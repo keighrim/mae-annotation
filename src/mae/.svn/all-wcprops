@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/!svn/ver/5/trunk/MAE/src/mae
+END
+AttID.java
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/2/trunk/MAE/src/mae/AttID.java
+END
+MaeGui.java
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/5/trunk/MAE/src/mae/MaeGui.java
+END
+ElemExtent.java
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/2/trunk/MAE/src/mae/ElemExtent.java
+END
+DTD.java
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/2/trunk/MAE/src/mae/DTD.java
+END
+TagDB.java
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/2/trunk/MAE/src/mae/TagDB.java
+END
+AttData.java
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/2/trunk/MAE/src/mae/AttData.java
+END
+Elem.java
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/2/trunk/MAE/src/mae/Elem.java
+END
+FileOperations.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2/trunk/MAE/src/mae/FileOperations.java
+END
+AttList.java
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/2/trunk/MAE/src/mae/AttList.java
+END
+Attrib.java
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/2/trunk/MAE/src/mae/Attrib.java
+END
+XMLFileLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2/trunk/MAE/src/mae/XMLFileLoader.java
+END
+AnnotationTask.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2/trunk/MAE/src/mae/AnnotationTask.java
+END
+XMLHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/2/trunk/MAE/src/mae/XMLHandler.java
+END
+HashCollection.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2/trunk/MAE/src/mae/HashCollection.java
+END
+ElemLink.java
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/2/trunk/MAE/src/mae/ElemLink.java
+END
+DTDLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/2/trunk/MAE/src/mae/DTDLoader.java
+END
