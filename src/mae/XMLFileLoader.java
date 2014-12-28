@@ -31,49 +31,46 @@ import org.xml.sax.helpers.*;
  * calling the XMLHandler file.
  * 
  * @author Amber Stubbs
- *
+ * @revised Keigh Rim
+ * 
  */
 
 class XMLFileLoader{
 
-	private XMLHandler xmlfile;
+    private XMLHandler mXmlfile;
 
-	XMLFileLoader(File f){
-		xmlfile = new XMLHandler();
-		try{
-			readFile(f);
-		}catch(Exception e){
-			System.out.println(e.toString());
-		}
-	}
+    public XMLFileLoader(File f){
+        mXmlfile = new XMLHandler();
+        try{
+            readFile(f);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
-	private void readFile(File f) throws Exception{
+    private void readFile(File f) throws Exception{
 
-		try { //this will work with java 5 and 6.  Java 1.4 is not supported.
+        try { //this will work with java 5 and 6.  Java 1.4 is not supported.
+            XMLReader parser = XMLReaderFactory.createXMLReader();
+            parser.setContentHandler(mXmlfile);
+            String docname = f.toString();
+            try{
+                parser.parse(docname);
+            }catch(Exception ex){
+                ex.printStackTrace();
+                System.out.println("parse of " + docname + " failed");
+                throw new Exception();
+            }
+        }catch (SAXException e) {
+            e.printStackTrace();
+        }
+    }
 
-			XMLReader parser = XMLReaderFactory.createXMLReader();
-			parser.setContentHandler(xmlfile);
-			String docname = f.toString();
-			try{
-				parser.parse(docname);
-			}catch(Exception ex){
-				System.out.println(ex.toString());
-				System.out.println("parse of " + docname + " failed");
-				throw new Exception();
-			}
-		}catch (SAXException e) {
-			System.out.println("e.toString()");
-		}
+    public HashCollection<String,Hashtable<String,String>> getTagHash(){
+        return mXmlfile.returnTagHash();
+    }
 
-	}
-
-	public HashCollection<String,Hashtable<String,String>> getTagHash(){
-		return xmlfile.returnTagHash();
-	}
-
-	public String getTextChars(){
-		return xmlfile.getTextChars();
-	}
-
-
+    public String getTextChars(){
+        return mXmlfile.getText();
+    }
 }

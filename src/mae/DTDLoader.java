@@ -30,28 +30,29 @@ import java.util.regex.Matcher;
  * Provides methods for loading a DTD file into a DTD class
  * 
  * @author Amber Stubbs
+ * @revised Keigh Rim
  *
  * @see DTD
  */
 
 class DTDLoader {
 
-    private DTD dtd;
+    private DTD mDtd;
     
     DTDLoader(File f){
-        dtd=new DTD();
+        mDtd =new DTD();
         try{
             readFile(f);
-        }catch(Exception e){
+        }catch(FileNotFoundException e){
             System.out.println("no file found");
         }
     }
     
     public DTD getDTD(){
-        return dtd;
+        return mDtd;
     }
     
-    private void readFile(File f) throws Exception{
+    private void readFile(File f) throws FileNotFoundException{
       Scanner sc = new Scanner(f,"UTF-8");
       while (sc.hasNextLine()) {
           String next = sc.nextLine();
@@ -59,7 +60,7 @@ class DTDLoader {
             //this assumes that comments are on their own line(s)
             //needs to be made more flexible
             if (next.contains("<!--")){
-                while (next.contains("-->")==false){
+                while (!next.contains("-->")){
                     next = sc.nextLine();
                 }
                 //this skips the lines with the comments
@@ -70,7 +71,7 @@ class DTDLoader {
             String tag = "";
             if (next.contains("<")){
                 tag = tag+next;
-                while (next.contains(">")==false){
+                while (!next.contains(">")){
                     next = sc.nextLine();
                     tag = tag+next;
                 }
@@ -90,7 +91,7 @@ class DTDLoader {
             addAttribute(tag);
         }
         
-         if(tag.startsWith("<!ENTITY")){
+        if(tag.startsWith("<!ENTITY")){
             addMeta(tag);
         }
     }
@@ -103,45 +104,40 @@ class DTDLoader {
         if (tag.contains("#PCDATA")){
             String idString = getIDString(name);
             ElemExtent e = new ElemExtent(name, idString);
-            dtd.addElem(e);
-        }
-        else{
+            mDtd.addElem(e);
+        } else {
             String idString = getIDString(name);
             ElemLink e = new ElemLink(name, idString);
-            dtd.addElem(e);
+            mDtd.addElem(e);
         }
         
     }
     
     private String getIDString(String name){
-        ArrayList<String> ids = dtd.getElementIDs();
+        ArrayList<String> ids = mDtd.getElementIDs();
         String id = name.substring(0,1);
         boolean idOK = false;
-        while (idOK == false){
+        while (!idOK){
             if(ids.contains(id)){
                 if(id.length()>=name.length()){
                     id = id+"-";
-                 }
-                 else{
+                 } else {
                      id = name.substring(0,id.length()+1);
                  }
-            }
-            else{
+            } else {
                 idOK=true;
             }
         }
         return id;
-        
     }
     
     private void addMeta(String tag){
         if (tag.contains("name ")){
             String name= tag.split("name \"")[1];
             name = name.split("\"")[0];
-            dtd.setName(name);
+            mDtd.setName(name);
         }
     }
-    
     
     /*
     Add an attribute to an existing string
@@ -155,11 +151,10 @@ class DTDLoader {
         }
     }
     
-    
     private void addListAtt(String tag){
         String elemName = tag.split(" ")[1];
         String attName = tag.split(" ")[2];
-        Elem elem = dtd.getElem(elemName);
+        Elem elem = mDtd.getElem(elemName);
         
         if(elem!=null){
             String listString = tag.split("\\(")[1];
@@ -167,9 +162,9 @@ class DTDLoader {
             
             ArrayList<String> atts = new ArrayList<String>();
             String[]list = listString.split("\\|");
-            for(int i=0;i<list.length;i++){
-                atts.add(list[i].trim());
-             }
+            for (String aList : list) {
+                atts.add(aList.trim());
+            }
              
              Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
              Matcher matcher = defaultVal.matcher(tag);
@@ -190,7 +185,6 @@ class DTDLoader {
                      defaultValue="";
                  }
              }
-             
              boolean req = tag.contains("#REQUIRED");
              elem.addAttribute(new AttList(attName,req,atts,defaultValue));
          }
@@ -200,53 +194,48 @@ class DTDLoader {
     }
         
     private void addDataAtt(String tag){
-        
+
         String elemName = tag.split(" ")[1];
         String attName = tag.split(" ")[2];
         boolean req = tag.contains("#REQUIRED");
-        if(dtd.hasElem(elemName)){
-            Elem elem = dtd.getElem(elemName);
-            if(attName.equalsIgnoreCase("start")){
+        if(mDtd.hasElem(elemName)){
+            Elem elem = mDtd.getElem(elemName);
+
+            // krim: support for multi-span extents
+            // dropped "end" tag, kept "start" only
+            // keeping "start" is for legacy DTD support
+            // (instead of replacing it with the actually used name "spans")
+            if(attName.equalsIgnoreCase("start")
+                    || attName.equalsIgnoreCase("spans")){
                 if(elem instanceof ElemExtent){
-                    Attrib att = elem.getAttribute("start");
-                    att.setRequired(req);
-                    att = elem.getAttribute("end");
+                    Attrib att = elem.getAttribute("spans");
                     att.setRequired(req);
                 }
-            }
-            else if(tag.contains(" ID ")){
+            } else if(tag.contains(" ID ")) {
                 AttID att = (AttID)elem.getAttribute("id");
                 if(tag.contains("prefix")){
                     String prefix = tag.split("\"")[1];
                     att.setPrefix(prefix);
                 }
-            }
-            else{
+            } else {
                 Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
-             Matcher matcher = defaultVal.matcher(tag);
-             ArrayList<String> defVals = new ArrayList<String>();
-             String defaultValue = "";
-             while (matcher.find()){
-                 defVals.add(matcher.group());
-             }
-             if (defVals.size()>1){
-                 System.out.println("Error in attribute; too many default values found");
-                 System.out.println(tag);
-             }
-             else if (defVals.size()==1){
-                 defaultValue = defVals.get(0).split("\"")[1];
-                 
-             }
-                
+                Matcher matcher = defaultVal.matcher(tag);
+                ArrayList<String> defVals = new ArrayList<String>();
+                String defaultValue = "";
+                while (matcher.find()){
+                    defVals.add(matcher.group());
+                }
+                if (defVals.size()>1){
+                    System.out.println("Error in attribute; too many default values found");
+                    System.out.println(tag);
+                } else if (defVals.size()==1) {
+                    defaultValue = defVals.get(0).split("\"")[1];
+                }
                 elem.addAttribute(new AttData(attName,req,defaultValue));
             }
         }
         else{
             System.out.println("no match found");
         }
-        
-        
     }
-    
-   
 }

@@ -22,12 +22,19 @@
 package mae;
 
 
+import java.util.ArrayList;
+
 /**
- * Extents Elem to provid information about tags that are 
- * used to label extents in a text (as well as non-conumsing
+ * Extents Elem to provide information about tags that are
+ * used to label extents in a text (as well as non-consuming
  * tags).
- * 
+ *
+ * mod by krim: Instead of start & end fields,
+ * use a string of (possibly) multiple spans, to keep track of spans of an extent
+ * Following getters and setters are also modified.
+ *
  * @author Amber Stubbs
+ * @revised Keigh Rim
  *
  */
 
@@ -35,43 +42,54 @@ package mae;
 
 class ElemExtent extends Elem{
 
-ElemExtent(String name, String pre){
-    setName(name);
-    //extent tags always have id, start, and end
-    AttID id = new AttID("id", pre, true);
-    AttData start = new AttData("start", true);
-    AttData end = new AttData("end", true);
-    AttData text = new AttData("text", false);
-    addAttribute(id);
-    addAttribute(start);
-    addAttribute(end);
-    addAttribute(text);
-}
+    // mod by krim: start, end --> spans
+    private String mSpans;
 
-public void setStart(int s){
-    start=s;
-}
-
-public int getStart(){
-    return start;
-}
-
-public void setEnd(int e){
-    end=e;
-}
-
-public int getEnd(){
-    return end;
-}
+    ElemExtent(String name, String pre){
+        setName(name);
+        //extent tags always have id, start, and end
+        AttID id = new AttID("id", pre, true);
+        addAttribute(id);
 
 
-public void printInfo(){
-    System.out.println("\tname = " + getName());
-    System.out.println("\tStart = " + getStart());
-    System.out.println("\tEnd = " + getEnd());
-    
-}
+        // mod by krim: start, end --> spans
+        AttData spans = new AttData("spans", true);
+        addAttribute(spans);
 
-private int start;
-private int end;
+        AttData text = new AttData("text", false);
+        addAttribute(text);
+    }
+
+    /* mod by krim: these setters and getters are no longer used
+    public void setStart(int s) {
+        start = s;
+    }
+
+    public int getStart(){
+        return start;
+    }
+
+    public void setEnd(int e){
+        end=e;
+    }
+
+    public int getEnd(){
+        return end;
+    }
+    */
+
+    public void setSpans(String spans) {
+        this.mSpans = spans;
+    }
+
+    public String getSpans() {
+        return mSpans;
+    }
+
+    public void printInfo(){
+        System.out.println("\tname = " + getName());
+
+        // mod by krim: start, end --> spans
+        System.out.println("\tspans = " + getSpans());
+    }
 }

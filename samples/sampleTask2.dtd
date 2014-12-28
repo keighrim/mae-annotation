@@ -1,0 +1,21 @@
+<!ENTITY name "NounVerbTask">
+
+<!ELEMENT NOUN ( #PCDATA ) >
+<!ATTLIST NOUN start #IMPLIED >	
+<!ATTLIST NOUN type ( person | place | thing | other ) #IMPLIED "other" >
+<!ATTLIST NOUN comment CDATA "default value" >
+
+<!ELEMENT VERB ( #PCDATA ) >
+<!ATTLIST VERB tense ( past | present | future | none ) #IMPLIED >
+<!ATTLIST VERB aspect ( simple | progressive | perfect | perfect progressive ) #IMPLIED "perfect progressive" >
+
+<!ELEMENT ADJ_ADV ( #PCDATA ) >
+<!ATTLIST ADJ_ADV type ( adjective | adverb ) #IMPLIED >
+
+
+<!ELEMENT ACTION EMPTY >
+<!ATTLIST ACTION relationship ( performs | performed_by ) #IMPLIED >
+
+<!ELEMENT DESCRIPTION EMPTY >
+<!ATTLIST DESCRIPTION relationship ( describes | described_by ) >
+

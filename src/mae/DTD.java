@@ -22,103 +22,99 @@
 package mae;
 
 /**
- * 
+ *
  * Provides a description of the annotation task information 
  * stored in a DTD.  The DTD describes the annotation 
  * task, specifically the tags and attributes.
- * 
+ *
  * @author Amber Stubbs
+ * @revised Keigh Rim
  *
  */
 
 import java.util.*;
 
-class DTD extends Object{
+class DTD {
 
-DTD(){
-    elements=new ArrayList<Elem>();
-    name="XML";
-}
-
-
-public String getName(){
-    return name;
-}
-
-public void setName(String t){
-    name=t;
-}
-
-public String toString(){
-    return("name " + getName());
-}
-
-public void addElem(Elem t){
-    elements.add(t);
-}
-
-public Elem getElem(String name){
-    for(int i=0;i<elements.size();i++){
-        Elem e = elements.get(i);
-        if (e.getName().equalsIgnoreCase(name)){
-            return e;
-        }
+    DTD(){
+        mElements =new ArrayList<Elem>();
+        mName ="XML";
     }
-    return null;
-}
 
-public boolean hasElem(String name){
-    for(int i=0;i<elements.size();i++){
-        Elem e = elements.get(i);
-        if (e.getName().equalsIgnoreCase(name)){
-            return true;
-        }
+
+    public String getName(){
+        return mName;
     }
-    return false;
-}
 
-public ArrayList<Elem> getElements(){
-    return elements;
-}
-
-public ArrayList<String> getElementIDs(){
-    ArrayList<String> ids = new ArrayList<String>();
-    
-    for (int i=0;i<elements.size();i++){
-        Elem e = elements.get(i);
-        AttID a = (AttID)e.getAttribute("id");
-        ids.add(a.getPrefix());
+    public void setName(String t){
+        mName =t;
     }
-    return ids;
-}
 
-public ArrayList<Elem> getNCElements(){
-    ArrayList<Elem> NCElems = new ArrayList<Elem>();
-    //returns a list of non-consuming extent tags
-    for(int i=0;i<elements.size();i++){
-        Elem e = elements.get(i);
-        if(e instanceof ElemExtent){
-            ElemExtent ex = (ElemExtent)e;
-            Attrib start = ex.getAttribute("start");
-            if(!(start.getRequired())){
-                NCElems.add(e);
+    public String toString(){
+        return("name " + getName());
+    }
+
+    public void addElem(Elem t){
+        mElements.add(t);
+    }
+
+    public Elem getElem(String name){
+        for (Elem e : mElements) {
+            if (e.getName().equalsIgnoreCase(name)) {
+                return e;
             }
         }
+        return null;
     }
-    return NCElems;
-}
 
-public void printInfo(){
-    System.out.println(name);
-    System.out.println("Elements:");
-    for(int i=0;i<elements.size();i++){
-        System.out.println(" Element " + i);
-        elements.get(i).printInfo();
-        System.out.println("\n");
+    public boolean hasElem(String name){
+        for (Elem e : mElements) {
+            if (e.getName().equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
-}
 
-private ArrayList<Elem> elements;
-private String name;
+    public ArrayList<Elem> getElements(){
+        return mElements;
+    }
+
+    public ArrayList<String> getElementIDs(){
+        ArrayList<String> ids = new ArrayList<String>();
+
+        for (Elem e : mElements) {
+            AttID a = (AttID) e.getAttribute("id");
+            ids.add(a.getPrefix());
+        }
+        return ids;
+    }
+
+    public ArrayList<Elem> getNCElements(){
+        ArrayList<Elem> NCElems = new ArrayList<Elem>();
+        //returns a list of non-consuming extent tags
+        for (Elem e : mElements) {
+            if (e instanceof ElemExtent) {
+                ElemExtent ex = (ElemExtent) e;
+                if (!ex.getAttribute("spans").getRequired()) {
+                    NCElems.add(e);
+                }
+            }
+        }
+        return NCElems;
+    }
+
+    public void printInfo(){
+        System.out.println(mName);
+        System.out.println("Elements:");
+        for(int i=0;i< mElements.size();i++){
+            System.out.println(" Element " + i);
+            mElements.get(i).printInfo();
+            System.out.println("\n");
+        }
+    }
+
+    private ArrayList<Elem> mElements;
+    private String mName;
 
 }

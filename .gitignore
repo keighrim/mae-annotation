@@ -16,3 +16,11 @@ bin/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# IDEA files
+.idea/**
+**/.idea/
+/local.properties
+**/desktop.ini
+**/.DS_Store
+**/*.iml
