@@ -39,7 +39,7 @@ class XMLFileLoader{
 
     private XMLHandler mXmlfile;
 
-    public XMLFileLoader(File f){
+    XMLFileLoader(File f){
         mXmlfile = new XMLHandler();
         try{
             readFile(f);

@@ -34,11 +34,12 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
 class XMLHandler extends DefaultHandler {
-    private HashCollection<String, Hashtable<String, String>> newTags = new HashCollection<String, Hashtable<String, String>>();
+    private HashCollection<String, Hashtable<String, String>> newTags 
+            = new HashCollection<String, Hashtable<String, String>>();
     private boolean mHasText = false;
     private String mText = "";
 
-    public XMLHandler() {
+    XMLHandler() {
     }
 
     @Override

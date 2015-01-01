@@ -193,6 +193,10 @@ class DTDLoader {
          }
     }
         
+    /**
+     * Creates an AttData object for the DTD
+     * @param tag
+     */
     private void addDataAtt(String tag){
 
         String elemName = tag.split(" ")[1];

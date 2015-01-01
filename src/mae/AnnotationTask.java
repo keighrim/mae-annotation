@@ -37,18 +37,19 @@ class AnnotationTask {
     private Hashtable<String,Elem> mElements;
     private Hashtable<String,AttID> mIdTracker;
     private HashCollection<String,String> mIdsExist;
-    private TagDB mTagTable;
+
+    private AnnotDB mDB;
     private DTD mDtd;
     private boolean hasDTD;
     
     AnnotationTask(){
-         mTagTable = new TagDB();
+         mDB = new AnnotDB();
          hasDTD = false;
     }
     
     public void reset_db(){
-        mTagTable.close_db();
-        mTagTable = new TagDB();
+        mDB.close_db();
+        mDB = new AnnotDB();
     }
     
     public void reset_IDTracker() {
@@ -128,7 +129,7 @@ class AnnotationTask {
         //this will catch cases where two tags have
         //the same prefix
         try {
-            while (mTagTable.idExists(nextid)) {
+            while (mDB.idExists(nextid)) {
                 nextid = id.getID();
                 id.incrementNumber();
             }
@@ -147,7 +148,7 @@ class AnnotationTask {
 
     public String getLocByID(String id) {
         try {
-            String loc = mTagTable.getLocByID(id);
+            String loc = mDB.getLocByID(id);
             return loc;
         } catch (Exception e) {
             e.printStackTrace();
@@ -157,7 +158,7 @@ class AnnotationTask {
 
     public String getElementByID(String id){
         try{
-            String elem = mTagTable.getElementByID(id);
+            String elem = mDB.getElementByID(id);
             return elem;
         }catch(Exception e){
             e.printStackTrace();
@@ -167,7 +168,7 @@ class AnnotationTask {
 
     public Hashtable<Integer,String> getLocationsbyElemLink(String elem){
         try{
-            Hashtable<Integer,String> locs = mTagTable.getLocationsbyElemLink(elem);
+            Hashtable<Integer,String> locs = mDB.getLocationsbyElemLink(elem);
             return locs;
         }catch(Exception e){
             e.printStackTrace();
@@ -178,7 +179,7 @@ class AnnotationTask {
     public Hashtable<Integer,String> getLocationsbyElemLink
             (String elem, ArrayList<String> active){
         try{
-            Hashtable<Integer,String> locs = mTagTable.getLocationsbyElemLink(elem,active);
+            Hashtable<Integer,String> locs = mDB.getLocationsbyElemLink(elem,active);
             return locs;
         }catch(Exception e){
             e.printStackTrace();
@@ -188,7 +189,7 @@ class AnnotationTask {
 
    public void removeExtentByID(String e_name,String id){
        try{
-          mTagTable.removeExtentTags(e_name, id);
+          mDB.removeExtentTags(e_name, id);
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -196,7 +197,7 @@ class AnnotationTask {
    
    public HashCollection<String,String> getLinksByExtentID(String e_name,String id){
        try{
-          return(mTagTable.getLinksByExtentID(e_name,id));
+          return(mDB.getLinksByExtentID(e_name,id));
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -205,7 +206,7 @@ class AnnotationTask {
    
    public HashCollection<String,String> getElementsAllLocs(){
        try{
-           return(mTagTable.getElementsAllLocs());
+           return(mDB.getElementsAllLocs());
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -215,11 +216,11 @@ class AnnotationTask {
     void addToDB(int start, String elem, String id, boolean insert){
         try{
             if (insert){
-                mTagTable.insert_extent(start, elem, id);
+                mDB.insert_extent(start, elem, id);
                 mIdsExist.putEnt(elem, id);
             }
             else{
-                mTagTable.add_extent(start, elem, id);
+                mDB.add_extent(start, elem, id);
                 mIdsExist.putEnt(elem, id);
 
             }
@@ -234,11 +235,11 @@ class AnnotationTask {
         String from_name, String linkTo, String to_name, boolean insert){
         try{
             if (insert){
-                mTagTable.insert_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
+                mDB.insert_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
                 mIdsExist.putEnt(linkName, newID);
             }
             else{
-                mTagTable.add_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
+                mDB.add_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
                 mIdsExist.putEnt(linkName, newID);
             }
         }catch(Exception e){
@@ -250,7 +251,7 @@ class AnnotationTask {
     
     ArrayList<String> getElemntsLoc(int loc){
         try{
-          return (mTagTable.getElementsAtLoc(loc));
+          return (mDB.getElementsAtLoc(loc));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -276,7 +277,7 @@ class AnnotationTask {
     public HashCollection<String,String> getTagsSpan(int begin, int end){
 
         try{
-            return (mTagTable.getTagsInSpan(begin, end));
+            return (mDB.getTagsInSpan(begin, end));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -309,7 +310,7 @@ class AnnotationTask {
 
     public HashCollection<String,String> getTagsSpanAndNC(int begin, int end){
         try{
-            return (mTagTable.getTagsInSpanAndNC(begin,end));
+            return (mDB.getTagsInSpanAndNC(begin,end));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -318,7 +319,7 @@ class AnnotationTask {
     
     public void batchExtents(){
         try{
-            mTagTable.batchExtents();
+            mDB.batchExtents();
         }catch(Exception e){
             System.out.println("Error adding all extents to DB");
             e.printStackTrace();
@@ -327,7 +328,7 @@ class AnnotationTask {
         
     public void batchLinks(){
             try{
-                mTagTable.batchLinks();
+                mDB.batchLinks();
             }catch(Exception e){
                 System.out.println("Error adding all links to DB");
                 e.printStackTrace();

@@ -44,9 +44,10 @@ import java.util.Hashtable;
  *
  */
 
-class TagDB {
+class AnnotDB {
+    // mod by krim: renamed corresponding MAI
 
-    private PreparedStatement mExtInset;
+    private PreparedStatement mExtInsert;
     private PreparedStatement mLinkInsert;
     private Connection mConn;
 
@@ -56,7 +57,7 @@ class TagDB {
      * tables and PreparedStatements.
      * 
      */
-    TagDB(){
+    AnnotDB(){
         try{
             Class.forName("org.sqlite.JDBC");
             mConn = DriverManager.getConnection("jdbc:sqlite:tag.db");
@@ -65,7 +66,7 @@ class TagDB {
             stat.executeUpdate("create table extents (location int(5), element_name, id);");
             stat.executeUpdate("drop table if exists links;");
             stat.executeUpdate("create table links (id,fromid,from_name,toid,to_name,element_name);");
-            mExtInset = mConn.prepareStatement("insert into extents values (?, ?, ?);");
+            mExtInsert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
             mLinkInsert = mConn.prepareStatement("insert into links values (?, ?, ?, ?, ?, ?);");
         }catch(Exception e){
             e.printStackTrace();
@@ -210,8 +211,7 @@ class TagDB {
      * @throws Exception
      */
     Hashtable<Integer,String> getLocationsbyElemLink(
-            String elem, ArrayList<String>active)
-                    throws Exception{
+            String elem, ArrayList<String>active) throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
         String query = "select * from links where element_name = '" + elem + "';";
@@ -472,10 +472,10 @@ class TagDB {
      */
     void add_extent(int location, String element, String id)
             throws Exception{
-        mExtInset.setInt(1, location);
-        mExtInset.setString(2, element);
-        mExtInset.setString(3, id);
-        mExtInset.addBatch();
+        mExtInsert.setInt(1, location);
+        mExtInsert.setString(2, element);
+        mExtInsert.setString(3, id);
+        mExtInsert.addBatch();
     }
 
     /**
@@ -485,7 +485,7 @@ class TagDB {
      */
     void batchExtents() throws Exception{
         mConn.setAutoCommit(false);
-        mExtInset.executeBatch();
+        mExtInsert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
@@ -498,12 +498,12 @@ class TagDB {
      */
     void insert_extent(int location, String element, String id)
             throws Exception{
-        mExtInset.setInt(1, location);
-        mExtInset.setString(2, element);
-        mExtInset.setString(3, id);
-        mExtInset.addBatch();
+        mExtInsert.setInt(1, location);
+        mExtInsert.setString(2, element);
+        mExtInsert.setString(3, id);
+        mExtInsert.addBatch();
         mConn.setAutoCommit(false);
-        mExtInset.executeBatch();
+        mExtInsert.executeBatch();
         mConn.setAutoCommit(true);
     }
 

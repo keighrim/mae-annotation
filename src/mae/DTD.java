@@ -80,6 +80,10 @@ class DTD {
         return mElements;
     }
 
+	/**
+	 * Returns a list of all the elements in the DTD
+	 * @return
+	 */
     public ArrayList<String> getElementIDs(){
         ArrayList<String> ids = new ArrayList<String>();
 
@@ -90,6 +94,11 @@ class DTD {
         return ids;
     }
 
+	/**
+	 * Returns a list of non-consuming extent tags
+	 * 
+	 * @return
+	 */
     public ArrayList<Elem> getNCElements(){
         ArrayList<Elem> NCElems = new ArrayList<Elem>();
         //returns a list of non-consuming extent tags

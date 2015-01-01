@@ -51,7 +51,7 @@ public class MaeMain extends JPanel {
 
     // add by krim: constant strings to be used in GUI title bar
     protected final static String VERSION = "0.10.0";
-    protected final static String TITLE_SUFFIX = "MAE " + VERSION;
+    protected final static String TITLE_PREFIX = "MAE " + VERSION;
 
     // add by krim: constant string to be used in string representation of spans
     protected final static String SPANDELIMITER = "~";
@@ -118,6 +118,7 @@ public class MaeMain extends JPanel {
     private JTabbedPane mBottomTable;
     private JTextPane mTextPane;
     private JPanel mTopPanel;
+
     private JMenuBar mMenuBar;
     private JMenu mFileMenu;
     private JMenu mNCMenu; // mod by krim: rename
@@ -149,11 +150,8 @@ public class MaeMain extends JPanel {
         isTextSelected =false;
         isCtrlPressed =false;
 
-        // add by krim: set bools
-        mMode = NORMAL;
-
         mPrevSpan = -1;
-
+        mMode = NORMAL;
         // mod by krim: init start-end to (-1, -1) pair
         mSpans = new ArrayList<int[]>();
         resetSpans();
@@ -171,56 +169,53 @@ public class MaeMain extends JPanel {
         mElementTables = new Hashtable<String, JTable>();
         mDisplayingLinkTypeOf = new Hashtable<String,Integer>();
 
+        /* GUI components */
         // krim: only help menu has constant, context-free items
         // thus we create it only once here in the constructor
-        mHelpMenu = createHelpMenu();
-
-        mMenuBar = new JMenuBar();
-        updateMenus();
-
-        mLinkPopupFrame = new JFrame();
-
         mLoadFC = new JFileChooser(".");
         mLoadFC.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
         mSaveFC = new JFileChooser(".");
         mSaveFC.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 
+        mTextPopup = new JPopupMenu();
+        mTablePopup = new JPopupMenu();
+        mLinkPopupFrame = new JFrame();
 
         mTextPane = new JTextPane(new DefaultStyledDocument());
         mTextPane.setEditable(false);
         mTextPane.setContentType("text/plain; charset=UTF-8");
         mTextPane.addCaretListener(new AnnCaretListener());
         mTextPane.addKeyListener(new ModKeyListener());
-        mTextPane.addMouseListener(new TextPopupListener());
+        mTextPane.addMouseListener(new TextMouseAdapter());
 
         mScrollPane = new JScrollPane(mTextPane);
         mScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        // mod by krim: use borderlayout to add statusbar
-        mTopPanel = new JPanel(new BorderLayout());
-        mTopPanel.add(mScrollPane, BorderLayout.CENTER);
-
         // add by krim: add a status bar in the bottom of the text pane
         mStatusBar = new JLabel();
         updateStatusBar();
+
+        mTopPanel = new JPanel(new BorderLayout());
+        mTopPanel.add(mScrollPane, BorderLayout.CENTER);
         mTopPanel.add(mStatusBar, BorderLayout.SOUTH);
-
-        mTextPopup = new JPopupMenu();
-        mTablePopup = new JPopupMenu();
-
 
         mBottomTable = new JTabbedPane();
         JComponent panel1 = makeTextPanel("No DTD");
         mBottomTable.addTab("Tab", panel1);
 
-        JSplitPane splitPane2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, mTopPanel, mBottomTable);
+        // krim: only help menu has constant, context-free items
+        // thus we create it only once here in the constructor
+        mHelpMenu = createHelpMenu();
+        mMenuBar = new JMenuBar();
+        updateMenus();
 
-        this.addKeyListener(new ModKeyListener());
+        JSplitPane splitPane = new JSplitPane(
+                JSplitPane.VERTICAL_SPLIT, mTopPanel, mBottomTable);
 
+        addKeyListener(new ModKeyListener());
         add(mMenuBar,BorderLayout.NORTH);
-        add(splitPane2,BorderLayout.CENTER);
-        splitPane2.setDividerLocation(250);
+        add(splitPane,BorderLayout.CENTER);
+        splitPane.setDividerLocation(250);
     }
 
     // ***********************
@@ -240,7 +235,6 @@ public class MaeMain extends JPanel {
     /**
      * Timer Task for timed messages in the status bar
      */
-
     private class TimedUpdateStatusBar extends TimerTask {
         @Override
         public void run() {
@@ -304,30 +298,32 @@ public class MaeMain extends JPanel {
                 String status = "";
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mLoadFC.getSelectedFile();
-                    String fullName = file.getName();
-                    int endName = fullName.lastIndexOf(".");
-                    mFileName = fullName.substring(0, endName);
+                    String fileName = file.getName();
+                    int endName = fileName.lastIndexOf(".");
+                    mFileName = fileName.substring(0, endName);
                     mXmlName = mFileName + ".xml";
                     try {
                         // mod by krim: to show tool version on title bar
-                        mMainFrame.setTitle(fullName + " - " + TITLE_SUFFIX);
+                        mMainFrame.setTitle(TITLE_PREFIX + " - " + fileName);
 
                         isFileOpen = true;
-                        resetTabPane();
+                        mTask.reset_db();
+                        mTask.reset_IDTracker();
 
                         // add by krim: need to refresh interfaces
+                        resetTabPane();
                         updateMenus();
                         returnToNormalMode();
 
-                        mTask.reset_db();
-                        mTask.reset_IDTracker();
                         mTextPane.setStyledDocument(new DefaultStyledDocument());
                         mTextPane.setContentType("text/plain; charset=UTF-8");
                         mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
                         if (FileOperations.hasTags(file)) {
                             XMLFileLoader xfl = new XMLFileLoader(file);
                             StyledDocument d = mTextPane.getStyledDocument();
-                            Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+                            Style def = StyleContext.getDefaultStyleContext()
+                                    .getStyle(StyleContext.DEFAULT_STYLE);
                             Style regular = d.addStyle("regular", def);
                             d.insertString(0, xfl.getTextChars(), regular);
                             HashCollection<String, Hashtable<String, String>> newTags = xfl.getTagHash();
@@ -396,7 +392,11 @@ public class MaeMain extends JPanel {
         }
     }
 
+    /**
+     * Listens for the request from the Help Menu
+     */
     private class AboutListener implements ActionListener{
+        @Override
         public void actionPerformed(ActionEvent e){
             showAboutDialog();
         }
@@ -433,6 +433,7 @@ public class MaeMain extends JPanel {
      */
     private class AnnTableModel extends DefaultTableModel{
         static final long serialVersionUID = 552012L;
+        @Override
         public boolean isCellEditable(int row, int col){
             return col != 0;
         }
@@ -444,7 +445,7 @@ public class MaeMain extends JPanel {
      * database and the table.
      *
      */
-    private class removeSelectedTableRows implements ActionListener{
+    private class RemoveSelectedTableRows implements ActionListener{
         public void actionPerformed(ActionEvent actionEvent) {
             boolean check = showDeleteWarning();
             if (check){
@@ -478,12 +479,14 @@ public class MaeMain extends JPanel {
                     mTask.removeExtentByID(action, id);
                     if(elem instanceof ElemExtent){
 
-                        // mod by krim: instead of take 2 integers, take a string of possibly multiple spans
+                        // mod by krim: instead of take 2 integers,
+                        // take a string of possibly multiple spans
                         String spanString = (String)tableModel.getValueAt(row,1);
                         ArrayList<int[]> spans = parseSpansString(spanString);
 
                         assignTextColor(spans);
-                        HashCollection<String,String> links = mTask.getLinksByExtentID(action,id);
+                        HashCollection<String,String> links
+                                = mTask.getLinksByExtentID(action,id);
                         //remove links that use the tag being removed
                         removeLinkTableRows(links);
                     }
@@ -492,7 +495,6 @@ public class MaeMain extends JPanel {
             }
         }
     }
-
 
     /**
      * This is the class that's called when an extent tag is
@@ -508,7 +510,6 @@ public class MaeMain extends JPanel {
                 resetSpans();
                 action = action.split(":")[1];
             }
-
             JTable tab = mElementTables.get(action);
             DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
             //create array for data for row
@@ -546,9 +547,7 @@ public class MaeMain extends JPanel {
 
                     if (attributes.get(i).getName().equals("spans")) {
                         newdata[i] = spansToString(mSpans);
-                    }
-
-                    if (attributes.get(i).getName().equals("text") &&
+                    } else if (attributes.get(i).getName().equals("text") &&
                             !isSpansEmpty()) {
                         newdata[i] = getTextIn(mSpans);
                     }
@@ -558,66 +557,16 @@ public class MaeMain extends JPanel {
             //add new row of tag info to the table and set appropriate attributes
             tableModel.addRow(newdata);
             tab.clearSelection();
-            tab.setRowSelectionInterval(tableModel.getRowCount() - 1, tableModel.getRowCount() - 1);
-            Rectangle rect = tab.getCellRect(tableModel.getRowCount() - 1, 0, true);
+            tab.setRowSelectionInterval(
+                    tableModel.getRowCount() - 1, tableModel.getRowCount() - 1);
+            Rectangle rect = tab.getCellRect(
+                    tableModel.getRowCount() - 1, 0, true);
             tab.scrollRectToVisible(rect);
-            add_tags(action, newID);
+            addTags(action, newID);
             if (!isSpansEmpty()) {
                 assignTextColor(mSpans);
             }
             resetSpans();
-        }
-    }
-
-    /**
-     * Change text selection mode to multiple span mode
-     * add by krim
-     */
-    private class MultiSpanListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            mMode = MSPAN;
-            mSpans.clear();
-            updateMenus();
-            mStatusBar.setText("Entering Multi-span mode! Click anywhere to continue.");
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-        }
-    }
-
-    /**
-     * Change mode to normal
-     * add by krim
-     */
-    private class ExitModeListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            returnToNormalMode();
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-        }
-    }
-
-    /**
-     * Remove last selected text span from spans list
-     * Used only in multi-span mode
-     * add by krim
-     */
-    private class UndoSelectListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            if (mSpans.size()>0) {
-                int[] lastSpan = mSpans.remove(mSpans.size()-1);
-                ArrayList<int[]> tmp = new ArrayList<int[]>();
-                tmp.add(lastSpan);
-
-                Highlighter hl = mTextPane.getHighlighter();
-                hl.removeAllHighlights();
-                highlightTextSpans(hl, tmp, mGrayHL);
-                highlightTextSpans(hl, mSpans, mDefHL);
-
-                mStatusBar.setText("Removed '" + getTextBetween(lastSpan[0], lastSpan[1]) + "'!" +
-                        " Click anywhere to continue.");
-            } else {
-                mStatusBar.setText("No text selected! Click anywhere to continue.");
-            }
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-
         }
     }
 
@@ -667,7 +616,6 @@ public class MaeMain extends JPanel {
      * an extent tag is removed through the
      * text-area popup window
      */
-
     private class RemoveExtentTag implements ActionListener{
         public void actionPerformed(ActionEvent e){
             boolean check = showDeleteWarning();
@@ -768,7 +716,7 @@ public class MaeMain extends JPanel {
                 mPrevSpan = dot;
             }
             else if(isCtrlPressed && mPrevSpan != -1){
-                showLinkWindow(mPrevSpan,dot);
+                showLinkPopup(mPrevSpan, dot);
                 isCtrlPressed = false;
                 mPrevSpan =-1;
             }
@@ -825,103 +773,6 @@ public class MaeMain extends JPanel {
 
         }
 
-    }
-
-    /**
-     * JTableListener determines if the ID of a tag has
-     * been double-clicked, and if it has it highlights the
-     * appropriate text extent/extents.
-     */
-
-    private class TablePopupListener extends MouseAdapter {
-        public void mousePressed(MouseEvent e){
-            if (SwingUtilities.isLeftMouseButton(e)){
-                if (isCtrlPressed) {
-                }
-            }
-            maybeShowTablePopup(e);
-        }
-
-        public void mouseReleased(MouseEvent e) {
-            maybeShowTablePopup(e);
-        }
-
-        public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount()==2) {
-                int index = mBottomTable.getSelectedIndex();
-                String title = mBottomTable.getTitleAt(index);
-                JTable tab = mElementTables.get(title);
-                Elem el = mTask.getElemHash().get(title);
-                Highlighter high = mTextPane.getHighlighter();
-                high.removeAllHighlights();
-
-                if (el instanceof ElemExtent) {
-                    int selectedRow = tab.getSelectedRow();
-
-                    // mod by krim: use table column[1] to get spanString then parse it
-                    ArrayList<int[]> spansSelect
-                            = parseSpansString((String) tab.getValueAt(selectedRow, 1));
-                    highlightTextSpans(high, spansSelect, mOrangeHL);
-
-                }
-
-                // krim: below block is used to highlight linked extents
-                // "from" extent get yellow color,
-                // "to" extent get green color,
-                if(el instanceof ElemLink){
-                    int selectedRow = tab.getSelectedRow();
-                    String fromSelect = (String)tab.getValueAt(selectedRow,1);
-                    String toSelect = (String)tab.getValueAt(selectedRow,3);
-
-                    ArrayList<int[]> fromSpans
-                            = parseSpansString(mTask.getLocByID(fromSelect));
-                    ArrayList<int[]> toSpans
-                            = parseSpansString(mTask.getLocByID(toSelect));
-                   if (toSpans != null) {
-                       highlightTextSpans(high, toSpans, mGreenHL);
-                    }
-                    // mod by krim: since highlightTextSpans() moves cursor, fromSpans need to be highlighted later
-                    if (fromSpans != null) {
-                        highlightTextSpans(high, fromSpans, mGrayHL);
-                    }
-                }
-            }
-        }
-
-        private void maybeShowTablePopup(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                mTablePopup = tableContextMenu();
-                mTablePopup.show(e.getComponent(),
-                        e.getX(), e.getY());
-            }
-        }
-    }
-
-    /**
-     * PopupListener determines whether the link
-     * creation window should be displayed.
-     */
-    private class TextPopupListener extends MouseAdapter {
-        public void mousePressed(MouseEvent e) {
-            if (SwingUtilities.isLeftMouseButton(e)){
-                if (isCtrlPressed) {
-                }
-            }
-            maybeShowTextPopup(e);
-        }
-
-        public void mouseReleased(MouseEvent e) {
-            maybeShowTextPopup(e);
-        }
-
-
-        private void maybeShowTextPopup(MouseEvent e) {
-            if (e.isPopupTrigger() && isTextSelected) {
-                mTextPopup = textContextMenu();
-                mTextPopup.show(e.getComponent(),
-                        e.getX(), e.getY());
-            }
-        }
     }
 
     /**
@@ -1024,6 +875,155 @@ public class MaeMain extends JPanel {
         }
     }
 
+    /**
+     * JTableListener determines if the ID of a tag has
+     * been double-clicked, and if it has it highlights the
+     * appropriate text extent/extents.
+     */
+    private class TableMouseAdapter extends MouseAdapter {
+        public void mousePressed(MouseEvent e){
+            if (SwingUtilities.isLeftMouseButton(e)){
+                if (isCtrlPressed) {
+                }
+            }
+            maybeShowTablePopup(e);
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            maybeShowTablePopup(e);
+        }
+
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount()==2) {
+                int index = mBottomTable.getSelectedIndex();
+                String title = mBottomTable.getTitleAt(index);
+                JTable tab = mElementTables.get(title);
+                Elem el = mTask.getElemHash().get(title);
+                Highlighter hl = mTextPane.getHighlighter();
+                hl.removeAllHighlights();
+
+                if (el instanceof ElemExtent) {
+                    int selectedRow = tab.getSelectedRow();
+
+                    // mod by krim: use table column[1] to get spanString then parse it
+                    ArrayList<int[]> spansSelect
+                            = parseSpansString((String) tab.getValueAt(selectedRow, 1));
+                    highlightTextSpans(hl, spansSelect, mOrangeHL);
+                } //end if ElemExtent
+
+                // krim: below block is used to highlight linked extents
+                // "from" extent get yellow color,
+                // "to" extent get green color,
+                if(el instanceof ElemLink){
+                    int selectedRow = tab.getSelectedRow();
+                    String fromSelect = (String)tab.getValueAt(selectedRow,1);
+                    String toSelect = (String)tab.getValueAt(selectedRow,3);
+
+                    ArrayList<int[]> fromSpans
+                            = parseSpansString(mTask.getLocByID(fromSelect));
+                    ArrayList<int[]> toSpans
+                            = parseSpansString(mTask.getLocByID(toSelect));
+                    if (toSpans != null) {
+                        highlightTextSpans(hl, toSpans, mGreenHL);
+                    }
+                    // mod by krim: since highlightTextSpans() moves cursor,
+                    // fromSpans need to be highlighted later
+                    if (fromSpans != null) {
+                        highlightTextSpans(hl, fromSpans, mGrayHL);
+                    }
+                }//end if ElemLink
+            }
+        }
+
+        //if the user right-clicks on a link
+        private void maybeShowTablePopup(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                mTablePopup = tableContextMenu();
+                mTablePopup.show(e.getComponent(),
+                        e.getX(), e.getY());
+            }
+        }
+    }
+
+    /**
+     * PopupListener determines whether the link
+     * creation window should be displayed.
+     */
+    private class TextMouseAdapter extends MouseAdapter {
+        public void mousePressed(MouseEvent e) {
+            if (SwingUtilities.isLeftMouseButton(e)){
+                if (isCtrlPressed) {
+                }
+            }
+            maybeShowTextPopup(e);
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            maybeShowTextPopup(e);
+        }
+
+
+        private void maybeShowTextPopup(MouseEvent e) {
+            if (e.isPopupTrigger() && isTextSelected) {
+                mTextPopup = textContextMenu();
+                mTextPopup.show(e.getComponent(),
+                        e.getX(), e.getY());
+            }
+        }
+    }
+
+    /**
+     * Change mode to normal
+     * add by krim
+     */
+    private class ExitModeListener implements ActionListener {
+        public void actionPerformed(ActionEvent actionEvent) {
+            returnToNormalMode();
+            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+        }
+    }
+
+    /**
+     * Change text selection mode to multiple span mode
+     * add by krim
+     */
+    private class MultiSpanListener implements ActionListener {
+        public void actionPerformed(ActionEvent actionEvent) {
+            mMode = MSPAN;
+            mSpans.clear();
+            updateMenus();
+            mStatusBar.setText("Entering Multi-span mode! Click anywhere to continue.");
+            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+        }
+    }
+
+    /**
+     * Remove last selected text span from spans list
+     * Used only in multi-span mode
+     * add by krim
+     */
+    private class UndoSelectListener implements ActionListener {
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (mSpans.size()>0) {
+                int[] lastSpan = mSpans.remove(mSpans.size()-1);
+                ArrayList<int[]> tmp = new ArrayList<int[]>();
+                tmp.add(lastSpan);
+
+                Highlighter hl = mTextPane.getHighlighter();
+                hl.removeAllHighlights();
+                highlightTextSpans(hl, tmp, mGrayHL);
+                highlightTextSpans(hl, mSpans, mDefHL);
+
+                mStatusBar.setText("Removed '" + getTextBetween(lastSpan[0], lastSpan[1]) + "'!" +
+                        " Click anywhere to continue.");
+            } else {
+                mStatusBar.setText("No text selected! Click anywhere to continue.");
+            }
+            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+
+        }
+    }
+
     // end Section: classes
     // *******************************
 
@@ -1093,15 +1093,14 @@ public class MaeMain extends JPanel {
         // take a string of spans and init a set of spans(start-end int pairs)
         String spansString = a.get("spans");
         mSpans = parseSpansString(spansString);
-        if(!isSpansEmpty()) {
+        if (!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
                 for (int i = start; i < end; i++) {
                     mTask.addToDB(i, elemName, newID, false);
                 }
             }
-        }
-        else {
+        } else {
             mTask.addToDB(-1, elemName, newID, false);
         }
         // mod by krim: resetting start-end for NC tag addition
@@ -1124,7 +1123,6 @@ public class MaeMain extends JPanel {
         String to_type = mTask.getElementByID(to_id);
         mTask.addToDB(newID, elemName, from_id, from_type, to_id, to_type, false);
     }
-
 
     /**
      * updateIDandDB sends tag information to the database, and
@@ -1165,7 +1163,6 @@ public class MaeMain extends JPanel {
      * @param a Hashtable of attributes
      * @param elemName type of tag being added
      */
-
     private void addRowFromHash(Hashtable<String,String> a, String elemName){
         JTable tab = mElementTables.get(elemName);
         DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
@@ -1187,25 +1184,23 @@ public class MaeMain extends JPanel {
      * @param links HashCollection of types and IDs of links being removed
      */
     private void removeLinkTableRows(HashCollection<String,String> links){
-        ArrayList<String> link_types = links.getKeyList();
-        for(int i=0;i<link_types.size();i++){
-            Elem elem = mTask.getElem(link_types.get(i));
+        ArrayList<String> linkTags = links.getKeyList();
+        for (String tag : linkTags) {
+            Elem elem = mTask.getElem(tag);
             ArrayList<String> link_ids = links.getList(elem.getName());
-            if(elem instanceof ElemLink){
-                for(int j=0;j<link_ids.size();j++){
-                    String id = link_ids.get(j);
-                    removeTableRows(elem,id);
+            if (elem instanceof ElemLink) {
+                for (String id : link_ids) {
+                    removeTableRows(elem, id);
                 }
             }
         }
     }
 
-
     /**
      * This removes the table rows containing the id given.
-     * If the id belongs to and extent tag, then it recolors the 
+     * If the id belongs to and extent tag, then it recolors the
      * related text portion.
-     * 
+     *
      * @param elem type of tag being removed
      * @param id ID of tag being removed
      */
@@ -1228,9 +1223,8 @@ public class MaeMain extends JPanel {
         }
     }
 
-
     /**
-     * Returns the text associated with an id.  Checks the table so that if there 
+     * Returns the text associated with an id.  Checks the table so that if there
      * is a note entered for a non-consuming tag, that information will be there
      *
      * @param elem the type of tag of the text being looked for
@@ -1296,7 +1290,7 @@ public class MaeMain extends JPanel {
      * @param element the type of tag being added
      * @param id the ID of the tag being added
      */
-    private void add_tags(String element, String id){
+    private void addTags(String element, String id){
         if(!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
@@ -1333,7 +1327,7 @@ public class MaeMain extends JPanel {
     }
 
     /** this method is for coloring/underlining text
-     *  in the entire text window.  It is called only when 
+     *  in the entire text window.  It is called only when
      *  a new file is loaded
      */
     private void assignTextColors(){
@@ -1350,7 +1344,6 @@ public class MaeMain extends JPanel {
             }
         }
     }
-
 
     /**
      *     This method is for coloring/underlining text
@@ -1371,34 +1364,32 @@ public class MaeMain extends JPanel {
         }
     }
 
-
     /**
      *  This method is for coloring/underlining text
      *  in the text window.  It detects overlaps, and
      *  should be called every time a tag is added
      *  or removed.
      *
-     * @param beginColor the location of the first character in the extent
-     * @param endColor the location of the last character in the extent
+     * @param begin the location of the first character in the extent
+     * @param end the location of the last character in the extent
      */
-    private void assignTextColor(int beginColor, int endColor){
+    private void assignTextColor(int begin, int end){
         //go through each part of the word being changed and
         //  find what tags are there, and what color it should be.
-        for(int i=0;i<endColor-beginColor;i++){
-            ArrayList<String> c = mTask.getElemntsLoc(beginColor+i);
+        for(int i=0;i<end-begin;i++){
+            ArrayList<String> c = mTask.getElemntsLoc(begin+i);
             if (c.size()==1) {
                 //use color of only tag
-                setColorAtLocation(mColorTable.get(c.get(0)),beginColor+i,1,false);
+                setColorAtLocation(mColorTable.get(c.get(0)),begin+i,1,false);
             } else if (c.size()>1) {
                 //set color to that of first tag also set underline
-                setColorAtLocation(mColorTable.get(c.get(0)),beginColor+i,1,true);
+                setColorAtLocation(mColorTable.get(c.get(0)),begin+i,1,true);
             } else {
                 //set color to black, remove underline
-                setColorAtLocation(Color.black,beginColor+i,1,false);
+                setColorAtLocation(Color.black,begin+i,1,false);
             }
         }
     }
-
 
     /**
      * Sets the color of a specific span of text.  Called for each
@@ -1406,17 +1397,17 @@ public class MaeMain extends JPanel {
      *
      * @param color The color the text will become.
      * Determined by the tag name and colorTable (Hashtable)
-     * @param s the location of the start of the extent
-     * @param e the location of the end of the extent
+     * @param pos the location of the start of the extent
+     * @param len the location of the end of the extent
      * @param b whether or not the text will be underlined
      */
-    private void setColorAtLocation(Color color, int s, int e, boolean b){
+    private void setColorAtLocation(Color color, int pos, int len, boolean b){
         DefaultStyledDocument styleDoc =
                 (DefaultStyledDocument) mTextPane.getStyledDocument();
         SimpleAttributeSet aset = new SimpleAttributeSet();
         StyleConstants.setForeground(aset, color);
         StyleConstants.setUnderline(aset, b);
-        styleDoc.setCharacterAttributes(s,e,aset,false);
+        styleDoc.setCharacterAttributes(pos,len,aset,false);
     }
 
     /**
@@ -1443,7 +1434,6 @@ public class MaeMain extends JPanel {
      * @param end end location of the text
      * @return the text
      */
-
     private String getTextBetween(int start, int end){
         DefaultStyledDocument styleDoc
                 = (DefaultStyledDocument) mTextPane.getStyledDocument();
@@ -1451,7 +1441,6 @@ public class MaeMain extends JPanel {
         try{
             text = styleDoc.getText(start,end-start);
         } catch(Exception e) {
-            System.out.println("MaeGui.getTextIn()");
             e.printStackTrace();
             text = "Error getting text from a selected span";
         }
@@ -1465,7 +1454,7 @@ public class MaeMain extends JPanel {
      * @param loc location of the first link anchor
      * @param loc2 location of the second link anchor
      */
-    private void showLinkWindow(int loc, int loc2){
+    private void showLinkPopup(int loc, int loc2){
         JPanel linkPane = new JPanel(new BorderLayout());
         JPanel boxPane = new JPanel(new GridLayout(3,2));
         mLinkPopupFrame = new JFrame();
@@ -1557,7 +1546,6 @@ public class MaeMain extends JPanel {
 
     }
 
-
     /**
      * Creates panel containing text for the GUI
      *
@@ -1588,7 +1576,7 @@ public class MaeMain extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
 
         mElementTables.put(e.getName(), table);
-        table.addMouseListener(new TablePopupListener());
+        table.addMouseListener(new TableMouseAdapter());
         //go through element attributes and add colums
         ArrayList<Attrib> attributes = e.getAttributes();
         //for some reason, it's necessary to add the columns first,
@@ -1621,134 +1609,6 @@ public class MaeMain extends JPanel {
             mBottomTable.addTab(name, makeTablePanel(element));
         }
     }
-
-
-    /**
-     * Creates the menu with the option to remove selected table rows
-     * mod by krim: re-named
-     *
-     * @return GUI menu
-     *
-     * TODO add menu item to add link or so
-     *
-     */
-    private JPopupMenu tableContextMenu(){
-        JPopupMenu jp = new JPopupMenu();
-        int index = mBottomTable.getSelectedIndex();
-        String title = mBottomTable.getTitleAt(index);
-        String action = "Remove selected " + title + " rows";
-        JMenuItem menuItem = new JMenuItem(action);
-        menuItem.setActionCommand(title);
-        menuItem.addActionListener(new removeSelectedTableRows());
-        jp.add(menuItem);
-        return jp;
-    }
-
-    /**
-     * highlights the row in the table with the given ID
-     *
-     * @param elem name of the tag type being highlighted
-     * @param id id of the tag being highlighted
-     */
-    private void highlightTableRows(String elem, String id){
-        JTable tab = mElementTables.get(elem);
-        DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
-        int rows = tableModel.getRowCount();
-        for (int i=rows-1;i>=0;i--){
-            String value = (String)tableModel.getValueAt(i,0);
-            if (value.equals(id)){
-                tab.addRowSelectionInterval(tab.convertRowIndexToView(i),tab.convertRowIndexToView(i));
-            }
-        }
-    }
-
-    /** Remove all highlights from table rows
-     */
-    private void clearTableSelections(){
-        for (Enumeration<String> tables = mElementTables.keys(); tables.hasMoreElements();){
-            JTable tab = mElementTables.get(tables.nextElement());
-            DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
-            int rows = tableModel.getRowCount();
-            if(rows>0)
-                tab.removeRowSelectionInterval(0,rows-1);
-        }
-    }
-
-
-    /**
-     * Displays the warning for saving your work before opening a new
-     * file or DTD.
-     *
-     */
-    private static void showSaveWarning(){
-        JOptionPane save = new JOptionPane();
-        save.setLocation(100,100);
-        String text = ("Warning! Opening a new file or DTD will \n" +
-                "delete any unsaved data.  \nPlease save your data before continuing");
-        JOptionPane.showMessageDialog(mMainFrame, text);
-    }
-
-
-    /**
-     * Shows information about MAE
-     * TODO - Add credit
-     */
-
-    private void showAboutDialog(){
-        JOptionPane about = new JOptionPane();
-        about.setLocation(100,100);
-        about.setAlignmentX(Component.CENTER_ALIGNMENT);
-        about.setAlignmentY(Component.CENTER_ALIGNMENT);
-        about.setMessage("MAE \n Multi-purpose Annotation Editor \nVersion " + VERSION + "\n\n" +
-                "Copyright Amber Stubbs\nastubbs@cs.brandeis.edu \n Lab for " +
-                "Linguistics and Computation, Brandeis University 2010-2012." +
-                "\n\nThis distribution of MAE (the software and the source code) \n" +
-                " is covered under the GNU General Public License version 3.\n" +
-                "http://www.gnu.org/licenses/");
-        JDialog dialog = about.createDialog(mMainFrame, "About MAE");
-        dialog.setVisible(true);
-        //about.showMessageDialog(mMainFrame, text);
-    }
-
-
-    /**
-     * Shows message warning that deleting an extent
-     * will also delete any links the extent is an anchor in.
-     *
-     * Currently is shows whether the extent is in a link or not.
-     *
-     * @return boolean indicating the user accepted the warning or
-     * canceled the action.
-     */
-    private boolean showDeleteWarning(){
-        //JOptionPane delete = new JOptionPane();
-        String text = ("Deleting extent tag(s) will also delete \n" +
-                "any links that use these extents.  Would you like to continue?");
-
-        int message = JOptionPane.showConfirmDialog(mMainFrame,
-                text, "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-        return message == 0;
-    }
-
-
-    /**
-     * Creates a drop-down comboBox for the table from the
-     * AttList attribute
-     *
-     * @param att a list-type attribute
-     * @return comboBox with attribute options
-     */
-    private JComboBox makeComboBox(AttList att){
-        //makes comboBox from List-type attribute
-        JComboBox options = new JComboBox();
-        options.addItem("");
-        for(int j=0;j<att.getList().size();j++){
-            options.addItem(att.getList().get(j));
-        }
-        return options;
-    }
-
 
     /**
      * Create a menuitem for each element in the annotation task
@@ -1816,6 +1676,128 @@ public class MaeMain extends JPanel {
     }
 
     /**
+     * Creates the menu with the option to remove selected table rows
+     * mod by krim: re-named
+     *
+     * @return GUI menu
+     *
+     * TODO add menu item to add link or so
+     *
+     */
+    private JPopupMenu tableContextMenu(){
+        JPopupMenu jp = new JPopupMenu();
+        int index = mBottomTable.getSelectedIndex();
+        String title = mBottomTable.getTitleAt(index);
+        String action = "Remove selected " + title + " rows";
+        JMenuItem menuItem = new JMenuItem(action);
+        menuItem.setActionCommand(title);
+        menuItem.addActionListener(new RemoveSelectedTableRows());
+        jp.add(menuItem);
+        return jp;
+    }
+
+    /**
+     * highlights the row in the table with the given ID
+     *
+     * @param elem name of the tag type being highlighted
+     * @param id id of the tag being highlighted
+     */
+    private void highlightTableRows(String elem, String id){
+        JTable tab = mElementTables.get(elem);
+        DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
+        int rows = tableModel.getRowCount();
+        for (int i=rows-1;i>=0;i--){
+            String value = (String)tableModel.getValueAt(i,0);
+            if (value.equals(id)){
+                tab.addRowSelectionInterval(tab.convertRowIndexToView(i),tab.convertRowIndexToView(i));
+            }
+        }
+    }
+
+    /** Remove all highlights from table rows
+     */
+    private void clearTableSelections(){
+        for (Enumeration<String> tables = mElementTables.keys(); tables.hasMoreElements();){
+            JTable tab = mElementTables.get(tables.nextElement());
+            DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
+            int rows = tableModel.getRowCount();
+            if(rows>0)
+                tab.removeRowSelectionInterval(0,rows-1);
+        }
+    }
+
+    /**
+     * Displays the warning for saving your work before opening a new
+     * file or DTD.
+     *
+     */
+    private static void showSaveWarning(){
+        JOptionPane save = new JOptionPane();
+        save.setLocation(100,100);
+        String text = ("Warning! Opening a new file or DTD will \n" +
+                "delete any unsaved data.  \nPlease save your data before continuing");
+        JOptionPane.showMessageDialog(mMainFrame, text);
+    }
+
+    /**
+     * Shows message warning that deleting an extent
+     * will also delete any links the extent is an anchor in.
+     *
+     * Currently is shows whether the extent is in a link or not.
+     *
+     * @return boolean indicating the user accepted the warning or
+     * canceled the action.
+     */
+    private boolean showDeleteWarning(){
+        //JOptionPane delete = new JOptionPane();
+        String text = ("Deleting extent tag(s) will also delete \n" +
+                "any links that use these extents.  Would you like to continue?");
+
+        int message = JOptionPane.showConfirmDialog(mMainFrame,
+                text, "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        return message == 0;
+    }
+
+    /**
+     * Shows information about MAE
+     * TODO - Add credit
+     */
+    private void showAboutDialog(){
+        JOptionPane about = new JOptionPane();
+        about.setLocation(100,100);
+        about.setAlignmentX(Component.CENTER_ALIGNMENT);
+        about.setAlignmentY(Component.CENTER_ALIGNMENT);
+        about.setMessage("MAE \n Multi-purpose Annotation Editor \n" +
+                "Version " + VERSION + "\n\n" +
+                "Copyright Amber Stubbs\nastubbs@cs.brandeis.edu \n Lab for " +
+                "Linguistics and Computation, Brandeis University 2010-2012." +
+                "\n\nThis distribution of MAE (the software and the source code) \n" +
+                " is covered under the GNU General Public License version 3.\n" +
+                "http://www.gnu.org/licenses/");
+        JDialog dialog = about.createDialog(mMainFrame, "About MAE");
+        dialog.setVisible(true);
+        //about.showMessageDialog(mMainFrame, text);
+    }
+
+    /**
+     * Creates a drop-down comboBox for the table from the
+     * AttList attribute
+     *
+     * @param att a list-type attribute
+     * @return comboBox with attribute options
+     */
+    private JComboBox makeComboBox(AttList att){
+        //makes comboBox from List-type attribute
+        JComboBox options = new JComboBox();
+        options.addItem("");
+        for(int j=0;j<att.getList().size();j++){
+            options.addItem(att.getList().get(j));
+        }
+        return options;
+    }
+
+    /**
      * assigns colors to the elements in the DTD
      */
     private void assignColors(){
@@ -1828,33 +1810,6 @@ public class MaeMain extends JPanel {
             }
             mColorTable.put(elements.get(i), colors[k]);
         }
-    }
-
-    /**
-     * Refreshes the GUI menus when a new DTD or file is loaded
-     */
-    private void updateMenus(){
-        this.mMenuBar.removeAll();
-
-        // mod by krim: some menus are used only after a file is loaded
-        mFileMenu = createFileMenu();
-        mMenuBar.add(mFileMenu);
-        if (isFileOpen) {
-            mDisplayMenu = createDisplayMenu();
-            mMenuBar.add(mDisplayMenu);
-            mNCMenu = createNCMenu();
-            mMenuBar.add(mNCMenu);
-
-            // add by krim: special mode menu
-            mModeMenu = createModeMenu();
-            mMenuBar.add(mModeMenu);
-        }
-
-        // krim: note that we don't have to re-create Help menu
-        mMenuBar.add(mHelpMenu);
-
-        mMenuBar.updateUI();
-
     }
 
     /**
@@ -2017,8 +1972,7 @@ public class MaeMain extends JPanel {
         JMenuItem exitMode = new JMenuItem("Exit to Normal Mode");
         if(mMode != NORMAL){
             exitMode.setEnabled(true);
-        }
-        else {
+        } else {
             exitMode.setEnabled(false);
         }
         exitMode.addActionListener(new ExitModeListener());
@@ -2033,6 +1987,32 @@ public class MaeMain extends JPanel {
         return menu;
     }
 
+    /**
+     * Refreshes the GUI menus when a new DTD or file is loaded
+     */
+    private void updateMenus(){
+        mMenuBar.removeAll();
+
+        // mod by krim: some menus are used only after a file is loaded
+        mFileMenu = createFileMenu();
+        mMenuBar.add(mFileMenu);
+        if (isFileOpen) {
+            mDisplayMenu = createDisplayMenu();
+            mMenuBar.add(mDisplayMenu);
+            mNCMenu = createNCMenu();
+            mMenuBar.add(mNCMenu);
+
+            // add by krim: special mode menu
+            mModeMenu = createModeMenu();
+            mMenuBar.add(mModeMenu);
+        }
+
+        // krim: note that we don't have to re-create Help menu
+        mMenuBar.add(mHelpMenu);
+
+        mMenuBar.updateUI();
+
+    }
 
     /**
      * Takes a string representing possibly multiple spans of an extent tag
@@ -2088,58 +2068,6 @@ public class MaeMain extends JPanel {
     }
 
     /**
-     * Updates the status bar mDisplayMenu
-     * add by krim
-     *
-     */
-    private void updateStatusBar() {
-        if (!mTask.hasDTD()) {
-            mStatusBar.setText("No DTD loaded.");
-        } else if (!isFileOpen) {
-            mStatusBar.setText("No file loaded.");
-        } else {
-            switch (mMode) {
-                case NORMAL:
-                    if (isSpansEmpty()) {
-                        mStatusBar.setText("No text selected.");
-                    } else {
-                        mStatusBar.setText("Selected: " + spansToString(this.mSpans));
-                    }
-                    break;
-                case MSPAN:
-                    mStatusBar.setText("[Multi-span mode] Selected: " + spansToString(this.mSpans));
-                    break;
-                case MLINK:
-                    mStatusBar.setText("Multiple link mode: ");
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Sets MAE mode to Normal
-     * add by krim
-     */
-    private void returnToNormalMode() {
-
-        mMode = NORMAL;
-        resetSpans();
-        updateMenus();
-
-        mStatusBar.setText("Exit to normal mode! Click anywhere to continue.");
-    }
-
-    /**
-     * Resets the selected spans to default non-selection (-1~-1)
-     */
-    private void resetSpans() {
-        this.mSpans.clear();
-        if (mMode != MSPAN) {
-            this.mSpans.add(new int[]{-1, -1});
-        }
-    }
-
-    /**
      * Highlight given spans with given highlighter and painter(color)
      *
      * @param hl - Highlighter OBJ from text panel
@@ -2163,13 +2091,75 @@ public class MaeMain extends JPanel {
 
 
     /**
+     * Updates the status bar mDisplayMenu
+     * add by krim
+     * TODO add MLINK mode
+     *
+     */
+    private void updateStatusBar() {
+        if (!mTask.hasDTD()) {
+            mStatusBar.setText("No DTD loaded.");
+        } else if (!isFileOpen) {
+            mStatusBar.setText("No file loaded.");
+        } else {
+            switch (mMode) {
+                case NORMAL:
+                    if (isSpansEmpty()) {
+                        mStatusBar.setText("No text selected.");
+                    } else {
+                        mStatusBar.setText("Selected: " + spansToString(this.mSpans));
+                    }
+                    break;
+                case MSPAN:
+                    if (isSpansEmpty()) {
+                        mStatusBar.setText("[Multi-span mode] No text selected.");
+                    } else {
+                        mStatusBar.setText("[Multi-span mode] Selected: " + spansToString(this.mSpans));
+                    }
+                    break;
+                case MLINK:
+                    mStatusBar.setText("Multiple link mode: ");
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Sets MAE mode to Normal
+     * add by krim
+     */
+    private void returnToNormalMode() {
+
+        mMode = NORMAL;
+        resetSpans();
+        updateMenus();
+
+        mStatusBar.setText("Exit to normal mode! Click anywhere to continue.");
+    }
+
+    private Boolean isSpansEmpty() {
+        return this.mSpans.size() == 0 || this.mSpans.get(0)[0] == -1;
+    }
+
+    /**
+     * Resets the selected spans to default non-selection (-1~-1)
+     */
+    private void resetSpans() {
+        this.mSpans.clear();
+        if (mMode != MSPAN) {
+            this.mSpans.add(new int[]{-1, -1});
+        }
+    }
+
+
+    /**
      * Creates the GUI
      */
     private static void createAndShowGUI() {
         JFrame.setDefaultLookAndFeelDecorated(true);
 
         //Create and set up the window.
-        mMainFrame = new JFrame(TITLE_SUFFIX);
+        mMainFrame = new JFrame(TITLE_PREFIX);
         mMainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
@@ -2181,10 +2171,6 @@ public class MaeMain extends JPanel {
         mMainFrame.pack();
         mMainFrame.setSize(900,500);
         mMainFrame.setVisible(true);
-    }
-
-    private Boolean isSpansEmpty() {
-        return this.mSpans.size() == 0 || this.mSpans.get(0)[0] == -1;
     }
 
     /**
