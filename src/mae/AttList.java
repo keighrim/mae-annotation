@@ -39,23 +39,23 @@ AttList(){
 AttList (String name, boolean r, ArrayList<String> c, String d){
     setName(name);
     setRequired(r);
-    setList(c);
+    setVaildValues(c);
     setDefaultValue(d);
 }
 
-public ArrayList<String> getList(){
-    return list;
+public ArrayList<String> getVaildValues(){
+    return vaildValues;
 }
 
-public void setList(ArrayList<String> l){
-    list=l;
+public void setVaildValues(ArrayList<String> l){
+    vaildValues =l;
 }
 
 public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() + "also list" );
+    return("Attribute name =" + getName() + " , required = " + isRequired() + "also list" );
 }
 
 
-private ArrayList<String> list;
+private ArrayList<String> vaildValues;
 
 }

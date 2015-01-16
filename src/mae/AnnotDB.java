@@ -30,8 +30,13 @@ import java.util.Hashtable;
 /**
  * TagDB is the class that handles all the calls to the 
  * SQLite database.  TagDB in MAE has two tables:
- * 1) extents, with columns: location int(5), element_name, id
- * 2) links, with columns: id,fromid,from_name,toid,to_name,element_name
+ * krim - these column design was originally from Amber, after re-writing modify here
+ * 1) extents, with columns: 1-location int(5), 2-element_name, 3-id
+ * <del>2) links, with columns: 1-id,2-fromid,3-from_name,4-toid,5-to_name,6-element_name</del>
+ * mod by krim - links table is redesign for multi-linking support
+ * 2) links, with columns: 1-location int(5), 2-element_name, 3-id,
+ *    4 ... - arg0...argN
+ *    4+mMaxArgs ... - arg0_name...argN_name
  * <p>
  * User-defined attribute information about the tags that are being 
  * created is not stored in the database; it exists only in the 
@@ -45,12 +50,20 @@ import java.util.Hashtable;
  */
 
 class AnnotDB {
-    // mod by krim: renamed corresponding MAI
+    // mod by krim: class renamed corresponding MAI
 
-    private PreparedStatement mExtInsert;
-    private PreparedStatement mLinkInsert;
+    private PreparedStatement mExt2Insert;
+    private PreparedStatement mLink2Insert;
     private Connection mConn;
 
+    // integers for each column in the table
+    final int LOC_COL = 1;
+    final int NAME_COL = 2;
+    final int ID_COL = 3;
+    final int ARG0_COL = 4;
+    private int mMaxArgs = 10; // by default, set max args to 10
+    private int ARG0_TYPE_COL = ARG0_COL + mMaxArgs;
+    // DO we need more than 10 arguments?
 
     /**
      * Clears out the database and creates the 
@@ -62,18 +75,32 @@ class AnnotDB {
             Class.forName("org.sqlite.JDBC");
             mConn = DriverManager.getConnection("jdbc:sqlite:tag.db");
             Statement stat = mConn.createStatement();
-            stat.executeUpdate("drop table if exists extents;");
-            stat.executeUpdate("create table extents (location int(5), element_name, id);");
-            stat.executeUpdate("drop table if exists links;");
-            stat.executeUpdate("create table links (id,fromid,from_name,toid,to_name,element_name);");
-            mExtInsert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
-            mLinkInsert = mConn.prepareStatement("insert into links values (?, ?, ?, ?, ?, ?);");
+            stat.executeUpdate("DROP TABLE if exists extents;");
+            stat.executeUpdate("CREATE TABLE extents (location INT(5), element_name, id);");
+            stat.executeUpdate("DROP TABLE if exists links;");
+            stat.executeUpdate("CREATE TABLE links (location INT(5), element_name, id);");
+            for (int i=0;i<mMaxArgs;i++) {
+                String colname = "arg"+i;
+                stat.executeUpdate("ALTER TABLE links ADD '" + colname + "';");
+            }
+            for (int i=0;i<mMaxArgs;i++) {
+                String colname = "arg"+i+"_name";
+                stat.executeUpdate("ALTER TABLE links ADD '" + colname + "';");
+            }
+//            stat.executeUpdate("create table links (id,fromid,from_name,toid,to_name,element_name);");
+            mExt2Insert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
+            String nullargs = "";
+            for (int i=0;i<mMaxArgs;i++) {
+                nullargs += ", ?, ?";
+            }
+            mLink2Insert = mConn.prepareStatement("insert into links values (?, ?, ?" +
+                    nullargs + ");");
         }catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public void print_extents(){
+    public void printExtents(){
         System.out.println("Extents in DB:");
         try {
             Statement stat = mConn.createStatement();
@@ -96,7 +123,8 @@ class AnnotDB {
         }
     }
 
-    public void print_links(){
+    // TODO need serious revision: right now, this method is not used at anywhere so leave it now
+    public void printLinks(){
         System.out.println("Links in DB:");
         try {
             Statement stat = mConn.createStatement();
@@ -181,18 +209,24 @@ class AnnotDB {
         ResultSet rs = stat.executeQuery(query);
         ArrayList<String>ids = new ArrayList<String>();
         while (rs.next()){
-            ids.add(rs.getString("fromid"));
-            ids.add(rs.getString("toid"));
+            for (int i=0;i<mMaxArgs;i++) {
+                String colName = "arg"+i;
+                String id = rs.getString(colName);
+                if (rs.wasNull()) {
+                    break;
+                } else {
+                    ids.add(id);
+                }
+            }
         }
         rs.close();
 
         Hashtable<Integer,String> locs = new Hashtable<Integer,String>();
-        for (int i = 0;i<ids.size();i++){
-            String id = ids.get(i);
+        for (String id : ids) {
             query = "select * from extents where id = '" + id + "';";
             rs = stat.executeQuery(query);
-            while (rs.next()){
-                locs.put((Integer.parseInt(rs.getString("location"))),"");
+            while (rs.next()) {
+                locs.put((Integer.parseInt(rs.getString("location"))), "");
             }
         }
         return(locs);
@@ -218,33 +252,45 @@ class AnnotDB {
         ResultSet rs = stat.executeQuery(query);
         ArrayList<String>ids = new ArrayList<String>();
         while (rs.next()){
-            ids.add(rs.getString("fromid"));
-            ids.add(rs.getString("toid"));
+            for (int i=0;i<mMaxArgs;i++) {
+                String colName = "arg"+i;
+                String id = rs.getString(colName);
+                if (rs.wasNull()) {
+                    break;
+                } else {
+                    ids.add(id);
+                }
+            }
         }
         rs.close();
 
         //then, go through and remove all the IDs that are associated with other 
         //actively bolded link tags
-        for(int i=0;i<active.size();i++){
-            String activeElem = active.get(i);
-            ArrayList<String>outIDs = new ArrayList<String>();
+        for (String activeElem : active) {
+            ArrayList<String> outIDs = new ArrayList<String>();
             query = "select * from links where element_name = '" + activeElem + "';";
             rs = stat.executeQuery(query);
             while (rs.next()){
-                outIDs.add(rs.getString("fromid"));
-                outIDs.add(rs.getString("toid"));
+                for (int i=0;i<mMaxArgs;i++) {
+                    String colName = "arg"+i;
+                    String id = rs.getString(colName);
+                    if (rs.wasNull()) {
+                        break;
+                    } else {
+                        outIDs.add(id);
+                    }
+                }
             }
             ids.removeAll(outIDs);
         }
         //now that the list is down to only the IDs that will be removed,
         //get their locations
         Hashtable<Integer,String> locs = new Hashtable<Integer,String>();
-        for (int i = 0;i<ids.size();i++){
-            String id = ids.get(i);
+        for (String id : ids) {
             query = "select * from extents where id = '" + id + "';";
             rs = stat.executeQuery(query);
-            while (rs.next()){
-                locs.put((Integer.parseInt(rs.getString("location"))),"");
+            while (rs.next()) {
+                locs.put((Integer.parseInt(rs.getString("location"))), "");
             }
         }
         return(locs);
@@ -330,31 +376,28 @@ class AnnotDB {
      * Returns the links that an extent participates in as 
      * a to or from anchor.
      * 
-     * @param element_name type of tag being searched for
-     * @param id ID of tag being searched for
+     * @param extType type of tag being searched for
+     * @param extID ID of tag being searched for
      * @return HashCollection of tag names and IDs that are 
      * associated with the extent being searched for
      * @throws Exception
      */
-    HashCollection<String,String> getLinksByExtentID(String element_name, String id)
+    HashCollection<String,String> getLinksByExtentID(String extType, String extID)
             throws Exception{
         HashCollection<String,String>links = new HashCollection<String,String>();
         Statement stat = mConn.createStatement();
-        String query = ("select id,element_name from links where fromid = '" +
-                id + "' and from_name  ='" + element_name + "';");
-        ResultSet rs = stat.executeQuery(query);
-        while(rs.next()){
-            links.putEnt(rs.getString("element_name"),rs.getString("id"));
-        }
-        rs.close();
+        for (int i=0; i<mMaxArgs; i++) {
+            String argIDCol = "arg" + i, argNameCol = "arg" + i + "_name";
+            String query = (String.format("select id,element_name from links " +
+                    "where %s = '%s' and %s  ='%s';"
+                    , argIDCol, extID, argNameCol, extType));
 
-        String query2 = ("select id,element_name from links where toid = '" +
-                id + "' and to_name  ='" + element_name + "';");
-        ResultSet rs2 = stat.executeQuery(query2);
-        while(rs2.next()){
-            links.putEnt(rs2.getString("element_name"),rs2.getString("id"));
+            ResultSet rs = stat.executeQuery(query);
+            while (rs.next()) {
+                links.putEnt(rs.getString("element_name"), rs.getString("id"));
+            }
+            rs.close();
         }
-        rs2.close();
         return links;
     }
 
@@ -470,12 +513,12 @@ class AnnotDB {
      * @param id ID
      * @throws Exception
      */
-    void add_extent(int location, String element, String id)
+    void addExtent(int location, String element, String id)
             throws Exception{
-        mExtInsert.setInt(1, location);
-        mExtInsert.setString(2, element);
-        mExtInsert.setString(3, id);
-        mExtInsert.addBatch();
+        mExt2Insert.setInt(LOC_COL, location);
+        mExt2Insert.setString(NAME_COL, element);
+        mExt2Insert.setString(ID_COL, id);
+        mExt2Insert.addBatch();
     }
 
     /**
@@ -485,7 +528,7 @@ class AnnotDB {
      */
     void batchExtents() throws Exception{
         mConn.setAutoCommit(false);
-        mExtInsert.executeBatch();
+        mExt2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
@@ -496,14 +539,14 @@ class AnnotDB {
      * @param id ID
      * @throws Exception
      */
-    void insert_extent(int location, String element, String id)
+    void insertExtent(int location, String element, String id)
             throws Exception{
-        mExtInsert.setInt(1, location);
-        mExtInsert.setString(2, element);
-        mExtInsert.setString(3, id);
-        mExtInsert.addBatch();
+        mExt2Insert.setInt(LOC_COL, location);
+        mExt2Insert.setString(NAME_COL, element);
+        mExt2Insert.setString(ID_COL, id);
+        mExt2Insert.addBatch();
         mConn.setAutoCommit(false);
-        mExtInsert.executeBatch();
+        mExt2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
@@ -513,33 +556,88 @@ class AnnotDB {
      */
     void batchLinks() throws Exception{
         mConn.setAutoCommit(false);
-        mLinkInsert.executeBatch();
+        mLink2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
     /**
-     * Adds a link to the batch 
-     * @param newID ID string
-     * @param linkName type of link being added
-     * @param linkFrom ID of the from anchor
-     * @param from_name tag type of the from anchor
-     * @param linkTo ID of the to anchor
-     * @param to_name tag type of the to anchor
-     * @throws Exception
+     * Adds a link to the batch
+     * @param id ID string for a new link
+     * @param name type of link being added
+     * @param args list of ids of relevent arguments
+     * @param argTypes list if names of relevent arguments (should correspond to args)
      */
-    void add_link(String newID, String linkName, String linkFrom, 
-            String from_name, String linkTo, String to_name) throws Exception{
-        mLinkInsert.setString(1, newID);
-        mLinkInsert.setString(2, linkFrom);
-        mLinkInsert.setString(3, from_name);
-        mLinkInsert.setString(4, linkTo);
-        mLinkInsert.setString(5, to_name);
-        mLinkInsert.setString(6, linkName);
-        mLinkInsert.addBatch();
+    void addLink(String id, String name,
+                 ArrayList<String> args, ArrayList<String> argTypes) {
+        // first check args and argTypes are matching
+        // TODO need these checkings also in main class
+        // (maybe checking here is redundant, since we can't give any message to a user
+        if (args.size() != argTypes.size()) {
+            System.out.println("args and argTypes not matching");
+        }
+        // or the number of arguments is acceptable
+        else if (args.size() > mMaxArgs) {
+            System.out.println("too many arguments");
+        }
+        // if there are two arguments, use legacy from-to structure
+        else if (args.size() == 2) {
+            try {
+                addBinaryLink(id, name,
+                        args.get(0), argTypes.get(0),  // fromID, fromName
+                        args.get(1), argTypes.get(1)); // toID, toName
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        // else, that is, for a link with more than three arguments,
+        else {
+            try {
+                mLink2Insert.setString(ID_COL, id);
+                mLink2Insert.setString(NAME_COL, id);
+                for (int i=0;i<args.size();i++) {
+                    mLink2Insert.setString(ARG0_COL + i, args.get(i));
+                    mLink2Insert.setString(ARG0_TYPE_COL + i, argTypes.get(i));
+                }
+                mLink2Insert.addBatch();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // TODO in Task and Main class, find usages of this method and modify parameter
+    void insertLink(String id, String name,
+                 ArrayList<String> args, ArrayList<String> argTypes) throws Exception {
+        addLink(id, name, args, argTypes);
+        batchLinks();
     }
 
     /**
-     * 
+     * krim - original addLink() method by Amber,
+     * now only used when adding a binary link
+     *
+     * @param newID ID string
+     * @param linkName type of link being added
+     * @param linkFrom ID of the from anchor
+     * @param fromType tag type of the from anchor
+     * @param linkTo ID of the to anchor
+     * @param toType tag type of the to anchor
+     * @throws Exception
+     */
+    void addBinaryLink(String newID, String linkName, String linkFrom,
+                 String fromType, String linkTo, String toType) throws Exception{
+        mLink2Insert.setString(ID_COL, newID);
+        mLink2Insert.setString(NAME_COL, linkName);
+        mLink2Insert.setString(ARG0_COL, linkFrom);
+        mLink2Insert.setString(ARG0_TYPE_COL, fromType);
+        mLink2Insert.setString(ARG0_COL + 1, linkTo);
+        mLink2Insert.setString(ARG0_TYPE_COL + 1, toType);
+        mLink2Insert.addBatch();
+    }
+
+    /*
+     * krim - deprecated old method
+     * TODO remove this when everything works
      * @param newID String of the ID being added
      * @param linkName tag type of the link being added
      * @param linkFrom ID of the from anchor
@@ -547,29 +645,40 @@ class AnnotDB {
      * @param linkTo ID of the to anchor
      * @param to_name tag type of the to anchor
      * @throws Exception
-     */
-    void insert_link(String newID, String linkName, String linkFrom, 
-            String from_name, String linkTo, String to_name) throws Exception{
-        mLinkInsert.setString(1, newID);
-        mLinkInsert.setString(2, linkFrom);
-        mLinkInsert.setString(3, from_name);
-        mLinkInsert.setString(4, linkTo);
-        mLinkInsert.setString(5, to_name);
-        mLinkInsert.setString(6, linkName);
-        mLinkInsert.addBatch();
+    void insertLink(String newID, String linkName, String linkFrom,
+                    String from_name, String linkTo, String to_name) throws Exception{
+        mLink2Insert.setString(ID_COL, newID);
+        mLink2Insert.setString(NAME_COL, linkName);
+        mLink2Insert.setString(ARG0_COL, linkFrom);
+        mLink2Insert.setString(ARG0_TYPE_COL, from_name);
+        mLink2Insert.setString(ARG0_COL + 1, linkTo);
+        mLink2Insert.setString(ARG0_TYPE_COL + 1, to_name);
+        mLink2Insert.addBatch();
         mConn.setAutoCommit(false);
-        mLinkInsert.executeBatch();
+        mLink2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
+    */
 
     /**
      * Closes the connection to the DB
      */
-    void close_db(){
+    void closeDb(){
         try{
             mConn.close();
         }catch(Exception e){
             System.out.println(e.toString());
         }
     }
+
+
+    /**
+     * added by krim - set max # arguments
+     */
+    void setMaxArgs(int i) {
+        mMaxArgs = i;
+        ARG0_TYPE_COL = ARG0_COL + i;
+    }
 }
+
+// TODO seems done here for now (1/9)

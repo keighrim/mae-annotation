@@ -45,10 +45,10 @@ class ElemExtent extends Elem{
     // mod by krim: start, end --> spans
     private String mSpans;
 
-    ElemExtent(String name, String pre){
+    ElemExtent(String name, String idString){
         setName(name);
         //extent tags always have id, start, and end
-        AttID id = new AttID("id", pre, true);
+        AttID id = new AttID("id", idString, true);
         addAttribute(id);
 
 

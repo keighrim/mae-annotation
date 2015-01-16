@@ -25,47 +25,64 @@ package mae;
 /**
  * A class that describes tag attributes that 
  * only contain text data (such as comments)
- * 
+ *
  * @author Amber Stubbs
+ * @revised Keigh Rim
  *
  */
 
 
 class AttData extends Attrib{
 
-AttData(){
+    AttData(){
+    }
+
+    AttData (String name, boolean req){
+        setName(name);
+        setRequired(req);
+        setData("");
+        setDefaultValue("");
+    }
+
+    AttData (String name, boolean req, String d){
+        this(name, req);
+        setDefaultValue(d);
+    }
+
+    // added by krim: constructor with idref value
+    AttData (String name, boolean req, boolean idref) {
+        this(name, req);
+        setIdRef(idref);
+    }
+
+    public String getData(){
+        return data;
+    }
+
+    public void setData(String c){
+        data=c;
+    }
+
+    public boolean isIdRef(){
+        return idRef;
+    }
+
+    public void setIdRef(boolean r){
+        idRef =r;
+    }
+
+    public void printInfo(){
+        System.out.println("Attribute name =" + getName() + " \n\trequired = " + isRequired() + "\n\tdata = " + data);
+    }
+
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() + " data = " + data );
+    }
+
+    private String data;
+    // added by krim - to track if the value of this att is referencing ID of another tag
+    private boolean idRef;
+
 }
 
-AttData (String name, boolean r){
-    setName(name);
-    setRequired(r);
-    setData("");
-    setDefaultValue("");
-}
-
-AttData (String name, boolean r, String d){
-    setName(name);
-    setRequired(r);
-    setData("");
-    setDefaultValue(d);
-}
-
-public String getData(){
-    return data;
-}
-
-public void setData(String c){
-    data=c;
-}
-
-public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " \n\trequired = " + getRequired() + "\n\tdata = " + data);
-}
-
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() + " data = " + data );
-}
-
-private String data;
-
-}
+// TODO seems done here

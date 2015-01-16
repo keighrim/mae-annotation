@@ -70,11 +70,11 @@ public void incrementNumber(){
 }
 
 public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " , required = " + getRequired());
+    System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
 }
 
 public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() );
+    return("Attribute name =" + getName() + " , required = " + isRequired() );
 }
 
 private String prefix;

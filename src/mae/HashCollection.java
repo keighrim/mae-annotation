@@ -68,7 +68,7 @@ class HashCollection<K,V>{
 
     /* krim: redundant
     void putAllEnt (K key, V value) {
-        ArrayList<V> existing = getList(key);
+        ArrayList<V> existing = getVaildValues(key);
         if ( existing == null ){
             ArrayList<V> newlist = new ArrayList<V>();
             newlist.add(value);

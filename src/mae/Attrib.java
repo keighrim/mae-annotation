@@ -23,66 +23,64 @@ package mae;
 
 /**
  * The parent class for tag attributes
- * 
+ *
  * @author Amber Stubbs
+ * @revised Keigh Rim
  *
  */
 
-class Attrib extends Object{
+class Attrib {
 
-Attrib(){
-}
+    private String name;
+    private boolean required;
+    private String defaultValue;
+
+    Attrib(){
+    }
 
 
-public String getName(){
-    return name;
-}
+    public String getName(){
+        return name;
+    }
 
-public void setName(String n){
-    name=n;
-}
+    public void setName(String n){
+        name=n;
+    }
 
-public boolean getRequired(){
-    return required;
-}
+    public boolean isRequired(){
+        return required;
+    }
 
-public void setRequired(boolean r){
-    required=r;
-}
+    public void setRequired(boolean r){
+        required=r;
+    }
 
-public String getDefaultValue(){
-    return defaultValue;
-}
+    public String getDefaultValue(){
+        return defaultValue;
+    }
 
-public void setDefaultValue(String d){
-    defaultValue = d;
-}
+    public void setDefaultValue(String d){
+        defaultValue = d;
+    }
 
-public boolean hasDefaultValue(){
-    if (defaultValue.length()==0){
-        return false;
-     }
-     return true;
-}
+    public boolean hasDefaultValue(){
+        return defaultValue.length() != 0;
+    }
 
-/*
-public String getType(){
-    return type;
-}
+    /*
+    public String getType(){
+        return type;
+    }
 
-public void setType(String t){
-    type=t;
-}
-*/
-public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " , required = " + getRequired());
-}
+    public void setType(String t){
+        type=t;
+    }
+    */
+    public void printInfo(){
+        System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
+    }
 
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() );
-}
-
-private String name;
-private boolean required;
-private String defaultValue;
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() );
+    }
 }

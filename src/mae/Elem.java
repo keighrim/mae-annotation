@@ -24,66 +24,76 @@ package mae;
 
 /**
  * Parent class for DTD elements (generally referred to as "tags")
- * 
+ *
  * @author Amber Stubbs
  */
 
 import java.util.*;
 
-class Elem extends Object{
+class Elem {
 
-Elem(){
-    setName("no name");
-    attributes=new ArrayList<Attrib>();
-}
-
-public String getName(){
-    return name;
-}
-
-public void setName(String t){
-    name=t;
-}
-
-public String toString(){
-    return("name " + getName());
-}
-
-public void addAttribute(Attrib a){
-    attributes.add(a);
-}
-
-public ArrayList<Attrib> getAttributes(){
-    return attributes;
-}
-
-public Attrib getAttribute(String name){
-    for(int i=0;i<attributes.size();i++){
-        if ((attributes.get(i).getName()).equalsIgnoreCase(name)){
-            return attributes.get(i);
-        }
-     }
-     return null;
-}
-
-boolean hasAttribute(String name){
-    for(int i=0;i<attributes.size();i++){
-        if ((attributes.get(i).getName()).equalsIgnoreCase(name)){
-            return true;
-        }
-     }
-     return false;
-}
-
-void printInfo(){
-    System.out.println(name);
-    System.out.println("Attributes:");
-    for(int i=0;i<attributes.size();i++){
-        attributes.get(i).printInfo();
-        System.out.println("\n");
+    Elem(){
+        setName("no name");
+        attributes=new ArrayList<Attrib>();
     }
-}
 
-private ArrayList<Attrib> attributes;
-private String name;
+    public String getName(){
+        return name;
+    }
+
+    public void setName(String t){
+        name=t;
+    }
+
+    public String toString(){
+        return("name " + getName());
+    }
+
+    public void addAttribute(Attrib a){
+        attributes.add(a);
+    }
+
+    public boolean removeAttribute(String attName) {
+        for (Attrib a : attributes) {
+            if (a.getName().equals(attName)) {
+                attributes.remove(a);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ArrayList<Attrib> getAttributes(){
+        return attributes;
+    }
+
+    public Attrib getAttribute(String name){
+        for(int i=0;i<attributes.size();i++){
+            if ((attributes.get(i).getName()).equalsIgnoreCase(name)){
+                return attributes.get(i);
+            }
+        }
+        return null;
+    }
+
+    boolean hasAttribute(String name){
+        for(int i=0;i<attributes.size();i++){
+            if ((attributes.get(i).getName()).equalsIgnoreCase(name)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void printInfo(){
+        System.out.println(name);
+        System.out.println("Attributes:");
+        for(int i=0;i<attributes.size();i++){
+            attributes.get(i).printInfo();
+            System.out.println("\n");
+        }
+    }
+
+    private ArrayList<Attrib> attributes;
+    private String name;
 }

@@ -36,11 +36,25 @@ import java.util.*;
 
 class DTD {
 
+    private ArrayList<Elem> mElements;
+    private String mName;
+    private int mMaxArgs;
+
     DTD(){
         mElements =new ArrayList<Elem>();
         mName ="XML";
+        mMaxArgs = 0;  // by default, set max # arguments to 2
+
     }
 
+    // TODO polish these MaxArgs getter and setter
+    public int getMaxArgs() {
+        return mMaxArgs;
+    }
+
+    public void setMaxArgs(int i) {
+        mMaxArgs = i;
+    }
 
     public String getName(){
         return mName;
@@ -80,10 +94,10 @@ class DTD {
         return mElements;
     }
 
-	/**
-	 * Returns a list of all the elements in the DTD
-	 * @return
-	 */
+    /**
+     * Returns a list of all the elements in the DTD
+     * @return
+     */
     public ArrayList<String> getElementIDs(){
         ArrayList<String> ids = new ArrayList<String>();
 
@@ -94,18 +108,18 @@ class DTD {
         return ids;
     }
 
-	/**
-	 * Returns a list of non-consuming extent tags
-	 * 
-	 * @return
-	 */
+    /**
+     * Returns a list of non-consuming extent tags
+     *
+     * @return
+     */
     public ArrayList<Elem> getNCElements(){
         ArrayList<Elem> NCElems = new ArrayList<Elem>();
         //returns a list of non-consuming extent tags
         for (Elem e : mElements) {
             if (e instanceof ElemExtent) {
                 ElemExtent ex = (ElemExtent) e;
-                if (!ex.getAttribute("spans").getRequired()) {
+                if (!ex.getAttribute("spans").isRequired()) {
                     NCElems.add(e);
                 }
             }
@@ -122,8 +136,6 @@ class DTD {
             System.out.println("\n");
         }
     }
-
-    private ArrayList<Elem> mElements;
-    private String mName;
-
 }
+
+// TODO seems done here

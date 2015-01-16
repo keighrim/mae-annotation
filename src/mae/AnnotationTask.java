@@ -48,7 +48,7 @@ class AnnotationTask {
     }
     
     public void reset_db(){
-        mDB.close_db();
+        mDB.closeDb();
         mDB = new AnnotDB();
     }
     
@@ -60,8 +60,8 @@ class AnnotationTask {
     private Hashtable<String,Elem> createHash() {
         Hashtable<String, Elem> es = new Hashtable<String, Elem>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for (int i = 0; i < elems.size(); i++) {
-            es.put(elems.get(i).getName(), elems.get(i));
+        for (Elem elem : elems) {
+            es.put(elem.getName(), elem);
         }
         return (es);
     }
@@ -80,15 +80,15 @@ class AnnotationTask {
     private Hashtable<String,AttID> createIDTracker() {
         Hashtable<String, AttID> ids = new Hashtable<String, AttID>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for (int i = 0; i < elems.size(); i++) {
-            ArrayList<Attrib> attribs = elems.get(i).getAttributes();
-            for (int j = 0; j < attribs.size(); j++) {
-                if (attribs.get(j) instanceof AttID) {
-                    AttID oldid = (AttID) attribs.get(j);
+        for (Elem elem : elems) {
+            ArrayList<Attrib> attribs = elem.getAttributes();
+            for (Attrib attrib : attribs) {
+                if (attrib instanceof AttID) {
+                    AttID oldid = (AttID) attrib;
                     AttID id = new AttID(oldid.getName(),
                             oldid.getPrefix(), true);
                     id.setNumber(0);
-                    ids.put(elems.get(i).getName(), id);
+                    ids.put(elem.getName(), id);
                 }
             }
         }
@@ -109,8 +109,8 @@ class AnnotationTask {
     private HashCollection<String,String> createIDsExist() {
         HashCollection<String, String> ids = new HashCollection<String, String>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for (int i = 0; i < elems.size(); i++) {
-            ids.putEnt(elems.get(i).getName(), "");
+        for (Elem elem : elems) {
+            ids.putEnt(elem.getName(), "");
         }
         return ids;
     }
@@ -148,8 +148,7 @@ class AnnotationTask {
 
     public String getLocByID(String id) {
         try {
-            String loc = mDB.getLocByID(id);
-            return loc;
+            return mDB.getLocByID(id);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -158,8 +157,7 @@ class AnnotationTask {
 
     public String getElementByID(String id){
         try{
-            String elem = mDB.getElementByID(id);
-            return elem;
+            return mDB.getElementByID(id);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -168,8 +166,7 @@ class AnnotationTask {
 
     public Hashtable<Integer,String> getLocationsbyElemLink(String elem){
         try{
-            Hashtable<Integer,String> locs = mDB.getLocationsbyElemLink(elem);
-            return locs;
+            return mDB.getLocationsbyElemLink(elem);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -179,8 +176,7 @@ class AnnotationTask {
     public Hashtable<Integer,String> getLocationsbyElemLink
             (String elem, ArrayList<String> active){
         try{
-            Hashtable<Integer,String> locs = mDB.getLocationsbyElemLink(elem,active);
-            return locs;
+            return mDB.getLocationsbyElemLink(elem,active);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -213,14 +209,14 @@ class AnnotationTask {
        return (new HashCollection<String,String>());
    }
 
-    void addToDB(int start, String elem, String id, boolean insert){
+    void addExtToDB(int start, String elem, String id, boolean insert){
         try{
             if (insert){
-                mDB.insert_extent(start, elem, id);
+                mDB.insertExtent(start, elem, id);
                 mIdsExist.putEnt(elem, id);
             }
             else{
-                mDB.add_extent(start, elem, id);
+                mDB.addExtent(start, elem, id);
                 mIdsExist.putEnt(elem, id);
 
             }
@@ -231,15 +227,17 @@ class AnnotationTask {
 
     }
 
-    public void addToDB(String newID, String linkName, String linkFrom, 
-        String from_name, String linkTo, String to_name, boolean insert){
+    // TODO test this completely
+    public void addLinkToDB(String newID, String linkName,
+                            ArrayList<String> args, ArrayList<String> argTypes,
+                            boolean insert){
         try{
             if (insert){
-                mDB.insert_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
+                mDB.insertLink(newID, linkName, args, argTypes);
                 mIdsExist.putEnt(linkName, newID);
             }
             else{
-                mDB.add_link(newID, linkName, linkFrom, from_name, linkTo, to_name);
+                mDB.addLink(newID, linkName, args, argTypes);
                 mIdsExist.putEnt(linkName, newID);
             }
         }catch(Exception e){
@@ -264,7 +262,6 @@ class AnnotationTask {
      * Added by krim
      * @param spans a list of start-end pairs
      * @return all tags in every spans
-     * @throws Exception
      */
     public HashCollection<String,String> getTagsSpan(ArrayList<int[]> spans) {
         HashCollection<String, String> tagsAndAtts = new HashCollection<String, String>();
@@ -341,10 +338,11 @@ class AnnotationTask {
     // its elements to MaeGui
 
     public void setDTD(DTD d){
-       mDtd =d;
-       mElements = createHash();
-       mIdTracker = createIDTracker();
-       hasDTD=true;
+        mDtd =d;
+        mDB.setMaxArgs(d.getMaxArgs());
+        mElements = createHash();
+        mIdTracker = createIDTracker();
+        hasDTD=true;
     }
 
     public ArrayList<Elem> getElements(){
@@ -358,19 +356,15 @@ class AnnotationTask {
   
     public boolean idExists(String tagname, String id){
         ArrayList<String> ids = mIdsExist.get(tagname);
-        if (ids.contains(id)){
-            return true;
-        }
-        return false;
+        return ids.contains(id);
     }
   
   
     public ArrayList<String> getExtentElements(){
         ArrayList<String> extents = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for(int i=0;i<elems.size();i++){
-            Elem e = elems.get(i);
-            if(e instanceof ElemExtent){
+        for (Elem e : elems) {
+            if (e instanceof ElemExtent) {
                 extents.add(e.getName());
             }
         }
@@ -380,9 +374,8 @@ class AnnotationTask {
     public ArrayList<String> getLinkElements(){
         ArrayList<String> links = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for(int i=0;i<elems.size();i++){
-            Elem e = elems.get(i);
-            if(e instanceof ElemLink){
+        for (Elem e : elems) {
+            if (e instanceof ElemLink) {
                 links.add(e.getName());
             }
         }
@@ -394,13 +387,12 @@ class AnnotationTask {
         //where start and end are optional
         ArrayList<String> extents = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
-        for(int i=0;i<elems.size();i++){
-            Elem e = elems.get(i);
-            if(e instanceof ElemExtent){
-                ElemExtent ee = (ElemExtent)e;
+        for (Elem e : elems) {
+            if (e instanceof ElemExtent) {
+                ElemExtent ee = (ElemExtent) e;
                 Attrib a = ee.getAttribute("id");
-                if(!a.getRequired()){
-                  extents.add(e.getName());
+                if (!a.isRequired()) {
+                    extents.add(e.getName());
                 }
             }
         }
@@ -423,4 +415,15 @@ class AnnotationTask {
         return mDtd.getName();
     }
 
+    public String[] getArguments(String name) {
+        try {
+            ElemLink linkElem = (ElemLink) mElements.get(name);
+            ArrayList<String> l = linkElem.getArguments();
+            return l.toArray(new String[l.size()]);
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+            System.out.println("Invalid name: not a link tag");
+            return null;
+        }
+    }
 }
