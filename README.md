@@ -16,7 +16,7 @@ Current version of MAE is written in JAVA. Thus, to run MAE on your local system
     > java -jar mae_v0.10.0.jar
 
 ### Changes
-See [CHANGELOG.md] (https://github.com/keighrim/mae-annotation/blob/master/README.md)
+See [CHANGELOG.md] (https://github.com/keighrim/mae-annotation/blob/master/CHANGELOG.md)
 
 ### License
 MAE is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](http://www.gnu.org/licenses/gpl.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
