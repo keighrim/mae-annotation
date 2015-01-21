@@ -27,3 +27,4 @@ The Multi-document Adjudication Interface (MAI) is a companion program to MAE th
 For a detailed user guide, please consult Amber Stubbs' book [Natural Language Annotation for Machine Learning](http://www.amazon.com/Natural-Language-Annotation-Machine-Learning/dp/1449306667/). (Please be advised than the guide written for 0.9.6)
 
 You can also visit old code site hosted on Google Code https://code.google.com/p/mae-annotation/
+

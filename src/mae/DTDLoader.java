@@ -1,9 +1,10 @@
 /*
- * This file is part of MAE - Multi-purpose Annotation Environment
- * 
- * Copyright Amber Stubbs (astubbs@cs.brandeis.edu)
+ * MAE - Multi-purpose Annotation Environment
+ *
+ * Copyright Keigh Rim (krim@brandeis.edu)
  * Department of Computer Science, Brandeis University
- * 
+ * Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+ *
  * MAE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +17,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
+ * For feedback, reporting bugs, use the project repo on github
+ * <https://github.com/keighrim/mae-annotation>
  */
 
 package mae;
@@ -164,34 +167,39 @@ class DTDLoader {
         if(elem!=null){
             String listString = tag.split("\\(")[1];
             listString = listString.split("\\)")[0];
-            
-            ArrayList<String> atts = new ArrayList<String>();
-            String[]list = listString.split("\\|");
-            for (String aList : list) {
-                atts.add(aList.trim());
+
+            ArrayList<String> validValues = new ArrayList<String>();
+            for (String value : listString.split("\\|")) {
+                validValues.add(value.trim());
             }
-             
-             Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
-             Matcher matcher = defaultVal.matcher(tag);
-             ArrayList<String> defVals = new ArrayList<String>();
+                
+//            ArrayList<String> validValues
+//                    = new ArrayList<String>(Arrays.asList(listString.split(" \\| ")));
+//            for (String value : validValues) {
+//                value = value.trim();
+//            }
+
+             Pattern defValPat = Pattern.compile("\"[\\w ]+\" *>");
+             Matcher matcher = defValPat.matcher(tag);
+             ArrayList<String> defVal = new ArrayList<String>();
              String defaultValue = "";
              while (matcher.find()){
-                 defVals.add(matcher.group());
+                 defVal.add(matcher.group());
              }
-             if (defVals.size()>1){
+             if (defVal.size()>1){
                  System.out.println("Error in attribute; too many default values found");
                  System.out.println(tag);
              }
-             else if (defVals.size()==1){
-                 defaultValue = defVals.get(0).split("\"")[1];
-                 if (!atts.contains(defaultValue)){
+             else if (defVal.size()==1){
+                 defaultValue = defVal.get(0).split("\"")[1];
+                 if (!validValues.contains(defaultValue)){
                      System.out.println("Error -- default value not in attribute list");
                      System.out.println(tag);
                      defaultValue="";
                  }
              }
              boolean req = tag.contains("#REQUIRED");
-             elem.addAttribute(new AttList(attName,req,atts,defaultValue));
+             elem.addAttribute(new AttList(attName,req,validValues,defaultValue));
          }
          else{
              System.out.println("no match found: '" + elemName + "' is not a valid tag identifier");
@@ -228,15 +236,18 @@ class DTDLoader {
             } else {
                 // added by krim: for multi-link support
                 // first check if this att is for argument
-                Pattern argAtt = Pattern.compile("^arg[0-9]+$");
-                Matcher matcher = argAtt.matcher(attName);
+                Pattern argAttPat = Pattern.compile("^arg[0-9]+$");
+                Matcher matcher = argAttPat.matcher(attName);
                 if (matcher.find()) {
                     // then check elem is a link tag
                     if (elem instanceof ElemLink) {
                         String argName;
+                        // name argument if a name is given
                         if (tag.contains("prefix")) {
                             argName = tag.split("\"")[1];
-                        } else {
+                        } 
+                        // otherwise, use argN format as a default name
+                        else {
                             argName = matcher.group();
                         }
                         ((ElemLink) elem).addArgement(argName);
@@ -276,6 +287,3 @@ class DTDLoader {
         }
     }
 }
-
-
-// TODO seems done here
