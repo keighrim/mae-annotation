@@ -1,9 +1,10 @@
 /*
- * This file is part of MAE - Multi-purpose Annotation Environment
- * 
- * Copyright Amber Stubbs (astubbs@cs.brandeis.edu)
+ * MAE - Multi-purpose Annotation Environment
+ *
+ * Copyright Keigh Rim (krim@brandeis.edu)
  * Department of Computer Science, Brandeis University
- * 
+ * Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+ *
  * MAE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +17,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
+ * For feedback, reporting bugs, use the project repo on github
+ * <https://github.com/keighrim/mae-annotation>
+ *
+ * @author Amber Stubss, Keigh Rim
+ * @version v0.11
  */
 
 package mae;
@@ -26,9 +32,6 @@ package mae;
  * Provides a description of the annotation task information 
  * stored in a DTD.  The DTD describes the annotation 
  * task, specifically the tags and attributes.
- *
- * @author Amber Stubbs
- * @revised Keigh Rim
  *
  */
 
@@ -42,12 +45,11 @@ class DTD {
 
     DTD(){
         mElements =new ArrayList<Elem>();
-        mName ="XML";
-        mMaxArgs = 0;  // by default, set max # arguments to 2
+        mName ="XML";   // default generic name
+        mMaxArgs = 2;   // by default, set max # arguments to 2 (for legacy support)
 
     }
 
-    // TODO polish these MaxArgs getter and setter
     public int getMaxArgs() {
         return mMaxArgs;
     }
@@ -138,4 +140,3 @@ class DTD {
     }
 }
 
-// TODO seems done here

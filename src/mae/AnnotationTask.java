@@ -1,9 +1,10 @@
 /*
- * This file is part of MAE - Multi-purpose Annotation Environment
- * 
- * Copyright Amber Stubbs (astubbs@cs.brandeis.edu)
+ * MAE - Multi-purpose Annotation Environment
+ *
+ * Copyright Keigh Rim (krim@brandeis.edu)
  * Department of Computer Science, Brandeis University
- * 
+ * Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+ *
  * MAE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +17,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
+ * For feedback, reporting bugs, use the project repo on github
+ * <https://github.com/keighrim/mae-annotation>
+ *
+ * @author Amber Stubss, Keigh Rim
+ * @version v0.11
  */
 
 package mae;
@@ -27,9 +33,6 @@ import java.util.*;
  * AnnotationTask serves as a go-between for MaeGui and the 
  * SQLite interface TagDB.  
  * 
- * 
- * @author Amber Stubbs 
- * @revised Keigh Rim
  */
 
 class AnnotationTask {
@@ -38,21 +41,23 @@ class AnnotationTask {
     private Hashtable<String,AttID> mIdTracker;
     private HashCollection<String,String> mIdsExist;
 
-    private AnnotDB mDB;
+    private AnnotDB mDb;
     private DTD mDtd;
     private boolean hasDTD;
+    private int mMaxArgs;
     
     AnnotationTask(){
-         mDB = new AnnotDB();
+         mDb = new AnnotDB();
          hasDTD = false;
     }
     
-    public void reset_db(){
-        mDB.closeDb();
-        mDB = new AnnotDB();
+    public void resetDb(){
+        mDb.closeDb();
+        mDb = new AnnotDB();
+        mDb.setMaxArgs(mMaxArgs);
     }
     
-    public void reset_IDTracker() {
+    public void resetIdTracker() {
         mIdTracker = createIDTracker();
         mIdsExist = createIDsExist();
     }
@@ -129,7 +134,7 @@ class AnnotationTask {
         //this will catch cases where two tags have
         //the same prefix
         try {
-            while (mDB.idExists(nextid)) {
+            while (mDb.idExists(nextid)) {
                 nextid = id.getID();
                 id.incrementNumber();
             }
@@ -148,7 +153,7 @@ class AnnotationTask {
 
     public String getLocByID(String id) {
         try {
-            return mDB.getLocByID(id);
+            return mDb.getLocByID(id);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -157,7 +162,7 @@ class AnnotationTask {
 
     public String getElementByID(String id){
         try{
-            return mDB.getElementByID(id);
+            return mDb.getElementByID(id);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -166,7 +171,7 @@ class AnnotationTask {
 
     public Hashtable<Integer,String> getLocationsbyElemLink(String elem){
         try{
-            return mDB.getLocationsbyElemLink(elem);
+            return mDb.getLocationsbyElemLink(elem);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -176,7 +181,7 @@ class AnnotationTask {
     public Hashtable<Integer,String> getLocationsbyElemLink
             (String elem, ArrayList<String> active){
         try{
-            return mDB.getLocationsbyElemLink(elem,active);
+            return mDb.getLocationsbyElemLink(elem,active);
         }catch(Exception e){
             e.printStackTrace();
             return null;
@@ -185,7 +190,7 @@ class AnnotationTask {
 
    public void removeExtentByID(String e_name,String id){
        try{
-          mDB.removeExtentTags(e_name, id);
+          mDb.removeExtentTags(e_name, id);
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -193,7 +198,7 @@ class AnnotationTask {
    
    public HashCollection<String,String> getLinksByExtentID(String e_name,String id){
        try{
-          return(mDB.getLinksByExtentID(e_name,id));
+          return(mDb.getLinksByExtentID(e_name, id));
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -202,24 +207,17 @@ class AnnotationTask {
    
    public HashCollection<String,String> getElementsAllLocs(){
        try{
-           return(mDB.getElementsAllLocs());
+           return(mDb.getElementsAllLocs());
        }catch(Exception e){
            e.printStackTrace();
        }
        return (new HashCollection<String,String>());
    }
 
-    void addExtToDB(int start, String elem, String id, boolean insert){
+    void addExtToBatch(int pos, String elemName, String newId){
         try{
-            if (insert){
-                mDB.insertExtent(start, elem, id);
-                mIdsExist.putEnt(elem, id);
-            }
-            else{
-                mDB.addExtent(start, elem, id);
-                mIdsExist.putEnt(elem, id);
-
-            }
+            mDb.addExtent(pos, elemName, newId);
+            mIdsExist.putEnt(elemName, newId);
         } catch(Exception e) {
             System.out.println("Error adding extent to DB");
             e.printStackTrace();
@@ -227,29 +225,23 @@ class AnnotationTask {
 
     }
 
-    // TODO test this completely
-    public void addLinkToDB(String newID, String linkName,
-                            ArrayList<String> args, ArrayList<String> argTypes,
-                            boolean insert){
-        try{
-            if (insert){
-                mDB.insertLink(newID, linkName, args, argTypes);
-                mIdsExist.putEnt(linkName, newID);
-            }
-            else{
-                mDB.addLink(newID, linkName, args, argTypes);
-                mIdsExist.putEnt(linkName, newID);
-            }
-        }catch(Exception e){
-            System.out.println("Error adding link to DB");
-            e.printStackTrace();
-        }
-        
+    /**
+     * Method to add a link tag to SQL batch for adding later
+     * Use runBatchLink() to add everything in batch to DB 
+     *  @param elemName Type of new link tag being added
+     * @param newID ID of new link tag being added
+     * @param argIds List of arg IDs
+     * @param argTypes List of arg Types
+     */
+    public void addLinkToBatch(String elemName, String newID,
+                               List<String> argIds, List<String> argTypes) {
+        mDb.addLink(newID, elemName, argIds, argTypes);
+        mIdsExist.putEnt(elemName, newID);
     }
-    
+
     ArrayList<String> getElemntsLoc(int loc){
         try{
-          return (mDB.getElementsAtLoc(loc));
+          return (mDb.getElementsAtLoc(loc));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -263,69 +255,94 @@ class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every spans
      */
-    public HashCollection<String,String> getTagsSpan(ArrayList<int[]> spans) {
+    public HashCollection<String,String> getTagsIn(ArrayList<int[]> spans) {
         HashCollection<String, String> tagsAndAtts = new HashCollection<String, String>();
         for (int[] span : spans) {
-            tagsAndAtts.putAll(getTagsSpan(span[0], span[1]));
+            tagsAndAtts.putAll(getTagsBetween(span[0], span[1]));
         }
         return tagsAndAtts;
     }
 
-    public HashCollection<String,String> getTagsSpan(int begin, int end){
+    private HashCollection<String,String> getTagsBetween(int begin, int end){
 
         try{
-            return (mDB.getTagsInSpan(begin, end));
+            return (mDb.getTagsInSpan(begin, end));
         }catch(Exception e){
             e.printStackTrace();
         }
         return null;
     }
 
-
-
+    HashCollection<String, String> getNCTags() {
+        try {
+            return mDb.getAllNCTags();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    HashCollection<String, String> getAllExtTags(boolean includeNC) {
+        HashCollection<String, String> hc = new HashCollection<String, String>();
+        try {
+            hc.putAll(mDb.getAllExtTags());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (includeNC) {
+            hc.putAll(getNCTags());
+        }
+        return hc;
+    }
+    
     /**
-     * Get all tags in target spans
+     * Get all tags in target spans and also NC tags
      * Added by krim
      *
      * @param spans a sorted set of start-end pairs
      * @return all tags in every spans
      * @throws Exception
      */
-    public HashCollection<String,String> getTagsSpanAndNC(ArrayList<int[]> spans) throws Exception{
+    public HashCollection<String,String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception{
         HashCollection<String, String> hc = new HashCollection<String, String>();
+        hc.putAll(getTagsIn(spans));
+        hc.putAll(getNCTags());
+        return hc;
+        /*
         Iterator<int[]> iter = spans.iterator();
         while (iter.hasNext()) {
             int[] span = iter.next();
             if (iter.hasNext()) {
-                hc.putAll(getTagsSpan(span[0], span[1]));
+                hc.putAll(getTagsBetween(span[0], span[1]));
             } else {
-                hc.putAll(getTagsSpanAndNC(span[0], span[1]));
+                hc.putAll(getTagsInSpansAndNC(span[0], span[1]));
             }
         }
         return hc;
     }
 
-    public HashCollection<String,String> getTagsSpanAndNC(int begin, int end){
+    public HashCollection<String,String> getTagsInSpansAndNC(int begin, int end){
         try{
-            return (mDB.getTagsInSpanAndNC(begin,end));
+            return (mDb.getTagsInSpansAndNC(begin,end));
         }catch(Exception e){
             e.printStackTrace();
         }
         return null;
+        */
     }
     
-    public void batchExtents(){
+    public void runBatchExtents(){
         try{
-            mDB.batchExtents();
+            mDb.batchExtents();
         }catch(Exception e){
             System.out.println("Error adding all extents to DB");
             e.printStackTrace();
         }
     }
         
-    public void batchLinks(){
+    public void runBatchLinks(){
             try{
-                mDB.batchLinks();
+                mDb.batchLinks();
             }catch(Exception e){
                 System.out.println("Error adding all links to DB");
                 e.printStackTrace();
@@ -337,14 +354,15 @@ class AnnotationTask {
     // the remaining methods provide information about the DTD and
     // its elements to MaeGui
 
-    public void setDTD(DTD d){
-        mDtd =d;
-        mDB.setMaxArgs(d.getMaxArgs());
+    public void setDtd(DTD d){
+        mDtd = d;
+        mMaxArgs =  d.getMaxArgs();
+        mDb.setMaxArgs(mMaxArgs);
         mElements = createHash();
         mIdTracker = createIDTracker();
         hasDTD=true;
     }
-
+    
     public ArrayList<Elem> getElements(){
         return mDtd.getElements();
     }
@@ -360,7 +378,7 @@ class AnnotationTask {
     }
   
   
-    public ArrayList<String> getExtentElements(){
+    public ArrayList<String> getExtElemNames(){
         ArrayList<String> extents = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
         for (Elem e : elems) {
@@ -371,7 +389,7 @@ class AnnotationTask {
         return extents;
     }
   
-    public ArrayList<String> getLinkElements(){
+    public ArrayList<String> getLinkElemNames(){
         ArrayList<String> links = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
         for (Elem e : elems) {
@@ -380,6 +398,20 @@ class AnnotationTask {
             }
         }
         return links;
+    }
+
+    public ArrayList<String> getLinkIdsByName(String linkName) {
+        return mDb.getLinkIdsByName(linkName);
+    }
+    
+    public ArrayList<String> getLinkIds() {
+        ArrayList<String> linkids = new ArrayList<String>();
+        for (String linkName : getLinkElemNames()) {
+            for (String id : mDb.getLinkIdsByName(linkName)) {
+                linkids.add(id);
+            }
+        }
+        return linkids;
     }
   
     public ArrayList<String> getEmptyExtentElements(){
