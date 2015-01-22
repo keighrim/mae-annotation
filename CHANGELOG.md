@@ -14,9 +14,10 @@
 
 ## v0.11.1  
 * added proto type UI for n-ary link creation 
-* added creating link tag menu in top menubar  
+* added creating link tag menu in top menu bar
 
-## v0.11.0  * beck-end works for n-ary link aupport
+## v0.11.0  
+* back-end works for n-ary link support
 
 ## 0.10.0
 * Added support for extent tags with multiple/discontinuous spans

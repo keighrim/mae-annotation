@@ -6,19 +6,22 @@ MAE (Multi-purpose Annotation Environment) is an annotation tool originally crea
 MAE allows users to define their own annotation tasks, annotate partial words, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML. While it does not enforce strict rules for annotation schemes, it is very easy to set up and start running.
 
 ### Download Current version
-Currently Keigh Rim (krim@brandeis.edu) is working on maintenance jobs and updating new features to MAE. The current version of MAE is 0.10.0. You can download most recent version by cloning this repository.
+Currently Keigh Rim (krim@brandeis.edu) is working on maintenance jobs and updating new features to MAE. The current release version of MAE is 0.10.0. You can download it by cloning this repository.
 
     > git clone https://github.com/keighrim/mae-annotation
    
-For the most recent, developing, and *unstable* version use develop branch after cloning
+For the most recent, developing, and *unstable* version, use develop branch after cloning
     
     > cd mae-annotation
     > git checkout develop
 
 ### Requirements
-Current version of MAE is written in JAVA. Thus, to run MAE on your local system, you need JAVA later than 6. Use JAR to run MAE
+Current version of MAE is written in JAVA. Thus, to run MAE on your local system, you need JAVA later than 6. 
+Use JAR to run MAE
     
     > java -jar mae_<VERSION>.jar
+
+Or if you are on Windows, simply double click jar file in File Explorer.
 
 ### Changes
 See [CHANGELOG.md] (https://github.com/keighrim/mae-annotation/blob/master/CHANGELOG.md).
