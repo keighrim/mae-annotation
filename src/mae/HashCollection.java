@@ -37,7 +37,9 @@ package mae;
  *
  */
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 class HashCollection<K,V>{
 
@@ -117,7 +119,7 @@ class HashCollection<K,V>{
     public void printHash(){
         for (Enumeration<K> e = mHash.keys() ; e.hasMoreElements() ;) {
             K ent = e.nextElement();
-            System.out.println((String)ent + ":");
+            System.out.println(ent + ":");
             ArrayList<V> list = getList(ent);
             for (int i=0;i<list.size();i++){
                 System.out.println("\t" + list.get(i).toString());

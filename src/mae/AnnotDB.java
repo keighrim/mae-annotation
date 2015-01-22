@@ -29,7 +29,10 @@ package mae;
 
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.List;
 
 /**
  * TagDB is the class that handles all the calls to the 
@@ -403,8 +406,6 @@ class AnnotDB {
                         , argIdCol, extID, argTypeCol, extType));
                 ResultSet rs = stat.executeQuery(query);
                 while (rs.next()) {
-                    System.out.println("IN DB:" + rs.getString("element_name")
-                    + rs.getString("id"));
                     links.putEnt(rs.getString("element_name"), rs.getString("id"));
                 }
                 rs.close();

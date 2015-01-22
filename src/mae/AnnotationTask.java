@@ -27,7 +27,9 @@
 
 package mae;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 
 /** 
  * AnnotationTask serves as a go-between for MaeGui and the 
@@ -253,7 +255,7 @@ class AnnotationTask {
      * Get all tags in target spans
      * Added by krim
      * @param spans a list of start-end pairs
-     * @return all tags in every spans
+     * @return all tags in every span
      */
     public HashCollection<String,String> getTagsIn(ArrayList<int[]> spans) {
         HashCollection<String, String> tagsAndAtts = new HashCollection<String, String>();
@@ -447,11 +449,10 @@ class AnnotationTask {
         return mDtd.getName();
     }
 
-    public String[] getArguments(String name) {
+    public ArrayList<String> getArguments(String name) {
         try {
             ElemLink linkElem = (ElemLink) mElements.get(name);
-            ArrayList<String> l = linkElem.getArguments();
-            return l.toArray(new String[l.size()]);
+            return linkElem.getArguments();
         } catch (ClassCastException e) {
             e.printStackTrace();
             System.out.println("Invalid name: not a link tag");

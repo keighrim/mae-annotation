@@ -1,3 +1,8 @@
+## v0.11.5
+* fixed an error text highlighting by double clicks on link tags in bottom table
+* changed set of colors for text highlighting
+* added color indicator in tab title
+
 ## v0.11.4  
 * re-wrote table context menu for adding an argument functionality with singular row  
 
