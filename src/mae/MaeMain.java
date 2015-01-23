@@ -31,8 +31,6 @@ package mae;
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.text.*;
@@ -59,9 +57,10 @@ public class MaeMain extends JPanel {
     // add by krim: constant strings to be used in GUI title bar
     protected final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     protected final static String CUR_YEAR = "2015";
-    protected final static String VERSION = "0.11.5";
+    protected final static String VERSION = "0.11.6";
     protected final static String TITLE_PREFIX = "MAE " + VERSION;
 
+    protected final static String COMBO_DELIMITER = " - ";
     // add by krim: constant string to be used in string representation of spans
     protected final static String SPANDELIMITER = "~";
     protected final static String SPANSEPARATOR = ",";
@@ -128,11 +127,8 @@ public class MaeMain extends JPanel {
     // instead of using 2 integers, start & end, now we use a set of tuples
 
     // variables for link creation
-//    private String linkFrom;
-//    private String linkName;
-//    private String linkTo;
     private LinkedList<String> mUnderspecified;
-    private HashCollection<String, String> mPossibleArgs;
+    private ArrayList<String[]> mPossibleArgs;
     private String mFileName;
     private String mXmlName;
     private String ADD_NC_COMMAND = "ADDNC:";
@@ -185,11 +181,8 @@ public class MaeMain extends JPanel {
         mSpans = new ArrayList<int[]>();
         resetSpans();
 
-//        linkFrom="";
-//        linkName="";
-//        linkTo="";
         mUnderspecified = new LinkedList<String>();
-        mPossibleArgs = new HashCollection<String, String>();
+        mPossibleArgs = new ArrayList<String[]>();
 
         mFileName = "";
         mXmlName = "";
@@ -385,7 +378,6 @@ public class MaeMain extends JPanel {
                     status = "File load succeed! Click anywhere to continue.";
                 }
                 mStatusBar.setText(status);
-                updateArgList();
 
             } else if (command.equals("Save RTF")) {
                 String rtfName = mFileName + ".rtf";
@@ -838,21 +830,12 @@ public class MaeMain extends JPanel {
             int dot = e.getDot();
             int mark = e.getMark();
 
-            // triggering link creation popup with ctrl+click is deprecated
-                /*
-            if((isCtrlPressed) && (mPrevSpan == -1)){
-                mPrevSpan = dot;
-            }
-            else if(isCtrlPressed && mPrevSpan != -1){
-                showLinkPopup(mPrevSpan, dot);
-                isCtrlPressed = false;
-                mPrevSpan =-1;
-                */
-
-            // mod by krim.
-            // Not just set start and end field to caret selection,
-            // but clear the spans set first, then fill it with caret selection span.
-            // Consequently the array get one int[] in it.
+            /*
+            mod by krim.
+            Not just set start and end field to caret selection,
+            but clear the spans set first, then fill it with caret selection span.
+            Consequently the array get one int[] in it.
+            */
 
             // in normal mode, reset span for every mouse event
             if (mMode == M_NORMAL) {
@@ -889,12 +872,6 @@ public class MaeMain extends JPanel {
                     mSpans.add(new int[]{start, end});
                 }
             }
-            // no span selected (that is, single click)
-//            else {
-//                if (mMode == M_MULTI_SPAN) {
-//                    resetSpans();
-//                }
-//            }
 
             // highlight corresponding row of table
             findHighlightRows();
@@ -909,111 +886,86 @@ public class MaeMain extends JPanel {
     }
 
 
-    /*
-     * krim - deprecated 
-     * The class that listens to the link creation window and
-     * creates a link when the information is set and the
-     * user clicks OK.
+    /**
+     * LinkListner listens to menu items that creating a link tag with arguments
+     * from selected text or table rows
      *
-    private class LinkListener implements ActionListener{
-        public void actionPerformed(ActionEvent actionEvent){
+     */ 
+    private class LinkListener implements ActionListener {
+        public void actionPerformed(ActionEvent actionEvent) {
+            String command = actionEvent.getActionCommand();
+            final ElemLink target = (ElemLink) mTask.getElem(command);
+            mLinkPopupFrame = new JFrame();
+
             clearTableSelections();
-            //check to make sure that linkFrom, linkName, and linkTo
-            //are all valid ids/link names
-
-            linkFrom = linkFrom.split(" \\(")[0];
-            String from_id = linkFrom.split(" - ")[1];
-            String from_type = linkFrom.split(" - ")[0];
-
-            linkTo = linkTo.split(" \\(")[0];
-            String to_id = linkTo.split(" - ")[1];
-            String to_type = linkTo.split(" - ")[0];
-            String from_text = getTextByID(linkFrom.split(" - ")[0],from_id);
-            String to_text = getTextByID(linkTo.split(" - ")[0],to_id);
-
-            //add link to appropriate table
-            JTable tab = mElementTables.get(linkName);
-            DefaultTableModel tableModel = (DefaultTableModel)tab.getModel();
-
-            String[] newdata = new String[tableModel.getColumnCount()];
-            for(int i=0;i<tableModel.getColumnCount();i++){
-                newdata[i]="";
+            // TODO need some thinking...
+            if (!isSpansEmpty()) {
+                System.out.println("IN MAIN: span empty");
+                updateArgList();
+//                resetSpans(); // TODO do we need? user can mistakenly open wrong link tag
             }
-            //get the Elem that the table was based on, and go through
-            //the attributes.  Put in the start and end bits
-            Hashtable<String,Elem> elements = mTask.getElemHash();
-            Elem elem = elements.get(linkName);
 
-            //get ID number for link
-            String newID = "";
-            ArrayList<Attrib> attributes = elem.getAttributes();
-            for(int i=0;i<attributes.size();i++){
-                Attrib a = attributes.get(i);
-                if(a instanceof AttID){
-                    newID= mTask.getNextID(linkName);
-                    newdata[i]=newID;
+            JPanel boxPane = new JPanel(new GridLayout(target.getArgNum() + 1, 2));
+            final String[] argIds = new String[target.getArgNum()];
+            final String[] argTypes = new String[target.getArgNum()];
+
+            JButton okay = new JButton("OK");
+            JButton cancel = new JButton("Cancel");
+            okay.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String newName = target.getName();
+                    String newId = mTask.getNextID(newName);
+
+                    addLinkTagToDb(newName, newId,
+                            Arrays.asList(argIds), Arrays.asList(argTypes));
                 }
-                if((a instanceof AttData) &&
-                        (attributes.get(i).getName().equals("fromID"))){
-                    newdata[i]=from_id;
+            });
+            cancel.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    mLinkPopupFrame.setVisible(false);
+                    mLinkPopupFrame.dispose();
                 }
-                if((a instanceof AttData) &&
-                        (attributes.get(i).getName().equals("toID"))){
-                    newdata[i]=to_id;
+            });
+
+            for (int i = 0; i < target.getArgNum(); i++) {
+                JComboBox candidates = new JComboBox();
+                for (String item : getComboItems(mPossibleArgs, false)) {
+                    candidates.addItem(item);
                 }
-                if((a instanceof AttData) &&
-                        (attributes.get(i).getName().equals("fromText"))){
-                    newdata[i]=from_text;
-                }
-                if((a instanceof AttData) &&
-                        (attributes.get(i).getName().equals("toText"))){
-                    newdata[i]=to_text;
-                }
+                // front of mPossibleArgs is sorted by selection order
+                candidates.setSelectedIndex(i % candidates.getItemCount());
+
+                // setting up an action command and a listener
+                candidates.setActionCommand(String.valueOf(i));
+                candidates.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String command = e.getActionCommand();
+                        JComboBox box = (JComboBox) e.getSource();
+                        String item = (String) box.getSelectedItem();
+                        argIds[Integer.parseInt(command)]
+                                = item.split(COMBO_DELIMITER)[1];
+                        argTypes[Integer.parseInt(command)]
+                                = item.split(COMBO_DELIMITER)[0];
+
+                    }
+                });
+                boxPane.add(new JLabel(target.getArguments().get(i)));
+                boxPane.add(candidates);
+
             }
-            tableModel.addRow(newdata);
-            tab.clearSelection();
-            tab.setRowSelectionInterval(tableModel.getRowCount() - 1, tableModel.getRowCount() - 1);
-            Rectangle rect =  tab.getCellRect(tableModel.getRowCount()-1, 0, true);
-            tab.scrollRectToVisible(rect);
+            boxPane.add(okay);
+            boxPane.add(cancel);
+            mLinkPopupFrame.add(boxPane);
+            mLinkPopupFrame.pack();
+            mLinkPopupFrame.setTitle("Creating " + command);
+            mLinkPopupFrame.setLocation(300, 200);
+            mLinkPopupFrame.setVisible(true);
 
-            String[] argIds = new String[]{from_id, to_id};
-            String[] argTypes = new String[]{from_type, to_type};
-            mTask.addLinkToBatch(linkName, newID,
-                    Arrays.asList(argIds), Arrays.asList(argTypes));
-            mTask.runBatchLinks();
-
-            //reset variables
-            linkFrom="";
-            linkName="";
-            linkTo="";
-
-            mLinkPopupFrame.setVisible(false);
-        }
-
-    }
-    */
-
-    /*
-     * krim - deprecated
-     * Listens to the link creation window and sets global
-     * variables for each link anchor and the link type.
-     *
-    private class JboxListener implements ActionListener{
-        public void actionPerformed(ActionEvent actionEvent){
-            JComboBox box = (JComboBox)actionEvent.getSource();
-            String select = (String)box.getSelectedItem();
-            if (actionEvent.getActionCommand().equals("fromID")){
-                linkFrom = select;
-            }
-            else if (actionEvent.getActionCommand().equals("link")){
-                linkName = select;
-            }
-            else if (actionEvent.getActionCommand().equals("toID")){
-                linkTo = select;
-            }
         }
     }
-    */
 
     /**
      * JTableListener determines if the ID of a tag has
@@ -1045,51 +997,27 @@ public class MaeMain extends JPanel {
                 if (el instanceof ElemExtent) {
                     int selectedRow = tab.getSelectedRow();
 
-                    // mod by krim: use table column[1] to get spanString then parse it
+                    // use table column[1] to get spanString then parse it
                     ArrayList<int[]> spansSelect
                             = parseSpansString((String) tab.getValueAt(selectedRow, 1));
                     highlightTextSpans(hl, spansSelect, mOrangeHL);
                 } //end if ElemExtent
 
                 // krim: below block is used to highlight linked extents
-                // "from" extent get yellow color,
-                // "to" extent get green color,
                 if(el instanceof ElemLink){
                     int selectedRow = tab.getSelectedRow();
                     
-                    
-                    // get relevant columns
-                    
+                    // get relevant argument columns
                     TreeSet<Integer> argColumns = getArgColIndices(elemName);
                     
                     int j = 0;
                     for (Integer i : argColumns) {
-                        
                         String argId = (String) tab.getValueAt(selectedRow, i);
                         ArrayList<int[]> argSpans
                                 = parseSpansString(mTask.getLocByID(argId));
-
                         highlightTextSpans(hl, argSpans, mHighlighters[j]);
                         j++;
                     }
-                    
-                    // first get arguments list from elemlink, the search the table
-                    // for columns titled with argNID, get the values and parse
-//                    String fromSelect = (String)tab.getValueAt(selectedRow,1);
-//                    String toSelect = (String)tab.getValueAt(selectedRow,3);
-//
-//                    ArrayList<int[]> fromSpans
-//                            = parseSpansString(mTask.getLocByID(fromSelect));
-//                    ArrayList<int[]> toSpans
-//                            = parseSpansString(mTask.getLocByID(toSelect));
-//                    if (toSpans != null) {
-//                        highlightTextSpans(hl, toSpans, mGreenHL);
-//                    }
-                    // mod by krim: since highlightTextSpans() moves cursor,
-                    // fromSpans need to be highlighted later
-//                    if (fromSpans != null) {
-//                        highlightTextSpans(hl, fromSpans, mGrayHL);
-//                    }
                 }//end if ElemLink
             }
         }
@@ -1097,6 +1025,7 @@ public class MaeMain extends JPanel {
         //if the user right-clicks on a link
         private void maybeShowTablePopup(MouseEvent e) {
             if (e.isPopupTrigger()) {
+                resetSpans();
                 mTablePopup = tableContextMenu(e);
                 mTablePopup.show(e.getComponent(),
                         e.getX(), e.getY());
@@ -1154,23 +1083,6 @@ public class MaeMain extends JPanel {
             }
         }
     }
-    /**
-     * Change mode to normal
-     * add by krim
-     private class ExitModeListener implements ActionListener {
-     public void actionPerformed(ActionEvent actionEvent) {
-     }
-     }
-
-     /**
-     * Change text selection mode to multiple span mode
-     * add by krim
-     private class MultiSpanListener implements ActionListener {
-     public void actionPerformed(ActionEvent actionEvent) {
-
-     }
-     }
-     */
 
     /**
      * Remove last selected text span from spans list
@@ -1202,72 +1114,13 @@ public class MaeMain extends JPanel {
 
             }
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-
-        }
-    }
-
-    private class ArgumentPopupListen implements PopupMenuListener {
-        JComboBox box;
-
-        ArgumentPopupListen(JComboBox box) {
-            this.box = box;
-        }
-
-        @Override
-        public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-            box.removeAllItems();
-            for (String item : getComboItems(mTask.getAllExtTags(true))) {
-                box.addItem(item);
+            if (mMode == M_MULTI_ARG) {
+//                updateArgList();
             }
-        }
-
-        @Override
-        public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-        }
-
-        @Override
-        public void popupMenuCanceled(PopupMenuEvent e) {
-        }
-
-    }
-    private class LinkPopupFrame extends JFrame implements WindowListener {
-
-        @Override
-        public void windowOpened(WindowEvent e) {
-            mMode = M_MULTI_ARG;
-//            System.out.println("Link popup opened");
-        }
-
-        @Override
-        public void windowClosing(WindowEvent e) {
-
-        }
-
-        @Override
-        public void windowClosed(WindowEvent e) {
-            mMode = NORMAL;
-        }
-
-        @Override
-        public void windowIconified(WindowEvent e) {
-
-        }
-
-        @Override
-        public void windowDeiconified(WindowEvent e) {
-
-        }
-
-        @Override
-        public void windowActivated(WindowEvent e) {
-
-        }
-
-        @Override
-        public void windowDeactivated(WindowEvent e) {
 
         }
     }
+
     // end Section: classes
     // *******************************
 
@@ -1537,13 +1390,7 @@ public class MaeMain extends JPanel {
                     //returns HashCollection of link ids connected to this
                     HashCollection<String, String> links
                             = mTask.getLinksByExtentID(e, id);
-                    if (links.size() > 0) {
-                        for (String key : links.getKeyList()) {
-                            System.out.println(key);
-                        }
-
-                        highlightTableRowsHash(links);
-                    }
+                    highlightTableRowsHash(links);
                 }
             }
         }
@@ -1726,124 +1573,18 @@ public class MaeMain extends JPanel {
         return text;
     }
 
-
-    /*
-     * krim - deprecated 
-     * TODO re write this for multi-arg selection mode
-     *  
-     * Displays the link creation window, populated with the information
-     * about the links at each location that was clicked.
-     *
-     * @param loc location of the first link anchor
-     * @param loc2 location of the second link anchor
-    private void showLinkPopup(int loc, int loc2){
-        JPanel linkPane = new JPanel(new BorderLayout());
-        JPanel boxPane = new JPanel(new GridLayout(3,2));
-        mLinkPopupFrame = new LinkPopupFrame();
-
-        JComboBox fromList = new JComboBox();
-        fromList.addActionListener(new JboxListener());
-        fromList.setActionCommand("fromID");
-
-        HashCollection<String,String> idHash =  mTask.getTagsInSpansAndNC(loc,loc+1);
-        ArrayList<String> elements = idHash.getKeyList();
-        if (elements.size()>0){
-            if (elements.size()>1){
-                fromList.addItem("");
-            }
-            for (String element : elements) {
-                ArrayList<String> tags = idHash.get(element);
-                for (String tag : tags) {
-                    //create the string for the table list
-                    String puttag = (element + " - " + tag);
-                    //get the text for the words by id and element
-                    String text = getTextByID(element, tag);
-                    puttag = puttag + " (" + text + ")";
-                    //add string to JComboBox
-                    fromList.addItem(puttag);
-                }
-            }
-        }
-
-        JComboBox linkList = new JComboBox();
-        linkList.setActionCommand("link");
-        linkList.addActionListener(new JboxListener());
-
-        ArrayList<Elem> taskElements = mTask.getElements();
-        //create a tab for each element in the annotation task
-
-        ArrayList<String> linkitems = new ArrayList<String>();
-
-        for (Elem taskElement : taskElements) {
-            String name = taskElement.getName();
-            if (taskElement instanceof ElemLink) {
-                linkitems.add(name);
-            }
-        }
-        if (linkitems.size()>1){
-            linkList.addItem("");
-        }
-        for (String linkitem : linkitems) {
-            linkList.addItem(linkitem);
-        }
-
-
-        JComboBox toList = new JComboBox();
-        toList.setActionCommand("toID");
-        toList.addActionListener(new JboxListener());
-
-        idHash =  mTask.getTagsInSpansAndNC(loc2,loc2+1);
-        elements = idHash.getKeyList();
-        if (elements.size()>0){
-            if (elements.size()>1){
-                toList.addItem("");
-            }
-            for (String element : elements) {
-                ArrayList<String> tags = idHash.get(element);
-                for (String tag : tags) {
-                    String puttag = (element +
-                            " - " + tag);
-                    //get the text for the words by id and element
-                    String text = getTextByID(element, tag);
-                    puttag = puttag + " (" + text + ")";
-                    //add option to JComboBox
-                    toList.addItem(puttag);
-                }
-            }
-        }
-
-        JButton makeLink = new JButton("Create Link");
-        makeLink.addActionListener(new LinkListener());
-        boxPane.add(new JLabel("Link from:"));
-        boxPane.add(fromList);
-        boxPane.add(new JLabel("Link type:"));
-        boxPane.add(linkList);
-        boxPane.add(new JLabel("Link to:"));
-        boxPane.add(toList);
-        linkPane.add(boxPane,BorderLayout.CENTER);
-        linkPane.add(makeLink,BorderLayout.SOUTH);
-        mLinkPopupFrame.setBounds(90, 70, 400, 300);
-        mLinkPopupFrame.add(linkPane);
-        mLinkPopupFrame.setVisible(true);
-
-    }
-*/
     private ArrayList<String> getComboItems(
-            HashCollection<String, String> targetTags) {
+            ArrayList<String[]> targetTags, boolean emptyFirst) {
         ArrayList<String> items = new ArrayList<String>();
-        ArrayList<String> tagTypes = targetTags.getKeyList();
-        if (tagTypes.size()>0){
-            if (tagTypes.size()>1){
-                items.add("");
-            }
-            for (String type : tagTypes) {
-                ArrayList<String> ids = targetTags.get(type);
-                for (String id : ids) {
-                    // format relevant info, then add to the list
-                    items.add(String.format("%s - %s (%s)",
-                            type, id, getTextByID(type, id)));
-                }
-            }
+        if (emptyFirst) {
+            items.add("");
+        }
+        for (String[] tag : targetTags) {
+            String type = tag[0], id = tag[1];
+            // format relevant info, then add to the list
+            items.add(String.format("%s%s%s%s%s",
+                    type, COMBO_DELIMITER, id, COMBO_DELIMITER, getTextByID(type, id)));
+            
         }
         return items;
     }
@@ -2008,7 +1749,17 @@ public class MaeMain extends JPanel {
                 jp.add(exit);
                 break;
             case M_MULTI_ARG:
-                // TODO do something to create link popup menu using multi-span selection
+                // TODO item to "Create a link using these"
+                jp.addSeparator();
+                undo = new JMenuItem("Undo last selection");
+                undo.setActionCommand("Undo");
+                undo.addActionListener(new UndoSelectListener());
+                over = new JMenuItem("Start over");
+                over.setActionCommand("Over");
+                over.addActionListener(new UndoSelectListener());
+                exit = new JMenuItem("Exit Multi-argument Mode");
+                exit.setActionCommand(Integer.toString(M_NORMAL));
+                exit.addActionListener(new ModeMenuListener());
                 break;
 
             case M_NORMAL:
@@ -2159,7 +1910,6 @@ public class MaeMain extends JPanel {
                 // krim - case 1 always means clickedRow is the only selected row
                 // thus getting the value from clickedRow is not that hard-coded logic
                 String id = (String) tab.getValueAt(clickedRow, 0);
-                String target = String.format("%s (%s)", id, getTextByID(elemName, id));
 
                 remove = "Remove " + id;
                 JMenuItem removeItem = new JMenuItem(remove);
@@ -2167,22 +1917,50 @@ public class MaeMain extends JPanel {
                 removeItem.addActionListener(new RemoveSelectedTableRows());
                 jp.add(removeItem);
 
-                if (mTask.getElem(elemName) instanceof ElemLink) {
+                if (mTask.getElem(elemName) instanceof ElemExtent) {
+                    String target = String.format("%s (%s)", id, getTextByID(elemName, id));
                     setArg = "Set " + target + " as an argument of";
                     jp.add(createSetAsArgMenu(setArg, elemName, id));
                 }
                 break;
             
             default:
+                // when two or more rows are selected, first add "delete all" item
                 remove = "Remove selected " + selected + " rows";
                 removeItem = new JMenuItem(remove);
                 removeItem.setActionCommand(elemName);
                 removeItem.addActionListener(new RemoveSelectedTableRows());
                 jp.add(removeItem);
 
-                if (mTask.getElem(elemName) instanceof ElemLink) {
-                    setArg = "Create a link tag using selected elements";
-                    // TODO do something to create link popup menu
+                // then if they are extent tags, add item for creating a link with them
+                if (mTask.getElem(elemName) instanceof ElemExtent) {
+                    // retrieve ids of all selected tags
+                    mPossibleArgs.clear();
+                    DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
+                    int[] selectedRows = tab.getSelectedRows();
+                    int cols = tableModel.getColumnCount();
+                    int idCol = -1;
+                    for(int i=0;i<cols;i++){
+                        String colname = tableModel.getColumnName(i);
+                        if(colname.equalsIgnoreCase("id")){
+                            idCol = i;
+                        }
+                    }
+                    // put selected tags as argument candidates
+                    for (Integer r : selectedRows) {
+                        mPossibleArgs.add(new String[]{elemName,
+                                (String) tableModel.getValueAt(r, idCol)});
+                    }
+                    
+                    String makeLink = "Create a link tag with selected tags";
+                    JMenu makeLinkItem = new JMenu(makeLink);
+                    for (String link : mTask.getLinkElemNames()) {
+                        JMenuItem linkItem = new JMenuItem(link);
+                        linkItem.setActionCommand(link);
+                        linkItem.addActionListener(new LinkListener());
+                        makeLinkItem.add(linkItem);
+                    }
+                    jp.add(makeLinkItem);
                 }
                 break;
         }
@@ -2687,12 +2465,34 @@ public class MaeMain extends JPanel {
     }
 
     /**
-     * Updates the list of all extent elements in mSpan
+     * Updates the list of all extent elements in mSpan or table selection
      * added by krim
      *
      */
     private void updateArgList() {
-        mPossibleArgs = mTask.getTagsIn(mSpans);
+        mPossibleArgs.clear();
+        ArrayList<String[]> back = new ArrayList<String[]>();
+        
+        int i = 0;
+        for (int[] span : mSpans) {
+            HashCollection<String, String> hc 
+                    = mTask.getTagsBetween(span[0], span[1]);
+            ArrayList<String[]> listed = new ArrayList<String[]>();
+            for (String tagName : hc.getKeyList()) {
+                for (String tagId : hc.get(tagName)) {
+                    listed.add(new String[]{tagName, tagId});
+                }
+            }
+            if (listed.size() > 0) {
+                // put first items of each span in order in front of PossibleArgs
+                mPossibleArgs.add(i, listed.remove(0));
+                // for anything left
+                if (listed.size() > 0) {
+                    back.addAll(listed);
+                }
+            }
+        }
+        mPossibleArgs.addAll(back);
     }
 
     /**
@@ -2718,12 +2518,17 @@ public class MaeMain extends JPanel {
                     if (isSpansEmpty()) {
                         mStatusBar.setText("[Multi-span mode] No text selected.");
                     } else {
-                        mStatusBar.setText("[Multi-span mode] Selected: " + spansToString(this.mSpans));
+                        mStatusBar.setText("[Multi-span mode] Selected: "
+                                + spansToString(this.mSpans));
                     }
                     break;
                 case M_MULTI_ARG:
-                    // TODO add M_MULTI_ARG mode
-//                    mStatusBar.setText("[Creating " + mCurLinkType + " Link]");
+                    if (isSpansEmpty()) {
+                        mStatusBar.setText("[Multi-span mode] No text selected.");
+                    } else {
+                        mStatusBar.setText( "[Multi-span mode] " + mPossibleArgs.size()
+                                + "consuming tags in selected text.");
+                    }
                     break;
             }
         }
@@ -2740,6 +2545,7 @@ public class MaeMain extends JPanel {
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
         }
         mMode = M_NORMAL;
+        mPossibleArgs.clear();
         resetSpans();
         updateMenus();
 

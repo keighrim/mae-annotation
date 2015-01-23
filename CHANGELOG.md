@@ -1,3 +1,9 @@
+## working on...
+* adding multi-argument selection mode in text pane for link tag creation
+
+## v0.11.6
+* added multi-argument link creation in table panel as well
+
 ## v0.11.5
 * fixed an error text highlighting by double clicks on link tags in bottom table
 * changed set of colors for text highlighting
@@ -10,7 +16,7 @@
 * added keyboard shortcuts for menu items  
 
 ## v0.11.2  
-* re-wrote text panel context menu for adding an argument from text selection  
+* re-wrote text pane context menu for adding an argument from text selection
 
 ## v0.11.1  
 * added proto type UI for n-ary link creation 

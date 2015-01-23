@@ -432,7 +432,7 @@ class AnnotDB {
     HashCollection<String,String> getTagsInSpan(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String query = "";
+        String query;
         if(begin!=end){
             query = ("select distinct(id), element_name from extents where location >= "
                     + begin + " and location <=" + end + ";");

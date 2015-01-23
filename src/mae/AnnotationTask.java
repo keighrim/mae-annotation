@@ -257,16 +257,15 @@ class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    public HashCollection<String,String> getTagsIn(ArrayList<int[]> spans) {
-        HashCollection<String, String> tagsAndAtts = new HashCollection<String, String>();
+    HashCollection<String,String> getTagsIn(ArrayList<int[]> spans) {
+        HashCollection<String, String> nameToId = new HashCollection<String, String>();
         for (int[] span : spans) {
-            tagsAndAtts.putAll(getTagsBetween(span[0], span[1]));
+            nameToId.putAll(getTagsBetween(span[0], span[1]));
         }
-        return tagsAndAtts;
+        return nameToId;
     }
 
-    private HashCollection<String,String> getTagsBetween(int begin, int end){
-
+    HashCollection<String,String> getTagsBetween(int begin, int end){
         try{
             return (mDb.getTagsInSpan(begin, end));
         }catch(Exception e){
