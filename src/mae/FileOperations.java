@@ -1,9 +1,10 @@
 /*
- * This file is part of MAE - Multi-purpose Annotation Environment
- * 
- * Copyright Amber Stubbs (astubbs@cs.brandeis.edu)
+ * MAE - Multi-purpose Annotation Environment
+ *
+ * Copyright Keigh Rim (krim@brandeis.edu)
  * Department of Computer Science, Brandeis University
- * 
+ * Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+ *
  * MAE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +17,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
+ * For feedback, reporting bugs, use the project repo on github
+ * <https://github.com/keighrim/mae-annotation>
+ *
+ * @author Amber Stubss, Keigh Rim
+ * @version v0.11
  */
 
 package mae;
@@ -28,15 +34,17 @@ package mae;
  */
 
 
-import java.io.*;
-import java.io.File;
-
-import java.util.*;
-
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.text.rtf.RTFEditorKit;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.Document;
+import javax.swing.text.Style;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.rtf.RTFEditorKit;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Scanner;
 
 class FileOperations {
 
