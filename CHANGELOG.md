@@ -1,3 +1,6 @@
+## 0.10.1
+* fixed java version problem (was not working on java 6 and 7)
+
 ## 0.10.0
 * Added support for extent tags with multiple/discontinuous spans
 * Added status bar interface for different notifications
