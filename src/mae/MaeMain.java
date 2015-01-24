@@ -103,8 +103,7 @@ public class MaeMain extends JPanel {
     private TextHighlightPainter mCyanHL = new TextHighlightPainter(mCyan);
     private TextHighlightPainter mGrayHL = new TextHighlightPainter(mLightGray);
     private Highlighter.HighlightPainter mDefHL = DefaultHighlighter.DefaultPainter;
-//            = new TextHighlightPainter(Def/add);
-    
+
     // default color is excluded from the list; it's for indicating selection
     private TextHighlightPainter[] mHighlighters = {
             mOrangeHL, mGreenHL, mPinkHL, mCyanHL, mGrayHL};
@@ -122,7 +121,6 @@ public class MaeMain extends JPanel {
 
 
     //ints and Strings that are handy to have widely available
-//    private int mPrevSpan; // this will be used when adding link (ctrl+drag UI)
     private ArrayList<int[]> mSpans; // added krim
     // instead of using 2 integers, start & end, now we use a set of tuples
 
@@ -562,37 +560,10 @@ public class MaeMain extends JPanel {
             JTable tab = mElementTables.get(newTagName);
             DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
 
-            // create array for data for row
-            String[] newdata = new String[tableModel.getColumnCount()];
-
-            // get the Elem that the table was based on, and go through
-            // the attributes.  Put in the start and end bits*/
+            // get a new ID
             Elem e = mTask.getElem(newTagName);
-            ArrayList<Attrib> attributes = e.getAttributes();
-            String newID = "";
+            String newId = mTask.getNextID(newTagName);
 
-            // go through the list of attributes, fill newdata array with proper values
-            for (int i = 0; i < attributes.size(); i++) {
-                // get ID number. This isn't as hard-coded as it looks:
-                // the columns for the table are created from the Attributes array list
-                if (attributes.get(i) instanceof AttID) {
-                    newID = mTask.getNextID(newTagName);
-                    newdata[i] = newID;
-                    // since link tags never have spans and text, below is safe
-                } else if (attributes.get(i).getName().equals("spans")) {
-                    newdata[i] = spansToString(mSpans);
-                } else if (attributes.get(i).getName().equals("text") && !isSpansEmpty()) {
-                    newdata[i] = getTextIn(mSpans);
-                }
-                // for the rest slots of newdata, make sure it's not staying in null value
-                else {
-                    if (attributes.get(i).hasDefaultValue()) {
-                        newdata[i] = attributes.get(i).getDefaultValue();
-                    } else {
-                        newdata[i] = "";
-                    }
-                }
-            }
             if (isLink) {
                 // get number of arguments associated with this link tag
                 ElemLink el = (ElemLink) e;
@@ -602,17 +573,19 @@ public class MaeMain extends JPanel {
                 String[] argIds = new String[argNum], argTypes = new String[argNum];
                 Arrays.fill(argIds, "");
                 Arrays.fill(argTypes, "");
-                addLinkTagToDb(newTagName, newID,
+                addLinkTagToDb(newTagName, newId,
                         Arrays.asList(argIds), Arrays.asList(argTypes));
 
                 // add id of the new tag to underspecified set for further lookup
-                mUnderspecified.add(newID);
+                System.out.println("IN MAKR TAG LIS: " + newId);
+                mUnderspecified.add(newId);
             } else {
-                addExtTagToDb(newTagName, newID);
+                addExtTagToDb(newTagName, newId);
             }
 
-            // add new row of tag info to the table and set appropriate attributes
-            tableModel.addRow(newdata);
+            //  create a dummy data set for inserting new table into table and insert
+            String[] newEmptyData = createEmptyRowData(newTagName, newId);
+            tableModel.addRow(newEmptyData);
 
             // move cursor and set focus to newly added tag
             mBottomTable.setSelectedIndex(mBottomTable.indexOfTab(newTagName));
@@ -631,6 +604,36 @@ public class MaeMain extends JPanel {
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
         }
     }
+    
+    private String[] createEmptyRowData(String elemName, String newId) {
+        // get the target element and a list of its attrib
+        Elem e = mTask.getElem(elemName);
+        ArrayList<Attrib> attributes = e.getAttributes();
+        String[] newData = new String[attributes.size()];
+        
+        // go through the list of attributes, fill newdata array with proper values
+        for (int i = 0; i < attributes.size(); i++) {
+            // get ID number. This isn't as hard-coded as it looks:
+            // the columns for the table are created from the Attributes array list
+            if (attributes.get(i) instanceof AttID) {
+                newData[i] = newId;
+                // since link tags never have spans and text, below is safe
+            } else if (attributes.get(i).getName().equals("spans")) {
+                newData[i] = spansToString(mSpans);
+            } else if (attributes.get(i).getName().equals("text") && !isSpansEmpty()) {
+                newData[i] = getTextIn(mSpans);
+            }
+            // for the rest slots of newdata, make sure it's not staying in null value
+            else {
+                if (attributes.get(i).hasDefaultValue()) {
+                    newData[i] = attributes.get(i).getDefaultValue();
+                } else {
+                    newData[i] = "";
+                }
+            }
+        }
+        return newData;
+    } 
 
     private class SetAsArgListener implements ActionListener {
         @Override
@@ -638,52 +641,53 @@ public class MaeMain extends JPanel {
             // command looks like this:
             // linkType(0), linkId(1), argName(2), argId(3), argText(4)
             String[] command = actionEvent.getActionCommand().split(SEP);
-            String linkType = command[0],
-                    linkId = command[1],
-                    argName = command[2],
-                    argId = command[3],
-                    argText = command[4];
+            setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
+        }
+    }
+    
+    private void setArgumentInTable(String linkType, String linkId,
+                                    String argName, String argId, String argText) {
+        DefaultTableModel tableModel
+                = (DefaultTableModel) mElementTables.get(linkType).getModel();
+        int rows = tableModel.getRowCount();
+        int idRow = -1, argCol = -1;
 
-            DefaultTableModel tableModel 
-                    = (DefaultTableModel) mElementTables.get(linkType).getModel();
-            int rows = tableModel.getRowCount();
-            int idRow = -1, argCol = -1;
+        // first get indices of columns of argument IDs in the table
+        TreeSet<Integer> argColumns = getArgColIndices(linkType);
 
-            // first get indices of columns of argument IDs in the table
-            TreeSet<Integer> argColumns = getArgColIndices(linkType);
+        // then find which row and column to look for
+        for (int i = rows - 1; i >= 0; i--) {
+            System.out.println("IN SETARG ROW: " + tableModel.getValueAt(i, 0));
+            if (tableModel.getValueAt(i, 0).equals(linkId)) {
+                idRow = i;
+            }
+        }
+        for (Integer i : argColumns) {
+            System.out.println("IN SETARG: " + tableModel.getColumnName(i));
+            if (tableModel.getColumnName(i).equals(argName + ID_SUF)) {
+                argCol = i;
+            }
+        }
 
-            // then find which row and column to look for
-            for (int i = 0; i < rows; i++) {
-                if (tableModel.getValueAt(i, 0).equals(linkId)) {
-                    idRow = i;
-                }
-            }
-            for (Integer i : argColumns) {
-                if (tableModel.getColumnName(i).equals(argName + ID_SUF)) {
-                    argCol = i;
-                }
-            }
-            
-            // set values for argID and argTEXT
-            if (idRow == -1 || argCol == -1) {
-                mStatusBar.setText("ERROR! Link ID and Arg name cannot be found in the table");
-                new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-            } else {
-                tableModel.setValueAt(argId, idRow, argCol);
-                tableModel.setValueAt(argText, idRow, argCol+1);
-            }
+        // set values for argID and argTEXT
+        if (idRow == -1 || argCol == -1) {
+            mStatusBar.setText("ERROR! Link ID and Arg name cannot be found in the table");
+            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+        } else {
+            tableModel.setValueAt(argId, idRow, argCol);
+            tableModel.setValueAt(argText, idRow, argCol+1);
+        }
 
-            // finally, check this link has a complete set of arguments
-            boolean fulfilled = true;
-            for (int argColumn : argColumns) {
-                if (tableModel.getValueAt(idRow, argColumn).equals("")) {
-                    fulfilled = false;
-                }
+        // finally, check this link has a complete set of arguments
+        boolean fulfilled = true;
+        for (int argColumn : argColumns) {
+            if (tableModel.getValueAt(idRow, argColumn).equals("")) {
+                fulfilled = false;
             }
-            // then remove this on from the list of the underspecified
-            if (fulfilled) {
-                mUnderspecified.remove(linkId);
-            }
+        }
+        // then remove this on from the list of the underspecified
+        if (fulfilled) {
+            mUnderspecified.remove(linkId);
         }
     }
 
@@ -891,7 +895,7 @@ public class MaeMain extends JPanel {
      * from selected text or table rows
      *
      */ 
-    private class LinkListener implements ActionListener {
+    private class MultiArgListener implements ActionListener {
         public void actionPerformed(ActionEvent actionEvent) {
             String command = actionEvent.getActionCommand();
             final ElemLink target = (ElemLink) mTask.getElem(command);
@@ -906,21 +910,39 @@ public class MaeMain extends JPanel {
             }
 
             JPanel boxPane = new JPanel(new GridLayout(target.getArgNum() + 1, 2));
+            
+            // information for creating a link tag
+            final String newName = command;
+            final String newId = mTask.getNextID(newName);
             final String[] argIds = new String[target.getArgNum()];
             final String[] argTypes = new String[target.getArgNum()];
 
+            // OK button
             JButton okay = new JButton("OK");
-            JButton cancel = new JButton("Cancel");
             okay.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String newName = target.getName();
-                    String newId = mTask.getNextID(newName);
 
+                    System.out.println(newId + "||" + newName);
+                    System.out.println(Arrays.toString(argIds));
+                    System.out.println(Arrays.toString(argTypes));
                     addLinkTagToDb(newName, newId,
                             Arrays.asList(argIds), Arrays.asList(argTypes));
+                    // add new row of tag info to the table and set appropriate attributes
+                    DefaultTableModel tableModel
+                            = (DefaultTableModel) mElementTables.get(newName).getModel();
+                    tableModel.addRow(createEmptyRowData(newName, newId));
+                    for (int i=0; i<argIds.length; i++) {
+                        setArgumentInTable(newName, newId, target.getArguments().get(i), argIds[i],
+                                getTextByID(argTypes[i], argIds[i]));
+                    }
+                    mLinkPopupFrame.setVisible(false);
+                    mLinkPopupFrame.dispose();
                 }
             });
+
+            // cancel button
+            JButton cancel = new JButton("Cancel");
             cancel.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -936,18 +958,25 @@ public class MaeMain extends JPanel {
                 }
                 // front of mPossibleArgs is sorted by selection order
                 candidates.setSelectedIndex(i % candidates.getItemCount());
+                // set initial argid and argtype from seleted item
+                String selected = (String) candidates.getSelectedItem();
+                argIds[i] = selected.split(COMBO_DELIMITER)[1];
+                argTypes[i] = selected.split(COMBO_DELIMITER)[0];
 
-                // setting up an action command and a listener
+                // action command is simply index of current argument
                 candidates.setActionCommand(String.valueOf(i));
+                // action listener for changing selection of an item
                 candidates.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        String command = e.getActionCommand();
+                        int command = Integer.parseInt(e.getActionCommand());
+                        System.out.println(command);
                         JComboBox box = (JComboBox) e.getSource();
                         String item = (String) box.getSelectedItem();
-                        argIds[Integer.parseInt(command)]
+                        System.out.println(item);
+                        argIds[command]
                                 = item.split(COMBO_DELIMITER)[1];
-                        argTypes[Integer.parseInt(command)]
+                        argTypes[command]
                                 = item.split(COMBO_DELIMITER)[0];
 
                     }
@@ -960,7 +989,7 @@ public class MaeMain extends JPanel {
             boxPane.add(cancel);
             mLinkPopupFrame.add(boxPane);
             mLinkPopupFrame.pack();
-            mLinkPopupFrame.setTitle("Creating " + command);
+            mLinkPopupFrame.setTitle(String.format("Creating %s - %s", newName, newId));
             mLinkPopupFrame.setLocation(300, 200);
             mLinkPopupFrame.setVisible(true);
 
@@ -1180,9 +1209,9 @@ public class MaeMain extends JPanel {
      *
      * @param a the Hashtable with the attribute information
      * @param elemName the name of the tag being processed
-     * @param newID the ID of the tag being added
+     * @param newId the ID of the tag being added
      */
-    private void addExtToDbFromHash(Hashtable<String, String> a, String elemName, String newID){
+    private void addExtToDbFromHash(Hashtable<String, String> a, String elemName, String newId){
 
         // mod by krim
         // take a string of spans and init a set of spans(start-end int pairs)
@@ -1192,11 +1221,11 @@ public class MaeMain extends JPanel {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
                 for (int i = start; i < end; i++) {
-                    mTask.addExtToBatch(i, elemName, newID);
+                    mTask.addExtToBatch(i, elemName, newId);
                 }
             }
         } else {
-            mTask.addExtToBatch(-1, elemName, newID);
+            mTask.addExtToBatch(-1, elemName, newId);
         }
         // mod by krim: resetting start-end for NC tag addition
         resetSpans();
@@ -1208,29 +1237,24 @@ public class MaeMain extends JPanel {
      *
      * @param a the Hashtable with the attribute information
      * @param elemName the name of the tag being processed
-     * @param newID the ID of the tag being added
+     * @param newId the ID of the tag being added
      */
-    private void addLinkToDbFromHash(Hashtable<String, String> a, String elemName, String newID){
+    private void addLinkToDbFromHash(Hashtable<String, String> a, String elemName, String newId){
         //getElementByID
         ArrayList<String> args = mTask.getArguments(elemName);
         ArrayList<String> argIDs = new ArrayList<String>();
         ArrayList<String> argTypes = new ArrayList<String>();
         for (String arg : args) {
-            String id = a.get(arg+ID_SUF);
-            // check id is a dummy, then add this id to a underspecified set for further lookup
-            if (id.equals("")) {
-                mUnderspecified.add(id);
+            String argId = a.get(arg+ID_SUF);
+            // check id value is a dummy, add the link tag to the underspecified for further lookup
+            if (argId.equals("")) {
+                mUnderspecified.add(argId);
             }
-            String type = mTask.getElementByID(id);
-            argIDs.add(id);
+            String type = mTask.getElementByID(argId);
+            argIDs.add(argId);
             argTypes.add(type);
         }
-//        String from_id = a.get("fromID");
-//        String to_id = a.get("toID");
-//        String from_type = mTask.getElementByID(from_id);
-//        String to_type = mTask.getElementByID(to_id);
-//        mTask.addLinkToBatch(newID, elemName, from_id, from_type, to_id, to_type, false);
-        mTask.addLinkToBatch(elemName, newID, argIDs, argTypes);
+        mTask.addLinkToBatch(elemName, newId, argIDs, argTypes);
         // no need to run batch for each adding, to in at once in processTagHash()
     }
 
@@ -1247,21 +1271,21 @@ public class MaeMain extends JPanel {
         Hashtable<String,Elem> elements = mTask.getElemHash();
         Elem elem = elements.get(elemName);
         ArrayList<Attrib> attributes = elem.getAttributes();
-        String newID = "";
+        String newId = "";
         for (Attrib attribute : attributes) {
             if (attribute instanceof AttID) {
-                newID = a.get(attribute.getName());
+                newId = a.get(attribute.getName());
             }
         }
-        if (!newID.equals("")) {
-            if (!mTask.idExists(elemName, newID)) {
+        if (!newId.equals("")) {
+            if (!mTask.idExists(elemName, newId)) {
                 if (elem instanceof ElemExtent) {
-                    addExtToDbFromHash(a, elemName, newID);
+                    addExtToDbFromHash(a, elemName, newId);
                 } else if (elem instanceof ElemLink) {
-                    addLinkToDbFromHash(a, elemName, newID);
+                    addLinkToDbFromHash(a, elemName, newId);
                 }
             } else {
-                System.out.println("ID " + newID + " already exists.  Skipping this " + elemName + " tag");
+                System.out.println("ID " + newId + " already exists.  Skipping this " + elemName + " tag");
                 return false;
             }
         } else {
@@ -1710,9 +1734,7 @@ public class MaeMain extends JPanel {
 
         // add menus for creating Ext tags, only if text selected
         if (isTextSelected) {
-            JMenuItem createTag = new JMenuItem("Create a tag with selected text");
-            createTag.setEnabled(false);
-            jp.add(createTag);
+            addGuideItem(jp, "Create a tag with selected text");
             for (Elem element : elements) {
                 String name = element.getName();
                 JMenuItem menuItem = new JMenuItem(name);
@@ -1798,50 +1820,57 @@ public class MaeMain extends JPanel {
 
     private JMenu createSetAsArgMenu(String menuTitle, String argType, String argId) {
         JMenu menu = new JMenu(menuTitle);
-        // for each link type, for each argument bound to the type, for each tag id:
-        // add id as menu item
+        
+        // waterfall menu top level - link names
         for (String linkType : mTask.getLinkElemNames()) {
-            JMenu linkTypeMenu = new JMenu(linkType);
 
-            // first check if any link tag of this type exists
             ArrayList<String> linkIds = mTask.getLinkIdsByName(linkType);
+            
+            // check if a tag in each type of link element exists
             if (linkIds.size() == 0) {
-                JMenuItem noLinkId = new JMenuItem(String.format(
-                        "no %s links", linkType));
-                noLinkId.setEnabled(false);
-                linkTypeMenu.add(noLinkId);
-                menu.add(linkTypeMenu);
+                addGuideItem(menu, String.format("no %s links", linkType));
                 continue;
             }
+            // add a link type as a menu item, only when it has real tags
+            JMenu linkTypeMenu = new JMenu(linkType);
+            
+            // next level - actual relevant arguments
             for (String argName : mTask.getArguments(linkType)) {
-                // if exists, list up all ids as menu items
-                ArrayList<String> itemsToAdd = new ArrayList<String>(linkIds);
                 JMenu linkArgMenu = new JMenu(argName);
-
-                // needs to move underspecified items to the top of the menu
-                // load contents of table for sorting up items, 
-                DefaultTableModel tableModel 
+                // copy names of all ids (list of ids will be recycled for all args)
+                ArrayList<String> id2Add = new ArrayList<String>(linkIds);
+                DefaultTableModel tableModel
                         = (DefaultTableModel) mElementTables.get(linkType).getModel();
-                int rows = tableModel.getRowCount(), cols = tableModel.getColumnCount();
-                int argCol = -1;
+                int rows = tableModel.getRowCount();
+                TreeSet<Integer> argCols = getArgColIndices(linkType);
+                int argCol = 0;
 
                 // find which column to look for
-                for (int i = 0; i < cols; i++) {
+                for (Integer i : argCols) {
                     if (tableModel.getColumnName(i).equals(argName + ID_SUF)) {
                         argCol = i;
                     }
                 }
+                
+                // final level - ids of each link
+                // needs to move underspecified items to the top of the menu
                 boolean prior = false;
                 if (mUnderspecified.size() > 0) {
                     for (String unspecId : mUnderspecified) {
-                        if (itemsToAdd.contains(unspecId)) {
+                        if (id2Add.contains(unspecId)) {
                             // find which row to look for,
                             // Note that it has to go backwards for efficiency
                             for (int i = rows - 1; i >= 0; i--) {
                                 // check id is matching first, then check argument is a dummy
                                 if (tableModel.getValueAt(i, 0).equals(unspecId) &&
                                         tableModel.getValueAt(i, argCol).equals("")) {
-                                    prior = true;
+                                    // add guidance item to menu
+                                    if (!prior) {
+                                        addGuideItem(linkArgMenu, "Underspecifed");
+                                        prior = true;
+                                    }
+
+                                    // add id as a menu item
                                     JMenuItem unspecIdItem = new JMenuItem(unspecId);
                                     unspecIdItem.addActionListener(new SetAsArgListener());
                                     unspecIdItem.setActionCommand(
@@ -1851,7 +1880,7 @@ public class MaeMain extends JPanel {
                                                     argId + SEP +
                                                     getTextByID(argType, argId));
                                     linkArgMenu.add(unspecIdItem);
-                                    itemsToAdd.remove(unspecId);
+                                    id2Add.remove(unspecId);
                                 }
                             }
                         }
@@ -1862,7 +1891,7 @@ public class MaeMain extends JPanel {
                 }
 
                 // then add the rest of the list as menu items
-                for (String item : itemsToAdd) {
+                for (String item : id2Add) {
                     JMenuItem idItem = new JMenuItem(item);
                     idItem.addActionListener(new SetAsArgListener());
                     idItem.setActionCommand(
@@ -1957,7 +1986,7 @@ public class MaeMain extends JPanel {
                     for (String link : mTask.getLinkElemNames()) {
                         JMenuItem linkItem = new JMenuItem(link);
                         linkItem.setActionCommand(link);
-                        linkItem.addActionListener(new LinkListener());
+                        linkItem.addActionListener(new MultiArgListener());
                         makeLinkItem.add(linkItem);
                     }
                     jp.add(makeLinkItem);
@@ -2216,9 +2245,7 @@ public class MaeMain extends JPanel {
             ArrayList<String> linkTypes = mTask.getLinkElemNames();
 
             if (linkTypes.size() == 0) {
-                JMenuItem none = new JMenuItem("no link tags defined");
-                none.setEnabled(false);
-                menu.add(none);
+                addGuideItem(menu, "no link tags defined");
             } else {
                 for (String linkType : linkTypes) {
                     JMenuItem menuItem = new JMenuItem(linkType);
@@ -2232,9 +2259,7 @@ public class MaeMain extends JPanel {
             }
         }
         else {
-            JMenuItem noDtd = new JMenuItem("no DTD is loaded");
-            noDtd.setEnabled(false);
-            menu.add(noDtd);
+            addGuideItem(menu, "no DTD is loaded");
         }
 
         return menu;
@@ -2254,9 +2279,7 @@ public class MaeMain extends JPanel {
             ArrayList<Elem> nc = mTask.getNCElements();
 
             if (nc.size() == 0) {
-                JMenuItem none = new JMenuItem("no NC tag defined");
-                none.setEnabled(false);
-                menu.add(none);
+                addGuideItem(menu, "no NC tag defined");
             } else {
                 for (Elem e : nc) {
                     JMenuItem menuItem = new JMenuItem(e.getName());
@@ -2270,9 +2293,7 @@ public class MaeMain extends JPanel {
             }
         }
         else {
-            JMenuItem noDtd = new JMenuItem("no DTD is loaded");
-            noDtd.setEnabled(false);
-            menu.add(noDtd);
+            addGuideItem(menu, "no DTD is loaded");
         }
 
         return menu;
@@ -2351,6 +2372,19 @@ public class MaeMain extends JPanel {
         menu.add(exitMode);
 
         return menu;
+    }
+
+
+    private void addGuideItem(JPopupMenu menu, String guide) {
+        JMenuItem item = new JMenuItem(guide);
+        item.setEnabled(false);
+        menu.add(item);
+    }
+
+    private void addGuideItem(JMenu menu, String guide) {
+        JMenuItem item = new JMenuItem(guide);
+        item.setEnabled(false);
+        menu.add(item);
     }
 
     /**
@@ -2561,10 +2595,7 @@ public class MaeMain extends JPanel {
     private void resetSpans() {
         isTextSelected = false;
         mSpans.clear();
-        // krim: removing condition check can cause some side-effects
-//        if (mMode != M_MULTI_SPAN) {
         mSpans.add(new int[]{-1, -1});
-//        }
     }
 
 

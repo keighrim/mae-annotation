@@ -1,8 +1,15 @@
 ## working on...
-* adding multi-argument selection mode in text pane for link tag creation
+* adding multi-argument select mode
+* adding selecting multiple arguments in text pane
+* adding a tab for all ext tags in bottom table
+
+## v0.11.7
+* fixed java version problem (was not working on java 6 and 7)
+* fixed bugs in multi-argument selection in table
 
 ## v0.11.6
-* added multi-argument link creation in table panel as well
+* added link creation windows for multi-argument selection
+* added selecting multiple arguments using bottom table
 
 ## v0.11.5
 * fixed an error text highlighting by double clicks on link tags in bottom table

@@ -64,9 +64,7 @@ class AnnotDB {
     final int NAME_COL = 2;
     final int ID_COL = 3;
     final int ARG0_COL = 4;
-    private int mMaxArgs; // by default, set max args to 2
-//    private int ARG0_TYPE_COL = ARG0_COL + 1;
-    // DO we need more than 10 arguments?
+    private int mMaxArgs;
 
     /**
      * Clears out the database and creates the 
@@ -89,8 +87,7 @@ class AnnotDB {
                 colname = "arg"+i+"_name";
                 stat.executeUpdate("ALTER TABLE links ADD '" + colname + "';");
             }
-//            stat.executeUpdate("create table links (id,fromid,from_name,toid,to_name,element_name);");
-            
+
             // init Extent DB table with null values
             mExt2Insert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
             

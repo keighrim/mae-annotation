@@ -41,10 +41,6 @@ import java.util.ArrayList;
 
 class ElemLink extends Elem {
 
-//    private String from;
-//    private String fromText;
-//    private String to;
-//    private String toText;
     private ArrayList<String> mArguments;
     private boolean mNary;
 
@@ -152,8 +148,6 @@ class ElemLink extends Elem {
     public void printInfo() {
         System.out.println("\tname = " + getName());
         // TODO currently this method is not used, but needs serious re-writing before being used
-//        System.out.println("\tFromID = " + getFrom());
-//        System.out.println("\tToID = " + getTo());
 
     }
 }

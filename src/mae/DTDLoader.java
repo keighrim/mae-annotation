@@ -27,10 +27,12 @@
 
 package mae;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.Pattern;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Provides methods for loading a DTD file into a DTD class
@@ -173,12 +175,6 @@ class DTDLoader {
                 validValues.add(value.trim());
             }
                 
-//            ArrayList<String> validValues
-//                    = new ArrayList<String>(Arrays.asList(listString.split(" \\| ")));
-//            for (String value : validValues) {
-//                value = value.trim();
-//            }
-
              Pattern defValPat = Pattern.compile("\"[\\w ]+\" *>");
              Matcher matcher = defValPat.matcher(tag);
              ArrayList<String> defVal = new ArrayList<String>();
