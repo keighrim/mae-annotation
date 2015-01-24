@@ -16,32 +16,33 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
  * For feedback, reporting bugs, use the project repo on github
- * <https://github.com/keighrim/mae-annotation>
- *
- * @author Amber Stubss, Keigh Rim
- * @version v0.11
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
 package mae;
 
 /**
  * FileOperations handles the input and output of files to and from MAE
- * 
+ * @author Amber Stubbs, Keigh Rim
+ * @version v0.11
+ *
  */
 
 
-import java.io.*;
-import java.io.File;
-
-import java.util.*;
-
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.text.rtf.RTFEditorKit;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.Document;
+import javax.swing.text.Style;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.rtf.RTFEditorKit;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Scanner;
 
 class FileOperations {
 

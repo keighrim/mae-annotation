@@ -16,19 +16,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
  * For feedback, reporting bugs, use the project repo on github
- * <https://github.com/keighrim/mae-annotation>
- *
- * @author Amber Stubss, Keigh Rim
- * @version v0.11
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
 package mae;
 
-
-import java.util.ArrayList;
 
 /**
  * Extents Elem to provide information about tags that are
@@ -38,6 +33,9 @@ import java.util.ArrayList;
  * mod by krim: Instead of start, end fields,
  * use a string of (possibly) multiple spans, to keep track of spans of an extent
  * Following getters and setters are also modified.
+ * *
+ * @author Amber Stubbs, Keigh Rim
+ * @version v0.11
  *
  */
 
@@ -62,24 +60,6 @@ class ElemExtent extends Elem{
         AttData text = new AttData("text", false);
         addAttribute(text);
     }
-
-    /* mod by krim: these setters and getters are no longer used
-    public void setStart(int s) {
-        start = s;
-    }
-
-    public int getStart(){
-        return start;
-    }
-
-    public void setEnd(int e){
-        end=e;
-    }
-
-    public int getEnd(){
-        return end;
-    }
-    */
 
     public void setSpans(String spans) {
         this.mSpans = spans;

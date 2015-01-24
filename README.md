@@ -6,7 +6,7 @@ MAE (Multi-purpose Annotation Environment) is an annotation tool originally crea
 MAE allows users to define their own annotation tasks, annotate partial words, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML. While it does not enforce strict rules for annotation schemes, it is very easy to set up and start running.
 
 ### Download Current version
-Currently Keigh Rim (krim@brandeis.edu) is working on maintenance jobs and updating new features to MAE. The current release version of MAE is 0.10.0. You can download it by cloning this repository.
+Currently Keigh Rim (krim@brandeis.edu) is working on maintenance jobs and updating new features to MAE. The current release version of MAE is 0.10. You can download it by cloning this repository.
 
     > git clone https://github.com/keighrim/mae-annotation
    
