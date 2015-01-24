@@ -16,13 +16,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
  * For feedback, reporting bugs, use the project repo on github
- * <https://github.com/keighrim/mae-annotation>
- *
- * @author Amber Stubss, Keigh Rim
- * @version v0.11
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
 package mae;
@@ -31,7 +28,8 @@ package mae;
 /**
  * Parent class for DTD elements (generally referred to as "tags")
  * 
- * @author Amber Stubbs
+ * @author Amber Stubbs, Keigh Rim
+ * @version v0.10
  */
 
 import java.util.ArrayList;
