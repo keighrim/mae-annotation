@@ -1,9 +1,9 @@
 ## Multi-purpose Annotation Environment
 
-### MAE v12 is released!
+### MAE v0.12 is released!
 Lots of new features!
 
-* N-ary link support. See wiki to learn how to set a DTD for n-ary links.
+* N-ary link support. See [wiki] (https://github.com/keighrim/mae-annotation/wiki/Defining-an-Annotation-Task---defining-a-DTD-file) to learn how to set a DTD for n-ary links.
 * Interface to create link tags is more intuitive now. 
 * Added color toggling.
 * Added all_tags tab to show up all extent tags in a single tab.
