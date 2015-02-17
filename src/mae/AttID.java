@@ -30,9 +30,8 @@ package mae;
  * ID attributes have special properties, so they 
  * have their own class that keeps track of the 
  * prefix.
- * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.11
  *
  */
 
@@ -74,11 +73,11 @@ public void incrementNumber(){
 }
 
 public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " , required = " + getRequired());
+    System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
 }
 
 public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() );
+    return("Attribute name =" + getName() + " , required = " + isRequired() );
 }
 
 private String prefix;

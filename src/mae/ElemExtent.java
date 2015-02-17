@@ -30,11 +30,11 @@ package mae;
  * used to label extents in a text (as well as non-consuming
  * tags).
  *
- * mod by krim: Instead of start & end fields,
+ * mod by krim: Instead of start, end fields,
  * use a string of (possibly) multiple spans, to keep track of spans of an extent
  * Following getters and setters are also modified.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.11
  *
  */
 
@@ -45,10 +45,10 @@ class ElemExtent extends Elem{
     // mod by krim: start, end --> spans
     private String mSpans;
 
-    ElemExtent(String name, String pre){
+    ElemExtent(String name, String idString){
         setName(name);
         //extent tags always have id, start, and end
-        AttID id = new AttID("id", pre, true);
+        AttID id = new AttID("id", idString, true);
         addAttribute(id);
 
 
@@ -59,24 +59,6 @@ class ElemExtent extends Elem{
         AttData text = new AttData("text", false);
         addAttribute(text);
     }
-
-    /* mod by krim: these setters and getters are no longer used
-    public void setStart(int s) {
-        start = s;
-    }
-
-    public int getStart(){
-        return start;
-    }
-
-    public void setEnd(int e){
-        end=e;
-    }
-
-    public int getEnd(){
-        return end;
-    }
-    */
 
     public void setSpans(String spans) {
         this.mSpans = spans;

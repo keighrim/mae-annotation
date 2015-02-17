@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * Provides methods for loading a DTD file into a DTD class
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.12
  *
  * @see DTD
  */
@@ -48,7 +48,7 @@ class DTDLoader {
         try{
             readFile(f);
         }catch(FileNotFoundException e){
-            System.out.println("no file found");
+            System.err.println("no file found");
         }
     }
     
@@ -105,23 +105,25 @@ class DTDLoader {
     */
     private void createElement(String tag){
         String name = tag.split(" ")[1];
+        // PCDATA indicating this is an extend tag
         if (tag.contains("#PCDATA")){
             String idString = getIDString(name);
             ElemExtent e = new ElemExtent(name, idString);
             mDtd.addElem(e);
-        } else {
+        }
+        // else, that is a link tag
+        else {
             String idString = getIDString(name);
             ElemLink e = new ElemLink(name, idString);
             mDtd.addElem(e);
         }
-        
     }
     
     private String getIDString(String name){
         ArrayList<String> ids = mDtd.getElementIDs();
         String id = name.substring(0,1);
-        boolean idOK = false;
-        while (!idOK){
+        boolean idOkay = false;
+        while (!idOkay){
             if(ids.contains(id)){
                 if(id.length()>=name.length()){
                     id = id+"-";
@@ -129,7 +131,7 @@ class DTDLoader {
                      id = name.substring(0,id.length()+1);
                  }
             } else {
-                idOK=true;
+                idOkay=true;
             }
         }
         return id;
@@ -143,18 +145,21 @@ class DTDLoader {
         }
     }
     
-    /*
-    Add an attribute to an existing string
-    */
+    /**
+     * Add an attribute to an existing string
+     */
     private void addAttribute(String tag){
-         if (tag.contains("(")){
-            addListAtt(tag);
-        }
-        else{
-            addDataAtt(tag);
-        }
+         if (tag.contains("(")) {
+             addListAtt(tag);
+         } else {
+             addDataAtt(tag);
+         }
     }
-    
+
+    /**
+     * Create an attribute with a list of valid values
+     * @param tag
+     */
     private void addListAtt(String tag){
         String elemName = tag.split(" ")[1];
         String attName = tag.split(" ")[2];
@@ -163,43 +168,43 @@ class DTDLoader {
         if(elem!=null){
             String listString = tag.split("\\(")[1];
             listString = listString.split("\\)")[0];
-            
-            ArrayList<String> atts = new ArrayList<String>();
-            String[]list = listString.split("\\|");
-            for (String aList : list) {
-                atts.add(aList.trim());
+
+            ArrayList<String> validValues = new ArrayList<String>();
+            for (String value : listString.split("\\|")) {
+                validValues.add(value.trim());
             }
-             
-             Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
-             Matcher matcher = defaultVal.matcher(tag);
-             ArrayList<String> defVals = new ArrayList<String>();
+                
+             Pattern defValPat = Pattern.compile("\"[\\w ]+\" *>");
+             Matcher matcher = defValPat.matcher(tag);
+             ArrayList<String> defVal = new ArrayList<String>();
              String defaultValue = "";
              while (matcher.find()){
-                 defVals.add(matcher.group());
+                 defVal.add(matcher.group());
              }
-             if (defVals.size()>1){
-                 System.out.println("Error in attribute; too many default values found");
-                 System.out.println(tag);
+             if (defVal.size()>1){
+                 System.err.println(String.format(
+                         "too many default values found in %s", tag));
              }
-             else if (defVals.size()==1){
-                 defaultValue = defVals.get(0).split("\"")[1];
-                 if (!atts.contains(defaultValue)){
-                     System.out.println("Error -- default value not in attribute list");
-                     System.out.println(tag);
+             else if (defVal.size()==1){
+                 defaultValue = defVal.get(0).split("\"")[1];
+                 if (!validValues.contains(defaultValue)){
+                     System.err.println(String.format(
+                             "default value %s not in attribute list of %s"
+                             , defaultValue, tag));
                      defaultValue="";
                  }
              }
              boolean req = tag.contains("#REQUIRED");
-             elem.addAttribute(new AttList(attName,req,atts,defaultValue));
+             elem.addAttribute(new AttList(attName,req,validValues,defaultValue));
          }
          else{
-             System.out.println("no match found: '" + elemName + "' is not a valid tag identifier");
+             System.err.println(String.format(
+                     "%s not found. not a valid tag identifier?", elemName));
          }
     }
         
     /**
-     * Creates an AttData object for the DTD
-     * @param tag
+     * Creates an attribute that can have an arbitrary string data
      */
     private void addDataAtt(String tag){
 
@@ -220,30 +225,62 @@ class DTDLoader {
                     att.setRequired(req);
                 }
             } else if(tag.contains(" ID ")) {
-                AttID att = (AttID)elem.getAttribute("id");
-                if(tag.contains("prefix")){
+                AttID att = (AttID) elem.getAttribute("id");
+                if (tag.contains("prefix")) {
                     String prefix = tag.split("\"")[1];
                     att.setPrefix(prefix);
                 }
             } else {
-                Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
-                Matcher matcher = defaultVal.matcher(tag);
-                ArrayList<String> defVals = new ArrayList<String>();
-                String defaultValue = "";
-                while (matcher.find()){
-                    defVals.add(matcher.group());
+                // krim: for multi-link support
+                // first check if this att is for argument
+                Pattern argAttPat = Pattern.compile("^arg[0-9]+$");
+                Matcher matcher = argAttPat.matcher(attName);
+                if (matcher.find()) {
+                    // then check elem is a link tag
+                    if (elem instanceof ElemLink) {
+                        String argName;
+                        // name argument if a name is given
+                        if (tag.contains("prefix")) {
+                            argName = tag.split("\"")[1];
+                        } 
+                        // otherwise, use argN format as a default name
+                        else {
+                            argName = matcher.group();
+                        }
+                        ((ElemLink) elem).addArgement(argName);
+                        // then adjust max args in dtd object
+                        if (mDtd.getMaxArgs() < ((ElemLink) elem).getArgNum()) {
+                            mDtd.setMaxArgs(((ElemLink) elem).getArgNum());
+                        }
+                    } else {
+                        System.err.println("No argument attrib allowed for an extend tag");
+                    }
                 }
-                if (defVals.size()>1){
-                    System.out.println("Error in attribute; too many default values found");
-                    System.out.println(tag);
-                } else if (defVals.size()==1) {
-                    defaultValue = defVals.get(0).split("\"")[1];
+                // otherwise, add as a simple data attrib (original code)
+                else {
+                    Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
+                    matcher = defaultVal.matcher(tag);
+                    ArrayList<String> defVals = new ArrayList<String>();
+                    String defaultValue = "";
+                    while (matcher.find()) {
+                        defVals.add(matcher.group());
+                    }
+                    if (defVals.size() > 1) {
+                        System.err.println(String.format(
+                                "too many default values found in %s", tag));
+                    } else if (defVals.size() == 1) {
+                        defaultValue = defVals.get(0).split("\"")[1];
+                    }
+                    AttData att = (new AttData(attName, req, defaultValue));
+                    // added by krim: check for IDREF for UI improvement
+                    att.setIdRef(tag.contains("IDREF"));
+                    elem.addAttribute(att);
                 }
-                elem.addAttribute(new AttData(attName,req,defaultValue));
             }
         }
         else{
-            System.out.println("no match found");
+            System.err.println(String.format(
+                    "element name %s is not found", elemName));
         }
     }
 }

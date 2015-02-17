@@ -28,48 +28,51 @@ package mae;
 /**
  * A class that describes tag attributes that 
  * only contain text data (such as comments)
- *
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.12
  *
  */
 
 
 class AttData extends Attrib{
 
-AttData(){
-}
+    AttData(){
+    }
 
-AttData (String name, boolean r){
-    setName(name);
-    setRequired(r);
-    setData("");
-    setDefaultValue("");
-}
+    AttData (String name, boolean req){
+        setName(name);
+        setRequired(req);
+        setData("");
+        setDefaultValue("");
+    }
 
-AttData (String name, boolean r, String d){
-    setName(name);
-    setRequired(r);
-    setData("");
-    setDefaultValue(d);
-}
+    AttData (String name, boolean req, String d){
+        this(name, req);
+        setDefaultValue(d);
+    }
 
-public String getData(){
-    return data;
-}
+    // added by krim: constructor with idref value
+    AttData (String name, boolean req, boolean idref) {
+        this(name, req);
+        setIdRef(idref);
+    }
 
-public void setData(String c){
-    data=c;
-}
+    public String getData(){
+        return data;
+    }
 
-public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " \n\trequired = " + getRequired() + "\n\tdata = " + data);
-}
+    public void setData(String c){
+        data=c;
+    }
 
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() + " data = " + data );
-}
+    public void printInfo(){
+        System.out.println("Attribute name =" + getName() + " \n\trequired = " + isRequired() + "\n\tdata = " + data);
+    }
 
-private String data;
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() + " data = " + data );
+    }
+
+    private String data;
 
 }

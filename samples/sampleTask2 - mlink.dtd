@@ -1,0 +1,59 @@
+<!ENTITY name "NounVerbTask">
+
+<!--
+  ~ MAE - Multi-purpose Annotation Environment
+  ~
+  ~ Copyright Keigh Rim (krim@brandeis.edu)
+  ~ Department of Computer Science, Brandeis University
+  ~ Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+  ~
+  ~ MAE is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
+  ~
+  ~ For feedback, reporting bugs, use the project repo on github
+  ~ @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+  -->
+
+<!ELEMENT NOUN ( #PCDATA ) >
+<!ATTLIST NOUN start #IMPLIED >	
+<!ATTLIST NOUN type ( person | place | thing | other ) #IMPLIED "other" >
+<!ATTLIST NOUN comment CDATA "default value" >
+
+<!ELEMENT VERB ( #PCDATA ) >
+<!ATTLIST VERB tense ( past | present | future | none ) #IMPLIED >
+<!ATTLIST VERB aspect ( simple | progressive | perfect | perfect progressive ) #IMPLIED "perfect progressive" >
+
+<!ELEMENT ADJ_ADV ( #PCDATA ) >
+<!ATTLIST ADJ_ADV type ( adjective | adverb ) #IMPLIED >
+
+
+<!ELEMENT ACTION EMPTY >
+<!ATTLIST ACTION relationship ( performs | performed_by ) #IMPLIED >
+
+<!ELEMENT DESCRIPTION EMPTY >
+<!ATTLIST DESCRIPTION relationship ( describes | described_by ) >
+
+<!ELEMENT LINKTEST EMPTY >
+<!ATTLIST LINKTEST type CDATA #REQUIRED>
+<!ATTLIST LINKTEST arg0 IDREF #REQUIRED>
+<!ATTLIST LINKTEST arg1 IDREF #REQUIRED>
+<!ATTLIST LINKTEST arg2 IDREF #REQUIRED>
+<!ATTLIST LINKTEST arg3 IDREF #REQUIRED>
+<!ATTLIST LINKTEST relationship ( des | des_by ) >
+
+<!ELEMENT LINKNAMETEST EMPTY >
+<!ATTLIST LINKNAMETEST arg0 IDREF prefix="agent" #REQUIRED>
+<!ATTLIST LINKNAMETEST arg1 IDREF prefix="patient" #REQUIRED>
+<!ATTLIST LINKNAMETEST arg2 IDREF prefix="theme" #REQUIRED>
+<!ATTLIST LINKNAMETEST relationship ( describes | described_by ) >
+

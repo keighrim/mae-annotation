@@ -27,65 +27,73 @@ package mae;
 /**
  * The parent class for tag attributes
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.11
  *
  */
 
-class Attrib extends Object{
+class Attrib {
 
-Attrib(){
-}
+    private String name;
+    private boolean required;
+    private String defaultValue;
+    
+    // added by krim - to track if the value of this att is referencing ID of another tag
+    private boolean idRef;
+
+    Attrib(){
+    }
 
 
-public String getName(){
-    return name;
-}
+    public String getName(){
+        return name;
+    }
 
-public void setName(String n){
-    name=n;
-}
+    public void setName(String n){
+        name=n;
+    }
 
-public boolean getRequired(){
-    return required;
-}
+    public boolean isRequired(){
+        return required;
+    }
 
-public void setRequired(boolean r){
-    required=r;
-}
+    public void setRequired(boolean r){
+        required=r;
+    }
 
-public String getDefaultValue(){
-    return defaultValue;
-}
+    public boolean isIdRef(){
+        return idRef;
+    }
 
-public void setDefaultValue(String d){
-    defaultValue = d;
-}
+    public void setIdRef(boolean r){
+        idRef =r;
+    }
+    
+    public String getDefaultValue(){
+        return defaultValue;
+    }
 
-public boolean hasDefaultValue(){
-    if (defaultValue.length()==0){
-        return false;
-     }
-     return true;
-}
+    public void setDefaultValue(String d){
+        defaultValue = d;
+    }
 
-/*
-public String getType(){
-    return type;
-}
+    public boolean hasDefaultValue(){
+        return defaultValue.length() != 0;
+    }
 
-public void setType(String t){
-    type=t;
-}
-*/
-public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " , required = " + getRequired());
-}
+    /*
+    public String getType(){
+        return type;
+    }
 
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() );
-}
+    public void setType(String t){
+        type=t;
+    }
+    */
+    public void printInfo(){
+        System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
+    }
 
-private String name;
-private boolean required;
-private String defaultValue;
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() );
+    }
 }

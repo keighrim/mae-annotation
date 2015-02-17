@@ -34,9 +34,8 @@ import java.util.Hashtable;
 /**
  * XMLFileLoader reads in any annotated files that are loaded into MAE by 
  * calling the XMLHandler file.
- * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.12
  *
  */
 
@@ -58,12 +57,13 @@ class XMLFileLoader{
         try { //this will work with java 5 and 6.  Java 1.4 is not supported.
             XMLReader parser = XMLReaderFactory.createXMLReader();
             parser.setContentHandler(mXmlfile);
-            String docname = f.toString();
+            String xmlContents = f.toString();
             try{
-                parser.parse(docname);
+                parser.parse(xmlContents);
             }catch(Exception ex){
                 ex.printStackTrace();
-                System.out.println("parse of " + docname + " failed");
+                System.err.println(String.format(
+                        "%s: parsing failed.\n%s", f.getName(), xmlContents));
                 throw new Exception();
             }
         }catch (SAXException e) {

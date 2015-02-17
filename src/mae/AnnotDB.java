@@ -26,57 +26,90 @@ package mae;
 
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * TagDB is the class that handles all the calls to the 
  * SQLite database.  TagDB in MAE has two tables:
- * 1) extents, with columns: location int(5), element_name, id
- * 2) links, with columns: id,fromid,from_name,toid,to_name,element_name
- * <p>
+ *
+ * these column design was originally from Amber
+ * 1) extents, with columns: 
+ *    1-location int(5), 
+ *    2-element_name, 
+ *    3-id
+ * links table is redesign for multi-linking support
+ * 2) links, with columns: 
+ *    1-location int(5), 
+ *    2-element_name, 
+ *    3-id,  // common attribs by far
+ *    4, 5,..., 4+(2*MaxArgs), 4+(2*MaxArgs)+1 - arg0, arg0_name, ...argN, argN_name
+ *     
  * User-defined attribute information about the tags that are being 
  * created is not stored in the database; it exists only in the 
  * tables that are part of MaeGui.  Therefore if the program 
  * is closed without the file being saved, the tags cannot
  * be completely recovered from the database.
- *
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.12
  *
  */
 
 class AnnotDB {
-    // mod by krim: renamed corresponding MAI
+    // krim: class renamed corresponding MAI
 
-    private PreparedStatement mExtInsert;
-    private PreparedStatement mLinkInsert;
+    private PreparedStatement mExt2Insert;
+    private PreparedStatement mLink2Insert;
     private Connection mConn;
 
+    // integers for each column in the table
+    final int LOC_COL = 1;
+    final int NAME_COL = 2;
+    final int ID_COL = 3;
+    final int ARG0_COL = 4;
+    private int mMaxArgs;
 
     /**
      * Clears out the database and creates the 
      * tables and PreparedStatements.
      * 
      */
-    AnnotDB(){
+    AnnotDB() {
+        this(2);
+    }
+    
+    AnnotDB(int maxArgs) {
         try{
+            mMaxArgs = maxArgs; // default number of args is 2
             Class.forName("org.sqlite.JDBC");
             mConn = DriverManager.getConnection("jdbc:sqlite:tag.db");
             Statement stat = mConn.createStatement();
-            stat.executeUpdate("drop table if exists extents;");
-            stat.executeUpdate("create table extents (location int(5), element_name, id);");
-            stat.executeUpdate("drop table if exists links;");
-            stat.executeUpdate("create table links (id,fromid,from_name,toid,to_name,element_name);");
-            mExtInsert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
-            mLinkInsert = mConn.prepareStatement("insert into links values (?, ?, ?, ?, ?, ?);");
+            stat.executeUpdate("DROP TABLE if exists extents;");
+            stat.executeUpdate("CREATE TABLE extents (location INT(5), element_name, id);");
+            stat.executeUpdate("DROP TABLE if exists links;");
+            stat.executeUpdate("CREATE TABLE links (location INT(5), element_name, id);");
+            for (int i=0;i<mMaxArgs;i++) {
+                String colname = "arg"+i;
+                stat.executeUpdate("ALTER TABLE links ADD '" + colname + "';");
+                colname = "arg"+i+"_name";
+                stat.executeUpdate("ALTER TABLE links ADD '" + colname + "';");
+            }
+
+            // init Extent DB table with null values
+            mExt2Insert = mConn.prepareStatement("insert into extents values (?, ?, ?);");
+            
+            // init link DB table with nul values
+            String nullArgs = "";
+            for (int i=0;i<mMaxArgs;i++) {
+                nullArgs += ", ?, ?";
+            }
+            mLink2Insert = mConn.prepareStatement("insert into links values (?, ?, ?" +
+                    nullArgs + ");");
         }catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public void print_extents(){
+    public void printExtents(){
         System.out.println("Extents in DB:");
         try {
             Statement stat = mConn.createStatement();
@@ -99,7 +132,9 @@ class AnnotDB {
         }
     }
 
-    public void print_links(){
+    // TODO this method needs to re-written from scratch:
+    // right now, this method is not used at anywhere so leave it now
+    public void printLinks(){
         System.out.println("Links in DB:");
         try {
             Statement stat = mConn.createStatement();
@@ -126,7 +161,8 @@ class AnnotDB {
     }
 
     /**
-     * 
+     * get all tags bound to a certain location and return types of those tags
+     *  
      * @param loc the character offset of the location being looked at
      * @return ArrayList of strings containing the types of elements at a location
      * @throws Exception 
@@ -154,7 +190,7 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    HashCollection<String,String> getElementsAllLocs()
+    HashCollection<String,String> getLocElemHash()
             throws Exception{
         HashCollection<String,String>elems = new HashCollection<String,String>();
         Statement stat = mConn.createStatement();
@@ -182,20 +218,31 @@ class AnnotDB {
         //first, get all the IDs for the extents associated with the ElemLink
         String query = "select * from links where element_name = '" + elem + "';";
         ResultSet rs = stat.executeQuery(query);
-        ArrayList<String>ids = new ArrayList<String>();
+        ArrayList<String> argIds = new ArrayList<String>();
         while (rs.next()){
-            ids.add(rs.getString("fromid"));
-            ids.add(rs.getString("toid"));
+            for (int i=0;i<mMaxArgs;i++) {
+                try {
+                    String colName = "arg" + i;
+                    String id = rs.getString(colName);
+                    if (rs.wasNull()) {
+                        break;
+                    } else {
+                        argIds.add(id);
+                    }
+                } catch (SQLException ignored) {
+                    // ignore querying beyond current #args 
+                    // (querying continues to maxargs)
+                }
+            }
         }
         rs.close();
 
         Hashtable<Integer,String> locs = new Hashtable<Integer,String>();
-        for (int i = 0;i<ids.size();i++){
-            String id = ids.get(i);
+        for (String id : argIds) {
             query = "select * from extents where id = '" + id + "';";
             rs = stat.executeQuery(query);
-            while (rs.next()){
-                locs.put((Integer.parseInt(rs.getString("location"))),"");
+            while (rs.next()) {
+                locs.put((Integer.parseInt(rs.getString("location"))), "");
             }
         }
         return(locs);
@@ -207,47 +254,59 @@ class AnnotDB {
      * menu.
      *
      * @param elem name of the link tag being looked at
-     * @param active an ArrayList of the 
+     * @param activeLinks an ArrayList of the
      * @return a hashTable of locations that should be 
      * bolded and italicized based on the selections in the
      * GUI menu
      * @throws Exception
      */
     Hashtable<Integer,String> getLocationsbyElemLink(
-            String elem, ArrayList<String>active) throws Exception{
+            String elem, ArrayList<String> activeLinks) throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
         String query = "select * from links where element_name = '" + elem + "';";
         ResultSet rs = stat.executeQuery(query);
-        ArrayList<String>ids = new ArrayList<String>();
+        ArrayList<String> argIds = new ArrayList<String>();
         while (rs.next()){
-            ids.add(rs.getString("fromid"));
-            ids.add(rs.getString("toid"));
+            for (int i=0;i<mMaxArgs;i++) {
+                String colName = "arg"+i;
+                String id = rs.getString(colName);
+                if (rs.wasNull()) {
+                    break;
+                } else {
+                    argIds.add(id);
+                }
+            }
         }
         rs.close();
 
         //then, go through and remove all the IDs that are associated with other 
         //actively bolded link tags
-        for(int i=0;i<active.size();i++){
-            String activeElem = active.get(i);
-            ArrayList<String>outIDs = new ArrayList<String>();
-            query = "select * from links where element_name = '" + activeElem + "';";
+        for (String activated : activeLinks) {
+            ArrayList<String> outIDs = new ArrayList<String>();
+            query = "select * from links where element_name = '" + activated + "';";
             rs = stat.executeQuery(query);
             while (rs.next()){
-                outIDs.add(rs.getString("fromid"));
-                outIDs.add(rs.getString("toid"));
+                for (int i=0;i<mMaxArgs;i++) {
+                    String colName = "arg"+i;
+                    String id = rs.getString(colName);
+                    if (rs.wasNull()) {
+                        break;
+                    } else {
+                        outIDs.add(id);
+                    }
+                }
             }
-            ids.removeAll(outIDs);
+            argIds.removeAll(outIDs);
         }
         //now that the list is down to only the IDs that will be removed,
         //get their locations
         Hashtable<Integer,String> locs = new Hashtable<Integer,String>();
-        for (int i = 0;i<ids.size();i++){
-            String id = ids.get(i);
+        for (String id : argIds) {
             query = "select * from extents where id = '" + id + "';";
             rs = stat.executeQuery(query);
-            while (rs.next()){
-                locs.put((Integer.parseInt(rs.getString("location"))),"");
+            while (rs.next()) {
+                locs.put((Integer.parseInt(rs.getString("location"))), "");
             }
         }
         return(locs);
@@ -263,8 +322,7 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    String getLocByID(String id)
-            throws Exception{
+    ArrayList<int[]> getLocByID(String id) throws Exception{
         Statement stat = mConn.createStatement();
         String query = "select * from extents where id = '" + id + "';";
         ResultSet rs = stat.executeQuery(query);
@@ -280,25 +338,28 @@ class AnnotDB {
         // add by krim: make a string representing multiple spans then return it
         int initLoc, endCandi;
         initLoc = endCandi = locs.get(0);
+        ArrayList<int[]> spans = new ArrayList<int[]>();
+        int[] span = new int[2];
         String s = Integer.toString(initLoc);
+        span[0] = initLoc;
 
         if (locs.size()>1) {
             for (int loc : locs) {
-                if (loc <= endCandi+1) {
-                    endCandi = loc;
+                if (loc > endCandi+1) {
+                    span[1] = endCandi + 1;
+                    spans.add(span);
+                    span[0] = loc;
                 }
-                else {
-                    s += MaeMain.SPANDELIMITER + (endCandi+1) +
-                            MaeMain.SPANSEPARATOR + loc;
-                    endCandi = loc;
-                }
+                endCandi = loc;
             }
         }
-        s += MaeMain.SPANDELIMITER + (locs.get(locs.size()-1)+1);
-        return s;
+        span[1] = locs.get(locs.size()-1) + 1;
+        spans.add(span);
+        return spans;
     }
 
     /**
+     * Return the type of an element searched by id
      * 
      * @param id the ID of the string being searched for
      * @return the tag name of the ID being searched for
@@ -307,9 +368,19 @@ class AnnotDB {
     String getElementByID(String id)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String query = "select * from extents where id = '" + id + "';";
+        // first search in extents table
+        String query = "SELECT * FROM extents WHERE id = '" + id + "';";
         ResultSet rs = stat.executeQuery(query);
-        String elemName =  rs.getString("element_name");
+        String elemName;
+        try {
+            elemName = rs.getString("element_name");
+        }
+        // if search failed, try links table
+        catch (SQLException e) {
+            query = "SELECT * FROM links WHERE id = '" + id + "';";
+            rs = stat.executeQuery(query);
+            elemName =  rs.getString("element_name");
+        }
         rs.close();
         return elemName;
     }
@@ -324,7 +395,7 @@ class AnnotDB {
     void removeExtentTags(String element_name, String id)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String delete = ("delete from extents where id = '" 
+        String delete = ("DELETE FROM extents WHERE id = '"
                 +id + "'and element_name = '" + element_name+ "';");
         stat.executeUpdate(delete);  
     }
@@ -333,31 +404,32 @@ class AnnotDB {
      * Returns the links that an extent participates in as 
      * a to or from anchor.
      * 
-     * @param element_name type of tag being searched for
-     * @param id ID of tag being searched for
+     * @param extType type of tag being searched for
+     * @param extID ID of tag being searched for
      * @return HashCollection of tag names and IDs that are 
      * associated with the extent being searched for
      * @throws Exception
      */
-    HashCollection<String,String> getLinksByExtentID(String element_name, String id)
+    HashCollection<String,String> getLinksByExtentID(String extType, String extID)
             throws Exception{
-        HashCollection<String,String>links = new HashCollection<String,String>();
+        HashCollection<String,String> links = new HashCollection<String,String>();
         Statement stat = mConn.createStatement();
-        String query = ("select id,element_name from links where fromid = '" +
-                id + "' and from_name  ='" + element_name + "';");
-        ResultSet rs = stat.executeQuery(query);
-        while(rs.next()){
-            links.putEnt(rs.getString("element_name"),rs.getString("id"));
+        for (int i=0; i<mMaxArgs; i++) {
+            try {
+                String argIdCol = "arg" + i, argTypeCol = "arg" + i + "_name";
+                String query = (String.format("select id,element_name from links " +
+                        "where %s = '%s' and %s  ='%s';"
+                        , argIdCol, extID, argTypeCol, extType));
+                ResultSet rs = stat.executeQuery(query);
+                while (rs.next()) {
+                    links.putEnt(rs.getString("element_name"), rs.getString("id"));
+                }
+                rs.close();
+            } catch (SQLException ignored) {
+                // ignore querying beyond current #args
+                // (querying continues to maxargs)
+            }
         }
-        rs.close();
-
-        String query2 = ("select id,element_name from links where toid = '" +
-                id + "' and to_name  ='" + element_name + "';");
-        ResultSet rs2 = stat.executeQuery(query2);
-        while(rs2.next()){
-            links.putEnt(rs2.getString("element_name"),rs2.getString("id"));
-        }
-        rs2.close();
         return links;
     }
 
@@ -376,7 +448,7 @@ class AnnotDB {
     HashCollection<String,String> getTagsInSpan(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String query = "";
+        String query;
         if(begin!=end){
             query = ("select distinct(id), element_name from extents where location >= "
                     + begin + " and location <=" + end + ";");
@@ -394,26 +466,26 @@ class AnnotDB {
         rs.close();
         return tags;
     }
-
+    
     /**
      * Returns tags in the provided span as well as all non-consuming tags
-     * 
+     *
      * @param begin starting location being searched for
      * @param end ending location being searched for
      * @return HashCollection of ids and element types
      * that exist between the start and end character offsets with the
      * tag name as keys and IDs as values.
      */
-    HashCollection<String,String> getTagsInSpanAndNC(int begin, int end)
+    HashCollection<String,String> getTagsInSpansAndNC(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query = "";
         if(begin!=end){
-            query = ("select distinct(id), element_name from extents where location >= " 
+            query = ("select distinct(id), element_name from extents where location >= "
                     + begin + " and location <=" + end + ";");
         }
         else{
-            query = ("select distinct(id), element_name from extents where location = " 
+            query = ("select distinct(id), element_name from extents where location = "
                     + begin + ";");
         }
 
@@ -425,14 +497,85 @@ class AnnotDB {
         rs.close();
 
         //now get the non-consuming tags
-        query = ("select distinct(id), element_name from extents where location = -1;");
-        rs = stat.executeQuery(query);
+        tags.putAll(getAllNCTags());
+        return tags;
+    }
+
+    /**
+     * get all extent tags in DB, return as a HashCollection
+     *
+     * @return HC with tag types as keys, tag ids as values
+     * @throws Exception
+     */
+    HashCollection<String, String> getAllExtTags() throws Exception {
+        Statement stat = mConn.createStatement();
+        String query = "SELECT distinct(id), element_name FROM extents WHERE location != -1;";
+        ResultSet rs = stat.executeQuery(query);
+        HashCollection<String,String> tags = new HashCollection<String,String>();
         while(rs.next()){
-            tags.putEnt(rs.getString("element_name"),rs.getString("id"));
+            tags.putEnt(rs.getString("element_name"), rs.getString("id"));
+        }
+        rs.close();
+        return tags;
+    }
+
+    /**
+     * get all NC tags in DB, return as a HashCollection 
+     * 
+     * @return HC with tag types as keys, tag ids as values
+     * @throws Exception
+     */
+    HashCollection<String,String> getAllNCTags() throws Exception {
+        Statement stat = mConn.createStatement();
+        String query = ("select distinct(id), element_name from extents where location = -1;");
+        ResultSet rs = stat.executeQuery(query);
+        HashCollection<String, String> ncTags = new HashCollection<String, String>();
+        while(rs.next()){
+            ncTags.putEnt(rs.getString("element_name"),rs.getString("id"));
         }
         rs.close();
 
-        return tags;
+        return ncTags;
+    }
+
+    /**
+     * Get all ids of link tags in DB, given a name(type) of a link tag
+     * * 
+     * @param elemName
+     * @return list of retrieved ids
+     */
+    ArrayList<String> getLinkIdsByName(String elemName) {
+        HashSet<String> ids = new HashSet<String>();
+        try {
+            Statement stat = mConn.createStatement();
+            String query = ("SELECT * FROM links where element_name = '" 
+                    + elemName + "';");
+            ResultSet rs = stat.executeQuery(query);
+            while(rs.next()) {
+                ids.add(rs.getString("id"));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<String>(ids);
+    }
+    
+    ArrayList<String> getExtIdsByName(String elemName) {
+        HashSet<String> ids = new HashSet<String>();
+        try {
+            Statement stat = mConn.createStatement();
+            String query = ("SELECT * FROM extents where element_name = '"
+                    + elemName + "';");
+            ResultSet rs = stat.executeQuery(query);
+            while(rs.next()) {
+                ids.add(rs.getString("id"));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<String>(ids);
     }
 
     /**
@@ -452,16 +595,13 @@ class AnnotDB {
         if (num>0){
             return true;
         }
-        //also check link table    
+        // also check link table
         String query2 = "select count(id) from links where id = '" + id + "';";
         ResultSet rs2 = stat.executeQuery(query2);
         int num2 = rs2.getInt(1);
         rs2.close();
-        if (num2>0){
-            return true;
-        }
+        return num2 > 0;
 
-        return false;
     }
 
 
@@ -473,12 +613,12 @@ class AnnotDB {
      * @param id ID
      * @throws Exception
      */
-    void add_extent(int location, String element, String id)
+    void addExtent(int location, String element, String id)
             throws Exception{
-        mExtInsert.setInt(1, location);
-        mExtInsert.setString(2, element);
-        mExtInsert.setString(3, id);
-        mExtInsert.addBatch();
+        mExt2Insert.setInt(LOC_COL, location);
+        mExt2Insert.setString(NAME_COL, element);
+        mExt2Insert.setString(ID_COL, id);
+        mExt2Insert.addBatch();
     }
 
     /**
@@ -488,7 +628,7 @@ class AnnotDB {
      */
     void batchExtents() throws Exception{
         mConn.setAutoCommit(false);
-        mExtInsert.executeBatch();
+        mExt2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
@@ -499,15 +639,10 @@ class AnnotDB {
      * @param id ID
      * @throws Exception
      */
-    void insert_extent(int location, String element, String id)
+    void insertExtent(int location, String element, String id)
             throws Exception{
-        mExtInsert.setInt(1, location);
-        mExtInsert.setString(2, element);
-        mExtInsert.setString(3, id);
-        mExtInsert.addBatch();
-        mConn.setAutoCommit(false);
-        mExtInsert.executeBatch();
-        mConn.setAutoCommit(true);
+        addExtent(location, element, id);
+        batchExtents();
     }
 
     /**
@@ -516,63 +651,84 @@ class AnnotDB {
      */
     void batchLinks() throws Exception{
         mConn.setAutoCommit(false);
-        mLinkInsert.executeBatch();
+        mLink2Insert.executeBatch();
         mConn.setAutoCommit(true);
     }
 
     /**
-     * Adds a link to the batch 
-     * @param newID ID string
-     * @param linkName type of link being added
-     * @param linkFrom ID of the from anchor
-     * @param from_name tag type of the from anchor
-     * @param linkTo ID of the to anchor
-     * @param to_name tag type of the to anchor
-     * @throws Exception
+     * Adds a link to the batch
+     * @param id ID string for a new link
+     * @param name type of link being added
+     * @param argIds list of ids of relevent arguments
+     * @param argTypes list of names of relevent arguments (should correspond to args)
      */
-    void add_link(String newID, String linkName, String linkFrom, 
-            String from_name, String linkTo, String to_name) throws Exception{
-        mLinkInsert.setString(1, newID);
-        mLinkInsert.setString(2, linkFrom);
-        mLinkInsert.setString(3, from_name);
-        mLinkInsert.setString(4, linkTo);
-        mLinkInsert.setString(5, to_name);
-        mLinkInsert.setString(6, linkName);
-        mLinkInsert.addBatch();
+    void addLink(String id, String name,
+                 List<String> argIds, List<String> argTypes) {
+        // first check args and argTypes are matching
+        // (maybe checking here is redundant, since we can't give any message to a user)
+        if (argIds.size() != argTypes.size()) {
+            System.err.println("args and argTypes not matching");
+        }
+        // or the number of arguments is acceptable
+        else if (argIds.size() > mMaxArgs) {
+            System.err.println(argIds.toString() + "CUR_MAX: " + mMaxArgs);
+            System.err.println("too many arguments");
+        }
+        // else, that is, input seems to be good enough
+        else {
+            try {
+                mLink2Insert.setString(ID_COL, id);
+                mLink2Insert.setString(NAME_COL, name);
+                for (int i=0;i<argIds.size();i++) {
+                    mLink2Insert.setString(ARG0_COL + (2*i), argIds.get(i));
+                    mLink2Insert.setString(ARG0_COL + (2*i)+1, argTypes.get(i));
+                }
+                mLink2Insert.addBatch();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
-
+    
     /**
-     * 
-     * @param newID String of the ID being added
-     * @param linkName tag type of the link being added
-     * @param linkFrom ID of the from anchor
-     * @param from_name tag type of the from anchor
-     * @param linkTo ID of the to anchor
-     * @param to_name tag type of the to anchor
-     * @throws Exception
+     * Update a link tag with a single specific argument of it
+     * @param id
+     * @param argNum
+     * @param argId
+     * @param argType
+     * @throws SQLException
      */
-    void insert_link(String newID, String linkName, String linkFrom, 
-            String from_name, String linkTo, String to_name) throws Exception{
-        mLinkInsert.setString(1, newID);
-        mLinkInsert.setString(2, linkFrom);
-        mLinkInsert.setString(3, from_name);
-        mLinkInsert.setString(4, linkTo);
-        mLinkInsert.setString(5, to_name);
-        mLinkInsert.setString(6, linkName);
-        mLinkInsert.addBatch();
-        mConn.setAutoCommit(false);
-        mLinkInsert.executeBatch();
-        mConn.setAutoCommit(true);
+    void addArgument(String id, int argNum,
+                     String argId, String argType) throws SQLException {
+        Statement stat = mConn.createStatement();
+        String argIdCol = "arg" + argNum, argTypeCol = "arg" + argNum + "_name";
+        String update
+                = String.format(
+                "UPDATE links SET %s = '%s', %s = '%s' where id = '%s';", 
+                argIdCol, argId, argTypeCol, argType, id);
+                
+        stat.executeUpdate(update);
+        
     }
 
     /**
      * Closes the connection to the DB
      */
-    void close_db(){
+    void closeDb(){
         try{
             mConn.close();
         }catch(Exception e){
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
     }
+
+    /**
+     * getter for max # arguments
+     * @return largest number among numbers of arguments in all link tags in DB
+     */
+    int getMaxArgs() {
+        return mMaxArgs;
+    }
+    
 }
+

@@ -27,9 +27,9 @@ package mae;
 /**
  * XMLHandler extends the sax DefaultHandler to work specifically with 
  * the stand-off XML format used in MAE.
- *
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.12
+ *
  */
 
 import org.xml.sax.Attributes;
@@ -48,21 +48,22 @@ class XMLHandler extends DefaultHandler {
     }
 
     @Override
-    public void startElement(String nsURI, String strippedName, String tagName, Attributes atts)
+    public void startElement(
+            String nsURI, String strippedName, String tagName, Attributes attribs)
             throws SAXException {
 
         if (tagName.equalsIgnoreCase("text")) {
             mHasText = true;
         } else {
-            Hashtable<String, String> tag = new Hashtable<String, String>();
-            for (int i = 0; i < atts.getLength(); i++) {
-                String name = atts.getQName(i);
-                String value = atts.getValue(i);
-                tag.put(name, value);
+            Hashtable<String, String> elemInstance = new Hashtable<String, String>();
+            for (int i = 0; i < attribs.getLength(); i++) {
+                String attName = attribs.getQName(i);
+                String attValue = attribs.getValue(i);
+                elemInstance.put(attName, attValue);
                 // add by krim: for legacy support
-                convertLegXml(tag);
-                newTags.putEnt(tagName, tag);
             }
+            convertLegXml(elemInstance);
+            newTags.putEnt(tagName, elemInstance);
         }
     }
 
@@ -84,7 +85,6 @@ class XMLHandler extends DefaultHandler {
     }
 
     public String getText() {
-        System.out.println(mText);
         return mText;
     }
 
@@ -92,16 +92,16 @@ class XMLHandler extends DefaultHandler {
      * add by krim:
      * Used to convers start-end attributes for old version to new 'spans' attribute.
      *
-     * @param tag a HashTable of (attribute, value) entities
+     * @param elemInstance a HashTable of (attribute, value) entities
      */
 
-    private void convertLegXml(Hashtable<String, String> tag) {
+    private void convertLegXml(Hashtable<String, String> elemInstance) {
 
-        if (!tag.containsKey("spans")) {
-            if (tag.containsKey("start") && tag.containsKey("end")) {
-                String start = tag.remove("start");
-                String end = tag.remove("end");
-                tag.put("spans", start + MaeMain.SPANDELIMITER + end);
+        if (!elemInstance.containsKey("spans")) {
+            if (elemInstance.containsKey("start") && elemInstance.containsKey("end")) {
+                String start = elemInstance.remove("start");
+                String end = elemInstance.remove("end");
+                elemInstance.put("spans", start + MaeStrings.SPANDELIMITER + end);
             }
         }
     }

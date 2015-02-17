@@ -30,8 +30,9 @@ package mae;
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
+ * @author Amber Stubbs, Keigh Rim
+ * @version v0.11
  *
- * @revised Keigh Rim
  *
  */
 
@@ -73,7 +74,7 @@ class HashCollection<K,V>{
 
     /* krim: redundant
     void putAllEnt (K key, V value) {
-        ArrayList<V> existing = getList(key);
+        ArrayList<V> existing = getVaildValues(key);
         if ( existing == null ){
             ArrayList<V> newlist = new ArrayList<V>();
             newlist.add(value);
@@ -117,7 +118,7 @@ class HashCollection<K,V>{
     public void printHash(){
         for (Enumeration<K> e = mHash.keys() ; e.hasMoreElements() ;) {
             K ent = e.nextElement();
-            System.out.println((String)ent + ":");
+            System.out.println(ent + ":");
             ArrayList<V> list = getList(ent);
             for (int i=0;i<list.size();i++){
                 System.out.println("\t" + list.get(i).toString());

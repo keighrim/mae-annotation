@@ -26,9 +26,9 @@ package mae;
 
 /**
  * Used for tag attributes that provide a list of options
- * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.10
+ * @version v0.11
+ *
  */
 
 
@@ -36,30 +36,31 @@ import java.util.ArrayList;
 
 class AttList extends Attrib{
 
-AttList(){
-}
+    AttList(){
+    }
 
 
-AttList (String name, boolean r, ArrayList<String> c, String d){
-    setName(name);
-    setRequired(r);
-    setList(c);
-    setDefaultValue(d);
-}
+    AttList (String name, boolean required, 
+             ArrayList<String> validList, String defaultValue){
+        setName(name);
+        setRequired(required);
+        setVaildValues(validList);
+        setDefaultValue(defaultValue);
+    }
 
-public ArrayList<String> getList(){
-    return list;
-}
+    public ArrayList<String> getVaildValues(){
+        return vaildValues;
+    }
 
-public void setList(ArrayList<String> l){
-    list=l;
-}
+    public void setVaildValues(ArrayList<String> vaildList){
+        vaildValues =vaildList;
+    }
 
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + getRequired() + "also list" );
-}
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() + "also list" );
+    }
 
 
-private ArrayList<String> list;
+    private ArrayList<String> vaildValues;
 
 }
