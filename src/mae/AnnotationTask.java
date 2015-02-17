@@ -24,6 +24,7 @@
 
 package mae;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.List;
  * AnnotationTask serves as a go-between for MaeGui and the 
  * SQLite interface TagDB.  
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
+ * @version v0.12
  *
  */
 
@@ -54,8 +55,8 @@ class AnnotationTask {
     
     public void resetDb(){
         mDb.closeDb();
-        mDb = new AnnotDB();
-        mDb.setMaxArgs(mMaxArgs);
+        mDb = new AnnotDB(mMaxArgs);
+//        mDb.setMaxArgs(mMaxArgs);
     }
     
     public void resetIdTracker() {
@@ -152,7 +153,7 @@ class AnnotationTask {
     // Exceptions are usually caught here, rather than passed back to
     // main.
 
-    public String getLocByID(String id) {
+    public ArrayList<int[]> getLocByID(String id) {
         try {
             return mDb.getLocByID(id);
         } catch (Exception e) {
@@ -161,7 +162,7 @@ class AnnotationTask {
         }
     }
 
-    public String getElementByID(String id){
+    public String getElemNameById(String id){
         try{
             return mDb.getElementByID(id);
         }catch(Exception e){
@@ -206,9 +207,9 @@ class AnnotationTask {
        return (new HashCollection<String,String>());
    }
    
-   public HashCollection<String,String> getElementsAllLocs(){
+   public HashCollection<String,String> getLocElemHash(){
        try{
-           return(mDb.getElementsAllLocs());
+           return(mDb.getLocElemHash());
        }catch(Exception e){
            e.printStackTrace();
        }
@@ -220,7 +221,7 @@ class AnnotationTask {
             mDb.addExtent(pos, elemName, newId);
             mIdsExist.putEnt(elemName, newId);
         } catch(Exception e) {
-            System.out.println("Error adding extent to DB");
+            System.err.println("Error adding extent to DB");
             e.printStackTrace();
         }
 
@@ -239,8 +240,18 @@ class AnnotationTask {
         mDb.addLink(newID, elemName, argIds, argTypes);
         mIdsExist.putEnt(elemName, newID);
     }
+    
+    void addArgument(
+            String id, int argNum, String argId, String argType) {
+        try {
+            mDb.addArgument(id, argNum, argId, argType);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-    ArrayList<String> getElemntsLoc(int loc){
+    }
+
+    ArrayList<String> getElementsAtLoc(int loc){
         try{
           return (mDb.getElementsAtLoc(loc));
         }catch(Exception e){
@@ -335,7 +346,7 @@ class AnnotationTask {
         try{
             mDb.batchExtents();
         }catch(Exception e){
-            System.out.println("Error adding all extents to DB");
+            System.err.println("Error adding all extents to DB");
             e.printStackTrace();
         }
     }
@@ -344,7 +355,7 @@ class AnnotationTask {
             try{
                 mDb.batchLinks();
             }catch(Exception e){
-                System.out.println("Error adding all links to DB");
+                System.err.println("Error adding all links to DB");
                 e.printStackTrace();
             }
         }
@@ -357,7 +368,8 @@ class AnnotationTask {
     public void setDtd(DTD d){
         mDtd = d;
         mMaxArgs =  d.getMaxArgs();
-        mDb.setMaxArgs(mMaxArgs);
+        mDb = new AnnotDB(mMaxArgs);
+//        mDb.setMaxArgs(mMaxArgs);
         mElements = createHash();
         mIdTracker = createIDTracker();
         hasDTD=true;
@@ -378,7 +390,7 @@ class AnnotationTask {
     }
   
   
-    public ArrayList<String> getExtElemNames(){
+    public ArrayList<String> getExtNames(){
         ArrayList<String> extents = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
         for (Elem e : elems) {
@@ -389,7 +401,7 @@ class AnnotationTask {
         return extents;
     }
   
-    public ArrayList<String> getLinkElemNames(){
+    public ArrayList<String> getLinkNames(){
         ArrayList<String> links = new ArrayList<String>();
         ArrayList<Elem> elems = mDtd.getElements();
         for (Elem e : elems) {
@@ -404,14 +416,28 @@ class AnnotationTask {
         return mDb.getLinkIdsByName(linkName);
     }
     
-    public ArrayList<String> getLinkIds() {
+    public ArrayList<String> getAllLinkIds() {
         ArrayList<String> linkids = new ArrayList<String>();
-        for (String linkName : getLinkElemNames()) {
+        for (String linkName : getLinkNames()) {
             for (String id : mDb.getLinkIdsByName(linkName)) {
                 linkids.add(id);
             }
         }
         return linkids;
+    }
+    
+    public ArrayList<String> getExtIdsByName(String elemName) {
+        return mDb.getExtIdsByName(elemName);
+    }
+    
+    public ArrayList<String> getAllExtIds() {
+        ArrayList<String> extIds = new ArrayList<String>();
+        for (String extName : getExtNames()) {
+            for (String id : mDb.getExtIdsByName(extName)) {
+                extIds.add(id);
+            }
+        }
+        return extIds;
     }
   
     public ArrayList<String> getEmptyExtentElements(){
@@ -435,7 +461,7 @@ class AnnotationTask {
       return mElements;
     }
 
-    public Elem getElem(String name) {
+    public Elem getElemByName(String name) {
         return mElements.get(name);
     }
 
@@ -453,7 +479,7 @@ class AnnotationTask {
             return linkElem.getArguments();
         } catch (ClassCastException e) {
             e.printStackTrace();
-            System.out.println("Invalid name: not a link tag");
+            System.err.println("Invalid name: not a link tag");
             return null;
         }
     }

@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * Provides methods for loading a DTD file into a DTD class
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
+ * @version v0.12
  *
  * @see DTD
  */
@@ -48,7 +48,7 @@ class DTDLoader {
         try{
             readFile(f);
         }catch(FileNotFoundException e){
-            System.out.println("no file found");
+            System.err.println("no file found");
         }
     }
     
@@ -182,14 +182,15 @@ class DTDLoader {
                  defVal.add(matcher.group());
              }
              if (defVal.size()>1){
-                 System.out.println("Error in attribute; too many default values found");
-                 System.out.println(tag);
+                 System.err.println(String.format(
+                         "too many default values found in %s", tag));
              }
              else if (defVal.size()==1){
                  defaultValue = defVal.get(0).split("\"")[1];
                  if (!validValues.contains(defaultValue)){
-                     System.out.println("Error -- default value not in attribute list");
-                     System.out.println(tag);
+                     System.err.println(String.format(
+                             "default value %s not in attribute list of %s"
+                             , defaultValue, tag));
                      defaultValue="";
                  }
              }
@@ -197,7 +198,8 @@ class DTDLoader {
              elem.addAttribute(new AttList(attName,req,validValues,defaultValue));
          }
          else{
-             System.out.println("no match found: '" + elemName + "' is not a valid tag identifier");
+             System.err.println(String.format(
+                     "%s not found. not a valid tag identifier?", elemName));
          }
     }
         
@@ -229,7 +231,7 @@ class DTDLoader {
                     att.setPrefix(prefix);
                 }
             } else {
-                // added by krim: for multi-link support
+                // krim: for multi-link support
                 // first check if this att is for argument
                 Pattern argAttPat = Pattern.compile("^arg[0-9]+$");
                 Matcher matcher = argAttPat.matcher(attName);
@@ -251,9 +253,8 @@ class DTDLoader {
                             mDtd.setMaxArgs(((ElemLink) elem).getArgNum());
                         }
                     } else {
-                        System.out.println("No argument attrib allowed for an extend tag");
+                        System.err.println("No argument attrib allowed for an extend tag");
                     }
-
                 }
                 // otherwise, add as a simple data attrib (original code)
                 else {
@@ -265,8 +266,8 @@ class DTDLoader {
                         defVals.add(matcher.group());
                     }
                     if (defVals.size() > 1) {
-                        System.out.println("Error in attribute; too many default values found");
-                        System.out.println(tag);
+                        System.err.println(String.format(
+                                "too many default values found in %s", tag));
                     } else if (defVals.size() == 1) {
                         defaultValue = defVals.get(0).split("\"")[1];
                     }
@@ -278,7 +279,8 @@ class DTDLoader {
             }
         }
         else{
-            System.out.printf("element name %s is not found", elemName);
+            System.err.println(String.format(
+                    "element name %s is not found", elemName));
         }
     }
 }

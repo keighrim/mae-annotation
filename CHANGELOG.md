@@ -1,7 +1,20 @@
 ## working on...
-* adding multi-argument select mode
-* adding selecting multiple arguments in text pane
-* adding a tab for all ext tags in bottom table
+* make editing in a single_tag tab to update the all_tag tab as well
+* performance enhancement by optimizing table management
+* adding a warning popup when save to XML with un-fulfilled links left
+* adding idRef support
+* adding side text panel to show meta data, etc.
+
+## v0.12.0
+* added: multi-argument select mode
+* added: selecting multiple arguments in text pane
+* added: a tab for all extent tags in bottom table. this can be useful when creating a link tag by selecting arguments from table
+* added: now can toggle extent tag coloring
+* added: toggle colors/styles from tabs in the bottom table
+* added: lots of lots of keyboard shortcuts
+* removed: toggle styling arguments of link tags in display menu
+* fixed: link display toggle now properly works
+* fixed: adding an argument to a link didn't update back-end DB
 
 ## v0.11.7
 * fixed java version problem (was not working on java 6 and 7)
@@ -10,10 +23,11 @@
 ## v0.11.6
 * added link creation windows for multi-argument selection
 * added selecting multiple arguments using bottom table
+* removed ctrl/cmd control in text pane to create links
 
 ## v0.11.5
 * fixed an error text highlighting by double clicks on link tags in bottom table
-* changed set of colors for text highlighting
+* changed set of colors for text coloring
 * added color indicator in tab title
 
 ## v0.11.4  

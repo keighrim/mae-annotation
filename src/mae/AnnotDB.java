@@ -26,33 +26,36 @@ package mae;
 
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 /**
  * TagDB is the class that handles all the calls to the 
  * SQLite database.  TagDB in MAE has two tables:
- * krim - these column design was originally from Amber, after re-writing modify here
- * 1) extents, with columns: 1-location int(5), 2-element_name, 3-id
- * mod by krim - links table is redesign for multi-linking support
- * 2) links, with columns: 1-location int(5), 2-element_name, 3-id,
- *    4 ... - arg0, arg0_name, ...argN, argN_name
- *    4+mMaxArgs ... - arg0_name...argN_name
- * <p>
+ *
+ * these column design was originally from Amber
+ * 1) extents, with columns: 
+ *    1-location int(5), 
+ *    2-element_name, 
+ *    3-id
+ * links table is redesign for multi-linking support
+ * 2) links, with columns: 
+ *    1-location int(5), 
+ *    2-element_name, 
+ *    3-id,  // common attribs by far
+ *    4, 5,..., 4+(2*MaxArgs), 4+(2*MaxArgs)+1 - arg0, arg0_name, ...argN, argN_name
+ *     
  * User-defined attribute information about the tags that are being 
  * created is not stored in the database; it exists only in the 
  * tables that are part of MaeGui.  Therefore if the program 
  * is closed without the file being saved, the tags cannot
  * be completely recovered from the database.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
+ * @version v0.12
  *
  */
 
 class AnnotDB {
-    // mod by krim: class renamed corresponding MAI
+    // krim: class renamed corresponding MAI
 
     private PreparedStatement mExt2Insert;
     private PreparedStatement mLink2Insert;
@@ -70,9 +73,13 @@ class AnnotDB {
      * tables and PreparedStatements.
      * 
      */
-    AnnotDB(){
+    AnnotDB() {
+        this(2);
+    }
+    
+    AnnotDB(int maxArgs) {
         try{
-            mMaxArgs = 2; // default number of args is 2
+            mMaxArgs = maxArgs; // default number of args is 2
             Class.forName("org.sqlite.JDBC");
             mConn = DriverManager.getConnection("jdbc:sqlite:tag.db");
             Statement stat = mConn.createStatement();
@@ -125,7 +132,8 @@ class AnnotDB {
         }
     }
 
-    // TODO need serious revision: right now, this method is not used at anywhere so leave it now
+    // TODO this method needs to re-written from scratch:
+    // right now, this method is not used at anywhere so leave it now
     public void printLinks(){
         System.out.println("Links in DB:");
         try {
@@ -182,7 +190,7 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    HashCollection<String,String> getElementsAllLocs()
+    HashCollection<String,String> getLocElemHash()
             throws Exception{
         HashCollection<String,String>elems = new HashCollection<String,String>();
         Statement stat = mConn.createStatement();
@@ -314,8 +322,7 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    String getLocByID(String id)
-            throws Exception{
+    ArrayList<int[]> getLocByID(String id) throws Exception{
         Statement stat = mConn.createStatement();
         String query = "select * from extents where id = '" + id + "';";
         ResultSet rs = stat.executeQuery(query);
@@ -331,25 +338,28 @@ class AnnotDB {
         // add by krim: make a string representing multiple spans then return it
         int initLoc, endCandi;
         initLoc = endCandi = locs.get(0);
+        ArrayList<int[]> spans = new ArrayList<int[]>();
+        int[] span = new int[2];
         String s = Integer.toString(initLoc);
+        span[0] = initLoc;
 
         if (locs.size()>1) {
             for (int loc : locs) {
-                if (loc <= endCandi+1) {
-                    endCandi = loc;
+                if (loc > endCandi+1) {
+                    span[1] = endCandi + 1;
+                    spans.add(span);
+                    span[0] = loc;
                 }
-                else {
-                    s += MaeMain.SPANDELIMITER + (endCandi+1) +
-                            MaeMain.SPANSEPARATOR + loc;
-                    endCandi = loc;
-                }
+                endCandi = loc;
             }
         }
-        s += MaeMain.SPANDELIMITER + (locs.get(locs.size()-1)+1);
-        return s;
+        span[1] = locs.get(locs.size()-1) + 1;
+        spans.add(span);
+        return spans;
     }
 
     /**
+     * Return the type of an element searched by id
      * 
      * @param id the ID of the string being searched for
      * @return the tag name of the ID being searched for
@@ -358,9 +368,19 @@ class AnnotDB {
     String getElementByID(String id)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String query = "select * from extents where id = '" + id + "';";
+        // first search in extents table
+        String query = "SELECT * FROM extents WHERE id = '" + id + "';";
         ResultSet rs = stat.executeQuery(query);
-        String elemName =  rs.getString("element_name");
+        String elemName;
+        try {
+            elemName = rs.getString("element_name");
+        }
+        // if search failed, try links table
+        catch (SQLException e) {
+            query = "SELECT * FROM links WHERE id = '" + id + "';";
+            rs = stat.executeQuery(query);
+            elemName =  rs.getString("element_name");
+        }
         rs.close();
         return elemName;
     }
@@ -375,7 +395,7 @@ class AnnotDB {
     void removeExtentTags(String element_name, String id)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String delete = ("delete from extents where id = '" 
+        String delete = ("DELETE FROM extents WHERE id = '"
                 +id + "'and element_name = '" + element_name+ "';");
         stat.executeUpdate(delete);  
     }
@@ -525,10 +545,11 @@ class AnnotDB {
      * @return list of retrieved ids
      */
     ArrayList<String> getLinkIdsByName(String elemName) {
-        ArrayList<String> ids = new ArrayList<String>();
+        HashSet<String> ids = new HashSet<String>();
         try {
             Statement stat = mConn.createStatement();
-            String query = ("SELECT * FROM links where element_name = '" + elemName + "';");
+            String query = ("SELECT * FROM links where element_name = '" 
+                    + elemName + "';");
             ResultSet rs = stat.executeQuery(query);
             while(rs.next()) {
                 ids.add(rs.getString("id"));
@@ -537,9 +558,26 @@ class AnnotDB {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return ids;
+        return new ArrayList<String>(ids);
     }
     
+    ArrayList<String> getExtIdsByName(String elemName) {
+        HashSet<String> ids = new HashSet<String>();
+        try {
+            Statement stat = mConn.createStatement();
+            String query = ("SELECT * FROM extents where element_name = '"
+                    + elemName + "';");
+            ResultSet rs = stat.executeQuery(query);
+            while(rs.next()) {
+                ids.add(rs.getString("id"));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<String>(ids);
+    }
+
     /**
      * Checks to see if an ID is already in use in the DB.
      * 
@@ -622,19 +660,19 @@ class AnnotDB {
      * @param id ID string for a new link
      * @param name type of link being added
      * @param argIds list of ids of relevent arguments
-     * @param argTypes list if names of relevent arguments (should correspond to args)
+     * @param argTypes list of names of relevent arguments (should correspond to args)
      */
     void addLink(String id, String name,
                  List<String> argIds, List<String> argTypes) {
         // first check args and argTypes are matching
         // (maybe checking here is redundant, since we can't give any message to a user)
         if (argIds.size() != argTypes.size()) {
-            System.out.println("args and argTypes not matching");
+            System.err.println("args and argTypes not matching");
         }
         // or the number of arguments is acceptable
         else if (argIds.size() > mMaxArgs) {
-            System.out.println(argIds.toString() + "CUR_MAX: " + mMaxArgs);
-            System.out.println("too many arguments");
+            System.err.println(argIds.toString() + "CUR_MAX: " + mMaxArgs);
+            System.err.println("too many arguments");
         }
         // else, that is, input seems to be good enough
         else {
@@ -651,6 +689,27 @@ class AnnotDB {
             }
         }
     }
+    
+    /**
+     * Update a link tag with a single specific argument of it
+     * @param id
+     * @param argNum
+     * @param argId
+     * @param argType
+     * @throws SQLException
+     */
+    void addArgument(String id, int argNum,
+                     String argId, String argType) throws SQLException {
+        Statement stat = mConn.createStatement();
+        String argIdCol = "arg" + argNum, argTypeCol = "arg" + argNum + "_name";
+        String update
+                = String.format(
+                "UPDATE links SET %s = '%s', %s = '%s' where id = '%s';", 
+                argIdCol, argId, argTypeCol, argType, id);
+                
+        stat.executeUpdate(update);
+        
+    }
 
     /**
      * Closes the connection to the DB
@@ -659,15 +718,8 @@ class AnnotDB {
         try{
             mConn.close();
         }catch(Exception e){
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
-    }
-
-    /**
-     * added by krim - set max # arguments
-     */
-    void setMaxArgs(int i) {
-        mMaxArgs = i;
     }
 
     /**

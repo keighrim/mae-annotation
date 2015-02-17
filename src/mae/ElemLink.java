@@ -31,7 +31,7 @@ import java.util.ArrayList;
 /**
  * Extends Elem; used for describing link tags
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
+ * @version v0.12
  *
  */
 
@@ -116,7 +116,7 @@ class ElemLink extends Elem {
      * @param argName name of an argument to be added
      */
     private void addArgAtts(String argName) {
-        addAttribute(new AttData(argName+MaeMain.ID_SUF, true, true));
+        addAttribute(new AttData(argName+ MaeStrings.ID_SUF, true, true));
         addAttribute(new AttData(argName+"Text", true, false));
     }
 
@@ -128,16 +128,16 @@ class ElemLink extends Elem {
      */
     public void setArgName(String name, int index) {
         if (!mNary) {
-            System.out.println("not a n-ary linking element");
+            System.err.println("not a n-ary linking element");
         } else {
             String oldName = mArguments.get(index);
             if (oldName.equals("arg"+index)) {
-                removeAttribute(oldName+MaeMain.ID_SUF);
+                removeAttribute(oldName+ MaeStrings.ID_SUF);
                 removeAttribute(oldName+"Text");
                 mArguments.set(index, name);
                 addArgAtts(name);
             } else {
-                System.out.println("Selected argument is already has a name");
+                System.err.println("Selected argument is already has a name");
             }
 
 
@@ -146,7 +146,8 @@ class ElemLink extends Elem {
 
     public void printInfo() {
         System.out.println("\tname = " + getName());
-        // TODO currently this method is not used, but needs serious re-writing before being used
+        // TODO this method needs to re-written from scratch:
+        // right now, this method is not used at anywhere so leave it now
 
     }
 }
