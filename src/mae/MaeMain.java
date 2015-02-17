@@ -909,7 +909,6 @@ public class MaeMain extends JPanel {
             }
             boxPane.add(okay);
             boxPane.add(cancel);
-            boxPane.getRootPane().setDefaultButton(okay);
             okay.requestFocus();
             mLinkPopupFrame.add(boxPane);
             mLinkPopupFrame.pack();

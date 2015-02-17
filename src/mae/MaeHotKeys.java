@@ -177,7 +177,7 @@ public class MaeHotKeys {
     final static int DPMENU = KeyEvent.VK_D;
     final static int HELPMENU = KeyEvent.VK_H;
     final static int OK_BUTTON = KeyEvent.VK_O;
-    final static int CANCEL_BUTTON = KeyEvent.VK_ESCAPE;
+    final static int CANCEL_BUTTON = KeyEvent.VK_C;
     
     // file menu keys
     final static KeyStroke ksCN
