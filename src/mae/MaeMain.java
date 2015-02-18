@@ -56,8 +56,8 @@ public class MaeMain extends JPanel {
     private static final long serialVersionUID = 9404268L;
 
     private Hashtable<String, Color> mColorTable;
-    private ArrayList<String> mActiveLinks;
-    private ArrayList<String> mActiveExts;
+    private HashSet<String> mActiveLinks;
+    private HashSet<String> mActiveExts;
 
     //Here is where to change the colors that get assigned to tags
     // these are for text colors
@@ -111,7 +111,7 @@ public class MaeMain extends JPanel {
 
     // variables for link creation
     private LinkedList<String> mUnderspecified;
-    private ArrayList<String[]> mPossibleArgs;
+    private ArrayList<String> mPossibleArgIds;
     private String mFileName;
     private String mXmlName;
     // krim: column number of some fixed attributes
@@ -151,7 +151,7 @@ public class MaeMain extends JPanel {
         isTextSelected = false;
 
         mUnderspecified = new LinkedList<String>();
-        mPossibleArgs = new ArrayList<String[]>();
+        mPossibleArgIds = new ArrayList<String>();
 
         mFileName = "";
         mXmlName = "";
@@ -159,8 +159,8 @@ public class MaeMain extends JPanel {
         //used to keep track of what color goes with what tag
         mColorTable = new Hashtable<String, Color>();
         // keep track of which tag type is highlighted in text pane
-        mActiveLinks = new ArrayList<String>();
-        mActiveExts = new ArrayList<String>();
+        mActiveLinks = new HashSet<String>();
+        mActiveExts = new HashSet<String>();
 
         // collection for bottom tables for each tag type
         mElementTables = new Hashtable<String, JTable>();
@@ -500,11 +500,13 @@ public class MaeMain extends JPanel {
                                 removeLinkTableRows(links);
                                 // also remove item from all extents tab
                                 removeAllTableRow(id);
+                                mTask.removeExtentByID(id);
+                            } else {
+                                mTask.removeLinkByID(id);
                             }
                             tableModel.removeRow(i);
                             break;
                         }
-                        mTask.removeExtentByID(elemName, id);
 
                     }
                 }
@@ -877,10 +879,10 @@ public class MaeMain extends JPanel {
             // comboboxes to select arguments
             for (int i = 0; i < target.getArgNum(); i++) {
                 JComboBox<String> candidates = new JComboBox<String>();
-                for (String item : getComboItems(mPossibleArgs, false)) {
+                for (String item : getComboItems(mPossibleArgIds, false)) {
                     candidates.addItem(item);
                 }
-                // front of mPossibleArgs is sorted by selection order
+                // front of mPossibleArgIds is sorted by selection order
                 candidates.setSelectedIndex(i % candidates.getItemCount());
                 // set initial argid and argtype from seleted item
                 String selected = (String) candidates.getSelectedItem();
@@ -1034,7 +1036,7 @@ public class MaeMain extends JPanel {
                 String elemType = command.split(MaeStrings.SEP)[0];
                 String id = command.split(MaeStrings.SEP)[1];
                 links = mTask.getLinksByExtentID(elemType, id);
-                mTask.removeExtentByID(elemType, id);
+                mTask.removeExtentByID(id);
                 //remove extent tags and recolors text area
                 removeTableRows(elem, id);
                 //remove links that use the tag being removed
@@ -1277,7 +1279,6 @@ public class MaeMain extends JPanel {
             }
         }
     }
-
     /** Icon class to be used in tab titles as toggle buttons */
     public class ColorRect implements Icon {
         private int size = UIManager.getIcon("CheckBox.icon").getIconHeight();
@@ -1407,10 +1408,11 @@ public class MaeMain extends JPanel {
             // if is, add the link tag to the underspecified for further lookup
             if (argId.equals("")) {
                 mUnderspecified.add(argId);
+            } else {
+                String type = mTask.getElemNameById(argId);
+                argIDs.add(argId);
+                argTypes.add(type);
             }
-            String type = mTask.getElemNameById(argId);
-            argIDs.add(argId);
-            argTypes.add(type);
         }
         mTask.addLinkToBatch(elemName, newId, argIDs, argTypes);
         // no need to run batch for each adding, to in at once in processTagHash()
@@ -1662,7 +1664,7 @@ public class MaeMain extends JPanel {
             }
         }
         ArrayList<String> elemNames = mTask.getExtNames();
-        mActiveExts = new ArrayList<String>(elemNames);
+        mActiveExts = new HashSet<String>(elemNames);
         for (String elemName : elemNames) {
             TabTitle tab = (TabTitle) mBottomTable.getTabComponentAt(
                     mBottomTable.indexOfTab(elemName));
@@ -1802,18 +1804,18 @@ public class MaeMain extends JPanel {
      * krim: create a list of arguments from a give target tag set used in a
      * link-creation popup windows
      *
-     * @param targetTags target tag set
+     * @param targetIds target tag set
      * @param emptyFirst add a empty dummy as the first item in the list
      * @return list of argument strings "type - id - text"
      */
     private ArrayList<String> getComboItems(
-            ArrayList<String[]> targetTags, boolean emptyFirst) {
+            ArrayList<String> targetIds, boolean emptyFirst) {
         ArrayList<String> items = new ArrayList<String>();
         if (emptyFirst) {
             items.add("");
         }
-        for (String[] tag : targetTags) {
-            String type = tag[0], id = tag[1];
+        for (String id : targetIds) {
+            String type = mTask.getElemNameById(id);
             // format relevant info, then add to the list
             items.add(String.format("%s%s%s%s%s",
                     type, MaeStrings.COMBO_DELIMITER,
@@ -1872,7 +1874,7 @@ public class MaeMain extends JPanel {
             } else if (a.isIdRef()) {
                 /* TODO need to implement this part, currently not working
                 final JComboBox tags = new JComboBox();
-                // tags.setModel(new DefaultComboBoxModel(mPossibleArgs));
+                // tags.setModel(new DefaultComboBoxModel(mPossibleArgIds));
 
                 tags.addItem("");
                 tags.setVisible(true);
@@ -2076,9 +2078,10 @@ public class MaeMain extends JPanel {
         JMenu menu = new JMenu(menuTitle);
 
         // waterfall menu top level - link names
-        int j = 0;
+        int j = -1;
         for (String linkType : mTask.getLinkNames()) {
 
+            j++;
             ArrayList<String> linkIds = mTask.getLinkIdsByName(linkType);
 
             // check if a tag in each type of link element exists
@@ -2089,19 +2092,18 @@ public class MaeMain extends JPanel {
             // add a link type as a menu item, only when it has real tags
             JMenu linkTypeMenu;
             if (j < 10) {
-                linkTypeMenu = new JMenu(String.format("(%d) %s", j + 1, linkType));
+                linkTypeMenu = new JMenu(String.format("%d %s", j+1, linkType));
                 linkTypeMenu.setMnemonic(MaeHotKeys.numKeys[j]);
             } else {
                 linkTypeMenu = new JMenu(linkType);
             }
-            j++;
 
             // next level - actual relevant arguments
             int k = 0;
             for (String argName : mTask.getArguments(linkType)) {
                 JMenu linkArgMenu;
                 if (k < 10) {
-                    linkArgMenu = new JMenu(String.format("(%d) %s", k + 1, argName));
+                    linkArgMenu = new JMenu(String.format("%d %s", k+1, argName));
                     linkArgMenu.setMnemonic(MaeHotKeys.numKeys[k]);
                 } else {
                     linkArgMenu = new JMenu(argName);
@@ -2127,7 +2129,6 @@ public class MaeMain extends JPanel {
                 // needs to move underspecified items to the top of the menu
                 boolean prior = false;
                 if (mUnderspecified.size() > 0) {
-                    int l = 0;
                     for (String unspecId : mUnderspecified) {
                         if (id2Add.contains(unspecId)) {
                             // find which row to look for,
@@ -2148,11 +2149,6 @@ public class MaeMain extends JPanel {
                                             = new JMenuItem(unspecId);
                                     unspecIdItem.addActionListener(
                                             new SetAsArgListener());
-                                    if (l < 10) {
-                                        unspecIdItem.setAccelerator(
-                                                MaeHotKeys.noneNums[l]);
-                                    }
-                                    l++;
                                     unspecIdItem.setActionCommand(
                                             linkType + MaeStrings.SEP +
                                                     unspecId + MaeStrings.SEP +
@@ -2278,10 +2274,9 @@ public class MaeMain extends JPanel {
                 // retrieve ids of all selected tags
                 for (String id : ids) {
                     if (elemName.equals(MaeStrings.ALL_TABLE_BACK_NAME)) {
-                        mPossibleArgs.add(
-                                new String[]{mTask.getElemNameById(id), id});
+                        mPossibleArgIds.add(id);
                     } else {
-                        mPossibleArgs.add(new String[]{elemName, id});
+                        mPossibleArgIds.add(id);
                     }
                 }
                 String makeLink = "Create a Link tag with selected elements";
@@ -2814,40 +2809,27 @@ public class MaeMain extends JPanel {
 
     /** krim: make a list all extent elements in mSpan */
     private void updateArgList() {
-        mPossibleArgs.clear();
-        ArrayList<String[]> lowPrior = new ArrayList<String[]>();
+        mPossibleArgIds.clear();
 
-        int i = -1;
+        int i = 0;
         for (int[] span : mSpans) {
-            HashCollection<String, String> hc
+            HashCollection<String, String> elems
                     = mTask.getTagsBetween(span[0], span[1]);
-            ArrayList<String[]> extElems = new ArrayList<String[]>();
-            for (String elemName : hc.getKeyList()) {
-                for (String elemId : hc.get(elemName)) {
-                    boolean duplicate = false;
-                    for (String[] exist : mPossibleArgs) {
-                        if (exist[1].equals(elemId)) {
-                            duplicate = true;
-                            break;
+            boolean first = true;
+            for (String elemName : elems.getKeyList()) {
+                for (String elemId : elems.get(elemName)) {
+                    if (!mPossibleArgIds.contains(elemId)) {
+                        if (first) {
+                            mPossibleArgIds.add(i, elemId);
+                            first = false;
+                            i++;
+                        } else {
+                            mPossibleArgIds.add(elemId);
                         }
                     }
-                    if (!duplicate) {
-                        String[] newArg = new String[]{elemName, elemId};
-                        extElems.add(newArg);
-                        i++;
-                    }
-                }
-            }
-            if (extElems.size() > 0) {
-                // put first items first
-                mPossibleArgs.add(i, extElems.remove(0));
-                // for anything left
-                if (extElems.size() > 0) {
-                    lowPrior.addAll(extElems);
                 }
             }
         }
-        mPossibleArgs.addAll(lowPrior);
     }
 
     /** krim: Updates the status bar */
@@ -2879,14 +2861,14 @@ public class MaeMain extends JPanel {
                         mStatusBar.setText("[Argument select] No tags selected.");
                     } else {
                         ArrayList<String> argList = new ArrayList<String>();
-                        for (String[] arg : mPossibleArgs) {
-                            argList.add(String.format(
-                                    "%s - %s"
-                                    , arg[1], getTextByID(arg[0], arg[1])));
+                        for (String id : mPossibleArgIds) {
+                            argList.add(String.format("%s - %s"
+                                    , id
+                                    , getTextByID(mTask.getElemNameById(id), id)));
                         }
                         mStatusBar.setText(String.format(
                                 "[Argument select] %s tags selected: %s"
-                                , mPossibleArgs.size(), argList.toString()));
+                                , mPossibleArgIds.size(), argList.toString()));
                     }
                     break;
             }
@@ -2918,7 +2900,7 @@ public class MaeMain extends JPanel {
         Highlighter hl = mTextPane.getHighlighter();
         hl.removeAllHighlights();
 
-        mPossibleArgs.clear();
+        mPossibleArgIds.clear();
     }
 
 

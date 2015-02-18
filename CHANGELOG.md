@@ -5,6 +5,14 @@
 * adding idRef support
 * adding side text panel to show meta data, etc.
 
+## v0.12.1
+* fixed: color toggle not working after using toggle from all_tab
+* fixed: SQL insert error when inserting underspecified link tags
+* fixed: triple click on text pane in arg_select mode caused crash
+* fixed: DB was not updated when deleting link tags
+* fixed: hotkey conflicts in set_as_arg menu
+* minor code optimizations
+
 ## v0.12.0
 * added: multi-argument select mode
 * added: selecting multiple arguments in text pane

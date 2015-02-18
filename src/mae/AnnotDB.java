@@ -365,7 +365,7 @@ class AnnotDB {
      * @return the tag name of the ID being searched for
      * @throws Exception
      */
-    String getElementByID(String id)
+    String getElemNameByID(String id)
             throws Exception{
         Statement stat = mConn.createStatement();
         // first search in extents table
@@ -388,17 +388,27 @@ class AnnotDB {
     /**
      * Removes an extent tag from the extents table
      * 
-     * @param element_name the name of the tag type being removed
+     * param element_name the name of the tag type being removed
      * @param id the ID of the tag being removed
      * @throws Exception
      */
-    void removeExtentTags(String element_name, String id)
+    void removeExtentTag(String id)
             throws Exception{
         Statement stat = mConn.createStatement();
-        String delete = ("DELETE FROM extents WHERE id = '"
-                +id + "'and element_name = '" + element_name+ "';");
+        String delete = (String.format("DELETE FROM extents WHERE id = '%s';", id));
+//                +id + "'and element_name = '" + element_name+ "';");
         stat.executeUpdate(delete);  
     }
+
+    void removeLinkTag(String id)
+            throws Exception{
+        Statement stat = mConn.createStatement();
+        String delete = (String.format("DELETE FROM links WHERE id = '%s';", id));
+//        String delete = ("DELETE FROM links WHERE id = '"
+//                +id + "'and element_name = '" + element_name+ "';");
+        stat.executeUpdate(delete);
+    }
+
 
     /**
      * Returns the links that an extent participates in as 
