@@ -546,8 +546,8 @@ public class MaeMain extends JPanel {
         TabTitle(String elemName, Color elemColor) {
             this.elemName = elemName;
             this.elemColor = elemColor;
-            Icon unselected = UIManager.getIcon("CheckBox.icon");
-            Icon selected = new ColorRect(this.elemColor);
+            Icon unselected = new BorderRect(this.elemColor, 13);
+            Icon selected = new ColorRect(this.elemColor, 13);
             this.toggle = new JCheckBox(unselected);
             this.toggle.setSelectedIcon(selected);
             this.init();
@@ -1052,6 +1052,7 @@ public class MaeMain extends JPanel {
      * methods can use that information in the display and links.
      */
     private class MaeCaretListener implements CaretListener {
+        @Override
         public void caretUpdate(CaretEvent e) {
             Highlighter hl = mTextPane.getHighlighter();
             //when the caret is moved, remove the any link highlights
@@ -1125,6 +1126,12 @@ public class MaeMain extends JPanel {
      * it has it highlights the appropriate text extent/extents.
      */
     private class TableMouseAdapter extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            maybeShowTablePopup(e);
+        }
+        
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTablePopup(e);
@@ -1183,6 +1190,12 @@ public class MaeMain extends JPanel {
      * displayed.
      */
     private class TextMouseAdapter extends MouseAdapter {
+        
+        @Override
+        public void mousePressed(MouseEvent e) {
+            maybeShowTextPopup(e);
+        }
+        
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTextPopup(e);
@@ -1228,6 +1241,7 @@ public class MaeMain extends JPanel {
      * Used only in multi-span mode
      */
     private class UndoSelectListener implements ActionListener {
+        @Override
         public void actionPerformed(ActionEvent actionEvent) {
             String command = actionEvent.getActionCommand();
             if (command.equals("Undo")) {
@@ -1263,35 +1277,47 @@ public class MaeMain extends JPanel {
         }
     }
 
-    /** Comparator class to be provided to ArrayList of spans */
-    private class SpanComparator implements Comparator<int[]> {
-        public int compare(int[] x, int[] y) {
-            if (x == null || x.length < 2) {
-                return y == null || y.length < 2 ? 0 : -1;
-            } else if (y == null || y.length < 2) {
-                return 1;
-            } else {
-                if (x[0] == y[0]) {
-                    return x[1] - y[1];
-                } else {
-                    return x[0] - y[0];
-                }
-            }
-        }
-    }
-    /** Icon class to be used in tab titles as toggle buttons */
+    /** filled color icon class to be used in tab titles as toggle buttons */
     public class ColorRect implements Icon {
-        private int size = UIManager.getIcon("CheckBox.icon").getIconHeight();
+        private int size;
         private Color color;
 
-        public ColorRect(Color c) {
+        public ColorRect(Color c, int size) {
             this.color = c;
+            this.size = size;
         }
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
             g.setColor(this.color);
             g.fillRect(x, y, this.size, this.size);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return this.size;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return this.size;
+        }
+    }
+
+    /** Rectangle icon class to be used in tab titles as toggle buttons */
+    public class BorderRect implements Icon {
+        private int size;
+        private Color color;
+
+        public BorderRect(Color c, int size) {
+            this.color = c;
+            this.size = size;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            g.setColor(this.color);
+            g.drawRect(x, y, this.size, this.size);
         }
 
         @Override

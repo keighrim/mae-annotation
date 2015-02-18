@@ -25,6 +25,7 @@
 package mae;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 
 /**
@@ -77,25 +78,35 @@ public class MaeHotKeys {
             n1, n2, n3, n4, n5, n6, n7, n8, n9, n0};
 
     final static KeyStroke ksC1
-            = KeyStroke.getKeyStroke(n1, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n1, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC2
-            = KeyStroke.getKeyStroke(n2, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n2, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC3
-            = KeyStroke.getKeyStroke(n3, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n3, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC4
-            = KeyStroke.getKeyStroke(n4, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n4, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC5
-            = KeyStroke.getKeyStroke(n5, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n5, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC6
-            = KeyStroke.getKeyStroke(n6, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n6, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC7
-            = KeyStroke.getKeyStroke(n7, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n7, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC8
-            = KeyStroke.getKeyStroke(n8, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n8, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC9
-            = KeyStroke.getKeyStroke(n9, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n9, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke ksC0
-            = KeyStroke.getKeyStroke(n0, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(n0, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     
     final static KeyStroke[] ctrlNums = new KeyStroke[] {
             ksC1, ksC2, ksC3, ksC4, ksC5, ksC6, ksC7, ksC8, ksC9, ksC0 };
@@ -173,7 +184,7 @@ public class MaeHotKeys {
     final static int LINKARGMENU = KeyEvent.VK_K;
     final static int SETARGMENU = KeyEvent.VK_S;
     final static int NCMENU = KeyEvent.VK_N;
-    final static int MODEMENU = KeyEvent.VK_F;
+    final static int MODEMENU = KeyEvent.VK_M;
     final static int DPMENU = KeyEvent.VK_D;
     final static int HELPMENU = KeyEvent.VK_H;
     final static int OK_BUTTON = KeyEvent.VK_O;
@@ -181,38 +192,46 @@ public class MaeHotKeys {
     
     // file menu keys
     final static KeyStroke ksCN
-            = KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_N, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke NEWTASK = ksCN;
     
     final static KeyStroke ksCO
-            = KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_O,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke OPENFILE = ksCO;
     
     final static KeyStroke ksCR
-            = KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke SAVERTF = ksCR;
     
     final static KeyStroke ksCS
-            = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_S, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke SAVEXML = ksCS;
     
     // display menu keys
     final static KeyStroke ksCMinus
-            = KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke FONTSMALL = ksCMinus;
     
     final static KeyStroke ksCEquals
-            = KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke FONTBIG = ksCEquals;
     
     final static KeyStroke ksCPlus
-            = KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     
     final static KeyStroke SIDEPANEL = ksF9;
     
     // mode menu keys
     final static KeyStroke ksCE
-            = KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK);
+            = KeyStroke.getKeyStroke(KeyEvent.VK_E, 
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke NORMALMODE = ksCE;
     final static KeyStroke MSPANMODE = ksC1;
     final static KeyStroke ARGSMODE = ksC2;

@@ -5,6 +5,11 @@
 * adding idRef support
 * adding side text panel to show meta data, etc.
 
+## v0.12.2
+* fixed: color toggle button was not properly shown in OSX
+* fixed: right click was not working in Linux and OSX
+* fixed: hotkey conflicts in main menu
+
 ## v0.12.1
 * fixed: color toggle not working after using toggle from all_tab
 * fixed: SQL insert error when inserting underspecified link tags
