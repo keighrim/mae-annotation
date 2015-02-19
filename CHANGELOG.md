@@ -1,9 +1,11 @@
 ## working on...
-* make editing in a single_tag tab to update the all_tag tab as well
-* performance enhancement by optimizing table management
-* adding a warning popup when save to XML with un-fulfilled links left
-* adding idRef support
 * adding side text panel to show meta data, etc.
+* make editing in a single_tag tab to update the all_tag tab as well
+* adding a warning popup when save to XML with un-fulfilled links left
+* integrating MAI into MAE
+* adding multi-file load
+* performance enhancement by optimizing table management
+* adding idRef support
 
 ## v0.12.2
 * fixed: color toggle button was not properly shown in OSX

@@ -1101,7 +1101,6 @@ public class MaeMain extends JPanel {
                 }
                 if (!dup) {
                     mSpans.add(new int[]{start, end});
-                    // TODO OutOfIndex exception when triple clicked
                     if (mMode == M_ARG_SEL) {
                         updateArgList();
                     }
@@ -1734,7 +1733,7 @@ public class MaeMain extends JPanel {
     /**
      * This method is for coloring/underlining text in the text window.  It detects
      * overlaps, and should be called every time a tag is added or removed.
-     * TODO also assign boldness when adding link tags*
+     * TODO also assign boldness when adding link tags
      *
      * @param begin the location of the first character in the extent
      * @param end   the location of the last character in the extent
