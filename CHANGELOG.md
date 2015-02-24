@@ -7,6 +7,9 @@
 * performance enhancement by optimizing table management
 * adding idRef support
 
+## v0.12.2.1
+* hotfix: fixed whitespace issue in loading a DTD file
+
 ## v0.12.2
 * fixed: color toggle button was not properly shown in OSX
 * fixed: right click was not working in Linux and OSX

@@ -80,7 +80,7 @@ class DTDLoader {
                     tag = tag+next;
                 }
             }
-            tag = tag.replaceAll(" +"," ");
+            tag = tag.replaceAll("\\s+"," ");
             process(tag);
       } 
     }
@@ -227,7 +227,7 @@ class DTDLoader {
             } else if(tag.contains(" ID ")) {
                 AttID att = (AttID) elem.getAttribute("id");
                 if (tag.contains("prefix")) {
-                    String prefix = tag.split("\"")[1];
+                    String prefix = tag.split("[\"]")[1];
                     att.setPrefix(prefix);
                 }
             } else {
