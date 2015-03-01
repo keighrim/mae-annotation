@@ -50,7 +50,6 @@ import java.util.*;
  * is closed without the file being saved, the tags cannot
  * be completely recovered from the database.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

@@ -29,7 +29,6 @@ package mae;
  * A class that describes tag attributes that 
  * only contain text data (such as comments)
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

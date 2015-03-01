@@ -31,7 +31,6 @@ import java.util.ArrayList;
 /**
  * Extends Elem; used for describing link tags
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

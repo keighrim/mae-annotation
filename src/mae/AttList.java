@@ -27,7 +27,6 @@ package mae;
 /**
  * Used for tag attributes that provide a list of options
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 

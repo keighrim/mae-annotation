@@ -28,7 +28,6 @@ package mae;
 /**
  * Parent class for DTD elements (generally referred to as "tags")
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 

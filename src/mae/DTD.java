@@ -30,7 +30,6 @@ package mae;
  * stored in a DTD.  The DTD describes the annotation 
  * task, specifically the tags and attributes.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 

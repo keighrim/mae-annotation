@@ -32,7 +32,6 @@ import java.awt.event.KeyEvent;
  * Contains hotkeys for MAE main
  * Created by krim on 2/17/2015.
  * @author Keigh Rim
- * @version v0.12
  *
  */
 public class MaeHotKeys {
@@ -239,5 +238,19 @@ public class MaeHotKeys {
     // help menu keys
     final static  KeyStroke ABOUT = ksF10;
     final static  KeyStroke WEB = ksF1;
+    
+    // switch between tabs
+    final static KeyStroke ksCTab
+            = KeyStroke.getKeyStroke("ctrl Tab");
+    final static KeyStroke ksCShTab
+            = KeyStroke.getKeyStroke("ctrl shift Tab");
+    final static KeyStroke ksCPgup
+            = KeyStroke.getKeyStroke("ctrl PgUp");
+    final static KeyStroke ksCPgdn
+            = KeyStroke.getKeyStroke("ctrl PgDown");
+    final static KeyStroke NEXTTAB = ksCTab;
+    final static KeyStroke PREVTAB = ksCShTab;
+    final static KeyStroke TABUP = ksCPgup;
+    final static KeyStroke TABDOWN = ksCPgdn;
 }
 

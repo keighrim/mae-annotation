@@ -34,7 +34,6 @@ package mae;
  * use a string of (possibly) multiple spans, to keep track of spans of an extent
  * Following getters and setters are also modified.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 

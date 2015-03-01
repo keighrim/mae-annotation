@@ -34,7 +34,6 @@ import java.util.List;
  * SQLite interface TagDB.
  *
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  */
 
 class AnnotationTask {

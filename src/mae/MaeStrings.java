@@ -30,7 +30,6 @@ import java.util.Calendar;
  * Contains string resources for MAE main
  * Created by krim on 2/17/2015.
  * @author Keigh Rim
- * @version v0.12
  *
  */
 public class MaeStrings {
@@ -38,7 +37,7 @@ public class MaeStrings {
             = "https://github.com/keighrim/mae-annotation";
     final static String CUR_YEAR
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    final static String VERSION = "0.12.0";
+    final static String VERSION = "0.12.2.2";
     final static String TITLE_PREFIX = "MAE " + VERSION;
 
     final static String COMBO_DELIMITER = " - ";
@@ -54,4 +53,7 @@ public class MaeStrings {
     // krim: column number of some fixed attributes
     final static String SEP = "@#";
     final static String ID_SUF = "ID";
+
+    final static String NO_TASK_IND = "No DTD";
+    final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
 }

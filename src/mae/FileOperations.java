@@ -27,7 +27,6 @@ package mae;
 /**
  * FileOperations handles the input and output of files to and from MAE
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

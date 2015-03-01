@@ -27,8 +27,8 @@ package mae;
 /**
  * XMLHandler extends the sax DefaultHandler to work specifically with 
  * the stand-off XML format used in MAE.
+ * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

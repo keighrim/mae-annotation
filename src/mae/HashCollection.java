@@ -30,8 +30,8 @@ package mae;
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
+ * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  *
  */

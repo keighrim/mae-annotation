@@ -1,11 +1,16 @@
 ## working on...
-* adding side text panel to show meta data, etc.
+* adding side text panel to show meta data, adjudication info, etc.
 * make editing in a single_tag tab to update the all_tag tab as well
 * adding a warning popup when save to XML with un-fulfilled links left
 * integrating MAI into MAE
 * adding multi-file load
 * performance enhancement by optimizing table management
 * adding idRef support
+* add RowSorter to id column
+
+## v0.12.2.2
+* hotfix: tags were not deleted in DB when deleting tags from table popup
+* hotfix: deleting tag in text popup menu was not functioning
 
 ## v0.12.2.1
 * hotfix: fixed whitespace issue in loading a DTD file

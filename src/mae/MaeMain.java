@@ -48,7 +48,6 @@ import java.util.Timer;
  * and displayed.
  *
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  */
 
 public class MaeMain extends JPanel {
@@ -196,8 +195,8 @@ public class MaeMain extends JPanel {
 
         // bottom tabbed table panel
         mBottomTable = new JTabbedPane();
-        JComponent panel1 = makeTextPanel("No DTD");
-        mBottomTable.addTab("Tab", panel1);
+        JComponent panel1 = makeTextPanel(MaeStrings.NO_TASK_GUIDE);
+        mBottomTable.addTab(MaeStrings.NO_TASK_IND, panel1);
 
         // main menu bar
         mMenuBar = new JMenuBar();
@@ -208,13 +207,16 @@ public class MaeMain extends JPanel {
                 JSplitPane.VERTICAL_SPLIT, mTopPanel, mBottomTable);
 
         add(mMenuBar, BorderLayout.NORTH);
+
         add(splitPane, BorderLayout.CENTER);
+
         splitPane.setDividerLocation(250);
 
         // set everything to default value
         mMode = M_NORMAL;
         // init start-end to (-1, -1) pair
         mSpans = new ArrayList<int[]>();
+
         resetSpans();
 
 
@@ -492,6 +494,7 @@ public class MaeMain extends JPanel {
                         if (tableModel.getValueAt(i, 0).equals(id)) {
                             // if removing an extent tag, re-assign highlighting
                             if (elem instanceof ElemExtent) {
+                                mTask.removeExtentByID(id);
                                 assignTextColor(parseSpansString(
                                         (String) tableModel.getValueAt(i, 1)));
                                 //remove links that use the tag being removed
@@ -500,7 +503,6 @@ public class MaeMain extends JPanel {
                                 removeLinkTableRows(links);
                                 // also remove item from all extents tab
                                 removeAllTableRow(id);
-                                mTask.removeExtentByID(id);
                             } else {
                                 mTask.removeLinkByID(id);
                             }
@@ -1029,20 +1031,19 @@ public class MaeMain extends JPanel {
             boolean check = showDeleteWarning();
             if (check) {
                 String command = actionEvent.getActionCommand();
-                Elem elem = mTask.getElemByName(command.split(", ")[0]);
+                Elem elem = mTask.getElemByName(command.split(MaeStrings.SEP)[0]);
                 //remove rows from DB
                 HashCollection<String, String> links;
                 // removes extent tags and related link tags from DB
-                String elemType = command.split(MaeStrings.SEP)[0];
+                String elemName = command.split(MaeStrings.SEP)[0];
                 String id = command.split(MaeStrings.SEP)[1];
-                links = mTask.getLinksByExtentID(elemType, id);
+                links = mTask.getLinksByExtentID(elemName, id);
                 mTask.removeExtentByID(id);
                 //remove extent tags and recolors text area
                 removeTableRows(elem, id);
+                removeAllTableRow(id);
                 //remove links that use the tag being removed
                 removeLinkTableRows(links);
-                //remove, also, item in all extents tab
-                removeAllTableRow(id);
             }
         }
     }
@@ -1558,13 +1559,12 @@ public class MaeMain extends JPanel {
         int rows = tableModel.getRowCount();
         //has to go backwards or the wrong rows get deleted
         for (int i = rows - 1; i >= 0; i--) {
-            String value = (String) tableModel.getValueAt(i, 0);
-            if (value.equals(id)) {
+            if (id.equals(tableModel.getValueAt(i, 0))) {
                 //redo color for this text--assumes that lines
                 //have already been removed from the DB
                 if (elem instanceof ElemExtent) {
-                    String spanString = (String) tableModel.getValueAt(i, 1);
-                    assignTextColor(parseSpansString(spanString));
+                    assignTextColor(parseSpansString(
+                            (String) tableModel.getValueAt(i, 1)));
                 }
                 tableModel.removeRow(i);
             }

@@ -34,8 +34,8 @@ import java.util.Hashtable;
 /**
  * XMLFileLoader reads in any annotated files that are loaded into MAE by 
  * calling the XMLHandler file.
+ * 
  * @author Amber Stubbs, Keigh Rim
- * @version v0.12
  *
  */
 

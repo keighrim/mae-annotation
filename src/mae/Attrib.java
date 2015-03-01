@@ -27,7 +27,6 @@ package mae;
 /**
  * The parent class for tag attributes
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 

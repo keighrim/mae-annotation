@@ -31,7 +31,6 @@ package mae;
  * have their own class that keeps track of the 
  * prefix.
  * @author Amber Stubbs, Keigh Rim
- * @version v0.11
  *
  */
 
