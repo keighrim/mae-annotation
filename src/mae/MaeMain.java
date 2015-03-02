@@ -98,6 +98,7 @@ public class MaeMain extends JPanel {
 
     //some booleans that help keep track of the status of the annotation
     private boolean isFileOpen;
+    private boolean isTaskChanged;
     private boolean isTextSelected;
 
     // krim: additional booleans to keep track of annotation mode
@@ -113,6 +114,7 @@ public class MaeMain extends JPanel {
     // variables for link creation
     private LinkedList<String> mUnderspecified;
     private ArrayList<String> mPossibleArgIds;
+    private String mFileFullName;
     private String mFileName;
     private String mXmlName;
     // krim: column number of some fixed attributes
@@ -149,11 +151,13 @@ public class MaeMain extends JPanel {
         mTask = new AnnotationTask();
 
         isFileOpen = false;
+        isTaskChanged = false;
         isTextSelected = false;
 
         mUnderspecified = new LinkedList<String>();
         mPossibleArgIds = new ArrayList<String>();
 
+        mFileFullName = "";
         mFileName = "";
         mXmlName = "";
 
@@ -257,7 +261,7 @@ public class MaeMain extends JPanel {
             String command = actionEvent.getActionCommand();
 
             if (command.equals("Load DTD")) {
-                if (isFileOpen) {
+                if (isFileOpen && isTaskChanged) {
                     showSaveWarning();
                 }
                 returnVal = mLoadFC.showOpenDialog(MaeMain.this);
@@ -297,7 +301,7 @@ public class MaeMain extends JPanel {
                 }
 
             } else if (command.equals("Load File")) {
-                if (isFileOpen) {
+                if (isFileOpen && isTaskChanged) {
                     showSaveWarning();
                 }
                 returnVal = mLoadFC.showOpenDialog(MaeMain.this);
@@ -305,14 +309,12 @@ public class MaeMain extends JPanel {
                 String status = "";
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mLoadFC.getSelectedFile();
-                    String fileName = file.getName();
-                    int endName = fileName.lastIndexOf(".");
-                    mFileName = fileName.substring(0, endName);
+                    mFileFullName = file.getName();
+                    int endName = mFileFullName.lastIndexOf(".");
+                    mFileName = mFileFullName.substring(0, endName);
                     mXmlName = mFileName + ".xml";
                     try {
-                        // krim: to show tool version on title bar
-                        mMainFrame.setTitle(MaeStrings.TITLE_PREFIX + fileName);
-
+                        updateTitle();
                         isFileOpen = true;
                         mTask.resetDb();
                         mTask.resetIdTracker();
@@ -369,6 +371,7 @@ public class MaeMain extends JPanel {
                 returnVal = mSaveFC.showSaveDialog(MaeMain.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mSaveFC.getSelectedFile();
+                    isTaskChanged = false;
                     try {
                         FileOperations.saveRTF(file, mTextPane);
                         mStatusBar.setText("Save Complete :" + rtfName);
@@ -383,15 +386,16 @@ public class MaeMain extends JPanel {
                 returnVal = mSaveFC.showSaveDialog(MaeMain.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mSaveFC.getSelectedFile();
-                    String fileName = file.getName();
+                    isTaskChanged = false;
+                    mFileFullName = file.getName();
                     try {
                         FileOperations.saveXML(file,
                                 mTextPane,
                                 mElementTables,
                                 mTask.getElements(),
                                 mTask.getDTDName());
-                        mMainFrame.setTitle(MaeStrings.TITLE_PREFIX + fileName);
-                        mXmlName = fileName;
+                        updateTitle();
+                        mXmlName = mFileFullName;
                         mStatusBar.setText("Save Complete :" + mXmlName);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -514,6 +518,8 @@ public class MaeMain extends JPanel {
                     }
                 }
             }
+            isTaskChanged = true;
+            updateTitle();
         }
     }
 
@@ -787,6 +793,8 @@ public class MaeMain extends JPanel {
             resetSpans();
             mStatusBar.setText(String.format("%s is created!", newId));
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+            isTaskChanged = true;
+            updateTitle();
         }
 
         private void insertToTable() {
@@ -858,7 +866,7 @@ public class MaeMain extends JPanel {
                                 // name, id, argType, argId, argText
                                 newName, newId,
                                 target.getArguments().get(i), argIds[i],
-                                getTextByID(argTypes[i], argIds[i]));
+                                getTextByID(argTypes[i], argIds[i], true));
                     }
                     mLinkPopupFrame.setVisible(false);
                     mLinkPopupFrame.dispose();
@@ -1045,6 +1053,8 @@ public class MaeMain extends JPanel {
                 removeAllTableRow(id);
                 //remove links that use the tag being removed
                 removeLinkTableRows(links);
+                isTaskChanged = true;
+                updateTitle();
             }
         }
     }
@@ -1580,7 +1590,7 @@ public class MaeMain extends JPanel {
      * @param id   The ID of the tag associated with the text being looked for
      * @return the text being searched for
      */
-    private String getTextByID(String elem, String id) {
+    private String getTextByID(String elem, String id, boolean fullText) {
         String text = "";
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(elem).getModel();
@@ -1591,6 +1601,10 @@ public class MaeMain extends JPanel {
             if (value.equals(id)) {
                 text = (String) tableModel.getValueAt(i, TEXT_COL);
             }
+        }
+        if (text.length() > 20 && !fullText) {
+            String[] words = text.split(" ");
+            return words[0] + MaeStrings.LONGTEXTTRUNC + words[words.length - 1];
         }
         return text;
     }
@@ -1847,7 +1861,7 @@ public class MaeMain extends JPanel {
             items.add(String.format("%s%s%s%s%s",
                     type, MaeStrings.COMBO_DELIMITER,
                     id, MaeStrings.COMBO_DELIMITER,
-                    getTextByID(type, id)));
+                    getTextByID(type, id, false)));
 
         }
         return items;
@@ -2007,16 +2021,16 @@ public class MaeMain extends JPanel {
         // add menus for creating Ext tags, 
         // only if text selected and not in arg_sel mode
         if (isTextSelected && mMode != M_ARG_SEL) {
-            JMenu tagMenu = createTagMenu("Create an Extent tag with selected text");
+            JMenu tagMenu = createTagMenu("Create an Extent tag with selected text", false);
             tagMenu.setMnemonic(MaeHotKeys.TAGMENU);
 
             jp.add(tagMenu);
         }
         // add common menus for NC and Link tag creation
-        JMenu ncMenu = createNCMenu("Create a NC tag");
+        JMenu ncMenu = createNCMenu("Create a NC tag", false);
         ncMenu.setMnemonic(MaeHotKeys.NCMENU);
         jp.add(ncMenu);
-        JMenu linkMenu = createLinkMenu("Create a Link tag without arguments");
+        JMenu linkMenu = createLinkMenu("Create a Link tag without arguments", false);
         linkMenu.setMnemonic(MaeHotKeys.LINKMENU);
         jp.add(linkMenu);
 
@@ -2072,7 +2086,7 @@ public class MaeMain extends JPanel {
                     ArrayList<String> ids = idHash.get(elem);
                     for (String id : ids) {
                         jp.addSeparator();
-                        String text = getTextByID(elem, id);
+                        String text = getTextByID(elem, id, false);
                         if (text.equals("")) {
                             text = "NC tag";
                         }
@@ -2181,7 +2195,7 @@ public class MaeMain extends JPanel {
                                                     unspecId + MaeStrings.SEP +
                                                     argName + MaeStrings.SEP +
                                                     argId + MaeStrings.SEP +
-                                                    getTextByID(argType, argId));
+                                                    getTextByID(argType, argId, true));
                                     linkArgMenu.add(unspecIdItem);
                                     id2Add.remove(unspecId);
                                 }
@@ -2202,7 +2216,7 @@ public class MaeMain extends JPanel {
                                     item + MaeStrings.SEP +
                                     argName + MaeStrings.SEP +
                                     argId + MaeStrings.SEP +
-                                    getTextByID(argType, argId));
+                                    getTextByID(argType, argId, true));
                     linkArgMenu.add(idItem);
                 }
                 linkTypeMenu.add(linkArgMenu);
@@ -2252,7 +2266,7 @@ public class MaeMain extends JPanel {
             }
             if (mTask.getElemByName(elemName) instanceof ElemExtent) {
                 String target = String.format("%s (%s)",
-                        id, getTextByID(elemName, id));
+                        id, getTextByID(elemName, id, false));
                 JMenu setArg = createSetAsArgMenu(String.format(
                         "Set %s as an argument of", target), elemName, id);
                 setArg.setMnemonic(MaeHotKeys.SETARGMENU);
@@ -2562,26 +2576,34 @@ public class MaeMain extends JPanel {
      *
      * @return JMenu for creating link tags
      */
-    private JMenu createLinkMenu(String menuTitle) {
+    private JMenu createLinkMenu(String menuTitle, boolean mainMenu) {
         JMenu menu = new JMenu(menuTitle);
 
         if (mTask.hasDTD()) {
-            ArrayList<String> linkTypes = mTask.getLinkNames();
+            ArrayList<String> linkNames = mTask.getLinkNames();
 
-            if (linkTypes.size() == 0) {
+            if (linkNames.size() == 0) {
                 addGuideItem(menu, "no link tags defined");
             } else {
                 int i = 0;
-                for (String linkType : linkTypes) {
-                    JMenuItem menuItem = new JMenuItem(linkType);
+                for (String linkName : linkNames) {
+                    JMenuItem menuItem;
+                    if (mainMenu) {
+                        menuItem = new JMenuItem(
+                                String.format("(%d) %s", i+1, linkName));
+                    } else {
+                        menuItem = new JMenuItem(linkName);
+                    }
                     menuItem.addActionListener(new MakeTagListener());
                     menuItem.setActionCommand(
-                            MaeStrings.ADD_LINK_COMMAND + linkType);
-                    if (!isFileOpen) {
-                        menuItem.setEnabled(false);
-                    }
+                            MaeStrings.ADD_LINK_COMMAND + linkName);
                     if (i < 10) {
-                        menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        if (mainMenu) {
+                            menuItem.setMnemonic(MaeHotKeys.numKeys[i]);
+
+                        } else {
+                            menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        }
                     }
                     i++;
                     menu.add(menuItem);
@@ -2594,15 +2616,34 @@ public class MaeMain extends JPanel {
         return menu;
     }
 
-    private JMenu createTagMenu(String menuTitle) {
+    private JMenu createTagMenu(String menuTitle, boolean mainMenu) {
         JMenu menu = new JMenu(menuTitle);
+        if (!isTextSelected) {
+            JMenuItem noText = new JMenuItem(MaeStrings.MENU_NOTEXT);
+            noText.setEnabled(false);
+            menu.add(noText);
+            return menu;
+        }
 
         int i = 0;
         for (String elemName : mTask.getExtNames()) {
-            JMenuItem menuItem = new JMenuItem(elemName);
+            JMenuItem menuItem;
+            if (mainMenu) {
+                menuItem = new JMenuItem( 
+                        String.format("(%d) %s", i + 1, elemName));
+                
+                
+            } else {
+                menuItem = new JMenuItem(elemName);
+            }
             menuItem.addActionListener(new MakeTagListener());
             if (i < 10) {
-                menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                if (mainMenu) {
+                    menuItem.setMnemonic(MaeHotKeys.numKeys[i]);
+
+                } else {
+                    menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                }
             }
             i++;
             menu.add(menuItem);
@@ -2615,26 +2656,34 @@ public class MaeMain extends JPanel {
      *
      * @return JMenu for creating non-consuming tags
      */
-    private JMenu createNCMenu(String menuTitle) {
+    private JMenu createNCMenu(String menuTitle, boolean mainMenu) {
         JMenu menu = new JMenu(menuTitle);
 
         if (mTask.hasDTD()) {
-            ArrayList<Elem> nc = mTask.getNCElements();
+            ArrayList<Elem> ncElems = mTask.getNCElements();
 
-            if (nc.size() == 0) {
+            if (ncElems.size() == 0) {
                 addGuideItem(menu, "no NC tag defined");
             } else {
                 int i = 0;
-                for (Elem e : nc) {
-                    JMenuItem menuItem = new JMenuItem(e.getName());
+                for (Elem ncElem : ncElems) {
+                    JMenuItem menuItem;
+                    if (mainMenu) {
+                        menuItem = new JMenuItem(
+                                String.format("(%d) %s", i+1, ncElem.getName()));
+                    } else {
+                        menuItem = new JMenuItem(ncElem.getName());
+                    }
                     menuItem.addActionListener(new MakeTagListener());
                     menuItem.setActionCommand(
-                            MaeStrings.ADD_NC_COMMAND + e.getName());
-                    if (!isFileOpen) {
-                        menuItem.setEnabled(false);
-                    }
+                            MaeStrings.ADD_NC_COMMAND + ncElem.getName());
                     if (i < 10) {
-                        menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        if (mainMenu) {
+                            menuItem.setMnemonic(MaeHotKeys.numKeys[i]);
+
+                        } else {
+                            menuItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        }
                     }
                     i++;
                     menu.add(menuItem);
@@ -2734,10 +2783,10 @@ public class MaeMain extends JPanel {
             JMenu displayMenu = createDisplayMenu("Display");
             displayMenu.setMnemonic(MaeHotKeys.DPMENU);
             mMenuBar.add(displayMenu);
-            JMenu linkMenu = createLinkMenu("Link elements");
+            JMenu linkMenu = createLinkMenu("Link Tags", true);
             linkMenu.setMnemonic(MaeHotKeys.LINKMENU);
             mMenuBar.add(linkMenu);
-            JMenu ncMenu = createNCMenu("NC elements");
+            JMenu ncMenu = createNCMenu("NC Tags", true);
             ncMenu.setMnemonic(MaeHotKeys.NCMENU);
             mMenuBar.add(ncMenu);
             JMenu modeMenu = createModeMenu("Modes");
@@ -2862,51 +2911,68 @@ public class MaeMain extends JPanel {
     /** krim: Updates the status bar */
     private void updateStatusBar() {
         if (!mTask.hasDTD()) {
-            mStatusBar.setText("No DTD loaded.");
+            mStatusBar.setText(MaeStrings.SB_NODTD);
         } else if (!isFileOpen) {
-            mStatusBar.setText("No file loaded.");
+            mStatusBar.setText(MaeStrings.SB_NOFILE);
         } else {
             switch (mMode) {
                 case M_NORMAL:
                     if (isSpansEmpty()) {
-                        mStatusBar.setText("No text selected.");
+                        mStatusBar.setText(MaeStrings.SB_NOTEXT);
                     } else {
-                        mStatusBar.setText("Selected: "
+                        mStatusBar.setText(MaeStrings.SB_TEXT
                                 + spansToString(this.mSpans));
                     }
                     break;
                 case M_MULTI_SPAN:
                     if (isSpansEmpty()) {
-                        mStatusBar.setText("[Multi-span] No text selected.");
+                        mStatusBar.setText(
+                                MaeStrings.SB_MSPAN_NOTEXT);
                     } else {
-                        mStatusBar.setText(String.format("[Multi-span] Selected: %s"
-                                , spansToString(this.mSpans)));
+                        mStatusBar.setText(String.format(
+                                MaeStrings.SB_MSPAN_TEXT +
+                                spansToString(this.mSpans)));
                     }
                     break;
                 case M_ARG_SEL:
                     if (isSpansEmpty()) {
-                        mStatusBar.setText("[Argument select] No tags selected.");
+                        mStatusBar.setText(MaeStrings.SB_MARGS_NOTAG);
                     } else {
                         ArrayList<String> argList = new ArrayList<String>();
                         for (String id : mPossibleArgIds) {
                             argList.add(String.format("%s - %s"
                                     , id
-                                    , getTextByID(mTask.getElemNameById(id), id)));
+                                    , getTextByID(
+                                    mTask.getElemNameById(id), id, false)));
                         }
                         mStatusBar.setText(String.format(
-                                "[Argument select] %s tags selected: %s"
+                                MaeStrings.SB_MARGS_TAG
                                 , mPossibleArgIds.size(), argList.toString()));
                     }
                     break;
             }
         }
     }
+    
+    /** add asterisk to windows title when file is changed */
+    private void updateTitle() {
+        if (isTaskChanged) {
+            mMainFrame.setTitle(
+                    MaeStrings.TITLE_PREFIX + " - " + mFileFullName + " *");
+        } else {
+            mMainFrame.setTitle(
+                    MaeStrings.TITLE_PREFIX + " - " + mFileFullName);
+
+        }
+        
+        
+    }
 
     /** krim: Sets MAE mode to Normal */
     private void returnToNormalMode() {
 
         if (mMode != M_NORMAL) {
-            mStatusBar.setText("Exit to normal mode! Click anywhere to continue.");
+            mStatusBar.setText(MaeStrings.SB_NORM_MODE);
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
         }
         mMode = M_NORMAL;

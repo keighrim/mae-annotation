@@ -8,6 +8,12 @@
 * adding idRef support
 * add RowSorter to id column
 
+## v0.12.3.0
+* added: put asterisk in title while user is editing a file
+* added: 'unsaved file' warning now appears only file is actually changed but not saved
+* added: tags with very long text are now truncated in menu
+* fixed: accelerators of creating tags caused unintended tag creation, replace accelerators with mnemonics
+
 ## v0.12.2.3
 * added: more colors to tag table and removed ambiguous gray color
 * fixed: Main window title not properly shown after saving a file
