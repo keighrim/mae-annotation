@@ -37,8 +37,8 @@ public class MaeStrings {
             = "https://github.com/keighrim/mae-annotation";
     final static String CUR_YEAR
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    final static String VERSION = "0.12.2.2";
-    final static String TITLE_PREFIX = "MAE " + VERSION;
+    final static String VERSION = "0.12.2.3";
+    final static String TITLE_PREFIX = "MAE " + VERSION + " - ";
 
     final static String COMBO_DELIMITER = " - ";
     // add by krim: constant string to be used in string representation of spans

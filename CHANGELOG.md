@@ -8,6 +8,10 @@
 * adding idRef support
 * add RowSorter to id column
 
+## v0.12.2.3
+* added: more colors to tag table and removed ambiguous gray color
+* fixed: Main window title not properly shown after saving a file
+
 ## v0.12.2.2
 * hotfix: tags were not deleted in DB when deleting tags from table popup
 * hotfix: deleting tag in text popup menu was not functioning

@@ -60,21 +60,23 @@ public class MaeMain extends JPanel {
 
     //Here is where to change the colors that get assigned to tags
     // these are for text colors
-    private Color mBlue = Color.blue;
-    private Color mRed = Color.red;
-    private Color mDarkGreen = new Color(12, 153, 72);
-    private Color mMagenta = Color.magenta;
-    private Color mDarkOrange = new Color(153, 102, 0);
-    private Color mDarkPink = new Color(170, 85, 133);
-    private Color mDarkBlue = new Color(42, 92, 206);
+    private Color mRed = new Color(255, 0, 0);
     private Color mLightBlue = new Color(11, 162, 188);
     private Color mOrange = new Color(234, 160, 0);
-    private Color mPurple = new Color(102, 75, 153);
-    private Color mGray = Color.darkGray;
+    private Color mDarkGreen = new Color(12, 153, 72);
+    private Color mMagenta = new Color(255, 0, 255);
+    private Color mDarkBlue = new Color(42, 92, 140);
+    private Color mYellow = new Color(255, 255, 0);
+    private Color mPurple = new Color(150, 20, 120);
+    private Color mGray = new Color(200, 200, 200);
+    private Color mViolet = new Color(102, 75, 153);
+    private Color mGold = new Color(207, 181, 59);
+    private Color mBlue = new Color(0, 0, 255);
+    private Color mDarkOrange = new Color(153, 102, 0);
 
     private Color[] mColors = {
-            mBlue, mRed, mDarkGreen, mMagenta, mDarkOrange, mDarkPink, mDarkBlue,
-            mLightBlue, mOrange, mPurple, mGray};
+            mRed, mLightBlue, mOrange, mDarkGreen, mMagenta, mDarkBlue,
+            mYellow, mPurple, mGray, mViolet, mGold, mBlue, mDarkOrange};
 
     // thses are for highlighter colors
     private Color mLightOrange = new Color(255, 204, 51);
@@ -309,8 +311,7 @@ public class MaeMain extends JPanel {
                     mXmlName = mFileName + ".xml";
                     try {
                         // krim: to show tool version on title bar
-                        mMainFrame.setTitle(
-                                MaeStrings.TITLE_PREFIX + " - " + fileName);
+                        mMainFrame.setTitle(MaeStrings.TITLE_PREFIX + fileName);
 
                         isFileOpen = true;
                         mTask.resetDb();
@@ -382,15 +383,15 @@ public class MaeMain extends JPanel {
                 returnVal = mSaveFC.showSaveDialog(MaeMain.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mSaveFC.getSelectedFile();
-                    String fullName = file.getName();
+                    String fileName = file.getName();
                     try {
                         FileOperations.saveXML(file,
                                 mTextPane,
                                 mElementTables,
                                 mTask.getElements(),
                                 mTask.getDTDName());
-                        mMainFrame.setTitle(fullName);
-                        mXmlName = fullName;
+                        mMainFrame.setTitle(MaeStrings.TITLE_PREFIX + fileName);
+                        mXmlName = fileName;
                         mStatusBar.setText("Save Complete :" + mXmlName);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -1813,6 +1814,7 @@ public class MaeMain extends JPanel {
      * @return the text
      */
     private String getTextBetween(int start, int end) {
+        // TODO implement stripping out white spaces with a proper option
         DefaultStyledDocument styleDoc
                 = (DefaultStyledDocument) mTextPane.getStyledDocument();
         String text;
