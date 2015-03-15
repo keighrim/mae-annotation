@@ -151,7 +151,7 @@ public class MaeHotKeys {
     final static KeyStroke ksN8
             = KeyStroke.getKeyStroke(n8, 0);
     final static KeyStroke ksN9
-            = KeyStroke.getKeyStroke(n0, 0);
+            = KeyStroke.getKeyStroke(n9, 0);
     final static KeyStroke ksN0
             = KeyStroke.getKeyStroke(n0, 0);
 

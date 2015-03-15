@@ -8,6 +8,12 @@
 * adding idRef support
 * add RowSorter to id column
 
+## v0.12.3.2
+* fixed hotkey for 9th tag in creating tag menus to 9 (formerly 0)
+
+## v0.12.3.1
+* updateed comments and javadoc
+
 ## v0.12.3.0
 * added: 'unsaved file' warning now appears only when there are unsaved changes in back-end DB
 * added: put an asterisk in title when there is such a change
