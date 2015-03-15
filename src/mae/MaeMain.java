@@ -476,7 +476,6 @@ public class MaeMain extends JPanel {
         }
     }
 
-
     /**
      * Called when the user selects the option to delete the highlighted rows from
      * the table in view.  Rows are removed both from the database and the table.
@@ -608,7 +607,6 @@ public class MaeMain extends JPanel {
             return this.toggle.isSelected();
         }
     }
-
 
     /**
      * This is the class to toggle hightlight color for a specific tagnamw
@@ -965,6 +963,10 @@ public class MaeMain extends JPanel {
         }
     }
 
+    /**
+     * This listener is associated with 'set as argument of...' menu items
+     * callable from context menus from either bottom table or main text pane
+     */
     private class SetAsArgListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
@@ -1131,7 +1133,6 @@ public class MaeMain extends JPanel {
         }
     }
 
-
     /**
      * JTableListener determines if the ID of a tag has been double-clicked, and if
      * it has it highlights the appropriate text extent/extents.
@@ -1189,7 +1190,7 @@ public class MaeMain extends JPanel {
         private void maybeShowTablePopup(MouseEvent e) {
             if (e.isPopupTrigger()) {
                 resetSpans();
-                mTablePopup = tableContextMenu(e);
+                mTablePopup = createTableContextMenu(e);
                 mTablePopup.show(e.getComponent(),
                         e.getX(), e.getY());
             }
@@ -1214,13 +1215,16 @@ public class MaeMain extends JPanel {
 
         private void maybeShowTextPopup(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                mTextPopup = textContextMenu();
+                mTextPopup = createTextContextMenu();
                 mTextPopup.show(e.getComponent(),
                         e.getX(), e.getY());
             }
         }
     }
 
+    /**
+     * Listener to select special modes
+     */
     private class ModeMenuListener implements ActionListener {
         public void actionPerformed(ActionEvent actionEvent) {
             int action = Integer.parseInt(actionEvent.getActionCommand());
@@ -1248,8 +1252,8 @@ public class MaeMain extends JPanel {
     }
 
     /**
-     * krim: Remove last selected text span from spans list
-     * Used only in multi-span mode
+     * Remove last selected text span from spans list
+     * Used only in multi-span mode or n-ary argument selection mode
      */
     private class UndoSelectListener implements ActionListener {
         @Override
@@ -1526,6 +1530,10 @@ public class MaeMain extends JPanel {
         }
     }
 
+    /**
+     * delete an item from all_extent_tags table given an ID of the item
+     * @param id id of the item to delete
+     */
     private void removeAllTableRow(String id) {
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(
@@ -1664,7 +1672,6 @@ public class MaeMain extends JPanel {
         mTask.addLinkToBatch(elemName, newId, argIds, argTypes);
         mTask.runBatchLinks();
     }
-
 
     // *******************************
     // Section: GUI methods
@@ -1953,6 +1960,10 @@ public class MaeMain extends JPanel {
         return scrollPane;
     }
 
+    /**
+     * creates a table to store all extent tags in one place
+     * @return the GUI component containing the JTable for all extent tags
+     */
     private JComponent makeAllTablePanel() {
 
         AllTableModel model = new AllTableModel();
@@ -2007,15 +2018,13 @@ public class MaeMain extends JPanel {
         allTab.setHighlighted(true);
     }
 
-
     /**
-     * Create a menuitem for each element in the annotation task when a section of
-     * the text is highlighted and right-clicked.
+     * Creates a context menu from selected text
      *
-     * @return a pop-up menu with all extent tags listed, as well as information
+     * @return a pop-up menu for creating different tags, as well as information
      * about existing tags at the selected location
      */
-    private JPopupMenu textContextMenu() {
+    private JPopupMenu createTextContextMenu() {
         JPopupMenu jp = new JPopupMenu();
 
         // add menus for creating Ext tags, 
@@ -2114,6 +2123,15 @@ public class MaeMain extends JPanel {
         return jp;
     }
 
+    /**
+     * Creates a waterfall menu to add current extent tag as an argument of a link tag
+     *
+     * @param menuTitle string for top menu item
+     * @param argType element name of current extent tag
+     * @param argId element id if current extent tag
+     * @return a waterfall menu, goes down to 3rd level,
+     *         for each link type, for each argument type, for each link instance
+     */
     private JMenu createSetAsArgMenu(
             String menuTitle, String argType, String argId) {
         JMenu menu = new JMenu(menuTitle);
@@ -2231,7 +2249,7 @@ public class MaeMain extends JPanel {
      *
      * @return GUI menu
      */
-    private JPopupMenu tableContextMenu(MouseEvent event) {
+    private JPopupMenu createTableContextMenu(MouseEvent event) {
         JPopupMenu jp = new JPopupMenu();
 
         // get the title of current tab
@@ -2389,7 +2407,6 @@ public class MaeMain extends JPanel {
         }
     }
 
-
     /**
      * given a type of link tag, return all indices of its arguments columns in
      * bottom table
@@ -2412,7 +2429,6 @@ public class MaeMain extends JPanel {
         }
         return argColumns;
     }
-
 
     /**
      * Displays the warning for saving your work before opening a new file or DTD.
@@ -2755,13 +2771,11 @@ public class MaeMain extends JPanel {
         return menu;
     }
 
-
-    private void addGuideItem(JPopupMenu menu, String guide) {
-        JMenuItem item = new JMenuItem(guide);
-        item.setEnabled(false);
-        menu.add(item);
-    }
-
+    /**
+     * creates a grayed-out menu item that informs user of something
+     * @param menu parent menu to which 'guide' goes in
+     * @param guide something to tell to user
+     */
     private void addGuideItem(JMenu menu, String guide) {
         JMenuItem item = new JMenuItem(guide);
         item.setEnabled(false);
@@ -2883,7 +2897,7 @@ public class MaeMain extends JPanel {
         }
     }
 
-    /** krim: make a list all extent elements in mSpan */
+    /** make a list all extent elements in mSpan */
     private void updateArgList() {
         mPossibleArgIds.clear();
 
@@ -2908,7 +2922,7 @@ public class MaeMain extends JPanel {
         }
     }
 
-    /** krim: Updates the status bar */
+    /** Updates the status bar */
     private void updateStatusBar() {
         if (!mTask.hasDTD()) {
             mStatusBar.setText(MaeStrings.SB_NODTD);
@@ -2968,7 +2982,7 @@ public class MaeMain extends JPanel {
         
     }
 
-    /** krim: Sets MAE mode to Normal */
+    /** Sets MAE mode to Normal */
     private void returnToNormalMode() {
 
         if (mMode != M_NORMAL) {
@@ -2995,7 +3009,6 @@ public class MaeMain extends JPanel {
 
         mPossibleArgIds.clear();
     }
-
 
     /** Creates the GUI */
     private static void createAndShowGUI() {
