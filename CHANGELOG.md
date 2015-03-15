@@ -1,12 +1,6 @@
-## working on...
-* adding side text panel to show meta data, adjudication info, etc.
-* make editing in a single_tag tab to update the all_tag tab as well
-* adding a warning popup when save to XML with un-fulfilled links left
-* integrating MAI into MAE
-* adding multi-file load
-* performance enhancement by optimizing table management
-* adding idRef support
-* add RowSorter to id column
+## v0.13.0.0
+* started new developing version
+* goal: intergrating MAI
 
 ## v0.12.3.2
 * fixed hotkey for 9th tag in creating tag menus to 9 (formerly 0)
