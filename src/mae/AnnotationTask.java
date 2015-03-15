@@ -55,7 +55,10 @@ class AnnotationTask {
     public void resetDb() {
         mDb.closeDb();
         mDb = new AnnotDB(mMaxArgs);
-//        mDb.setMaxArgs(mMaxArgs);
+    }
+
+    void setWorkingFile(String filename) {
+        mDb.setWorkingFile(filename);
     }
 
     public void resetIdTracker() {
@@ -306,12 +309,16 @@ class AnnotationTask {
     HashCollection<String, String> getAllExtTags(boolean includeNC) {
         HashCollection<String, String> hc = new HashCollection<String, String>();
         try {
-            hc.putAll(mDb.getAllExtTags());
+            hc.putAll(mDb.getAllConsumingTags());
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (includeNC) {
-            hc.putAll(getNCTags());
+            try {
+                hc.putAll(mDb.getAllNCTags());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return hc;
     }
@@ -326,7 +333,7 @@ class AnnotationTask {
     public HashCollection<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
         HashCollection<String, String> hc = new HashCollection<String, String>();
         hc.putAll(getTagsIn(spans));
-        hc.putAll(getNCTags());
+        hc.putAll(mDb.getAllNCTags());
         return hc;
         /*
         Iterator<int[]> iter = spans.iterator();
