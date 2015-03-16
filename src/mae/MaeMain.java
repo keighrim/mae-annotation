@@ -30,6 +30,7 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -105,6 +106,7 @@ public class MaeMain extends JPanel {
     private final int M_NORMAL = 0;
     private final int M_MULTI_SPAN = 1;
     private final int M_ARG_SEL = 2;
+    private final int M_ADJUD = 9;
     private int mMode;
 
 
@@ -114,15 +116,14 @@ public class MaeMain extends JPanel {
     // variables for link creation
     private LinkedList<String> mUnderspecified;
     private ArrayList<String> mPossibleArgIds;
-    private String mFileFullName;
-    private String mFileName;
-    private String mXmlName;
+    private String mWorkingFileName;
     // krim: column number of some fixed attributes
-    // this might be hard-coding, but MAE always create an extent element 
+    // this might be hard-coding, but MAE always create an extent element
     // with id, spans, text as the first three attribs of it
-    private int ID_COL = 0;
-    private int SPANS_COL = 1;
-    private int TEXT_COL = 2;
+    private int SRC_COL = 0;
+    private int ID_COL = 1;
+    private int SPANS_COL = 2;
+    private int TEXT_COL = 3;
 
     //GUI components
     private static JFrame mMainFrame;
@@ -157,9 +158,7 @@ public class MaeMain extends JPanel {
         mUnderspecified = new LinkedList<String>();
         mPossibleArgIds = new ArrayList<String>();
 
-        mFileFullName = "";
-        mFileName = "";
-        mXmlName = "";
+        mWorkingFileName = "";
 
         //used to keep track of what color goes with what tag
         mColorTable = new Hashtable<String, Color>();
@@ -276,7 +275,7 @@ public class MaeMain extends JPanel {
                         mActiveLinks.clear();
                         mActiveExts.clear();
                         assignColors();
-                        resetTabPane();
+                        resetTablePane();
 
                         // refresh interfaces
                         updateMenus();
@@ -300,6 +299,67 @@ public class MaeMain extends JPanel {
                     }
                 }
 
+            } else if (command.equals("Add File")) {
+                // TODO re-write this part
+                returnVal = mLoadFC.showOpenDialog(MaeMain.this);
+                boolean succeed = true;
+                String status = "";
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File file = mLoadFC.getSelectedFile();
+                    mWorkingFileName = file.getName();
+                    try {
+                        updateTitle();
+                        isFileOpen = true;
+                        mTask.resetDb();
+                        mTask.resetIdTracker();
+                        mTask.setWorkingFile(mWorkingFileName);
+
+                        // refresh interfaces
+                        resetTablePane();
+                        updateMenus();
+                        resetSpans();
+                        returnToNormalMode();
+
+                        mTextPane.setStyledDocument(new DefaultStyledDocument());
+                        mTextPane.setContentType("text/plain; charset=UTF-8");
+                        mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                        if (FileOperations.hasTags(file)) {
+                            XMLFileLoader xfl = new XMLFileLoader(file);
+                            StyledDocument d = mTextPane.getStyledDocument();
+                            Style def = StyleContext.getDefaultStyleContext()
+                                    .getStyle(StyleContext.DEFAULT_STYLE);
+                            Style regular = d.addStyle("regular", def);
+                            d.insertString(0, xfl.getTextChars(), regular);
+                            // newTags is a hash from tagType to attib list
+                            // each attrib is stored in a has from att name to value
+                            HashCollection<String, Hashtable<String, String>> newTags
+                                    = xfl.getTagHash();
+                            if (newTags.size() > 0) {
+                                processTagHash(newTags);
+                            }
+                        } else {  // that is, if it's only a text file
+                            StyledDocument d = mTextPane.getStyledDocument();
+                            mTextPane.setStyledDocument(FileOperations.setText(file, d));
+                        }
+                        mTextPane.requestFocus(true);
+                        mTextPane.getCaret().setDot(0);
+                        mTextPane.getCaret().moveDot(1);
+                    } catch (Exception ex) {
+                        isFileOpen = false;
+                        ex.printStackTrace();
+                        succeed = false;
+                        status = "Error loading file";
+                    }
+                }
+                mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                mTextPane.setCaretPosition(0);
+                // refresh status bar after all caret events
+                if (succeed) {
+                    status = "File load succeed! Click anywhere to continue.";
+                }
+                mStatusBar.setText(status);
+
             } else if (command.equals("Load File")) {
                 if (isFileOpen && isTaskChanged) {
                     showSaveWarning();
@@ -309,18 +369,16 @@ public class MaeMain extends JPanel {
                 String status = "";
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mLoadFC.getSelectedFile();
-                    mFileFullName = file.getName();
-                    int endName = mFileFullName.lastIndexOf(".");
-                    mFileName = mFileFullName.substring(0, endName);
-                    mXmlName = mFileName + ".xml";
+                    mWorkingFileName = file.getName();
                     try {
                         updateTitle();
                         isFileOpen = true;
                         mTask.resetDb();
                         mTask.resetIdTracker();
+                        mTask.setWorkingFile(mWorkingFileName);
 
                         // refresh interfaces
-                        resetTabPane();
+                        resetTablePane();
                         updateMenus();
                         resetSpans();
                         returnToNormalMode();
@@ -366,7 +424,7 @@ public class MaeMain extends JPanel {
                 mStatusBar.setText(status);
 
             } else if (command.equals("Save RTF")) {
-                String rtfName = mFileName + ".rtf";
+                String rtfName = mWorkingFileName + ".rtf";
                 mSaveFC.setSelectedFile(new File(rtfName));
                 returnVal = mSaveFC.showSaveDialog(MaeMain.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -382,12 +440,13 @@ public class MaeMain extends JPanel {
                 }
 
             } else if (command.equals("Save XML")) {
-                mSaveFC.setSelectedFile(new File(mXmlName));
+                mSaveFC.setSelectedFile(new File(mWorkingFileName + ".xml"));
                 returnVal = mSaveFC.showSaveDialog(MaeMain.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = mSaveFC.getSelectedFile();
                     isTaskChanged = false;
-                    mFileFullName = file.getName();
+                    mWorkingFileName = file.getName();
+                    mTask.setWorkingFile(mWorkingFileName);
                     try {
                         FileOperations.saveXML(file,
                                 mTextPane,
@@ -395,8 +454,8 @@ public class MaeMain extends JPanel {
                                 mTask.getElements(),
                                 mTask.getDTDName());
                         updateTitle();
-                        mXmlName = mFileFullName;
-                        mStatusBar.setText("Save Complete :" + mXmlName);
+                        mStatusBar.setText(
+                                String.format("Save Complete: %s", mWorkingFileName));
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         mStatusBar.setText("Error saving XML file");
@@ -461,7 +520,7 @@ public class MaeMain extends JPanel {
 
         @Override
         public boolean isCellEditable(int row, int col) {
-            return col != 0;
+            return (col != ID_COL) && (col != SRC_COL);
         }
     }
 
@@ -495,12 +554,12 @@ public class MaeMain extends JPanel {
 
                     // search in the table model for matching id, remove that row
                     for (int i = 0; i < tableModel.getRowCount(); i++) {
-                        if (tableModel.getValueAt(i, 0).equals(id)) {
+                        if (tableModel.getValueAt(i, ID_COL).equals(id)) {
                             // if removing an extent tag, re-assign highlighting
                             if (elem instanceof ElemExtent) {
                                 mTask.removeExtentByID(id);
                                 assignTextColor(parseSpansString(
-                                        (String) tableModel.getValueAt(i, 1)));
+                                        (String) tableModel.getValueAt(i, SPANS_COL)));
                                 //remove links that use the tag being removed
                                 HashCollection<String, String> links
                                         = mTask.getLinksByExtentID(elemName, id);
@@ -570,8 +629,8 @@ public class MaeMain extends JPanel {
             this.setOpaque(false);
 
             // make components to be set on title and place them
-            if (this.elemName.equals(MaeStrings.ALL_TABLE_BACK_NAME)) {
-                this.title = new JLabel(MaeStrings.ALL_TABLE_FRONT_NAME);
+            if (this.elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
+                this.title = new JLabel(MaeStrings.ALL_TABLE_TAB_FRONT_NAME);
             } else {
                 this.title = new JLabel(this.elemName);
             }
@@ -658,7 +717,7 @@ public class MaeMain extends JPanel {
                     // when all single tabs are turned on, turn all_extents tab on
                     if (mActiveExts.size() == mTask.getExtNames().size()) {
                         // since allTab is created after all single tabs are created
-                        // getTabComponentAt() will return null while loading up 
+                        // getTabComponentAt() will return null while loading up
                         // a new DTD file, and will cause a nullpointer exception
                         TabTitle allTab = (TabTitle) mBottomTable.getTabComponentAt(0);
                         if (allTab != null) {
@@ -685,6 +744,8 @@ public class MaeMain extends JPanel {
             //get list of locations associated with the selected link
             Hashtable<Integer, String> locs
                     = mTask.getLocationsbyElemLink(elemName);
+
+            // TODO this for loop is redundant in this one and turnOff one
             for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
                 Integer i = e.nextElement();
                 Element el = styleDoc.getCharacterElement(i);
@@ -808,7 +869,7 @@ public class MaeMain extends JPanel {
             if (!isLink && !isArgLink) {
                 DefaultTableModel allTableModel = (DefaultTableModel)
                         mElementTables.get(
-                                MaeStrings.ALL_TABLE_BACK_NAME).getModel();
+                                MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
                 String[] newdataForAll = Arrays.copyOfRange(newEmptyData, 0, 3);
                 allTableModel.addRow(newdataForAll);
             }
@@ -1001,7 +1062,7 @@ public class MaeMain extends JPanel {
 
         // then find which row and column to look for
         for (int i = rows - 1; i >= 0; i--) {
-            if (tableModel.getValueAt(i, 0).equals(linkId)) {
+            if (tableModel.getValueAt(i, ID_COL).equals(linkId)) {
                 idRow = i;
             }
         }
@@ -1143,7 +1204,7 @@ public class MaeMain extends JPanel {
         public void mousePressed(MouseEvent e) {
             maybeShowTablePopup(e);
         }
-        
+
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTablePopup(e);
@@ -1154,9 +1215,10 @@ public class MaeMain extends JPanel {
             if (e.getClickCount() == 2) {
                 String elemName
                         = mBottomTable.getTitleAt(mBottomTable.getSelectedIndex());
-                JTable tab = mElementTables.get(elemName);
-                int selectedRow = tab.getSelectedRow();
-                String elemId = (String) tab.getValueAt(selectedRow, 0);
+                JTable table = mElementTables.get(elemName);
+                int selectedRow = table.getSelectedRow();
+                TableModel tableModel = table.getModel();
+                String elemId = (String) tableModel.getValueAt(selectedRow, ID_COL);
                 Elem el = mTask.getElemByName(mTask.getElemNameById(elemId));
                 Highlighter hl = mTextPane.getHighlighter();
                 hl.removeAllHighlights();
@@ -1164,7 +1226,7 @@ public class MaeMain extends JPanel {
                 if (el instanceof ElemExtent) {
                     // use table column[1] to get spanString then parse it
                     ArrayList<int[]> spansSelect = parseSpansString(
-                            (String) tab.getValueAt(selectedRow, 1));
+                            (String) tableModel.getValueAt(selectedRow, SPANS_COL));
                     highlightTextSpans(hl, spansSelect, mOrangeHL);
                 } //end if ElemExtent
 
@@ -1176,12 +1238,10 @@ public class MaeMain extends JPanel {
 
                     int j = 0;
                     for (Integer i : argColumns) {
-                        String argId = (String) tab.getValueAt(selectedRow, i);
-                        // argId can be empty (not all arguments required)
-                        if (!argId.equals("")) {
-                            ArrayList<int[]> argSpans = mTask.getLocByID(argId);
-                            highlightTextSpans(hl, argSpans, mHighlighters[j]);
-                        }
+                        String argId = (String) tableModel.getValueAt(selectedRow, i);
+                        ArrayList<int[]> argSpans
+                                = mTask.getLocByID(argId);
+                        highlightTextSpans(hl, argSpans, mHighlighters[j]);
                         j++;
                     }
                 }//end if ElemLink
@@ -1204,12 +1264,12 @@ public class MaeMain extends JPanel {
      * displayed.
      */
     private class TextMouseAdapter extends MouseAdapter {
-        
+
         @Override
         public void mousePressed(MouseEvent e) {
             maybeShowTextPopup(e);
         }
-        
+
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTextPopup(e);
@@ -1524,7 +1584,7 @@ public class MaeMain extends JPanel {
         if (isExt) {
             DefaultTableModel allTableModel = (DefaultTableModel)
                     mElementTables.get(
-                            MaeStrings.ALL_TABLE_BACK_NAME).getModel();
+                            MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
             // extent tag tables are always initialized with
             // id, spans, text in first three columns
             String[] newdataForAll = Arrays.copyOfRange(newdata, 0, 3);
@@ -1539,11 +1599,11 @@ public class MaeMain extends JPanel {
     private void removeAllTableRow(String id) {
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(
-                MaeStrings.ALL_TABLE_BACK_NAME).getModel();
+                MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
         int rows = tableModel.getRowCount();
         //has to go backwards or the wrong rows get deleted
         for (int i = rows - 1; i >= 0; i--) {
-            if (id.equals(tableModel.getValueAt(i, 0))) {
+            if (id.equals(tableModel.getValueAt(i, ID_COL))) {
                 tableModel.removeRow(i);
             }
         }
@@ -1580,12 +1640,12 @@ public class MaeMain extends JPanel {
         int rows = tableModel.getRowCount();
         //has to go backwards or the wrong rows get deleted
         for (int i = rows - 1; i >= 0; i--) {
-            if (id.equals(tableModel.getValueAt(i, 0))) {
+            if (id.equals(tableModel.getValueAt(i, ID_COL))) {
                 //redo color for this text--assumes that lines
                 //have already been removed from the DB
                 if (elem instanceof ElemExtent) {
                     assignTextColor(parseSpansString(
-                            (String) tableModel.getValueAt(i, 1)));
+                            (String) tableModel.getValueAt(i, SPANS_COL)));
                 }
                 tableModel.removeRow(i);
             }
@@ -1910,12 +1970,13 @@ public class MaeMain extends JPanel {
         ArrayList<Attrib> attributes = e.getAttributes();
         //for some reason, it's necessary to add the columns first,
         //then go back and add the cell renderers.
+        model.addColumn(MaeStrings.SRC_COL_NAME);
         for (Attrib attribute : attributes) {
             model.addColumn(attribute.getName());
         }
         for (int i = 0; i < attributes.size(); i++) {
             Attrib a = attributes.get(i);
-            TableColumn c = table.getColumnModel().getColumn(i);
+            TableColumn c = table.getColumnModel().getColumn(1 + i);
             // TODO add listeners to ID, SPANS, TEXT columns to update all_tab when edited
             if (a instanceof AttList) {
                 AttList att = (AttList) a;
@@ -1959,6 +2020,11 @@ public class MaeMain extends JPanel {
             }
             // maybe adding a button to pop up to select an argument?
         }
+        // if not in adjudication, suppress SRC column to be invisible
+        if (mMode != M_ADJUD) {
+            table.getColumnModel().removeColumn(
+                    table.getColumnModel().getColumn(SRC_COL));
+        }
         return scrollPane;
     }
 
@@ -1973,14 +2039,20 @@ public class MaeMain extends JPanel {
         table.setAutoCreateRowSorter(true);
         JScrollPane scrollPane = new JScrollPane(table);
 
-        mElementTables.put(MaeStrings.ALL_TABLE_BACK_NAME, table);
+        mElementTables.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
         table.addMouseListener(new TableMouseAdapter());
 
         // since all extent tags have three common attribs,
         // use only those as columns of all_table
-        model.addColumn("id");
-        model.addColumn("spans");
-        model.addColumn("text");
+        model.addColumn(MaeStrings.SRC_COL_NAME);
+        model.addColumn(MaeStrings.ID_COL_NAME);
+        model.addColumn(MaeStrings.SPANS_COL_NAME);
+        model.addColumn(MaeStrings.TEXT_COL_NAME);
+
+        if (mMode != M_ADJUD) {
+            table.getColumnModel().removeColumn(
+                    table.getColumnModel().getColumn(SRC_COL));
+        }
 
         return scrollPane;
     }
@@ -1988,11 +2060,11 @@ public class MaeMain extends JPanel {
     /**
      * Removes all the tags from the table when a new DTD is loaded.
      */
-    private void resetTabPane() {
+    private void resetTablePane() {
         mBottomTable.removeAll();
         ArrayList<Elem> elements = mTask.getElements();
         // create a tan for all extents and place it at first
-        mBottomTable.addTab(MaeStrings.ALL_TABLE_BACK_NAME, makeAllTablePanel());
+        mBottomTable.addTab(MaeStrings.ALL_TABLE_TAB_BACK_NAME, makeAllTablePanel());
         //create a tab for each element in the annotation task
         for (Elem element : elements) {
             String name = element.getName();
@@ -2015,7 +2087,7 @@ public class MaeMain extends JPanel {
             }
         }
         // set toggle button in all extents tab after creating all other tabs
-        TabTitle allTab = new TabTitle(MaeStrings.ALL_TABLE_BACK_NAME);
+        TabTitle allTab = new TabTitle(MaeStrings.ALL_TABLE_TAB_BACK_NAME);
         mBottomTable.setTabComponentAt(0, allTab);
         allTab.setHighlighted(true);
     }
@@ -2029,7 +2101,7 @@ public class MaeMain extends JPanel {
     private JPopupMenu createTextContextMenu() {
         JPopupMenu jp = new JPopupMenu();
 
-        // add menus for creating Ext tags, 
+        // add menus for creating Ext tags,
         // only if text selected and not in arg_sel mode
         if (isTextSelected && mMode != M_ARG_SEL) {
             JMenu tagMenu = createTagMenu("Create an Extent tag with selected text", false);
@@ -2197,7 +2269,7 @@ public class MaeMain extends JPanel {
                             for (int i = rows - 1; i >= 0; i--) {
                                 // check if id is matching first
                                 // then check if argument is a dummy
-                                if (tableModel.getValueAt(i, 0).equals(unspecId) &&
+                                if (tableModel.getValueAt(i, ID_COL).equals(unspecId) &&
                                         tableModel.getValueAt(i, argCol).equals("")) {
                                     // add a menu guidance
                                     if (!prior) {
@@ -2272,7 +2344,7 @@ public class MaeMain extends JPanel {
         if (selected == 1) {
             // krim - case 1 always means clickedRow is the only selected row
             // thus getting the value from clickedRow is not that hard-coded logic
-            String id = (String) table.getValueAt(clickedRow, 0);
+            String id = (String) table.getModel().getValueAt(clickedRow, ID_COL);
 
             JMenuItem removeItem = new JMenuItem(String.format("Remove %s", id));
             removeItem.setActionCommand(id);
@@ -2281,7 +2353,7 @@ public class MaeMain extends JPanel {
             jp.add(removeItem);
 
             // if selection was in all_tab, replace elemName
-            if (elemName.equals(MaeStrings.ALL_TABLE_BACK_NAME)) {
+            if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
                 elemName = mTask.getElemNameById(id);
             }
             if (mTask.getElemByName(elemName) instanceof ElemExtent) {
@@ -2328,13 +2400,13 @@ public class MaeMain extends JPanel {
             jp.add(removeItem);
 
             // then if they are extent tags, add item for creating a link with them
-            if (elemName.equals(MaeStrings.ALL_TABLE_BACK_NAME) ||
+            if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME) ||
                     mTask.getElemByName(elemName) instanceof ElemExtent) {
                 // calling table context menu will reset text selection
                 resetSpans();
                 // retrieve ids of all selected tags
                 for (String id : ids) {
-                    if (elemName.equals(MaeStrings.ALL_TABLE_BACK_NAME)) {
+                    if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
                         mPossibleArgIds.add(id);
                     } else {
                         mPossibleArgIds.add(id);
@@ -2373,7 +2445,7 @@ public class MaeMain extends JPanel {
         DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
         int rows = tableModel.getRowCount();
         for (int i = rows - 1; i >= 0; i--) {
-            String value = (String) tableModel.getValueAt(i, 0);
+            String value = (String) tableModel.getValueAt(i, ID_COL);
             if (value.equals(id)) {
                 tab.addRowSelectionInterval(
                         tab.convertRowIndexToView(i), tab.convertRowIndexToView(i));
@@ -2382,11 +2454,11 @@ public class MaeMain extends JPanel {
         // then make highlight in the all_tag tab
         // this only happens when coloring elem is activated
         if (mActiveExts.contains(elem)) {
-            tab = mElementTables.get(MaeStrings.ALL_TABLE_BACK_NAME);
+            tab = mElementTables.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME);
             tableModel = (DefaultTableModel) tab.getModel();
             rows = tableModel.getRowCount();
             for (int i = rows - 1; i >= 0; i--) {
-                String value = (String) tableModel.getValueAt(i, 0);
+                String value = (String) tableModel.getValueAt(i, ID_COL);
                 if (value.equals(id)) {
                     tab.addRowSelectionInterval(
                             tab.convertRowIndexToView(i),
@@ -2647,10 +2719,10 @@ public class MaeMain extends JPanel {
         for (String elemName : mTask.getExtNames()) {
             JMenuItem menuItem;
             if (mainMenu) {
-                menuItem = new JMenuItem( 
+                menuItem = new JMenuItem(
                         String.format("(%d) %s", i + 1, elemName));
-                
-                
+
+
             } else {
                 menuItem = new JMenuItem(elemName);
             }
@@ -2969,15 +3041,15 @@ public class MaeMain extends JPanel {
             }
         }
     }
-    
+
     /** add asterisk to windows title when file is changed */
     private void updateTitle() {
         if (isTaskChanged) {
             mMainFrame.setTitle(
-                    MaeStrings.TITLE_PREFIX + " - " + mFileFullName + " *");
+                    MaeStrings.TITLE_PREFIX + " - " + mWorkingFileName + " *");
         } else {
             mMainFrame.setTitle(
-                    MaeStrings.TITLE_PREFIX + " - " + mFileFullName);
+                    MaeStrings.TITLE_PREFIX + " - " + mWorkingFileName);
 
         }
         

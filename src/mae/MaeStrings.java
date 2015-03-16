@@ -41,7 +41,7 @@ public class MaeStrings {
             = "https://github.com/keighrim/mae-annotation";
     final static String CUR_YEAR
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    final static String VERSION = "0.13.0.0";
+    final static String VERSION = "0.13.0.1";
     final static String TITLE_PREFIX = "MAE " + VERSION;
 
     /*
@@ -55,8 +55,12 @@ public class MaeStrings {
     final static String ADD_NC_COMMAND = "ADDNC:";
     final static String ADD_LINK_COMMAND = "ADDLINK:";
     final static String ADD_LINK_WITH_ARGS_COMMAND = "ADDLINKARGS:";
-    final static String ALL_TABLE_BACK_NAME = new Object().toString();
-    final static String ALL_TABLE_FRONT_NAME = "All Extents";
+    final static String ALL_TABLE_TAB_BACK_NAME = new Object().toString();
+    final static String ALL_TABLE_TAB_FRONT_NAME = "All Extents";
+    final static String SRC_COL_NAME = "source";
+    final static String ID_COL_NAME = "id";
+    final static String SPANS_COL_NAME = "spans";
+    final static String TEXT_COL_NAME = "text";
     final static String SEP = "@#";
     final static String ID_SUF = "ID";
 
