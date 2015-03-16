@@ -124,6 +124,8 @@ public class MaeMain extends JPanel {
     private int ID_COL = 1;
     private int SPANS_COL = 2;
     private int TEXT_COL = 3;
+    // should match last essential column (currently text_col) + 1
+    private int LAST_ESSE_COL = 4;
 
     //GUI components
     private static JFrame mMainFrame;
@@ -907,10 +909,12 @@ public class MaeMain extends JPanel {
 
             // when adding an extent tag, also insert to all_table
             if (!isLink && !isArgLink) {
-                DefaultTableModel allTableModel = (DefaultTableModel)
-                        mElementTables.get(
-                                MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
-                String[] newdataForAll = Arrays.copyOfRange(newEmptyData, 0, 3);
+                DefaultTableModel allTableModel
+                        = (DefaultTableModel) mElementTables.get(
+                        MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
+                // all_extent tab takes only obligatory columns
+                String[] newdataForAll
+                        = Arrays.copyOfRange(newEmptyData, 0, LAST_ESSE_COL);
                 allTableModel.addRow(newdataForAll);
             }
 
@@ -1037,28 +1041,34 @@ public class MaeMain extends JPanel {
             // get the target element and a list of its attrib
             Elem e = mTask.getElemByName(elemName);
             ArrayList<Attrib> attributes = e.getAttributes();
-            String[] newData = new String[attributes.size()];
+            String[] newData = new String[attributes.size()+1];
 
+            // first column is for source file
+            newData[0] = mWorkingFileName;
+            int curCol = 1;
             // go through the list of attributes, fill newdata array with proper values
-            for (int i = 0; i < attributes.size(); i++) {
+            for (Attrib att : attributes) {
                 // get ID number. This isn't as hard-coded as it looks:
                 // the columns for the table are created from the Attributes array list
-                if (attributes.get(i) instanceof AttID) {
-                    newData[i] = newId;
-                    // since link tags never have spans and text, below is safe
-                } else if (attributes.get(i).getName().equals("spans")) {
-                    newData[i] = spansToString(mSpans);
-                } else if (attributes.get(i).getName().equals("text") && !isSpansEmpty()) {
-                    newData[i] = getTextIn(mSpans);
+                if (att instanceof AttID) {
+                    newData[curCol] = newId;
                 }
-                // for the rest slots of newdata, make sure it's not staying in null value
+                // since link tags never have spans and text, below is safe
+                else if (att.getName().equals(MaeStrings.SPANS_COL_NAME)) {
+                    newData[curCol] = spansToString(mSpans);
+                } else if (att.getName().equals(MaeStrings.TEXT_COL_NAME)
+                        && !isSpansEmpty()) {
+                    newData[curCol] = getTextIn(mSpans);
+                }
+                // for the rest slots of newdata, make sure it's not staying as null value
                 else {
-                    if (attributes.get(i).hasDefaultValue()) {
-                        newData[i] = attributes.get(i).getDefaultValue();
+                    if (att.hasDefaultValue()) {
+                        newData[curCol] = att.getDefaultValue();
                     } else {
-                        newData[i] = "";
+                        newData[curCol] = "";
                     }
                 }
+                curCol++;
             }
             return newData;
         }
@@ -1135,27 +1145,36 @@ public class MaeMain extends JPanel {
     }
 
     /**
-     * RemoveExtentTag is triggered when an extent tag is removed through the
-     * text-area popup window
+     * Listen to remove commmand in the text context menu
      */
-    private class RemoveExtentTag implements ActionListener {
+    private class RemoveExtentTagListener implements ActionListener {
         public void actionPerformed(ActionEvent actionEvent) {
             boolean check = showDeleteWarning();
             if (check) {
                 String command = actionEvent.getActionCommand();
-                Elem elem = mTask.getElemByName(command.split(MaeStrings.SEP)[0]);
-                //remove rows from DB
-                HashCollection<String, String> links;
-                // removes extent tags and related link tags from DB
+                // command looks like this: elemName + SEP + elemId
                 String elemName = command.split(MaeStrings.SEP)[0];
-                String id = command.split(MaeStrings.SEP)[1];
-                links = mTask.getLinksByExtentID(elemName, id);
-                mTask.removeExtentByID(id);
+                String elemId = command.split(MaeStrings.SEP)[1];
+                Elem elem = mTask.getElemByName(elemName);
+
+                // removes extent tags and related link tags from DB
+                mTask.removeExtentByID(elemId);
+
                 //remove extent tags and recolors text area
-                removeTableRows(elem, id);
-                removeAllTableRow(id);
+                removeTableRows(elem, elemId);
+                removeAllTableRow(elemId);
+
                 //remove links that use the tag being removed
+                HashCollection<String, String> links
+                        = mTask.getLinksByExtentID(elemName, elemId);
                 removeLinkTableRows(links);
+                for (String link : links.getKeyList()) {
+                    for (String linkId : links.getList(link)) {
+                        mTask.removeLinkByID(linkId);
+                    }
+                }
+
+                // mark as a change
                 isTaskChanged = true;
                 updateTitle();
             }
@@ -1279,9 +1298,11 @@ public class MaeMain extends JPanel {
                     int j = 0;
                     for (Integer i : argColumns) {
                         String argId = (String) tableModel.getValueAt(selectedRow, i);
-                        ArrayList<int[]> argSpans
-                                = mTask.getLocByID(argId);
-                        highlightTextSpans(hl, argSpans, mHighlighters[j]);
+                        // argId can be empty (not all arguments required)
+                        if (!argId.equals("")) {
+                            ArrayList<int[]> argSpans = mTask.getLocByID(argId);
+                            highlightTextSpans(hl, argSpans, mHighlighters[j]);
+                        }
                         j++;
                     }
                 }//end if ElemLink
@@ -2222,7 +2243,8 @@ public class MaeMain extends JPanel {
                         // menu items for removing
                         JMenuItem removeItem = createMenuItem(
                                 "Remove",  MaeHotKeys.DELETE,
-                                elem + MaeStrings.SEP + id, new RemoveExtentTag());
+                                elem + MaeStrings.SEP + id,
+                                new RemoveExtentTagListener());
 
                         // menu items for adding tag as an arg
                         JMenu setArg = createSetAsArgMenu(String.format(
@@ -3034,7 +3056,7 @@ public class MaeMain extends JPanel {
         for (int[] span : spans) {
             int start = span[0], end = span[1];
             // do highlighting only for real spans; (-1, -1) is a dummy for NC tags
-            if (start != -1 || end != -1) {
+            if (start != -1 && end != -1) {
                 try {
                     hl.addHighlight(start, end, painter);
                     mTextPane.scrollRectToVisible(mTextPane.modelToView(start));
