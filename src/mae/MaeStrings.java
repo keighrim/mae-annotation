@@ -41,7 +41,7 @@ public class MaeStrings {
             = "https://github.com/keighrim/mae-annotation";
     final static String CUR_YEAR
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    final static String VERSION = "0.13.0.1";
+    final static String VERSION = "0.13.1.0";
     final static String TITLE_PREFIX = "MAE " + VERSION;
 
     /*

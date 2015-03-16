@@ -1,3 +1,7 @@
+## v0.13.1.0
+* added: preference menu
+* added: option to return to normal mode on every tag creation
+
 ## v0.13.0.0
 * started new developing version
 * goal: intergrating MAI

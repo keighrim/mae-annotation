@@ -185,6 +185,7 @@ public class MaeHotKeys {
     final static int NCMENU = KeyEvent.VK_N;
     final static int MODEMENU = KeyEvent.VK_M;
     final static int DPMENU = KeyEvent.VK_D;
+    final static int PREFMENU = KeyEvent.VK_P;
     final static int HELPMENU = KeyEvent.VK_H;
     final static int OK_BUTTON = KeyEvent.VK_O;
     final static int CANCEL_BUTTON = KeyEvent.VK_C;

@@ -102,6 +102,9 @@ public class MaeMain extends JPanel {
     private boolean isTaskChanged;
     private boolean isTextSelected;
 
+    // some booleans for user preference
+    private boolean mOptionExitOnCreation = true; // on by default
+
     // krim: additional booleans to keep track of annotation mode
     private final int M_NORMAL = 0;
     private final int M_MULTI_SPAN = 1;
@@ -304,7 +307,7 @@ public class MaeMain extends JPanel {
                     updateMenus();
                     updateTitle();
                     resetSpans();
-                    returnToNormalMode();
+                    returnToNormalMode(false);
                     mStatusBar.setText("DTD load succeed! Click anywhere to continue.");
 
                     if (mTask.getElements().size() > 20) {
@@ -342,7 +345,7 @@ public class MaeMain extends JPanel {
                     resetTablePane();
                     updateMenus();
                     resetSpans();
-                    returnToNormalMode();
+                    returnToNormalMode(false);
 
                     mTextPane.setStyledDocument(new DefaultStyledDocument());
                     mTextPane.setContentType("text/plain; charset=UTF-8");
@@ -403,7 +406,7 @@ public class MaeMain extends JPanel {
                     resetTablePane();
                     updateMenus();
                     resetSpans();
-                    returnToNormalMode();
+                    returnToNormalMode(false);
 
                     mTextPane.setStyledDocument(new DefaultStyledDocument());
                     mTextPane.setContentType("text/plain; charset=UTF-8");
@@ -501,7 +504,7 @@ public class MaeMain extends JPanel {
             resetTablePane();
             updateMenus();
             resetSpans();
-            returnToNormalMode();
+            returnToNormalMode(false);
             mStatusBar.setText("All Files closed");
             mWorkingFileName = "";
             isTaskChanged = false;
@@ -874,23 +877,33 @@ public class MaeMain extends JPanel {
             newId = mTask.getNextID(newName);
 
             // first add a new tag to table
+            // it's needed because link arguments need pre-defined placeholders
             insertToTable();
 
             // then add to DB
             if (isLink) {
                 processLink();
+                succeed();
             } else if (isArgLink) {
                 processLinkWithArgs();
             } else {
                 addExtTagToDb(newName, newId);
+                succeed();
             }
 
             // assign colors if necessary
             if (!isSpansEmpty()) {
                 assignTextColor(mSpans);
             }
+        }
 
             // post to the user
+
+        void succeed() {
+            // return if user prefer
+            if (mOptionExitOnCreation && (mMode != M_NORMAL)) {
+                returnToNormalMode(false);
+            }
             resetSpans();
             mStatusBar.setText(String.format("%s is created!", newId));
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
@@ -948,7 +961,6 @@ public class MaeMain extends JPanel {
             final ElemLink target = (ElemLink) newElem;
             mLinkPopupFrame = new JFrame();
 
-
             JPanel boxPane = new JPanel(new GridLayout(target.getArgNum() + 1, 2));
 
             // information for creating a link tag
@@ -973,6 +985,11 @@ public class MaeMain extends JPanel {
                     }
                     mLinkPopupFrame.setVisible(false);
                     mLinkPopupFrame.dispose();
+                    // return if user prefer
+                    if (mOptionExitOnCreation) {
+                        returnToNormalMode(false);
+                    }
+                    succeed();
                 }
             });
 
@@ -1035,7 +1052,6 @@ public class MaeMain extends JPanel {
             mLinkPopupFrame.requestFocus();
 
         }
-
 
         private String[] createEmptyRowData(String elemName, String newId) {
             // get the target element and a list of its attrib
@@ -1356,7 +1372,7 @@ public class MaeMain extends JPanel {
             switch (action) {
                 // return to normal mode
                 case M_NORMAL:
-                    returnToNormalMode();
+                    returnToNormalMode(true);
                     break;
                 case M_MULTI_SPAN:
                     mMode = M_MULTI_SPAN;
@@ -2724,6 +2740,25 @@ public class MaeMain extends JPanel {
     }
 
     /**
+     * Creates the Preference menu for the top bar
+     *
+     * @return JMenu with all preferable boolean options
+     */
+    private JMenu createPrefMenu(String menuTitle) {
+        JMenu menu = new JMenu(menuTitle);
+        final JCheckBoxMenuItem exitOnCreation = new JCheckBoxMenuItem(
+                "Return to normal mode after creating a tag", true);
+        exitOnCreation.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                mOptionExitOnCreation = exitOnCreation.getState();
+            }
+        });
+        menu.add(exitOnCreation);
+
+        return menu;
+    }
+
+    /**
      * Creates the Display menu for the top bar
      *
      * @return JMenu with all available display options
@@ -2786,6 +2821,11 @@ public class MaeMain extends JPanel {
         return menu;
     }
 
+    /**
+     * Creates the menu for creating extent tags
+     *
+     * @return JMenu for creating extent tags
+     */
     private JMenu createTagMenu(String menuTitle, boolean mainMenu) {
         JMenu menu = new JMenu(menuTitle);
         if (!isTextSelected) {
@@ -2960,6 +3000,9 @@ public class MaeMain extends JPanel {
             modeMenu.setMnemonic(MaeHotKeys.MODEMENU);
             mMenuBar.add(modeMenu);
         }
+        JMenu prefMenu = createPrefMenu("Preference");
+        prefMenu.setMnemonic(MaeHotKeys.PREFMENU);
+        mMenuBar.add(prefMenu);
 
         JMenu helpMenu = createHelpMenu("Help");
         helpMenu.setMnemonic(MaeHotKeys.HELPMENU);
@@ -2979,11 +3022,6 @@ public class MaeMain extends JPanel {
 
         return item;
     }
-
-
-
-
-
 
     /**
      * Takes a string representing possibly multiple spans of an extent tag Return
@@ -3153,14 +3191,13 @@ public class MaeMain extends JPanel {
     }
 
     /** Sets MAE mode to Normal */
-    private void returnToNormalMode() {
+    private void returnToNormalMode(boolean statusBarAlert) {
 
-        if (mMode != M_NORMAL) {
+        if (mMode != M_NORMAL && statusBarAlert) {
             mStatusBar.setText(MaeStrings.SB_NORM_MODE);
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
         }
         mMode = M_NORMAL;
-
     }
 
     /** check if anything is selected in text pane */
