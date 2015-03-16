@@ -1,5 +1,9 @@
+## v0.13.2.1
+* fixed: text context menu bug that tag management not showing up when all tags in selected text is same type
+* fixed: assigning color was not working when creating a new tag
+
 ## v0.13.2.0
-* fixed: now context menu from text panel shows tag management directly if there's only one tag associated with selected text
+* modified: now context menu from text panel shows tag management directly if there's only one tag associated with selected text
 
 ## v0.13.1.0
 * added: preference menu

@@ -890,16 +890,16 @@ public class MaeMain extends JPanel {
                 addExtTagToDb(newName, newId);
                 succeed();
             }
+        }
 
+        /**
+         * update interface and post to user
+         */
+        void succeed() {
             // assign colors if necessary
             if (!isSpansEmpty()) {
                 assignTextColor(mSpans);
             }
-        }
-
-            // post to the user
-
-        void succeed() {
             // return if user prefer
             if (mOptionExitOnCreation && (mMode != M_NORMAL)) {
                 returnToNormalMode(false);
@@ -2264,7 +2264,7 @@ public class MaeMain extends JPanel {
 
             }
             // else create waterfall menu
-            else if (idHash.size() > 1) {
+            else if (idHash.size() > 0) {
                 ArrayList<String> elems = idHash.getKeyList();
                 for (String elem : elems) {
                     ArrayList<String> ids = idHash.get(elem);
