@@ -2121,21 +2121,15 @@ public class MaeMain extends JPanel {
         //the action command for that menuItem
         //this is only for extent tags
 
+        UndoSelectListener undoSelectListener = new UndoSelectListener();
         if (mMode == M_ARG_SEL || mMode == M_MULTI_SPAN) {
-            JMenuItem undo = new JMenuItem("Undo last selection");
-            undo.setActionCommand("Undo");
-            undo.addActionListener(new UndoSelectListener());
-            undo.setAccelerator(MaeHotKeys.UNDO);
-
-            JMenuItem over = new JMenuItem("Start over");
-            over.setActionCommand("Over");
-            over.addActionListener(new UndoSelectListener());
-            over.setAccelerator(MaeHotKeys.STARTOVER);
-
-            JMenuItem exit = new JMenuItem("Exit Multi-span Mode");
-            exit.setActionCommand(Integer.toString(M_NORMAL));
-            exit.addActionListener(new ModeMenuListener());
-            exit.setAccelerator(MaeHotKeys.NORMALMODE);
+            JMenuItem undo = createMenuItem("Undo last selection", MaeHotKeys.UNDO,
+                    "Undo", undoSelectListener);
+            JMenuItem over = createMenuItem("Start Over", MaeHotKeys.STARTOVER,
+                    "Over", undoSelectListener);
+            JMenuItem exit = createMenuItem(
+                    "Exit Multi-span Mode", MaeHotKeys.NORMALMODE,
+                    Integer.toString((M_NORMAL)), new ModeMenuListener());
 
             if (mMode == M_ARG_SEL) {
                 String makeLink = "Create a Link tag with selected elements";
@@ -2143,12 +2137,20 @@ public class MaeMain extends JPanel {
                 makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
                 int i = 0;
                 for (String link : mTask.getLinkNames()) {
-                    JMenuItem linkItem = new JMenuItem(link);
-                    linkItem.setActionCommand(
-                            MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link);
-                    linkItem.addActionListener(new MakeTagListener());
+                    JMenuItem linkItem;
+                    MakeTagListener makeTagListener = new MakeTagListener();
+
                     if (i < 10) {
-                        linkItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        linkItem = createMenuItem(
+                                link, MaeHotKeys.noneNums[i],
+                                MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link,
+                                makeTagListener);
+                    } else {
+                        linkItem = createMenuItem(
+                                link, null,
+                                MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link,
+                                makeTagListener);
+
                     }
                     i++;
                     makeLinkItem.add(linkItem);
@@ -2176,19 +2178,18 @@ public class MaeMain extends JPanel {
                         JMenu idItem = new JMenu(String.format(
                                 "%s (%S)", id, text));
 
-                        // add menu items for removing
-                        JMenuItem removeItem = new JMenuItem("Remove");
-                        removeItem.setActionCommand(elem + MaeStrings.SEP + id);
-                        removeItem.setAccelerator(MaeHotKeys.DELETE);
-                        removeItem.addActionListener(new RemoveExtentTag());
-                        idItem.add(removeItem);
+                        // menu items for removing
+                        JMenuItem removeItem = createMenuItem(
+                                "Remove",  MaeHotKeys.DELETE,
+                                elem + MaeStrings.SEP + id, new RemoveExtentTag());
 
-                        // add menu items for adding tag as an arg
+                        // menu items for adding tag as an arg
                         JMenu setArg = createSetAsArgMenu(String.format(
                                 "Set %s as an argument of", id), elem, id);
                         setArg.setMnemonic(MaeHotKeys.SETARGMENU);
-                        idItem.add(setArg);
 
+                        idItem.add(removeItem);
+                        idItem.add(setArg);
                         jp.add(idItem);
                     }
                 }
@@ -2261,6 +2262,7 @@ public class MaeMain extends JPanel {
                 // final level - ids of each link
                 // needs to move underspecified items to the top of the menu
                 boolean prior = false;
+                SetAsArgListener setAsArgListener = new SetAsArgListener();
                 if (mUnderspecified.size() > 0) {
                     for (String unspecId : mUnderspecified) {
                         if (id2Add.contains(unspecId)) {
@@ -2276,18 +2278,15 @@ public class MaeMain extends JPanel {
                                         addGuideItem(linkArgMenu, "Underspecifed");
                                         prior = true;
                                     }
-
                                     // add ids as menu items
                                     JMenuItem unspecIdItem
-                                            = new JMenuItem(unspecId);
-                                    unspecIdItem.addActionListener(
-                                            new SetAsArgListener());
-                                    unspecIdItem.setActionCommand(
+                                            = createMenuItem(unspecId, null,
                                             linkType + MaeStrings.SEP +
                                                     unspecId + MaeStrings.SEP +
                                                     argName + MaeStrings.SEP +
                                                     argId + MaeStrings.SEP +
-                                                    getTextByID(argType, argId, true));
+                                                    getTextByID(argType, argId, true),
+                                            setAsArgListener);
                                     linkArgMenu.add(unspecIdItem);
                                     id2Add.remove(unspecId);
                                 }
@@ -2301,14 +2300,13 @@ public class MaeMain extends JPanel {
 
                 // then add the rest of the list as menu items
                 for (String item : id2Add) {
-                    JMenuItem idItem = new JMenuItem(item);
-                    idItem.addActionListener(new SetAsArgListener());
-                    idItem.setActionCommand(
+                    JMenuItem idItem = createMenuItem(item, null,
                             linkType + MaeStrings.SEP +
                                     item + MaeStrings.SEP +
                                     argName + MaeStrings.SEP +
                                     argId + MaeStrings.SEP +
-                                    getTextByID(argType, argId, true));
+                                    getTextByID(argType, argId, true),
+                            setAsArgListener);
                     linkArgMenu.add(idItem);
                 }
                 linkTypeMenu.add(linkArgMenu);
@@ -2346,10 +2344,9 @@ public class MaeMain extends JPanel {
             // thus getting the value from clickedRow is not that hard-coded logic
             String id = (String) table.getModel().getValueAt(clickedRow, ID_COL);
 
-            JMenuItem removeItem = new JMenuItem(String.format("Remove %s", id));
-            removeItem.setActionCommand(id);
-            removeItem.setAccelerator(MaeHotKeys.DELETE);
-            removeItem.addActionListener(new RemoveSelectedTableRows());
+            JMenuItem removeItem = createMenuItem(
+                    String.format("Remove %s", id), MaeHotKeys.DELETE,
+                    id, new RemoveSelectedTableRows());
             jp.add(removeItem);
 
             // if selection was in all_tab, replace elemName
@@ -2417,12 +2414,18 @@ public class MaeMain extends JPanel {
                 makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
                 int i = 0;
                 for (String link : mTask.getLinkNames()) {
-                    JMenuItem linkItem = new JMenuItem(link);
-                    linkItem.setActionCommand(
-                            MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link);
-                    linkItem.addActionListener(new MakeTagListener());
+                    MakeTagListener makeTagListener = new MakeTagListener();
+
+                    JMenuItem linkItem;
                     if (i < 10) {
-                        linkItem.setAccelerator(MaeHotKeys.noneNums[i]);
+                        linkItem = createMenuItem(link,
+                                MaeHotKeys.noneNums[i],
+                                MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link,
+                                makeTagListener);
+                    } else {
+                        linkItem = createMenuItem(link, null,
+                                MaeStrings.ADD_LINK_WITH_ARGS_COMMAND + link,
+                                makeTagListener);
                     }
                     i++;
                     makeLinkItem.add(linkItem);
@@ -2594,46 +2597,40 @@ public class MaeMain extends JPanel {
      */
     private JMenu createFileMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-        JMenuItem loadDTD = new JMenuItem("Load DTD");
-        loadDTD.setActionCommand("Load DTD");
-        loadDTD.addActionListener(new FileMenuListener());
-        loadDTD.setAccelerator(MaeHotKeys.NEWTASK);
-        menu.add(loadDTD);
+        FileMenuListener fileMenuListener = new FileMenuListener();
 
-        JMenuItem loadFile = new JMenuItem("Load File");
-        loadFile.setActionCommand("Load File");
-        loadFile.addActionListener(new FileMenuListener());
-        loadFile.setAccelerator(MaeHotKeys.OPENFILE);
+        JMenuItem loadDTD = createMenuItem("Load DTD", MaeHotKeys.NEWTASK,
+                "Load DTD", fileMenuListener);
+
+        JMenuItem loadFile = createMenuItem("Load File", MaeHotKeys.OPENFILE,
+                "Load File", fileMenuListener);
         if (!mTask.hasDTD()) {
             loadFile.setEnabled(false);
         } else {
             loadFile.setEnabled(true);
         }
-        menu.add(loadFile);
 
-        menu.addSeparator();
-        JMenuItem saveFileRTF = new JMenuItem("Create RTF");
-        saveFileRTF.setActionCommand("Save RTF");
-        saveFileRTF.addActionListener(new FileMenuListener());
-        saveFileRTF.setAccelerator(MaeHotKeys.SAVERTF);
+        JMenuItem saveFileRTF = createMenuItem("Create RTF", MaeHotKeys.SAVERTF,
+                "Save RTF", fileMenuListener);
         if (!isFileOpen) {
             saveFileRTF.setEnabled(false);
         } else {
             saveFileRTF.setEnabled(true);
         }
-        menu.add(saveFileRTF);
-        menu.addSeparator();
 
-        JMenuItem saveFileXML = new JMenuItem("Save File As XML");
-        saveFileXML.setActionCommand("Save XML");
-        saveFileXML.addActionListener(new FileMenuListener());
-        saveFileXML.setAccelerator(MaeHotKeys.SAVEXML);
+        JMenuItem saveFileXML = createMenuItem("Save File As XML", MaeHotKeys.SAVEXML,
+                "Save XML", fileMenuListener);
         if (!isFileOpen) {
             saveFileXML.setEnabled(false);
         } else {
             saveFileXML.setEnabled(true);
         }
 
+        menu.add(loadDTD);
+        menu.add(loadFile);
+        menu.addSeparator();
+        menu.add(saveFileRTF);
+        menu.addSeparator();
         menu.add(saveFileXML);
         return menu;
     }
@@ -2645,17 +2642,12 @@ public class MaeMain extends JPanel {
      */
     private JMenu createDisplayMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-
-        JMenuItem increaseFont = new JMenuItem("Font Size ++");
-        increaseFont.setActionCommand("Font++");
-        increaseFont.addActionListener(new FontSizeMenuListener());
-        increaseFont.setAccelerator(MaeHotKeys.FONTBIG);
+        FontSizeMenuListener fsmListener = new FontSizeMenuListener();
+        JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.FONTBIG,
+                "Font++", fsmListener);
+        JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.FONTSMALL,
+                "Font--", fsmListener);
         menu.add(increaseFont);
-
-        JMenuItem decreaseFont = new JMenuItem("Font Size --");
-        decreaseFont.setActionCommand("Font--");
-        decreaseFont.addActionListener(new FontSizeMenuListener());
-        decreaseFont.setAccelerator(MaeHotKeys.FONTSMALL);
         menu.add(decreaseFont);
 
         return menu;
@@ -2794,14 +2786,12 @@ public class MaeMain extends JPanel {
     private JMenu createHelpMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
         HelpMenuListener helpMenuListener = new HelpMenuListener();
-        JMenuItem about = new JMenuItem("About MAE");
-        about.setAccelerator(MaeHotKeys.ABOUT);
-        about.setActionCommand("about");
-        about.addActionListener(helpMenuListener);
-        JMenuItem github = new JMenuItem("Visit project website(Github)");
-        github.setActionCommand("web");
-        github.addActionListener(helpMenuListener);
-        github.setAccelerator(MaeHotKeys.WEB);
+
+        JMenuItem about = createMenuItem("About MAE", MaeHotKeys.ABOUT,
+                "about", helpMenuListener);
+        JMenuItem github = createMenuItem(
+                "Visit project website(Github)", MaeHotKeys.WEB,
+                "web", helpMenuListener);
         menu.add(about);
         menu.addSeparator();
         menu.add(github);
@@ -2817,25 +2807,23 @@ public class MaeMain extends JPanel {
     private JMenu createModeMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
         JMenuItem multiSpan = new JMenuItem("Multi-span Mode");
-        ModeMenuListener modemenuListen = new ModeMenuListener();
+        ModeMenuListener modemenuListener = new ModeMenuListener();
         multiSpan.setActionCommand(Integer.toString(M_MULTI_SPAN));
-        multiSpan.addActionListener(modemenuListen);
+        multiSpan.addActionListener(modemenuListener);
         multiSpan.setAccelerator(MaeHotKeys.MSPANMODE);
 
-        JMenuItem multiArgs = new JMenuItem("Argument selection Mode");
-        multiArgs.setActionCommand(Integer.toString(M_ARG_SEL));
-        multiArgs.addActionListener(modemenuListen);
-        multiArgs.setAccelerator(MaeHotKeys.ARGSMODE);
 
-        JMenuItem exitMode = new JMenuItem("Exit to Normal Mode");
+        JMenuItem multiArgs = createMenuItem(
+                "Argument selection Mode", MaeHotKeys.ARGSMODE,
+                Integer.toString(M_ARG_SEL), modemenuListener);
+        JMenuItem exitMode = createMenuItem(
+                "Exit to Normal Mode", MaeHotKeys.NORMALMODE,
+                Integer.toString(M_NORMAL), modemenuListener);
         if (mMode != M_NORMAL) {
             exitMode.setEnabled(true);
         } else {
             exitMode.setEnabled(false);
         }
-        exitMode.setActionCommand(Integer.toString(M_NORMAL));
-        exitMode.addActionListener(modemenuListen);
-        exitMode.setAccelerator(MaeHotKeys.NORMALMODE);
 
         menu.add(multiSpan);
         menu.add(multiArgs);
@@ -2888,6 +2876,23 @@ public class MaeMain extends JPanel {
 
         mMenuBar.updateUI();
     }
+
+    JMenuItem createMenuItem(String menuTitle, KeyStroke hotkey,
+                             String actionCommand, ActionListener listener) {
+        JMenuItem item = new JMenuItem(menuTitle);
+        item.setActionCommand(actionCommand);
+        item.addActionListener(listener);
+        if (hotkey != null) {
+            item.setAccelerator(hotkey);
+        }
+
+        return item;
+    }
+
+
+
+
+
 
     /**
      * Takes a string representing possibly multiple spans of an extent tag Return
@@ -3050,10 +3055,7 @@ public class MaeMain extends JPanel {
         } else {
             mMainFrame.setTitle(
                     MaeStrings.TITLE_PREFIX + " - " + mWorkingFileName);
-
         }
-        
-        
     }
 
     /** Sets MAE mode to Normal */
