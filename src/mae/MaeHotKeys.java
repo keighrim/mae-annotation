@@ -199,12 +199,19 @@ public class MaeHotKeys {
             = KeyStroke.getKeyStroke(KeyEvent.VK_O,
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke OPENFILE = ksCO;
-    
+
+    final static KeyStroke ksCI
+            = KeyStroke.getKeyStroke(KeyEvent.VK_I,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    final static KeyStroke ADDFILE = ksCI;
+
     final static KeyStroke ksCR
             = KeyStroke.getKeyStroke(KeyEvent.VK_R, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     final static KeyStroke SAVERTF = ksCR;
-    
+
+    final static KeyStroke CLOSEFILE = ksF4;
+
     final static KeyStroke ksCS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
@@ -234,7 +241,8 @@ public class MaeHotKeys {
     final static KeyStroke NORMALMODE = ksCE;
     final static KeyStroke MSPANMODE = ksC1;
     final static KeyStroke ARGSMODE = ksC2;
-    
+    final static KeyStroke ADJUDMODE = ksC9;
+
     // help menu keys
     final static  KeyStroke ABOUT = ksF10;
     final static  KeyStroke WEB = ksF1;

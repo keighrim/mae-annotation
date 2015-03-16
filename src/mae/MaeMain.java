@@ -256,214 +256,254 @@ public class MaeMain extends JPanel {
     private class FileMenuListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            int returnVal;
             String command = actionEvent.getActionCommand();
 
             if (command.equals("Load DTD")) {
                 if (isFileOpen && isTaskChanged) {
                     showSaveWarning();
                 }
-                returnVal = mLoadFC.showOpenDialog(MaeMain.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = mLoadFC.getSelectedFile();
-                    try {
-                        mTextPane.setStyledDocument(new DefaultStyledDocument());
-                        DTDLoader dtdl = new DTDLoader(file);
-                        mTask.resetDb();
-                        DTD d = dtdl.getDTD();
-                        mTask.setDtd(d);
-                        mActiveLinks.clear();
-                        mActiveExts.clear();
-                        assignColors();
-                        resetTablePane();
-
-                        // refresh interfaces
-                        updateMenus();
-                        resetSpans();
-                        returnToNormalMode();
-                        mStatusBar.setText("DTD load succeed! Click anywhere to continue.");
-
-                        if (mTask.getElements().size() > 20) {
-                            mBottomTable.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-                        } else {
-                            mBottomTable.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
-                        }
-
-                        isFileOpen = false;
-                    } catch (Exception ex) {
-                        System.err.println("Error loading DTD");
-                        ex.printStackTrace();
-
-                        // print out the error message on the status bar
-                        mStatusBar.setText("Error loading DTD: " + ex.toString());
-                    }
-                }
-
+                loadDtd();
             } else if (command.equals("Add File")) {
-                // TODO re-write this part
-                returnVal = mLoadFC.showOpenDialog(MaeMain.this);
-                boolean succeed = true;
-                String status = "";
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = mLoadFC.getSelectedFile();
-                    mWorkingFileName = file.getName();
-                    try {
-                        updateTitle();
-                        isFileOpen = true;
-                        mTask.resetDb();
-                        mTask.resetIdTracker();
-                        mTask.setWorkingFile(mWorkingFileName);
-
-                        // refresh interfaces
-                        resetTablePane();
-                        updateMenus();
-                        resetSpans();
-                        returnToNormalMode();
-
-                        mTextPane.setStyledDocument(new DefaultStyledDocument());
-                        mTextPane.setContentType("text/plain; charset=UTF-8");
-                        mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                        if (FileOperations.hasTags(file)) {
-                            XMLFileLoader xfl = new XMLFileLoader(file);
-                            StyledDocument d = mTextPane.getStyledDocument();
-                            Style def = StyleContext.getDefaultStyleContext()
-                                    .getStyle(StyleContext.DEFAULT_STYLE);
-                            Style regular = d.addStyle("regular", def);
-                            d.insertString(0, xfl.getTextChars(), regular);
-                            // newTags is a hash from tagType to attib list
-                            // each attrib is stored in a has from att name to value
-                            HashCollection<String, Hashtable<String, String>> newTags
-                                    = xfl.getTagHash();
-                            if (newTags.size() > 0) {
-                                processTagHash(newTags);
-                            }
-                        } else {  // that is, if it's only a text file
-                            StyledDocument d = mTextPane.getStyledDocument();
-                            mTextPane.setStyledDocument(FileOperations.setText(file, d));
-                        }
-                        mTextPane.requestFocus(true);
-                        mTextPane.getCaret().setDot(0);
-                        mTextPane.getCaret().moveDot(1);
-                    } catch (Exception ex) {
-                        isFileOpen = false;
-                        ex.printStackTrace();
-                        succeed = false;
-                        status = "Error loading file";
-                    }
-                }
-                mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                mTextPane.setCaretPosition(0);
-                // refresh status bar after all caret events
-                if (succeed) {
-                    status = "File load succeed! Click anywhere to continue.";
-                }
-                mStatusBar.setText(status);
-
+                addFile();
             } else if (command.equals("Load File")) {
                 if (isFileOpen && isTaskChanged) {
                     showSaveWarning();
                 }
-                returnVal = mLoadFC.showOpenDialog(MaeMain.this);
-                boolean succeed = true;
-                String status = "";
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = mLoadFC.getSelectedFile();
-                    mWorkingFileName = file.getName();
-                    try {
-                        updateTitle();
-                        isFileOpen = true;
-                        mTask.resetDb();
-                        mTask.resetIdTracker();
-                        mTask.setWorkingFile(mWorkingFileName);
-
-                        // refresh interfaces
-                        resetTablePane();
-                        updateMenus();
-                        resetSpans();
-                        returnToNormalMode();
-
-                        mTextPane.setStyledDocument(new DefaultStyledDocument());
-                        mTextPane.setContentType("text/plain; charset=UTF-8");
-                        mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                        if (FileOperations.hasTags(file)) {
-                            XMLFileLoader xfl = new XMLFileLoader(file);
-                            StyledDocument d = mTextPane.getStyledDocument();
-                            Style def = StyleContext.getDefaultStyleContext()
-                                    .getStyle(StyleContext.DEFAULT_STYLE);
-                            Style regular = d.addStyle("regular", def);
-                            d.insertString(0, xfl.getTextChars(), regular);
-                            // newTags is a hash from tagType to attib list
-                            // each attrib is stored in a has from att name to value
-                            HashCollection<String, Hashtable<String, String>> newTags
-                                    = xfl.getTagHash();
-                            if (newTags.size() > 0) {
-                                processTagHash(newTags);
-                            }
-                        } else {  // that is, if it's only a text file
-                            StyledDocument d = mTextPane.getStyledDocument();
-                            mTextPane.setStyledDocument(FileOperations.setText(file, d));
-                        }
-                        mTextPane.requestFocus(true);
-                        mTextPane.getCaret().setDot(0);
-                        mTextPane.getCaret().moveDot(1);
-                    } catch (Exception ex) {
-                        isFileOpen = false;
-                        ex.printStackTrace();
-                        succeed = false;
-                        status = "Error loading file";
-                    }
-                }
-                mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                mTextPane.setCaretPosition(0);
-                // refresh status bar after all caret events
-                if (succeed) {
-                    status = "File load succeed! Click anywhere to continue.";
-                }
-                mStatusBar.setText(status);
-
+                loadFile();
             } else if (command.equals("Save RTF")) {
-                String rtfName = mWorkingFileName + ".rtf";
-                mSaveFC.setSelectedFile(new File(rtfName));
-                returnVal = mSaveFC.showSaveDialog(MaeMain.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = mSaveFC.getSelectedFile();
-                    isTaskChanged = false;
-                    try {
-                        FileOperations.saveRTF(file, mTextPane);
-                        mStatusBar.setText("Save Complete :" + rtfName);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        mStatusBar.setText("Error saving RTF file");
-                    }
-                }
-
+                saveRtf();
             } else if (command.equals("Save XML")) {
-                mSaveFC.setSelectedFile(new File(mWorkingFileName + ".xml"));
-                returnVal = mSaveFC.showSaveDialog(MaeMain.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = mSaveFC.getSelectedFile();
-                    isTaskChanged = false;
-                    mWorkingFileName = file.getName();
-                    mTask.setWorkingFile(mWorkingFileName);
-                    try {
-                        FileOperations.saveXML(file,
-                                mTextPane,
-                                mElementTables,
-                                mTask.getElements(),
-                                mTask.getDTDName());
-                        updateTitle();
-                        mStatusBar.setText(
-                                String.format("Save Complete: %s", mWorkingFileName));
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        mStatusBar.setText("Error saving XML file");
-                    }
+                saveXml();
+            } else if (command.equals("Close File")) {
+                if (isFileOpen && isTaskChanged) {
+                    showSaveWarning();
                 }
+                closeFile();
             }
             // reset status bar after 3 secs
             new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+        }
+
+        void loadDtd() {
+            if (mLoadFC.showOpenDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
+                File file = mLoadFC.getSelectedFile();
+                try {
+                    mTextPane.setStyledDocument(new DefaultStyledDocument());
+                    DTDLoader dtdl = new DTDLoader(file);
+                    mTask.resetDb();
+                    DTD d = dtdl.getDTD();
+                    mTask.setDtd(d);
+                    mActiveLinks.clear();
+                    mActiveExts.clear();
+                    assignColors();
+                    resetTablePane();
+
+                    // refresh interfaces
+                    updateMenus();
+                    updateTitle();
+                    resetSpans();
+                    returnToNormalMode();
+                    mStatusBar.setText("DTD load succeed! Click anywhere to continue.");
+
+                    if (mTask.getElements().size() > 20) {
+                        mBottomTable.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+                    } else {
+                        mBottomTable.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+                    }
+
+                    isFileOpen = false;
+                } catch (Exception ex) {
+                    System.err.println("Error loading DTD");
+                    ex.printStackTrace();
+
+                    // print out the error message on the status bar
+                    mStatusBar.setText("Error loading DTD: " + ex.toString());
+                }
+            }
+        }
+
+        void addFile() {
+           // TODO re-write this part
+            boolean succeed = true;
+            String status = "";
+            if (mLoadFC.showOpenDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
+                File file = mLoadFC.getSelectedFile();
+                mWorkingFileName = file.getName();
+                try {
+                    updateTitle();
+                    isFileOpen = true;
+                    mTask.resetDb();
+                    mTask.resetIdTracker();
+                    mTask.setWorkingFile(mWorkingFileName);
+
+                    // refresh interfaces
+                    resetTablePane();
+                    updateMenus();
+                    resetSpans();
+                    returnToNormalMode();
+
+                    mTextPane.setStyledDocument(new DefaultStyledDocument());
+                    mTextPane.setContentType("text/plain; charset=UTF-8");
+                    mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                    if (FileOperations.hasTags(file)) {
+                        XMLFileLoader xfl = new XMLFileLoader(file);
+                        StyledDocument d = mTextPane.getStyledDocument();
+                        Style def = StyleContext.getDefaultStyleContext()
+                                .getStyle(StyleContext.DEFAULT_STYLE);
+                        Style regular = d.addStyle("regular", def);
+                        d.insertString(0, xfl.getTextChars(), regular);
+                        // newTags is a hash from tagType to attib list
+                        // each attrib is stored in a has from att name to value
+                        HashCollection<String, Hashtable<String, String>> newTags
+                                = xfl.getTagHash();
+                        if (newTags.size() > 0) {
+                            processTagHash(newTags);
+                        }
+                    } else {  // that is, if it's only a text file
+                        StyledDocument d = mTextPane.getStyledDocument();
+                        mTextPane.setStyledDocument(FileOperations.setText(file, d));
+                    }
+                    mTextPane.requestFocus(true);
+                    mTextPane.getCaret().setDot(0);
+                    mTextPane.getCaret().moveDot(1);
+                } catch (Exception ex) {
+                    isFileOpen = false;
+                    ex.printStackTrace();
+                    succeed = false;
+                    status = "Error loading file";
+                }
+            }
+            mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            mTextPane.setCaretPosition(0);
+            // refresh status bar after all caret events
+            if (succeed) {
+                status = "File load succeed! Click anywhere to continue.";
+            }
+            mStatusBar.setText(status);
+
+        }
+
+        void loadFile() {
+            boolean succeed = true;
+            String status = "";
+            if (mLoadFC.showOpenDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
+                File file = mLoadFC.getSelectedFile();
+                mWorkingFileName = file.getName();
+                try {
+                    updateTitle();
+                    isFileOpen = true;
+                    mTask.resetDb();
+                    mTask.resetIdTracker();
+                    mTask.setWorkingFile(mWorkingFileName);
+
+                    // refresh interfaces
+                    resetTablePane();
+                    updateMenus();
+                    resetSpans();
+                    returnToNormalMode();
+
+                    mTextPane.setStyledDocument(new DefaultStyledDocument());
+                    mTextPane.setContentType("text/plain; charset=UTF-8");
+                    mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                    if (FileOperations.hasTags(file)) {
+                        XMLFileLoader xfl = new XMLFileLoader(file);
+                        StyledDocument d = mTextPane.getStyledDocument();
+                        Style def = StyleContext.getDefaultStyleContext()
+                                .getStyle(StyleContext.DEFAULT_STYLE);
+                        Style regular = d.addStyle("regular", def);
+                        d.insertString(0, xfl.getTextChars(), regular);
+                        // newTags is a hash from tagType to attib list
+                        // each attrib is stored in a has from att name to value
+                        HashCollection<String, Hashtable<String, String>> newTags
+                                = xfl.getTagHash();
+                        if (newTags.size() > 0) {
+                            processTagHash(newTags);
+                        }
+                    } else {  // that is, if it's only a text file
+                        StyledDocument d = mTextPane.getStyledDocument();
+                        mTextPane.setStyledDocument(FileOperations.setText(file, d));
+                    }
+                    mTextPane.requestFocus(true);
+                    mTextPane.getCaret().setDot(0);
+                    mTextPane.getCaret().moveDot(1);
+                } catch (Exception ex) {
+                    isFileOpen = false;
+                    ex.printStackTrace();
+                    succeed = false;
+                    status = "Error loading file";
+                }
+            }
+            mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            mTextPane.setCaretPosition(0);
+            // refresh status bar after all caret events
+            if (succeed) {
+                status = "File load succeed! Click anywhere to continue.";
+            }
+            mStatusBar.setText(status);
+
+        }
+
+        void saveRtf() {
+            String rtfName = mWorkingFileName + ".rtf";
+            mSaveFC.setSelectedFile(new File(rtfName));
+            if (mSaveFC.showSaveDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
+                File file = mSaveFC.getSelectedFile();
+                isTaskChanged = false;
+                try {
+                    FileOperations.saveRTF(file, mTextPane);
+                    mStatusBar.setText("Save Complete :" + rtfName);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    mStatusBar.setText("Error saving RTF file");
+                }
+            }
+
+        }
+
+        void saveXml() {
+            String xmlName;
+            if (mWorkingFileName.endsWith(".xml")) {
+                xmlName = mWorkingFileName;
+            } else {
+                xmlName = mWorkingFileName + ".xml";
+            }
+            mSaveFC.setSelectedFile(new File(xmlName));
+            if (mSaveFC.showSaveDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
+                File file = mSaveFC.getSelectedFile();
+                isTaskChanged = false;
+                mWorkingFileName = file.getName();
+                mTask.setWorkingFile(mWorkingFileName);
+                try {
+                    FileOperations.saveXML(file,
+                            mTextPane, mElementTables,
+                            mTask.getElements(), mTask.getDTDName());
+                    updateTitle();
+                    mStatusBar.setText(
+                            String.format("Save Complete: %s", mWorkingFileName));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    mStatusBar.setText("Error saving XML file");
+                }
+            }
+        }
+
+        void closeFile() {
+            isFileOpen = false;
+            mTextPane.setStyledDocument(new DefaultStyledDocument());
+            mTask.resetDb();
+            mActiveLinks.clear();
+            mActiveExts.clear();
+            assignColors();
+            resetTablePane();
+            updateMenus();
+            resetSpans();
+            returnToNormalMode();
+            mStatusBar.setText("All Files closed");
+            mWorkingFileName = "";
+            isTaskChanged = false;
+            updateTitle();
         }
     }
 
@@ -1288,6 +1328,7 @@ public class MaeMain extends JPanel {
      * Listener to select special modes
      */
     private class ModeMenuListener implements ActionListener {
+        // TODO add adjud mode
         public void actionPerformed(ActionEvent actionEvent) {
             int action = Integer.parseInt(actionEvent.getActionCommand());
 
@@ -2511,6 +2552,7 @@ public class MaeMain extends JPanel {
      * Displays the warning for saving your work before opening a new file or DTD.
      */
     private static void showSaveWarning() {
+        // TODO re-write wording
         JOptionPane save = new JOptionPane();
         save.setLocation(100, 100);
         String text = ("Warning! Opening a new file or DTD will \n" +
@@ -2609,10 +2651,19 @@ public class MaeMain extends JPanel {
         } else {
             loadFile.setEnabled(true);
         }
+        if (mMode == M_ADJUD) {
+            loadFile.setText("Load Gold Standard File");
+        }
+
+        JMenuItem addFile = createMenuItem("Add Annotation File", MaeHotKeys.ADDFILE,
+                "Add File", fileMenuListener);
+        if (!mTask.hasDTD() || mMode != M_ADJUD) {
+            addFile.setVisible(false);
+        }
 
         JMenuItem saveFileRTF = createMenuItem("Create RTF", MaeHotKeys.SAVERTF,
                 "Save RTF", fileMenuListener);
-        if (!isFileOpen) {
+        if (!isFileOpen || mMode == M_ADJUD) {
             saveFileRTF.setEnabled(false);
         } else {
             saveFileRTF.setEnabled(true);
@@ -2625,13 +2676,28 @@ public class MaeMain extends JPanel {
         } else {
             saveFileXML.setEnabled(true);
         }
+        if (mMode == M_ADJUD) {
+            saveFileXML.setText("Save Gold Standard File as XML");
+        }
+
+        JMenuItem closeFile = createMenuItem(
+                "Close Annotation Files", MaeHotKeys.CLOSEFILE,
+                "Close File", fileMenuListener);
+        if (!isFileOpen) {
+            closeFile.setEnabled(false);
+        } else {
+            closeFile.setEnabled(true);
+        }
 
         menu.add(loadDTD);
         menu.add(loadFile);
+        menu.add(addFile);
         menu.addSeparator();
         menu.add(saveFileRTF);
         menu.addSeparator();
         menu.add(saveFileXML);
+        menu.addSeparator();
+        menu.add(closeFile);
         return menu;
     }
 
@@ -2806,16 +2872,18 @@ public class MaeMain extends JPanel {
      */
     private JMenu createModeMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-        JMenuItem multiSpan = new JMenuItem("Multi-span Mode");
+
         ModeMenuListener modemenuListener = new ModeMenuListener();
-        multiSpan.setActionCommand(Integer.toString(M_MULTI_SPAN));
-        multiSpan.addActionListener(modemenuListener);
-        multiSpan.setAccelerator(MaeHotKeys.MSPANMODE);
 
-
+        JMenuItem multiSpan = createMenuItem(
+                "Multi-span Mode", MaeHotKeys.MSPANMODE,
+                Integer.toString(M_MULTI_SPAN), modemenuListener);
         JMenuItem multiArgs = createMenuItem(
                 "Argument selection Mode", MaeHotKeys.ARGSMODE,
                 Integer.toString(M_ARG_SEL), modemenuListener);
+        JMenuItem adjudication = createMenuItem(
+                "Adjudication Mode", MaeHotKeys.ADJUDMODE,
+                Integer.toString(M_ADJUD), modemenuListener);
         JMenuItem exitMode = createMenuItem(
                 "Exit to Normal Mode", MaeHotKeys.NORMALMODE,
                 Integer.toString(M_NORMAL), modemenuListener);
@@ -2827,6 +2895,7 @@ public class MaeMain extends JPanel {
 
         menu.add(multiSpan);
         menu.add(multiArgs);
+        menu.add(adjudication);
         menu.addSeparator();
         menu.add(exitMode);
 
@@ -3049,13 +3118,16 @@ public class MaeMain extends JPanel {
 
     /** add asterisk to windows title when file is changed */
     private void updateTitle() {
-        if (isTaskChanged) {
-            mMainFrame.setTitle(
-                    MaeStrings.TITLE_PREFIX + " - " + mWorkingFileName + " *");
+        String title = MaeStrings.TITLE_PREFIX + " - ";
+        if (mWorkingFileName.equals("")) {
+            title = title + "no file open";
         } else {
-            mMainFrame.setTitle(
-                    MaeStrings.TITLE_PREFIX + " - " + mWorkingFileName);
+            title = title + mWorkingFileName;
         }
+        if (isTaskChanged) {
+            title += "*";
+        }
+        mMainFrame.setTitle(title);
     }
 
     /** Sets MAE mode to Normal */
