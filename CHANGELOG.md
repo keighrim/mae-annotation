@@ -1,3 +1,6 @@
+## v0.13.2.0
+* fixed: now context menu from text panel shows tag management directly if there's only one tag associated with selected text
+
 ## v0.13.1.0
 * added: preference menu
 * added: option to return to normal mode on every tag creation

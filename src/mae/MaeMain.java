@@ -2243,7 +2243,28 @@ public class MaeMain extends JPanel {
 
         } else {
             HashCollection<String, String> idHash = mTask.getTagsIn(mSpans);
-            if (idHash.size() > 0) {
+            // if only item is retrieved, display directly
+            if (idHash.isSizeOne()) {
+                String elem = idHash.getKeyList().get(0);
+                String id = idHash.get(elem).get(0);
+                // remove a tag
+                JMenuItem removeItem = createMenuItem(
+                        String.format("Remove %s", id),
+                        MaeHotKeys.DELETE,
+                        elem + MaeStrings.SEP + id,
+                        new RemoveExtentTagListener());
+                // set a ext tag as an argument
+                JMenu setArg = createSetAsArgMenu(String.format(
+                        "Set %s as an argument of", id), elem, id);
+                setArg.setMnemonic(MaeHotKeys.SETARGMENU);
+
+                jp.addSeparator();
+                jp.add(removeItem);
+                jp.add(setArg);
+
+            }
+            // else create waterfall menu
+            else if (idHash.size() > 1) {
                 ArrayList<String> elems = idHash.getKeyList();
                 for (String elem : elems) {
                     ArrayList<String> ids = idHash.get(elem);

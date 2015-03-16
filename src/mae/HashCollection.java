@@ -53,6 +53,14 @@ class HashCollection<K,V>{
     }
 
     /**
+     * returns true if their's only one key and one item associated with that key
+     */
+    boolean isSizeOne() {
+        Object[] array  = mHash.keySet().toArray();
+        return array.length == 1 && mHash.get(array[0]).size() == 1;
+    }
+
+    /**
      * Associate yet another value with a key in a Hashtable that allows duplicates.
      * Also use to put the first key/value.
      * Add an entity to a key's arrayList
