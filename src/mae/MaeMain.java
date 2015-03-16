@@ -1177,9 +1177,11 @@ public class MaeMain extends JPanel {
                     int j = 0;
                     for (Integer i : argColumns) {
                         String argId = (String) tab.getValueAt(selectedRow, i);
-                        ArrayList<int[]> argSpans
-                                = mTask.getLocByID(argId);
-                        highlightTextSpans(hl, argSpans, mHighlighters[j]);
+                        // argId can be empty (not all arguments required)
+                        if (!argId.equals("")) {
+                            ArrayList<int[]> argSpans = mTask.getLocByID(argId);
+                            highlightTextSpans(hl, argSpans, mHighlighters[j]);
+                        }
                         j++;
                     }
                 }//end if ElemLink
