@@ -13,6 +13,9 @@
 * started new developing version
 * goal: intergrating MAI
 
+## v0.12.3.3
+* fixed multi-span algorithm to remove any overlapping between spans
+
 ## v0.12.3.2
 * fixed hotkey for 9th tag in creating tag menus to 9 (formerly 0)
 
