@@ -1103,21 +1103,9 @@ public class MaeMain extends JPanel {
                     start = mark;
                     end = dot;
                 }
-                int[] newSpan = new int[]{start, end};
-
-                // not to add duplicate span
-                boolean dup = false;
-                for (int[] span : mSpans) {
-                    if (Arrays.equals(span, newSpan)) {
-                        dup = true;
-                        break;
-                    }
-                }
-                if (!dup) {
-                    mSpans.add(new int[]{start, end});
-                    if (mMode == M_ARG_SEL) {
-                        updateArgList();
-                    }
+                mSpans.add(new int[]{start, end});
+                if (mMode == M_ARG_SEL) {
+                    updateArgList();
                 }
             }
 
@@ -1127,9 +1115,45 @@ public class MaeMain extends JPanel {
             // krim: need to update current selection and status bar
             if (!isSpansEmpty()) {
                 highlightTextSpans(hl, mSpans, mDefHL);
+                mSpans = removeOverlapping(mSpans);
             }
             updateStatusBar();
 
+        }
+
+        /**
+         * go over current spans and remove overlaps
+         */
+        ArrayList<int[]> removeOverlapping(ArrayList<int[]> spans) {
+            // sorting is necessary for linear looping below
+            Collections.sort(spans, new Comparator<int[]>() {
+                @Override
+                public int compare(int[] o1, int[] o2) {
+                    if (o1[0] == o2[0]) {
+                        return o1[1] - o2[1];
+                    } else {
+                        return o1[0] - o2[0];
+                    }
+                }
+            });
+            ArrayList<int[]> stack = new ArrayList<int[]>();
+            stack.add(spans.get(0));
+            spans.remove(0);
+            for (int[] span : spans) {
+                // linear loop, YEAH!
+                int[] top = stack.remove(stack.size() - 1);
+                if (top[0] <= span[0] && span[0] < top[1]) {
+                    // note that inequity in second part does not include equal sign
+                    // because one might one adjacent discontinuous spans (?)
+                    // e.g.> tagging over morphological affixes separately
+                    top[1] = Math.max(span[1], top[1]);
+                    stack.add(top);
+                } else {
+                    stack.add(top);
+                    stack.add(span);
+                }
+            }
+            return stack;
         }
     }
 
