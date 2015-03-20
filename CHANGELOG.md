@@ -8,6 +8,9 @@
 * adding idRef support
 * add RowSorter to id column
 
+## v0.12.3.4
+* fixed: Undo in multi-selection mode was conflicting with last update (remove overlapping)
+
 ## v0.12.3.3
 * fixed multi-span algorithm to remove any overlapping between spans
 

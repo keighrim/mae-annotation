@@ -109,7 +109,9 @@ public class MaeMain extends JPanel {
 
 
     // krim: instead of using 2 integers, start & end, now we use a set of tuples
+    private ArrayList<ArrayList<int[]>> mPrevSpans;
     private ArrayList<int[]> mSpans;
+    private ArrayList<int[]> mLastSelection;
 
     // variables for link creation
     private LinkedList<String> mUnderspecified;
@@ -222,7 +224,8 @@ public class MaeMain extends JPanel {
         mMode = M_NORMAL;
         // init start-end to (-1, -1) pair
         mSpans = new ArrayList<int[]>();
-
+        mPrevSpans = new ArrayList<ArrayList<int[]>>();
+        mLastSelection = new ArrayList<int[]>();
         resetSpans();
 
 
@@ -1076,7 +1079,6 @@ public class MaeMain extends JPanel {
             int mark = e.getMark();
 
             /*
-            mod by krim.
             Not just set start and end field to caret selection,
             but clear the spans set first, then fill it with caret selection span.
             Consequently the array get one int[] in it.
@@ -1102,6 +1104,10 @@ public class MaeMain extends JPanel {
                 } else {
                     start = mark;
                     end = dot;
+                }
+                if (mMode == M_MULTI_SPAN || mMode == M_ARG_SEL) {
+                    mPrevSpans.add(new ArrayList<int[]>(mSpans));
+                    mLastSelection.add(new int[]{start, end});
                 }
                 mSpans.add(new int[]{start, end});
                 if (mMode == M_ARG_SEL) {
@@ -1167,7 +1173,7 @@ public class MaeMain extends JPanel {
         public void mousePressed(MouseEvent e) {
             maybeShowTablePopup(e);
         }
-        
+
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTablePopup(e);
@@ -1228,12 +1234,12 @@ public class MaeMain extends JPanel {
      * displayed.
      */
     private class TextMouseAdapter extends MouseAdapter {
-        
+
         @Override
         public void mousePressed(MouseEvent e) {
             maybeShowTextPopup(e);
         }
-        
+
         @Override
         public void mouseReleased(MouseEvent e) {
             maybeShowTextPopup(e);
@@ -1286,24 +1292,25 @@ public class MaeMain extends JPanel {
         public void actionPerformed(ActionEvent actionEvent) {
             String command = actionEvent.getActionCommand();
             if (command.equals("Undo")) {
-                if (mSpans.size() > 0) {
-                    int[] lastSpan = mSpans.remove(mSpans.size() - 1);
-                    ArrayList<int[]> tmp = new ArrayList<int[]>();
-                    tmp.add(lastSpan);
+                // by calling menu with right clicking,
+                // PrevSpans and LastSel get update with a duplicate span
+                mPrevSpans.remove(mPrevSpans.size() - 1);
+                mLastSelection.remove(mLastSelection.size() - 1);
 
-                    Highlighter hl = mTextPane.getHighlighter();
-                    hl.removeAllHighlights();
-                    highlightTextSpans(hl, tmp, mGrayHL);
-                    highlightTextSpans(hl, mSpans, mDefHL);
+                mSpans = mPrevSpans.remove(mPrevSpans.size() - 1);
+                ArrayList<int[]> tmp = new ArrayList<int[]>();
+                int[] lastSpan = mLastSelection.remove(mLastSelection.size() - 1);
+                tmp.add(lastSpan);
 
-                    mStatusBar.setText(String.format(
-                            "Removed '%s' from selection!" +
-                                    " Click anywhere to continue."
-                            , getTextBetween(lastSpan[0], lastSpan[1])));
-                } else {
-                    mStatusBar.setText(
-                            "No text selected! Click anywhere to continue.");
-                }
+                Highlighter hl = mTextPane.getHighlighter();
+                hl.removeAllHighlights();
+                highlightTextSpans(hl, mSpans, mDefHL);
+                highlightTextSpans(hl, tmp, mGrayHL);
+
+                mStatusBar.setText(String.format(
+                        "Removed '%s' from selection!" +
+                                " Click anywhere to continue."
+                        , getTextBetween(lastSpan[0], lastSpan[1])));
             } else if (command.equals("Over")) {
                 resetSpans();
                 mStatusBar.setText(
@@ -2078,11 +2085,17 @@ public class MaeMain extends JPanel {
             undo.setActionCommand("Undo");
             undo.addActionListener(new UndoSelectListener());
             undo.setAccelerator(MaeHotKeys.UNDO);
+            if (mSpans.size() < 1) {
+                undo.setEnabled(false);
+            }
 
             JMenuItem over = new JMenuItem("Start over");
             over.setActionCommand("Over");
             over.addActionListener(new UndoSelectListener());
             over.setAccelerator(MaeHotKeys.STARTOVER);
+            if (mSpans.size() < 1) {
+                over.setEnabled(false);
+            }
 
             JMenuItem exit = new JMenuItem("Exit Multi-span Mode");
             exit.setActionCommand(Integer.toString(M_NORMAL));
@@ -2671,10 +2684,10 @@ public class MaeMain extends JPanel {
         for (String elemName : mTask.getExtNames()) {
             JMenuItem menuItem;
             if (mainMenu) {
-                menuItem = new JMenuItem( 
+                menuItem = new JMenuItem(
                         String.format("(%d) %s", i + 1, elemName));
-                
-                
+
+
             } else {
                 menuItem = new JMenuItem(elemName);
             }
@@ -2993,7 +3006,7 @@ public class MaeMain extends JPanel {
             }
         }
     }
-    
+
     /** add asterisk to windows title when file is changed */
     private void updateTitle() {
         if (isTaskChanged) {
@@ -3004,8 +3017,8 @@ public class MaeMain extends JPanel {
                     MaeStrings.TITLE_PREFIX + " - " + mFileFullName);
 
         }
-        
-        
+
+
     }
 
     /** Sets MAE mode to Normal */
@@ -3029,6 +3042,8 @@ public class MaeMain extends JPanel {
         isTextSelected = false;
 
         mSpans.clear();
+        mPrevSpans.clear();
+        mLastSelection.clear();
         mSpans.add(new int[]{-1, -1});
         Highlighter hl = mTextPane.getHighlighter();
         hl.removeAllHighlights();
