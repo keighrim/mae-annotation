@@ -119,7 +119,11 @@ public class MaeMain extends JPanel {
     // variables for link creation
     private LinkedList<String> mUnderspecified;
     private ArrayList<String> mPossibleArgIds;
+
+    // for file operation
     private String mWorkingFileName;
+    private String mFilenameSuffix = "";
+
     // krim: column number of some fixed attributes
     // this might be hard-coding, but MAE always create an extent element
     // with id, spans, text as the first three attribs of it
@@ -451,7 +455,7 @@ public class MaeMain extends JPanel {
         }
 
         void saveRtf() {
-            String rtfName = mWorkingFileName + ".rtf";
+            String rtfName = mWorkingFileName + mFilenameSuffix + ".rtf";
             mSaveFC.setSelectedFile(new File(rtfName));
             if (mSaveFC.showSaveDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
                 File file = mSaveFC.getSelectedFile();
@@ -470,9 +474,15 @@ public class MaeMain extends JPanel {
         void saveXml() {
             String xmlName;
             if (mWorkingFileName.endsWith(".xml")) {
-                xmlName = mWorkingFileName;
+                String pureName = mWorkingFileName.
+                        substring(0, mWorkingFileName.length()-4);
+                if (pureName.endsWith(mFilenameSuffix)) {
+                    xmlName = mWorkingFileName;
+                } else {
+                    xmlName = pureName + mFilenameSuffix + ".xml";
+                }
             } else {
-                xmlName = mWorkingFileName + ".xml";
+                xmlName = mWorkingFileName + mFilenameSuffix + ".xml";
             }
             mSaveFC.setSelectedFile(new File(xmlName));
             if (mSaveFC.showSaveDialog(MaeMain.this) == JFileChooser.APPROVE_OPTION) {
@@ -2800,6 +2810,20 @@ public class MaeMain extends JPanel {
         });
         menu.add(exitOnCreation);
 
+        JMenuItem fileSuffix = createMenuItem(
+                "File name suffix: " + mFilenameSuffix,
+                null, "", new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+//                        JFrame frame = new JFrame("Enter suffix");
+                        mFilenameSuffix = JOptionPane.showInputDialog(
+                                "Enter a suffix to filename you save",
+                                mFilenameSuffix);
+                        updateMenus();
+                    }
+                });
+        menu.add(fileSuffix);
+
         return menu;
     }
 
@@ -2991,6 +3015,7 @@ public class MaeMain extends JPanel {
         JMenuItem adjudication = createMenuItem(
                 "Adjudication Mode", MaeHotKeys.ADJUDMODE,
                 Integer.toString(M_ADJUD), modemenuListener);
+        adjudication.setEnabled(false);
         JMenuItem exitMode = createMenuItem(
                 "Exit to Normal Mode", MaeHotKeys.NORMALMODE,
                 Integer.toString(M_NORMAL), modemenuListener);

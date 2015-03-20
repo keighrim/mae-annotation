@@ -1,5 +1,8 @@
+## v0.13.3.0
+* added: preference menu item to set filename suffix to be used when saving files
+
 ## v0.13.2.1
-* fixed: text context menu bug that tag management not showing up when all tags in selected text is same type
+* fixed: existing tag management were not showing in text context menu when all tags in selected text is same type
 * fixed: assigning color was not working when creating a new tag
 
 ## v0.13.2.0
