@@ -1,3 +1,6 @@
+## v0.12.3.4
+* fixed: Undo in multi-selection mode was conflicting with last update (remove overlapping)
+
 ## v0.13.3.0
 * added: preference menu item to set filename suffix to be used when saving files
 
