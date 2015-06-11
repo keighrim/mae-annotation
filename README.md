@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/keighrim/mae-annotation.png?label=ready&title=Ready)](https://waffle.io/keighrim/mae-annotation)
 # Multi-purpose Annotation Environment
 
 ## MAE v0.12 is released!
