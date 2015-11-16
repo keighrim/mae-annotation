@@ -1,26 +1,62 @@
-**/*.class
-**/.svn
-out/
-bin/
+# Created by .ignore support plugin (hsz.mobi)
+### idea & os-specifics template
+### Linux template
+*~
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# KDE directory preferences
+.directory
 
-# Package Files #
-# *.jar
-*.war
-*.ear
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
 
-# sql db files
-*.db
+### OSX template
+.DS_Store
+.AppleDouble
+.LSOverride
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# Icon must end with two \r
+Icon
 
-# IDEA files
-.idea/**
-**/.idea/
-/local.properties
-**/desktop.ini
-**/.DS_Store
-**/*.iml
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+### Windows template
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+### IntelliJ project files
+.idea
+*.iml
+out
+gen
