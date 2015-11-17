@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
 
 
 /**
@@ -31,9 +31,11 @@ package edu.brandeis.cs.nlp.mae;
  *
  */
 
+import edu.brandeis.cs.nlp.mae.model.Attrib;
+
 import java.util.ArrayList;
 
-class Elem {
+public class Elem {
 
     Elem(){
         setName("no name");

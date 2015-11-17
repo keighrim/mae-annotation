@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
 
 /**
  *
@@ -35,13 +35,13 @@ package edu.brandeis.cs.nlp.mae;
 
 import java.util.ArrayList;
 
-class DTD {
+public class DTD {
 
     private ArrayList<Elem> mElements;
     private String mName;
     private int mMaxArgs;
 
-    DTD(){
+    public DTD(){
         mElements =new ArrayList<Elem>();
         mName ="XML";   // default generic name
         mMaxArgs = 2;   // by default, set max # arguments to 2 (for legacy support)

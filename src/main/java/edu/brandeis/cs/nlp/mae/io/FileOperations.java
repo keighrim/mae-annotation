@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.io;
 
 /**
  * FileOperations handles the input and output of files to and from MAE
@@ -30,6 +30,8 @@ package edu.brandeis.cs.nlp.mae;
  *
  */
 
+
+import edu.brandeis.cs.nlp.mae.model.Elem;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -43,7 +45,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
 
-class FileOperations {
+public class FileOperations {
 
 
     /**

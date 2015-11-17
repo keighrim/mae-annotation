@@ -22,8 +22,10 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
 
+
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 
 import java.util.ArrayList;
 
@@ -35,9 +37,7 @@ import java.util.ArrayList;
  */
 
 
-
-
-class ElemLink extends Elem {
+public class ElemLink extends Elem {
 
     private ArrayList<String> mArguments;
     private boolean mNary;
@@ -54,7 +54,7 @@ class ElemLink extends Elem {
      * @param name name of tag type
      * @param idString string indicating tag's ID
      */
-    ElemLink(String name, String idString) {
+    public ElemLink(String name, String idString) {
         setName(name);
         AttID id = new AttID("id", idString, true);
         addAttribute(id);

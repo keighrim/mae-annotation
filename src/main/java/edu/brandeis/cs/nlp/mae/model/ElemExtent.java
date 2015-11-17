@@ -22,56 +22,54 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
 
 
 /**
- * A class that describes tag attributes that 
- * only contain text data (such as comments)
+ * Extents Elem to provide information about tags that are
+ * used to label extents in a text (as well as non-consuming
+ * tags).
+ *
+ * mod by krim: Instead of start, end fields,
+ * use a string of (possibly) multiple spans, to keep track of spans of an extent
+ * Following getters and setters are also modified.
  * @author Amber Stubbs, Keigh Rim
  *
  */
 
 
-class AttData extends Attrib{
+public class ElemExtent extends Elem{
 
-    AttData(){
-    }
+    // mod by krim: start, end --> spans
+    private String mSpans;
 
-    AttData (String name, boolean req){
+    public ElemExtent(String name, String idString){
         setName(name);
-        setRequired(req);
-        setData("");
-        setDefaultValue("");
+        //extent tags always have id, start, and end
+        AttID id = new AttID("id", idString, true);
+        addAttribute(id);
+
+
+        // mod by krim: start, end --> spans
+        AttData spans = new AttData("spans", true);
+        addAttribute(spans);
+
+        AttData text = new AttData("text", false);
+        addAttribute(text);
     }
 
-    AttData (String name, boolean req, String d){
-        this(name, req);
-        setDefaultValue(d);
+    public void setSpans(String spans) {
+        this.mSpans = spans;
     }
 
-    // added by krim: constructor with idref value
-    AttData (String name, boolean req, boolean idref) {
-        this(name, req);
-        setIdRef(idref);
-    }
-
-    public String getData(){
-        return data;
-    }
-
-    public void setData(String c){
-        data=c;
+    public String getSpans() {
+        return mSpans;
     }
 
     public void printInfo(){
-        System.out.println("Attribute name =" + getName() + " \n\trequired = " + isRequired() + "\n\tdata = " + data);
+        System.out.println("\tname = " + getName());
+
+        // mod by krim: start, end --> spans
+        System.out.println("\tspans = " + getSpans());
     }
-
-    public String toString(){
-        return("Attribute name =" + getName() + " , required = " + isRequired() + " data = " + data );
-    }
-
-    private String data;
-
 }

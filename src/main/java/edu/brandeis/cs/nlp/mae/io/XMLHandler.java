@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.io;
 
 /**
  * XMLHandler extends the sax DefaultHandler to work specifically with 
@@ -32,6 +32,8 @@ package edu.brandeis.cs.nlp.mae;
  *
  */
 
+import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -39,7 +41,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.Hashtable;
 
 class XMLHandler extends DefaultHandler {
-    private HashCollection<String, Hashtable<String, String>> newTags 
+    private HashCollection<String, Hashtable<String, String>> newTags
             = new HashCollection<String, Hashtable<String, String>>();
     private boolean mHasText = false;
     private String mText = "";

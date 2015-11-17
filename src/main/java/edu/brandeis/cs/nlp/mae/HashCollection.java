@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-class HashCollection<K,V>{
+public class HashCollection<K,V>{
 
     private Hashtable<K,ArrayList<V>> mHash;
 

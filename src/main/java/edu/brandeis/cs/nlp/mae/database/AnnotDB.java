@@ -22,8 +22,10 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.database;
 
+
+import edu.brandeis.cs.nlp.mae.HashCollection;
 
 import java.sql.*;
 import java.util.*;

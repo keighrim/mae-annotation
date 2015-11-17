@@ -22,7 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.io;
+
+import edu.brandeis.cs.nlp.mae.model.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,11 +40,11 @@ import java.util.regex.Pattern;
  * @see DTD
  */
 
-class DTDLoader {
+public class DTDLoader {
 
     private DTD mDtd;
 
-    DTDLoader(File f) {
+    public DTDLoader(File f) {
         mDtd = new DTD();
         try {
             readFile(f);

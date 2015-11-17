@@ -22,77 +22,58 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
+
+
+import edu.brandeis.cs.nlp.mae.model.Attrib;
 
 /**
- * The parent class for tag attributes
+ * A class that describes tag attributes that 
+ * only contain text data (such as comments)
  * @author Amber Stubbs, Keigh Rim
  *
  */
 
-class Attrib {
 
-    private String name;
-    private boolean required;
-    private String defaultValue;
-    
-    // added by krim - to track if the value of this att is referencing ID of another tag
-    private boolean idRef;
+public class AttData extends Attrib {
 
-    Attrib(){
+    AttData(){
     }
 
-
-    public String getName(){
-        return name;
+    AttData (String name, boolean req){
+        setName(name);
+        setRequired(req);
+        setData("");
+        setDefaultValue("");
     }
 
-    public void setName(String n){
-        name=n;
+    public AttData(String name, boolean req, String d){
+        this(name, req);
+        setDefaultValue(d);
     }
 
-    public boolean isRequired(){
-        return required;
+    // added by krim: constructor with idref value
+    AttData (String name, boolean req, boolean idref) {
+        this(name, req);
+        setIdRef(idref);
     }
 
-    public void setRequired(boolean r){
-        required=r;
+    public String getData(){
+        return data;
     }
 
-    public boolean isIdRef(){
-        return idRef;
+    public void setData(String c){
+        data=c;
     }
 
-    public void setIdRef(boolean r){
-        idRef =r;
-    }
-    
-    public String getDefaultValue(){
-        return defaultValue;
-    }
-
-    public void setDefaultValue(String d){
-        defaultValue = d;
-    }
-
-    public boolean hasDefaultValue(){
-        return defaultValue.length() != 0;
-    }
-
-    /*
-    public String getType(){
-        return type;
-    }
-
-    public void setType(String t){
-        type=t;
-    }
-    */
     public void printInfo(){
-        System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
+        System.out.println("Attribute name =" + getName() + " \n\trequired = " + isRequired() + "\n\tdata = " + data);
     }
 
     public String toString(){
-        return("Attribute name =" + getName() + " , required = " + isRequired() );
+        return("Attribute name =" + getName() + " , required = " + isRequired() + " data = " + data );
     }
+
+    private String data;
+
 }

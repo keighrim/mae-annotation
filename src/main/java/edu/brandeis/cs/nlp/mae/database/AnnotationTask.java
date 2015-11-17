@@ -22,7 +22,10 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.database;
+
+import edu.brandeis.cs.nlp.mae.*;
+import edu.brandeis.cs.nlp.mae.model.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,7 +39,7 @@ import java.util.List;
  * @author Amber Stubbs, Keigh Rim
  */
 
-class AnnotationTask {
+public class AnnotationTask {
 
     private Hashtable<String, Elem> mElements;
     private Hashtable<String, AttID> mIdTracker;
@@ -47,7 +50,7 @@ class AnnotationTask {
     private boolean hasDTD;
     private int mMaxArgs;
 
-    AnnotationTask() {
+    public AnnotationTask() {
         mDb = new AnnotDB();
         hasDTD = false;
     }
@@ -57,7 +60,7 @@ class AnnotationTask {
         mDb = new AnnotDB(mMaxArgs);
     }
 
-    void setWorkingFile(String filename) {
+    public void setWorkingFile(String filename) {
         mDb.setWorkingFile(filename);
     }
 
@@ -227,7 +230,7 @@ class AnnotationTask {
         return (new HashCollection<String, String>());
     }
 
-    void addExtToBatch(int pos, String elemName, String newId) {
+    public void addExtToBatch(int pos, String elemName, String newId) {
         try {
             mDb.addExtent(pos, elemName, newId);
             mIdsExist.putEnt(elemName, newId);
@@ -253,7 +256,7 @@ class AnnotationTask {
         mIdsExist.putEnt(elemName, newID);
     }
 
-    void addArgument(
+    public void addArgument(
             String id, int argNum, String argId, String argType) {
         try {
             mDb.addArgument(id, argNum, argId, argType);
@@ -263,7 +266,7 @@ class AnnotationTask {
 
     }
 
-    ArrayList<String> getElementsAtLoc(int loc) {
+    public ArrayList<String> getElementsAtLoc(int loc) {
         try {
             return (mDb.getElementsAtLoc(loc));
         } catch (Exception e) {
@@ -280,7 +283,7 @@ class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    HashCollection<String, String> getTagsIn(ArrayList<int[]> spans) {
+    public HashCollection<String, String> getTagsIn(ArrayList<int[]> spans) {
         HashCollection<String, String> nameToId = new HashCollection<String, String>();
         for (int[] span : spans) {
             nameToId.putAll(getTagsBetween(span[0], span[1]));
@@ -288,7 +291,7 @@ class AnnotationTask {
         return nameToId;
     }
 
-    HashCollection<String, String> getTagsBetween(int begin, int end) {
+    public HashCollection<String, String> getTagsBetween(int begin, int end) {
         try {
             return (mDb.getTagsInSpan(begin, end));
         } catch (Exception e) {

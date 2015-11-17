@@ -37,62 +37,62 @@ public class MaeStrings {
     /*
     External information
      */
-    final static String PROJECT_WEBPAGE
+    public final static String PROJECT_WEBPAGE
             = "https://github.com/keighrim/mae-annotation";
-    final static String CUR_YEAR
+    public final static String CUR_YEAR
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    final static String VERSION = "0.13.3.0";
-    final static String TITLE_PREFIX = "MAE " + VERSION;
+    public final static String VERSION = "0.13.3.0";
+    public final static String TITLE_PREFIX = "MAE " + VERSION;
 
     /*
     Internal data structures and actionEvents
      */
-    final static String COMBO_DELIMITER = " - ";
-    final static String SPANDELIMITER = "~";
-    final static String SPANSEPARATOR = ",";
-    final static String SPANTEXTTRUNC = " ... ";
-    final static String LONGTEXTTRUNC = " … ";
-    final static String ADD_NC_COMMAND = "ADDNC:";
-    final static String ADD_LINK_COMMAND = "ADDLINK:";
-    final static String ADD_LINK_WITH_ARGS_COMMAND = "ADDLINKARGS:";
-    final static String ALL_TABLE_TAB_BACK_NAME = new Object().toString();
-    final static String ALL_TABLE_TAB_FRONT_NAME = "All Extents";
-    final static String SRC_COL_NAME = "source";
-    final static String ID_COL_NAME = "id";
-    final static String SPANS_COL_NAME = "spans";
-    final static String TEXT_COL_NAME = "text";
-    final static String SEP = "@#";
-    final static String ID_SUF = "ID";
+    public final static String COMBO_DELIMITER = " - ";
+    public final static String SPANDELIMITER = "~";
+    public final static String SPANSEPARATOR = ",";
+    public final static String SPANTEXTTRUNC = " ... ";
+    public final static String LONGTEXTTRUNC = " … ";
+    public final static String ADD_NC_COMMAND = "ADDNC:";
+    public final static String ADD_LINK_COMMAND = "ADDLINK:";
+    public final static String ADD_LINK_WITH_ARGS_COMMAND = "ADDLINKARGS:";
+    public final static String ALL_TABLE_TAB_BACK_NAME = new Object().toString();
+    public final static String ALL_TABLE_TAB_FRONT_NAME = "All Extents";
+    public final static String SRC_COL_NAME = "source";
+    public final static String ID_COL_NAME = "id";
+    public final static String SPANS_COL_NAME = "spans";
+    public final static String TEXT_COL_NAME = "text";
+    public final static String SEP = "@#";
+    public final static String ID_SUF = "ID";
 
 
     /*
     Status bar messages
      */
-    final static String SB_NODTD = "No DTD loaded.";
-    final static String SB_NOFILE = "No file loaded.";
-    final static String SB_TEXT = "Selected: ";
-    final static String SB_NOTEXT = "No Text Selected";
-    final static String SB_TAG= " %d Tags Selected: %s";
-    final static String SB_NOTAG = "No Tags Selected";
-    final static String SB_NORM_MODE 
+    public final static String SB_NODTD = "No DTD loaded.";
+    public final static String SB_NOFILE = "No file loaded.";
+    public final static String SB_TEXT = "Selected: ";
+    public final static String SB_NOTEXT = "No Text Selected";
+    public final static String SB_TAG= " %d Tags Selected: %s";
+    public final static String SB_NOTAG = "No Tags Selected";
+    public final static String SB_NORM_MODE
             = "Now in normal mode! Click anywhere to continue.";
-    final static String SB_MSPAN_MODE = "[Multi-span] ";
-    final static String SB_MSPAN_TEXT = SB_MSPAN_MODE + SB_TEXT;
-    final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE + SB_NOTEXT;
-    final static String SB_MARGS_MODE = "[Arguments select] ";
-    final static String SB_MARGS_TAG = SB_MARGS_MODE + SB_TAG;
-    final static String SB_MARGS_NOTAG = SB_MARGS_MODE + SB_NOTAG;
+    public final static String SB_MSPAN_MODE = "[Multi-span] ";
+    public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE + SB_TEXT;
+    public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE + SB_NOTEXT;
+    public final static String SB_MARGS_MODE = "[Arguments select] ";
+    public final static String SB_MARGS_TAG = SB_MARGS_MODE + SB_TAG;
+    public final static String SB_MARGS_NOTAG = SB_MARGS_MODE + SB_NOTAG;
 
     
     /*
     menu items 
     */
-    final static String MENU_NOTEXT = SB_NOTEXT;
+    public final static String MENU_NOTEXT = SB_NOTEXT;
     
     
     /*
     general messages
      */
-    final static String NO_TASK_IND = "No DTD";
-    final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
+    public final static String NO_TASK_IND = "No DTD";
+    public final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
 }

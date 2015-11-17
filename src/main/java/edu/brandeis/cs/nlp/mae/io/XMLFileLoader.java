@@ -22,8 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.HashCollection;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -39,11 +40,11 @@ import java.util.Hashtable;
  *
  */
 
-class XMLFileLoader{
+public class XMLFileLoader{
 
     private XMLHandler mXmlfile;
 
-    XMLFileLoader(File f){
+    public XMLFileLoader(File f){
         mXmlfile = new XMLHandler();
         try{
             readFile(f);

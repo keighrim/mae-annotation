@@ -1,4 +1,3 @@
-
 /*
  * MAE - Multi-purpose Annotation Environment
  *
@@ -23,62 +22,44 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.model;
 
 /**
- * 
- * ID attributes have special properties, so they 
- * have their own class that keeps track of the 
- * prefix.
+ * Used for tag attributes that provide a list of options
  * @author Amber Stubbs, Keigh Rim
  *
  */
 
 
-class AttID extends Attrib{
+import java.util.ArrayList;
 
-AttID(){
-}
+public class AttList extends Attrib{
 
-AttID (String name, String pre, boolean r){
-    setName(name);
-    setRequired(r);
-    setPrefix(pre);
-    setDefaultValue("");
-}
+    AttList(){
+    }
 
-public String getID(){
-   return(prefix + Integer.toString(number));
-}
 
-public void setPrefix(String pre){
-    prefix=pre;
-}
+    public AttList(String name, boolean required,
+                   ArrayList<String> validList, String defaultValue){
+        setName(name);
+        setRequired(required);
+        setVaildValues(validList);
+        setDefaultValue(defaultValue);
+    }
 
-public String getPrefix(){
-    return prefix;
-}
+    public ArrayList<String> getVaildValues(){
+        return vaildValues;
+    }
 
-public void setNumber(int i){
-    number=i;
-}
+    public void setVaildValues(ArrayList<String> vaildList){
+        vaildValues =vaildList;
+    }
 
-public int getNumber(){
-    return number;
-}
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() + "also list" );
+    }
 
-public void incrementNumber(){
-    number++;
-}
 
-public void printInfo(){
-    System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
-}
+    private ArrayList<String> vaildValues;
 
-public String toString(){
-    return("Attribute name =" + getName() + " , required = " + isRequired() );
-}
-
-private String prefix;
-private int number;
 }
