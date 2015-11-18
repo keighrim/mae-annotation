@@ -22,28 +22,25 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.ui;
 
 
+import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.MaeHotKeys;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
-import edu.brandeis.cs.nlp.mae.io.DTDLoader;
-import edu.brandeis.cs.nlp.mae.io.FileOperations;
-import edu.brandeis.cs.nlp.mae.io.XMLFileLoader;
+import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
+import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.ui.menu.*;
+import edu.brandeis.cs.nlp.mae.view.*;
 
 import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -65,25 +62,23 @@ public class MaeMainUI extends JPanel {
     private HashSet<String> mActiveLinks;
     private HashSet<String> mActiveExts;
 
-    //Here is where to change the colors that get assigned to tags
-    // these are for text colors
-    private Color mRed = new Color(255, 0, 0);
-    private Color mLightBlue = new Color(11, 162, 188);
-    private Color mOrange = new Color(234, 160, 0);
-    private Color mDarkGreen = new Color(12, 153, 72);
-    private Color mMagenta = new Color(255, 0, 255);
-    private Color mDarkBlue = new Color(42, 92, 140);
-    private Color mYellow = new Color(255, 255, 0);
-    private Color mPurple = new Color(150, 20, 120);
-    private Color mGray = new Color(200, 200, 200);
-    private Color mViolet = new Color(102, 75, 153);
-    private Color mGold = new Color(207, 181, 59);
-    private Color mBlue = new Color(0, 0, 255);
-    private Color mDarkOrange = new Color(153, 102, 0);
+    public HashSet<String> getActiveLinks() {
+        return mActiveLinks;
+    }
 
-    private Color[] mColors = {
-            mRed, mLightBlue, mOrange, mDarkGreen, mMagenta, mDarkBlue,
-            mYellow, mPurple, mGray, mViolet, mGold, mBlue, mDarkOrange};
+    public void setActiveLinks(HashSet<String> mActiveLinks) {
+        this.mActiveLinks = mActiveLinks;
+    }
+
+    public HashSet<String> getActiveExts() {
+        return mActiveExts;
+    }
+
+    public void setActiveExts(HashSet<String> mActiveExts) {
+        this.mActiveExts = mActiveExts;
+    }
+
+    private Color[] mColors = Colors.getColors();
 
     // thses are for highlighter colors
     private Color mLightOrange = new Color(255, 204, 51);
@@ -96,72 +91,261 @@ public class MaeMainUI extends JPanel {
     private TextHighlightPainter mGreenHL = new TextHighlightPainter(mGreen);
     private TextHighlightPainter mPinkHL = new TextHighlightPainter(mPink);
     private TextHighlightPainter mCyanHL = new TextHighlightPainter(mCyan);
-    private TextHighlightPainter mGrayHL = new TextHighlightPainter(mLightGray);
-    private Highlighter.HighlightPainter mDefHL = DefaultHighlighter.DefaultPainter;
+    private TextHighlightPainter mGrayHL = Colors.getFadingHighlighter();
+    private Highlighter.HighlightPainter mDefHL = Colors.getDefaultHighliter();
 
     // default color is excluded from the list; it's for indicating selection
-    private TextHighlightPainter[] mHighlighters = {
-            mOrangeHL, mGreenHL, mPinkHL, mCyanHL, mGrayHL};
+    private TextHighlightPainter[] mHighlighters = Colors.getHighlighters();
+
+    public boolean isFileOpen() {
+        return isFileOpen;
+    }
+
+    public void setFileOpen(boolean fileOpen) {
+        isFileOpen = fileOpen;
+    }
 
     //some booleans that help keep track of the status of the annotation
     private boolean isFileOpen;
+
+    public boolean isTaskChanged() {
+        return isTaskChanged;
+    }
+
+    public void setTaskChanged(boolean taskChanged) {
+        isTaskChanged = taskChanged;
+    }
+
+    public boolean isTextSelected() {
+        return isTextSelected;
+    }
+
+    public void setTextSelected() {
+        setTextSelected(true);
+    }
+
+    public void setTextSelected(boolean textSelected) {
+        isTextSelected = textSelected;
+    }
+
     private boolean isTaskChanged;
     private boolean isTextSelected;
+
+    public boolean isOptionExitOnCreation() {
+        return mOptionExitOnCreation;
+    }
+
+    public void setOptionExitOnCreation(boolean mOptionExitOnCreation) {
+        this.mOptionExitOnCreation = mOptionExitOnCreation;
+    }
 
     // some booleans for user preference
     private boolean mOptionExitOnCreation = true; // on by default
 
     // krim: additional booleans to keep track of annotation mode
-    private final int M_NORMAL = 0;
-    private final int M_MULTI_SPAN = 1;
-    private final int M_ARG_SEL = 2;
-    private final int M_ADJUD = 9;
+    public static final int M_NORMAL = 0;
+    public static final int M_MULTI_SPAN = 1;
+    public static final int M_ARG_SEL = 2;
+    public static final int M_ADJUD = 9;
+
+    public int getMode() {
+        return mMode;
+    }
+
+    public void setMode(int mode) {
+        this.mMode = mode;
+    }
+
     private int mMode;
 
-
-    // krim: instead of using 2 integers, start & end, now we use a set of tuples
-    private ArrayList<ArrayList<int[]>> mPrevSpans;
     private ArrayList<int[]> mSpans;
+    private ArrayList<ArrayList<int[]>> mPrevSpans;
     private ArrayList<int[]> mLastSelection;
+
+    public ArrayList<int[]> getSpans() {
+        return mSpans;
+    }
+
+    public void setSpans(ArrayList<int[]> spans) {
+        this.mSpans = spans;
+    }
+
+    public ArrayList<ArrayList<int[]>> getPrevSpans() {
+        return mPrevSpans;
+    }
+
+    public ArrayList<int[]> getLastSelection() {
+        return mLastSelection;
+    }
+
+    public LinkedList<String> getUnderspecified() {
+        return mUnderspecified;
+    }
+
+    public void setUnderspecified(LinkedList<String> mUnderspecified) {
+        this.mUnderspecified = mUnderspecified;
+    }
+
+    public ArrayList<String> getPossibleArgIds() {
+        return mPossibleArgIds;
+    }
+
+    public void setPossibleArgIds(ArrayList<String> mPossibleArgIds) {
+        this.mPossibleArgIds = mPossibleArgIds;
+    }
 
     // variables for link creation
     private LinkedList<String> mUnderspecified;
     private ArrayList<String> mPossibleArgIds;
 
+    public String getWorkingFileName() {
+        return mWorkingFileName;
+    }
+
+    public JFrame getMainFrame() {
+//        return (JFrame) this.getParent();
+        return mMainFrame;
+    }
+
+    public void setMainFrame(JFrame frame) {
+        mMainFrame = frame;
+    }
+
+    public void setWorkingFileName(String mWorkingFileName) {
+        this.mWorkingFileName = mWorkingFileName;
+    }
+
     // for file operation
     private String mWorkingFileName;
+
+    public String getFilenameSuffix() {
+        return mFilenameSuffix;
+    }
+
+    public void setFilenameSuffix(String mFilenameSuffix) {
+        this.mFilenameSuffix = mFilenameSuffix;
+    }
+
     private String mFilenameSuffix = "";
 
     // krim: column number of some fixed attributes
     // this might be hard-coding, but MAE always create an extent element
     // with id, spans, text as the first three attribs of it
-    private int SRC_COL = 0;
-    private int ID_COL = 1;
-    private int SPANS_COL = 2;
-    private int TEXT_COL = 3;
+    public final int SRC_COL = 0;
+    public final int ID_COL = 1;
+    public final int SPANS_COL = 2;
+    public final int TEXT_COL = 3;
+
     // should match last essential column (currently text_col) + 1
-    private int LAST_ESSE_COL = 4;
+    public int LAST_ESSE_COL = 4;
 
     //GUI components
-    private static JFrame mMainFrame;
+    private JFrame mMainFrame;
+
+    public JFrame getLinkPopupFrame() {
+        return mLinkPopupFrame;
+    }
+
+    public void setLinkPopupFrame(JFrame mLinkPopupFrame) {
+        this.mLinkPopupFrame = mLinkPopupFrame;
+    }
+
     private JFrame mLinkPopupFrame;
     private JScrollPane mScrollPane;
+
+    public Hashtable<String, JTable> getElementTables() {
+        return mElementTables;
+    }
+
+    public void setElementTables(Hashtable<String, JTable> mElementTables) {
+        this.mElementTables = mElementTables;
+    }
+
     private Hashtable<String, JTable> mElementTables;
+
+    public JTabbedPane getBottomTable() {
+        return mBottomTable;
+    }
+
+    public void setBottomTable(JTabbedPane mBottomTable) {
+        this.mBottomTable = mBottomTable;
+    }
+
     private JTabbedPane mBottomTable;
+
+    public JTextPane getTextPane() {
+        return mTextPane;
+    }
+
+    public void setTextPane(JTextPane mTextPane) {
+        this.mTextPane = mTextPane;
+    }
+
     private JTextPane mTextPane;
     private JPanel mTopPanel;
 
     private JMenuBar mMenuBar;
+
+    // TODO refactor this into separate class
     private JLabel mStatusBar;
 
+    public JPopupMenu getTextPopup() {
+        return mTextPopup;
+    }
+
+    public void setTextPopup(JPopupMenu mTextPopup) {
+        this.mTextPopup = mTextPopup;
+    }
+
     private JPopupMenu mTextPopup;
+
+    public JPopupMenu getTablePopup() {
+        return mTablePopup;
+    }
+
+    public void setTablePopup(JPopupMenu mTablePopup) {
+        this.mTablePopup = mTablePopup;
+    }
+
     private JPopupMenu mTablePopup;
+
+    public JFileChooser getLoadFC() {
+        return mLoadFC;
+    }
+
+    public void setLoadFC(JFileChooser mLoadFC) {
+        this.mLoadFC = mLoadFC;
+    }
+
+    public JFileChooser getSaveFC() {
+        return mSaveFC;
+    }
+
+    public void setSaveFC(JFileChooser mSaveFC) {
+        this.mSaveFC = mSaveFC;
+    }
 
     private JFileChooser mLoadFC;
     private JFileChooser mSaveFC;
 
+    public AnnotationTask getTask() {
+        return mTask;
+    }
+
+    public void setTask(AnnotationTask mTask) {
+        mTask = mTask;
+    }
+
     //the helper function for talking to the database
-    private static AnnotationTask mTask;
+    private AnnotationTask mTask;
+
+    public JLabel getStatusBar() {
+        return mStatusBar;
+    }
+
+    public void setStatusBar(JLabel mStatusBar) {
+        this.mStatusBar = mStatusBar;
+    }
 
     public MaeMainUI() {
         super(new BorderLayout());
@@ -202,8 +386,8 @@ public class MaeMainUI extends JPanel {
         mTextPane = new JTextPane(new DefaultStyledDocument());
         mTextPane.setEditable(false);
         mTextPane.setContentType("text/plain; charset=UTF-8");
-        mTextPane.addCaretListener(new MaeCaretListener());
-        mTextPane.addMouseListener(new TextMouseAdapter());
+        mTextPane.addCaretListener(new MaeCaretListener(this));
+        mTextPane.addMouseListener(new TextMouseAdapter(this));
         mScrollPane = new JScrollPane(mTextPane);
         mScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -249,880 +433,12 @@ public class MaeMainUI extends JPanel {
     // Section: classes and listeners
 
     /**
-     * Allows new highlighters for the JTextPane
-     */
-    private class TextHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
-        private TextHighlightPainter(Color color) {
-            super(color);
-        }
-    }
-
-    /**
      * Timer Task for timed messages in the status bar
      */
-    private class TimedUpdateStatusBar extends TimerTask {
+    protected class TimedUpdateStatusBar extends TimerTask {
         @Override
         public void run() {
             updateStatusBar();
-        }
-    }
-
-    /**
-     * Listener for the File menu; determines what action to take for loading/saving
-     * documents.
-     */
-    private class FileMenuListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            String command = actionEvent.getActionCommand();
-
-            if (command.equals("Load DTD")) {
-                if (isFileOpen && isTaskChanged) {
-                    showSaveWarning();
-                }
-                loadDtd();
-            } else if (command.equals("Add File")) {
-                addFile();
-            } else if (command.equals("Load File")) {
-                if (isFileOpen && isTaskChanged) {
-                    showSaveWarning();
-                }
-                loadFile();
-            } else if (command.equals("Save RTF")) {
-                saveRtf();
-            } else if (command.equals("Save XML")) {
-                saveXml();
-            } else if (command.equals("Close File")) {
-                if (isFileOpen && isTaskChanged) {
-                    showSaveWarning();
-                }
-                closeFile();
-            }
-            // reset status bar after 3 secs
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-        }
-
-        void loadDtd() {
-            if (mLoadFC.showOpenDialog(MaeMainUI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = mLoadFC.getSelectedFile();
-                try {
-                    mTextPane.setStyledDocument(new DefaultStyledDocument());
-                    DTDLoader dtdl = new DTDLoader(file);
-                    mTask.resetDb();
-                    DTD d = dtdl.getDTD();
-                    mTask.setDtd(d);
-                    mActiveLinks.clear();
-                    mActiveExts.clear();
-                    assignColors();
-                    resetTablePane();
-
-                    // refresh interfaces
-                    updateMenus();
-                    updateTitle();
-                    resetSpans();
-                    returnToNormalMode(false);
-                    mStatusBar.setText("DTD load succeed! Click anywhere to continue.");
-
-                    if (mTask.getElements().size() > 20) {
-                        mBottomTable.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-                    } else {
-                        mBottomTable.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
-                    }
-
-                    isFileOpen = false;
-                } catch (Exception ex) {
-                    System.err.println("Error loading DTD");
-                    ex.printStackTrace();
-
-                    // print out the error message on the status bar
-                    mStatusBar.setText("Error loading DTD: " + ex.toString());
-                }
-            }
-        }
-
-        void addFile() {
-           // TODO re-write this part
-            boolean succeed = true;
-            String status = "";
-            if (mLoadFC.showOpenDialog(MaeMainUI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = mLoadFC.getSelectedFile();
-                mWorkingFileName = file.getName();
-                try {
-                    updateTitle();
-                    isFileOpen = true;
-                    mTask.resetDb();
-                    mTask.resetIdTracker();
-                    mTask.setWorkingFile(mWorkingFileName);
-
-                    // refresh interfaces
-                    resetTablePane();
-                    updateMenus();
-                    resetSpans();
-                    returnToNormalMode(false);
-
-                    mTextPane.setStyledDocument(new DefaultStyledDocument());
-                    mTextPane.setContentType("text/plain; charset=UTF-8");
-                    mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                    if (FileOperations.hasTags(file)) {
-                        XMLFileLoader xfl = new XMLFileLoader(file);
-                        StyledDocument d = mTextPane.getStyledDocument();
-                        Style def = StyleContext.getDefaultStyleContext()
-                                .getStyle(StyleContext.DEFAULT_STYLE);
-                        Style regular = d.addStyle("regular", def);
-                        d.insertString(0, xfl.getTextChars(), regular);
-                        // newTags is a hash from tagType to attib list
-                        // each attrib is stored in a has from att name to value
-                        HashCollection<String, Hashtable<String, String>> newTags
-                                = xfl.getTagHash();
-                        if (newTags.size() > 0) {
-                            processTagHash(newTags);
-                        }
-                    } else {  // that is, if it's only a text file
-                        StyledDocument d = mTextPane.getStyledDocument();
-                        mTextPane.setStyledDocument(FileOperations.setText(file, d));
-                    }
-                    mTextPane.requestFocus(true);
-                    mTextPane.getCaret().setDot(0);
-                    mTextPane.getCaret().moveDot(1);
-                } catch (Exception ex) {
-                    isFileOpen = false;
-                    ex.printStackTrace();
-                    succeed = false;
-                    status = "Error loading file";
-                }
-            }
-            mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            mTextPane.setCaretPosition(0);
-            // refresh status bar after all caret events
-            if (succeed) {
-                status = "File load succeed! Click anywhere to continue.";
-            }
-            mStatusBar.setText(status);
-
-        }
-
-        void loadFile() {
-            boolean succeed = true;
-            String status = "";
-            if (mLoadFC.showOpenDialog(MaeMainUI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = mLoadFC.getSelectedFile();
-                mWorkingFileName = file.getName();
-                try {
-                    updateTitle();
-                    isFileOpen = true;
-                    mTask.resetDb();
-                    mTask.resetIdTracker();
-                    mTask.setWorkingFile(mWorkingFileName);
-
-                    // refresh interfaces
-                    resetTablePane();
-                    updateMenus();
-                    resetSpans();
-                    returnToNormalMode(false);
-
-                    mTextPane.setStyledDocument(new DefaultStyledDocument());
-                    mTextPane.setContentType("text/plain; charset=UTF-8");
-                    mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                    if (FileOperations.hasTags(file)) {
-                        XMLFileLoader xfl = new XMLFileLoader(file);
-                        StyledDocument d = mTextPane.getStyledDocument();
-                        Style def = StyleContext.getDefaultStyleContext()
-                                .getStyle(StyleContext.DEFAULT_STYLE);
-                        Style regular = d.addStyle("regular", def);
-                        d.insertString(0, xfl.getTextChars(), regular);
-                        // newTags is a hash from tagType to attib list
-                        // each attrib is stored in a has from att name to value
-                        HashCollection<String, Hashtable<String, String>> newTags
-                                = xfl.getTagHash();
-                        if (newTags.size() > 0) {
-                            processTagHash(newTags);
-                        }
-                    } else {  // that is, if it's only a text file
-                        StyledDocument d = mTextPane.getStyledDocument();
-                        mTextPane.setStyledDocument(FileOperations.setText(file, d));
-                    }
-                    mTextPane.requestFocus(true);
-                    mTextPane.getCaret().setDot(0);
-                    mTextPane.getCaret().moveDot(1);
-                } catch (Exception ex) {
-                    isFileOpen = false;
-                    ex.printStackTrace();
-                    succeed = false;
-                    status = "Error loading file";
-                }
-            }
-            mMainFrame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            mTextPane.setCaretPosition(0);
-            // refresh status bar after all caret events
-            if (succeed) {
-                status = "File load succeed! Click anywhere to continue.";
-            }
-            mStatusBar.setText(status);
-
-        }
-
-        void saveRtf() {
-            String rtfName = mWorkingFileName + mFilenameSuffix + ".rtf";
-            mSaveFC.setSelectedFile(new File(rtfName));
-            if (mSaveFC.showSaveDialog(MaeMainUI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = mSaveFC.getSelectedFile();
-                isTaskChanged = false;
-                try {
-                    FileOperations.saveRTF(file, mTextPane);
-                    mStatusBar.setText("Save Complete :" + rtfName);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    mStatusBar.setText("Error saving RTF file");
-                }
-            }
-
-        }
-
-        void saveXml() {
-            String xmlName;
-            if (mWorkingFileName.endsWith(".xml")) {
-                String pureName = mWorkingFileName.
-                        substring(0, mWorkingFileName.length()-4);
-                if (pureName.endsWith(mFilenameSuffix)) {
-                    xmlName = mWorkingFileName;
-                } else {
-                    xmlName = pureName + mFilenameSuffix + ".xml";
-                }
-            } else {
-                xmlName = mWorkingFileName + mFilenameSuffix + ".xml";
-            }
-            mSaveFC.setSelectedFile(new File(xmlName));
-            if (mSaveFC.showSaveDialog(MaeMainUI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = mSaveFC.getSelectedFile();
-                isTaskChanged = false;
-                mWorkingFileName = file.getName();
-                mTask.setWorkingFile(mWorkingFileName);
-                try {
-                    FileOperations.saveXML(file,
-                            mTextPane, mElementTables,
-                            mTask.getElements(), mTask.getDTDName());
-                    updateTitle();
-                    mStatusBar.setText(
-                            String.format("Save Complete: %s", mWorkingFileName));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    mStatusBar.setText("Error saving XML file");
-                }
-            }
-        }
-
-        void closeFile() {
-            isFileOpen = false;
-            mTextPane.setStyledDocument(new DefaultStyledDocument());
-            mTask.resetDb();
-            mActiveLinks.clear();
-            mActiveExts.clear();
-            assignColors();
-            resetTablePane();
-            updateMenus();
-            resetSpans();
-            returnToNormalMode(false);
-            mStatusBar.setText("All Files closed");
-            mWorkingFileName = "";
-            isTaskChanged = false;
-            updateTitle();
-        }
-    }
-
-    /**
-     * Listens for the request from the Help Menu
-     */
-    private class HelpMenuListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            String command = actionEvent.getActionCommand();
-            if (command.equals("about")) {
-                showAboutDialog();
-            } else if (command.equals("web")) {
-                if (Desktop.isDesktopSupported()) {
-                    try {
-                        Desktop.getDesktop().browse(
-                                new URI(MaeStrings.PROJECT_WEBPAGE));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Class that changes the size of the text from the top menu
-     */
-    private class FontSizeMenuListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            String command = actionEvent.getActionCommand();
-            if (command.equals("Font++")) {
-                Font font = mTextPane.getFont();
-                Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
-                mTextPane.setFont(font2);
-            } else if (command.equals("Font--")) {
-                Font font = mTextPane.getFont();
-                Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
-                mTextPane.setFont(font2);
-            }
-        }
-    }
-
-    /**
-     * AnnTableModel creates a TableModel that allows the ID column to be
-     * uneditable.  This helps prevent user-created database conflicts by ensuring
-     * the IDs being generated will not be changed, and makes it so that users can
-     * double-click on the ID in order to see where that tag appears in the text.
-     */
-    private class MaeTableModel extends DefaultTableModel {
-        static final long serialVersionUID = 552012L;
-
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return (col != ID_COL) && (col != SRC_COL);
-        }
-    }
-
-    /**
-     * ALlTableModel creates a TableModel that is not editable at all This is only
-     * used to create the all extents tab
-     */
-    private class AllTableModel extends DefaultTableModel {
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return false;
-        }
-    }
-
-    /**
-     * Called when the user selects the option to delete the highlighted rows from
-     * the table in view.  Rows are removed both from the database and the table.
-     */
-    private class RemoveSelectedTableRows implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            if (showDeleteWarning()) {
-                // command is concatenated ids from selected rows, so first split it
-                String[] ids = actionEvent.getActionCommand().split(MaeStrings.SEP);
-                for (String id : ids) {
-                    // load corresponding table and its back-end model
-                    String elemName = mTask.getElemNameById(id);
-                    Elem elem = mTask.getElemByName(elemName);
-                    JTable table = mElementTables.get(elemName);
-                    DefaultTableModel tableModel
-                            = (DefaultTableModel) table.getModel();
-
-                    // search in the table model for matching id, remove that row
-                    for (int i = 0; i < tableModel.getRowCount(); i++) {
-                        if (tableModel.getValueAt(i, ID_COL).equals(id)) {
-                            // if removing an extent tag, re-assign highlighting
-                            if (elem instanceof ElemExtent) {
-                                mTask.removeExtentByID(id);
-                                assignTextColor(parseSpansString(
-                                        (String) tableModel.getValueAt(i, SPANS_COL)));
-                                //remove links that use the tag being removed
-                                HashCollection<String, String> links
-                                        = mTask.getLinksByExtentID(elemName, id);
-                                removeLinkTableRows(links);
-                                // also remove item from all extents tab
-                                removeAllTableRow(id);
-                            } else {
-                                mTask.removeLinkByID(id);
-                            }
-                            tableModel.removeRow(i);
-                            break;
-                        }
-
-                    }
-                }
-            }
-            isTaskChanged = true;
-            updateTitle();
-        }
-    }
-
-    /**
-     * TabTitle is a renderer class to render tabs in the bottom table with an
-     * element name and a highlight-toggling checkbox.
-     */
-    private class TabTitle extends JPanel {
-        private String elemName;
-        private Color elemColor;
-        private JCheckBox toggle;
-        private JLabel title;
-
-        /**
-         * constructor for a link element tab note that this constructor accepts
-         * only name since a link tag doesn't have a color assigned to highlight
-         *
-         * @param elemName name of the element
-         */
-        TabTitle(String elemName) {
-            this.elemName = elemName;
-            this.elemColor = Color.white;
-            this.toggle = new JCheckBox();
-            this.init();
-        }
-
-        /**
-         * constructor for a extent element tab
-         *
-         * @param elemName  name of the element
-         * @param elemColor color assigned to highlight the element
-         */
-        TabTitle(String elemName, Color elemColor) {
-            this.elemName = elemName;
-            this.elemColor = elemColor;
-            Icon unselected = new BorderRect(this.elemColor, 13);
-            Icon selected = new ColorRect(this.elemColor, 13);
-            this.toggle = new JCheckBox(unselected);
-            this.toggle.setSelectedIcon(selected);
-            this.init();
-        }
-
-        /**
-         * common constructor
-         */
-        private void init() {
-            // set layout and transparency
-            this.setLayout(new GridBagLayout());
-            this.setOpaque(false);
-
-            // make components to be set on title and place them
-            if (this.elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
-                this.title = new JLabel(MaeStrings.ALL_TABLE_TAB_FRONT_NAME);
-            } else {
-                this.title = new JLabel(this.elemName);
-            }
-            this.toggle.addItemListener(new ToggleHighlightListener(elemName));
-            this.add(this.toggle);
-            this.add(this.title);
-        }
-
-        /**
-         * returns the name of the tab of current tab *
-         *
-         * @return element name
-         */
-        String getTitleName() {
-            return this.elemName;
-        }
-
-        /**
-         * set the highlighting status of current tab
-         *
-         * @param b whether turn on or off highlighting
-         */
-        void setHighlighted(Boolean b) {
-            this.toggle.setSelected(b);
-        }
-
-        /**
-         * returns where current tab is highlighted or not
-         *
-         * @return true if current tab is highlighted
-         */
-        boolean isHighlighted() {
-            return this.toggle.isSelected();
-        }
-    }
-
-    /**
-     * This is the class to toggle hightlight color for a specific tagnamw
-     */
-    private class ToggleHighlightListener implements ItemListener {
-
-        private String elemName;
-        private boolean isLink;
-
-        public ToggleHighlightListener(String elemName) {
-            this.elemName = elemName;
-            this.isLink = mTask.getLinkNames().contains(elemName);
-        }
-
-        public String getElemName() {
-            return this.elemName;
-        }
-
-        @Override
-        public void itemStateChanged(ItemEvent itemEvent) {
-            mStatusBar.setText("Processing...");
-            int index = mBottomTable.indexOfTab(this.getElemName());
-
-            TabTitle tab = (TabTitle) mBottomTable.getTabComponentAt(index);
-            // checking 0 might be a little bit hardcoding
-            // toggle all extent elements
-            if (index == 0) {
-                if (tab.isHighlighted()) {
-                    assignAllColors();
-                } else {
-                    unassignAllColors();
-                }
-            }
-            // toggle a single link element
-            else if (index > 0 && isLink) {
-                if (tab.isHighlighted()) {
-                    mActiveLinks.add(this.elemName);
-                    this.turnOnLink();
-                } else {
-                    mActiveLinks.remove(this.elemName);
-                    this.turnOffLink();
-                }
-            }
-            // toggle a single extent element
-            else {
-                if (tab.isHighlighted()) {
-                    mActiveExts.add(this.elemName);
-
-                    // when all single tabs are turned on, turn all_extents tab on
-                    if (mActiveExts.size() == mTask.getExtNames().size()) {
-                        // since allTab is created after all single tabs are created
-                        // getTabComponentAt() will return null while loading up
-                        // a new DTD file, and will cause a nullpointer exception
-                        TabTitle allTab = (TabTitle) mBottomTable.getTabComponentAt(0);
-                        if (allTab != null) {
-                            allTab.setHighlighted(true);
-                        }
-                    }
-                } else {
-                    mActiveExts.remove(this.elemName);
-
-                    // when all single tabs are turned off, turn all_extents tab off
-                    if (mActiveExts.size() == 0) {
-                        TabTitle allTab = (TabTitle) mBottomTable.getTabComponentAt(0);
-                        allTab.setHighlighted(false);
-                    }
-                }
-                this.updateElemColor();
-            }
-            new Timer().schedule(new TimedUpdateStatusBar(), 1000);
-        }
-
-        private void turnOnLink() {
-            DefaultStyledDocument styleDoc =
-                    (DefaultStyledDocument) mTextPane.getStyledDocument();
-            //get list of locations associated with the selected link
-            Hashtable<Integer, String> locs
-                    = mTask.getLocationsbyElemLink(elemName);
-
-            // TODO this for loop is redundant in this one and turnOff one
-            for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
-                Integer i = e.nextElement();
-                Element el = styleDoc.getCharacterElement(i);
-                AttributeSet as = el.getAttributes();
-                SimpleAttributeSet sas = new SimpleAttributeSet(as);
-                StyleConstants.setItalic(sas, true);
-                StyleConstants.setBold(sas, true);
-                styleDoc.setCharacterAttributes(i, 1, sas, false);
-            }
-        }
-
-        private void turnOffLink() {
-            DefaultStyledDocument styleDoc =
-                    (DefaultStyledDocument) mTextPane.getStyledDocument();
-            //if boldness is being removed, have to make sure it doesn't
-            //take away boldness of other tags that are selected
-            //get list of active displays
-            ArrayList<String> active = new ArrayList<String>();
-            for (String linkName : mActiveLinks) {
-                active.add(linkName);
-            }
-            active.remove(elemName);
-            Hashtable<Integer, String> locs =
-                    mTask.getLocationsbyElemLink(elemName, active);
-
-            for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
-                Integer i = e.nextElement();
-                Element el = styleDoc.getCharacterElement(i);
-                AttributeSet as = el.getAttributes();
-                SimpleAttributeSet sas = new SimpleAttributeSet(as);
-                StyleConstants.setItalic(sas, false);
-                StyleConstants.setBold(sas, false);
-                styleDoc.setCharacterAttributes(i, 1, sas, false);
-            }
-        }
-
-        private void updateElemColor() {
-            for (String id : mTask.getExtIdsByName(this.elemName)) {
-                assignTextColor(mTask.getLocByID(id));
-            }
-        }
-
-    }
-
-    /**
-     * This is the class that's called when creating an extent tag (by either popup
-     * menu or NC menu) * LinkListner listens to menu items that creating a link tag
-     * with arguments from selected text or table rows Creating a link tag from
-     * multiple arguments are done by an additional popup window, mLinkPopupFrame
-     */
-    private class MakeTagListener implements ActionListener {
-        private boolean isLink;
-        private boolean isArgLink;
-        private String newName;
-        private String newId;
-        private Elem newElem;
-
-        public void actionPerformed(ActionEvent actionEvent) {
-            String command = actionEvent.getActionCommand();
-
-            clearTableSelections();
-
-            // first get tag type; is it a link? is it a NC tag?
-            isLink = false;
-            if (command.startsWith(MaeStrings.ADD_LINK_COMMAND)) {
-                newName = command.
-                        substring(MaeStrings.ADD_LINK_COMMAND.length());
-                isLink = true;
-            } else if (command.startsWith(MaeStrings.ADD_LINK_WITH_ARGS_COMMAND)) {
-                newName = command.
-                        substring(MaeStrings.ADD_LINK_WITH_ARGS_COMMAND.length());
-                isArgLink = true;
-            } else if (command.startsWith(MaeStrings.ADD_NC_COMMAND)) {
-                // if the tag being added is non-consuming, make sure
-                // it's added with (-1, -1) span
-                resetSpans();
-                newName = command.substring(MaeStrings.ADD_NC_COMMAND.length());
-            } else {
-                newName = command;
-            }
-
-            // get a new ID
-            newElem = mTask.getElemByName(newName);
-            newId = mTask.getNextID(newName);
-
-            // first add a new tag to table
-            // it's needed because link arguments need pre-defined placeholders
-            insertToTable();
-
-            // then add to DB
-            if (isLink) {
-                processLink();
-                succeed();
-            } else if (isArgLink) {
-                processLinkWithArgs();
-            } else {
-                addExtTagToDb(newName, newId);
-                succeed();
-            }
-        }
-
-        /**
-         * update interface and post to user
-         */
-        void succeed() {
-            // assign colors if necessary
-            if (!isSpansEmpty()) {
-                assignTextColor(mSpans);
-            }
-            // return if user prefer
-            if (mOptionExitOnCreation && (mMode != M_NORMAL)) {
-                returnToNormalMode(false);
-            }
-            resetSpans();
-            mStatusBar.setText(String.format("%s is created!", newId));
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-            isTaskChanged = true;
-            updateTitle();
-        }
-
-        private void insertToTable() {
-            // bring up corresponding panel from the bottom table
-            JTable tab = mElementTables.get(newName);
-            DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
-
-            //  create a dummy data set and insert to table
-            String[] newEmptyData = createEmptyRowData(newName, newId);
-            tableModel.addRow(newEmptyData);
-
-            // when adding an extent tag, also insert to all_table
-            if (!isLink && !isArgLink) {
-                DefaultTableModel allTableModel
-                        = (DefaultTableModel) mElementTables.get(
-                        MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
-                // all_extent tab takes only obligatory columns
-                String[] newdataForAll
-                        = Arrays.copyOfRange(newEmptyData, 0, LAST_ESSE_COL);
-                allTableModel.addRow(newdataForAll);
-            }
-
-            // move cursor and set focus to newly added tag
-            mBottomTable.setSelectedIndex(mBottomTable.indexOfTab(newName));
-            tab.clearSelection();
-            tab.setRowSelectionInterval(
-                    tableModel.getRowCount() - 1, tableModel.getRowCount() - 1);
-            Rectangle rect = tab.getCellRect(
-                    tableModel.getRowCount() - 1, 0, true);
-            tab.scrollRectToVisible(rect);
-        }
-
-        private void processLink() {
-            // get number of arguments associated with this link tag
-            ElemLink target = (ElemLink) newElem;
-            int argNum = target.getArgNum();
-
-            // initiate lists with empty strings as dummy arguments and comm with DB
-            String[] argIds = new String[argNum], argTypes = new String[argNum];
-            Arrays.fill(argIds, "");
-            Arrays.fill(argTypes, "");
-            addLinkTagToDb(newName, newId,
-                    Arrays.asList(argIds), Arrays.asList(argTypes));
-
-            // add id of the new tag to underspecified set for further lookup
-            mUnderspecified.add(newId);
-        }
-
-        private void processLinkWithArgs() {
-            final ElemLink target = (ElemLink) newElem;
-            mLinkPopupFrame = new JFrame();
-
-            JPanel boxPane = new JPanel(new GridLayout(target.getArgNum() + 1, 2));
-
-            // information for creating a link tag
-            final String[] argIds = new String[target.getArgNum()];
-            final String[] argTypes = new String[target.getArgNum()];
-
-            // OK button
-            JButton okay = new JButton("OK");
-            okay.setMnemonic(MaeHotKeys.OK_BUTTON);
-            okay.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-
-                    addLinkTagToDb(newName, newId,
-                            Arrays.asList(argIds), Arrays.asList(argTypes));
-                    for (int i = 0; i < argIds.length; i++) {
-                        setArgumentInTable(
-                                // name, id, argType, argId, argText
-                                newName, newId,
-                                target.getArguments().get(i), argIds[i],
-                                getTextByID(argTypes[i], argIds[i], true));
-                    }
-                    mLinkPopupFrame.setVisible(false);
-                    mLinkPopupFrame.dispose();
-                    // return if user prefer
-                    if (mOptionExitOnCreation) {
-                        returnToNormalMode(false);
-                    }
-                    succeed();
-                }
-            });
-
-            // cancel button
-            JButton cancel = new JButton("Cancel");
-            cancel.setMnemonic(MaeHotKeys.CANCEL_BUTTON);
-            cancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    mLinkPopupFrame.setVisible(false);
-                    mLinkPopupFrame.dispose();
-                    removeTableRows(newElem, newId);
-                    mStatusBar.setText("Canceled");
-                    new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-                }
-            });
-
-            // comboboxes to select arguments
-            for (int i = 0; i < target.getArgNum(); i++) {
-                JComboBox<String> candidates = new JComboBox<String>();
-                for (String item : getComboItems(mPossibleArgIds, false)) {
-                    candidates.addItem(item);
-                }
-                // front of mPossibleArgIds is sorted by selection order
-                candidates.setSelectedIndex(i % candidates.getItemCount());
-                // set initial argid and argtype from seleted item
-                String selected = (String) candidates.getSelectedItem();
-                argTypes[i] = selected.split(MaeStrings.COMBO_DELIMITER)[0];
-                argIds[i] = selected.split(MaeStrings.COMBO_DELIMITER)[1];
-
-                // action command is simply index of current argument
-                candidates.setActionCommand(String.valueOf(i));
-                // action listener for changing selection of an item
-                candidates.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        int command = Integer.parseInt(e.getActionCommand());
-                        JComboBox box = (JComboBox) e.getSource();
-                        String item = (String) box.getSelectedItem();
-                        argTypes[command]
-                                = item.split(MaeStrings.COMBO_DELIMITER)[0];
-                        argIds[command]
-                                = item.split(MaeStrings.COMBO_DELIMITER)[1];
-
-                    }
-                });
-                boxPane.add(new JLabel(target.getArguments().get(i), JLabel.CENTER));
-                boxPane.add(candidates);
-
-            }
-            boxPane.add(okay);
-            boxPane.add(cancel);
-            okay.requestFocus();
-            mLinkPopupFrame.add(boxPane);
-            mLinkPopupFrame.pack();
-            mLinkPopupFrame.setTitle(String.format("Creating %s - %s", newName, newId));
-            mLinkPopupFrame.setLocation(300, 200);
-            mLinkPopupFrame.setVisible(true);
-            mLinkPopupFrame.setAlwaysOnTop(true);
-            mLinkPopupFrame.requestFocus();
-
-        }
-
-        private String[] createEmptyRowData(String elemName, String newId) {
-            // get the target element and a list of its attrib
-            Elem e = mTask.getElemByName(elemName);
-            ArrayList<Attrib> attributes = e.getAttributes();
-            String[] newData = new String[attributes.size()+1];
-
-            // first column is for source file
-            newData[0] = mWorkingFileName;
-            int curCol = 1;
-            // go through the list of attributes, fill newdata array with proper values
-            for (Attrib att : attributes) {
-                // get ID number. This isn't as hard-coded as it looks:
-                // the columns for the table are created from the Attributes array list
-                if (att instanceof AttID) {
-                    newData[curCol] = newId;
-                }
-                // since link tags never have spans and text, below is safe
-                else if (att.getName().equals(MaeStrings.SPANS_COL_NAME)) {
-                    newData[curCol] = spansToString(mSpans);
-                } else if (att.getName().equals(MaeStrings.TEXT_COL_NAME)
-                        && !isSpansEmpty()) {
-                    newData[curCol] = getTextIn(mSpans);
-                }
-                // for the rest slots of newdata, make sure it's not staying as null value
-                else {
-                    if (att.hasDefaultValue()) {
-                        newData[curCol] = att.getDefaultValue();
-                    } else {
-                        newData[curCol] = "";
-                    }
-                }
-                curCol++;
-            }
-            return newData;
-        }
-    }
-
-    /**
-     * This listener is associated with 'set as argument of...' menu items
-     * callable from context menus from either bottom table or main text pane
-     */
-    private class SetAsArgListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            // command looks like this:
-            // linkType(0), linkId(1), argName(2), argId(3), argText(4)
-            String[] command = actionEvent.getActionCommand().split(MaeStrings.SEP);
-            setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
-            int argNum = mTask.getArguments(command[0]).indexOf(command[2]);
-            String argType = mTask.getElemNameById(command[3]);
-            mTask.addArgument(command[1], argNum, command[3], argType);
         }
     }
 
@@ -1135,8 +451,8 @@ public class MaeMainUI extends JPanel {
      * @param argId    id of an argument extent tag being added
      * @param argText  text of an argument extent tag being added
      */
-    private void setArgumentInTable(String linkName, String linkId,
-                                    String argName, String argId, String argText) {
+    public void setArgumentInTable(String linkName, String linkId,
+                                   String argName, String argId, String argText) {
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(linkName).getModel();
         int rows = tableModel.getRowCount();
@@ -1160,7 +476,7 @@ public class MaeMainUI extends JPanel {
         // set values for argID and argTEXT
         if (idRow == -1 || argCol == -1) {
             mStatusBar.setText("ERROR! Link ID and Arg name cannot be found in the table");
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+            delayedUpdateStatusBar(3000);
         } else {
             tableModel.setValueAt(argId, idRow, argCol);
             tableModel.setValueAt(argText, idRow, argCol + 1);
@@ -1179,360 +495,6 @@ public class MaeMainUI extends JPanel {
         }
     }
 
-    /**
-     * Listen to remove commmand in the text context menu
-     */
-    private class RemoveExtentTagListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            boolean check = showDeleteWarning();
-            if (check) {
-                String command = actionEvent.getActionCommand();
-                // command looks like this: elemName + SEP + elemId
-                String elemName = command.split(MaeStrings.SEP)[0];
-                String elemId = command.split(MaeStrings.SEP)[1];
-                Elem elem = mTask.getElemByName(elemName);
-
-                // removes extent tags and related link tags from DB
-                mTask.removeExtentByID(elemId);
-
-                //remove extent tags and recolors text area
-                removeTableRows(elem, elemId);
-                removeAllTableRow(elemId);
-
-                //remove links that use the tag being removed
-                HashCollection<String, String> links
-                        = mTask.getLinksByExtentID(elemName, elemId);
-                removeLinkTableRows(links);
-                for (String link : links.getKeyList()) {
-                    for (String linkId : links.getList(link)) {
-                        mTask.removeLinkByID(linkId);
-                    }
-                }
-
-                // mark as a change
-                isTaskChanged = true;
-                updateTitle();
-            }
-        }
-    }
-
-    /**
-     * AnnCaretListener keeps track of what extents have been selected so that other
-     * methods can use that information in the display and links.
-     */
-    private class MaeCaretListener implements CaretListener {
-        @Override
-        public void caretUpdate(CaretEvent e) {
-            Highlighter hl = mTextPane.getHighlighter();
-            //when the caret is moved, remove the any link highlights
-            hl.removeAllHighlights();
-
-            int dot = e.getDot();
-            int mark = e.getMark();
-
-            /*
-            Not just set start and end field to caret selection,
-            but clear the spans set first, then fill it with caret selection span.
-            Consequently the array get one int[] in it.
-            */
-
-            // in normal mode, reset span for every mouse event
-            if (mMode == M_NORMAL) {
-                resetSpans();
-            }
-
-            // before selecting a text span, clear default (-1, -1) pair in mSpan
-            if (isSpansEmpty()) {
-                mSpans.clear();
-            }
-            int start, end;
-
-            // mouse is dragged
-            if (dot != mark) {
-                isTextSelected = true;
-                if (dot < mark) {
-                    start = dot;
-                    end = mark;
-                } else {
-                    start = mark;
-                    end = dot;
-                }
-                if (mMode == M_MULTI_SPAN || mMode == M_ARG_SEL) {
-                    mPrevSpans.add(new ArrayList<int[]>(mSpans));
-                    mLastSelection.add(new int[]{start, end});
-                }
-                mSpans.add(new int[]{start, end});
-                if (mMode == M_ARG_SEL) {
-                    updateArgList();
-                }
-            }
-
-            // highlight corresponding row of table
-            findHighlightRows();
-
-            // krim: need to update current selection and status bar
-            if (!isSpansEmpty()) {
-                highlightTextSpans(hl, mSpans, mDefHL);
-                mSpans = removeOverlapping(mSpans);
-            }
-            updateStatusBar();
-
-        }
-
-        /**
-         * go over current spans and remove overlaps
-         */
-        ArrayList<int[]> removeOverlapping(ArrayList<int[]> spans) {
-            // sorting is necessary for linear looping below
-            Collections.sort(spans, new Comparator<int[]>() {
-                @Override
-                public int compare(int[] o1, int[] o2) {
-                    if (o1[0] == o2[0]) {
-                        return o1[1] - o2[1];
-                    } else {
-                        return o1[0] - o2[0];
-                    }
-                }
-            });
-            ArrayList<int[]> stack = new ArrayList<int[]>();
-            stack.add(spans.get(0));
-            spans.remove(0);
-            for (int[] span : spans) {
-                // linear loop, YEAH!
-                int[] top = stack.remove(stack.size() - 1);
-                if (top[0] <= span[0] && span[0] < top[1]) {
-                    // note that inequity in second part does not include equal sign
-                    // because one might one adjacent discontinuous spans (?)
-                    // e.g.> tagging over morphological affixes separately
-                    top[1] = Math.max(span[1], top[1]);
-                    stack.add(top);
-                } else {
-                    stack.add(top);
-                    stack.add(span);
-                }
-            }
-            return stack;
-        }
-    }
-
-    /**
-     * JTableListener determines if the ID of a tag has been double-clicked, and if
-     * it has it highlights the appropriate text extent/extents.
-     */
-    private class TableMouseAdapter extends MouseAdapter {
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            maybeShowTablePopup(e);
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            maybeShowTablePopup(e);
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                String elemName
-                        = mBottomTable.getTitleAt(mBottomTable.getSelectedIndex());
-                JTable table = mElementTables.get(elemName);
-                int selectedRow = table.getSelectedRow();
-                TableModel tableModel = table.getModel();
-                String elemId = (String) tableModel.getValueAt(selectedRow, ID_COL);
-                Elem el = mTask.getElemByName(mTask.getElemNameById(elemId));
-                Highlighter hl = mTextPane.getHighlighter();
-                hl.removeAllHighlights();
-
-                if (el instanceof ElemExtent) {
-                    // use table column[1] to get spanString then parse it
-                    ArrayList<int[]> spansSelect = parseSpansString(
-                            (String) tableModel.getValueAt(selectedRow, SPANS_COL));
-                    highlightTextSpans(hl, spansSelect, mOrangeHL);
-                } //end if ElemExtent
-
-                // krim: below is used to highlight linked extents
-                if (el instanceof ElemLink) {
-
-                    // get relevant argument columns
-                    TreeSet<Integer> argColumns = getArgColIndices(elemName);
-
-                    int j = 0;
-                    for (Integer i : argColumns) {
-                        String argId = (String) tableModel.getValueAt(selectedRow, i);
-                        // argId can be empty (not all arguments required)
-                        if (!argId.equals("")) {
-                            ArrayList<int[]> argSpans = mTask.getLocByID(argId);
-                            highlightTextSpans(hl, argSpans, mHighlighters[j]);
-                        }
-                        j++;
-                    }
-                }//end if ElemLink
-            }
-        }
-
-        //if the user right-clicks on the table
-        private void maybeShowTablePopup(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                resetSpans();
-                mTablePopup = createTableContextMenu(e);
-                mTablePopup.show(e.getComponent(),
-                        e.getX(), e.getY());
-            }
-        }
-    }
-
-    /**
-     * PopupListener determines whether the link creation window should be
-     * displayed.
-     */
-    private class TextMouseAdapter extends MouseAdapter {
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            maybeShowTextPopup(e);
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            maybeShowTextPopup(e);
-        }
-
-        private void maybeShowTextPopup(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                mTextPopup = createTextContextMenu();
-                mTextPopup.show(e.getComponent(),
-                        e.getX(), e.getY());
-            }
-        }
-    }
-
-    /**
-     * Listener to select special modes
-     */
-    private class ModeMenuListener implements ActionListener {
-        // TODO add adjud mode
-        public void actionPerformed(ActionEvent actionEvent) {
-            int action = Integer.parseInt(actionEvent.getActionCommand());
-
-            switch (action) {
-                // return to normal mode
-                case M_NORMAL:
-                    returnToNormalMode(true);
-                    break;
-                case M_MULTI_SPAN:
-                    mMode = M_MULTI_SPAN;
-                    mStatusBar.setText(
-                            "Multi-span mode! Click anywhere to continue.");
-                    break;
-                case M_ARG_SEL:
-                    mMode = M_ARG_SEL;
-                    mStatusBar.setText(
-                            "Argument select mode! Click anywhere to continue.");
-                    break;
-            }
-            updateMenus();
-            resetSpans();
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
-        }
-    }
-
-    /**
-     * Remove last selected text span from spans list
-     * Used only in multi-span mode or n-ary argument selection mode
-     */
-    private class UndoSelectListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            String command = actionEvent.getActionCommand();
-            if (command.equals("Undo")) {
-                // by calling menu with right clicking,
-                // PrevSpans and LastSel get update with a duplicate span
-                mPrevSpans.remove(mPrevSpans.size() - 1);
-                mLastSelection.remove(mLastSelection.size() - 1);
-
-                mSpans = mPrevSpans.remove(mPrevSpans.size() - 1);
-                ArrayList<int[]> tmp = new ArrayList<int[]>();
-                int[] lastSpan = mLastSelection.remove(mLastSelection.size() - 1);
-                tmp.add(lastSpan);
-
-                Highlighter hl = mTextPane.getHighlighter();
-                hl.removeAllHighlights();
-                highlightTextSpans(hl, mSpans, mDefHL);
-                highlightTextSpans(hl, tmp, mGrayHL);
-
-                mStatusBar.setText(String.format(
-                        "Removed '%s' from selection!" +
-                                " Click anywhere to continue."
-                        , getTextBetween(lastSpan[0], lastSpan[1])));
-            } else if (command.equals("Over")) {
-                resetSpans();
-                mStatusBar.setText(
-                        "No text selected! Click anywhere to continue.");
-
-            }
-            new Timer().schedule(new TimedUpdateStatusBar(), 1000);
-            if (mMode == M_ARG_SEL) {
-                updateArgList();
-            }
-
-        }
-    }
-
-    /** filled color icon class to be used in tab titles as toggle buttons */
-    public class ColorRect implements Icon {
-        private int size;
-        private Color color;
-
-        public ColorRect(Color c, int size) {
-            this.color = c;
-            this.size = size;
-        }
-
-        @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            g.setColor(this.color);
-            g.fillRect(x, y, this.size, this.size);
-        }
-
-        @Override
-        public int getIconWidth() {
-            return this.size;
-        }
-
-        @Override
-        public int getIconHeight() {
-            return this.size;
-        }
-    }
-
-    /** Rectangle icon class to be used in tab titles as toggle buttons */
-    public class BorderRect implements Icon {
-        private int size;
-        private Color color;
-
-        public BorderRect(Color c, int size) {
-            this.color = c;
-            this.size = size;
-        }
-
-        @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            g.setColor(this.color);
-            g.drawRect(x, y, this.size, this.size);
-        }
-
-        @Override
-        public int getIconWidth() {
-            return this.size;
-        }
-
-        @Override
-        public int getIconHeight() {
-            return this.size;
-        }
-    }
-
     // end Section: classes
     // *******************************
 
@@ -1546,7 +508,7 @@ public class MaeMainUI extends JPanel {
      *
      * @param elementsToProcess the HashCollection passed from XMLHandler
      */
-    private void processTagHash(
+    public void processTagHash(
             HashCollection<String, Hashtable<String, String>> elementsToProcess) {
         ArrayList<String> elemNames = elementsToProcess.getKeyList();
         //first, add the extent tags
@@ -1719,9 +681,10 @@ public class MaeMainUI extends JPanel {
 
     /**
      * delete an item from all_extent_tags table given an ID of the item
+     *
      * @param id id of the item to delete
      */
-    private void removeAllTableRow(String id) {
+    public void removeAllTableRow(String id) {
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(
                 MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
@@ -1739,7 +702,7 @@ public class MaeMainUI extends JPanel {
      *
      * @param links HashCollection of types and IDs of links being removed
      */
-    private void removeLinkTableRows(HashCollection<String, String> links) {
+    public void removeLinkTableRows(HashCollection<String, String> links) {
         ArrayList<String> linkTags = links.getKeyList();
         for (String tag : linkTags) {
             Elem elem = mTask.getElemByName(tag);
@@ -1759,7 +722,7 @@ public class MaeMainUI extends JPanel {
      * @param elem type of tag being removed
      * @param id   ID of tag being removed
      */
-    private void removeTableRows(Elem elem, String id) {
+    public void removeTableRows(Elem elem, String id) {
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(elem.getName()).getModel();
         int rows = tableModel.getRowCount();
@@ -1785,7 +748,7 @@ public class MaeMainUI extends JPanel {
      * @param id   The ID of the tag associated with the text being looked for
      * @return the text being searched for
      */
-    private String getTextByID(String elem, String id, boolean fullText) {
+    public String getTextByID(String elem, String id, boolean fullText) {
         String text = "";
         DefaultTableModel tableModel
                 = (DefaultTableModel) mElementTables.get(elem).getModel();
@@ -1808,7 +771,7 @@ public class MaeMainUI extends JPanel {
      * Finds which rows in the table get highlighted based on the span that was
      * selected in the text panel
      */
-    private void findHighlightRows() {
+    public void findHighlightRows() {
         clearTableSelections();
         //first, get ids and types of elements in selected extents
         HashCollection<String, String> idHash = mTask.getTagsIn(mSpans);
@@ -1836,7 +799,7 @@ public class MaeMainUI extends JPanel {
      * @param elemName the type of tag being added
      * @param newId    the ID of the tag being added
      */
-    private void addExtTagToDb(String elemName, String newId) {
+    public void addExtTagToDb(String elemName, String newId) {
         if (!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
@@ -1854,8 +817,8 @@ public class MaeMainUI extends JPanel {
      * Adds a link tag to the database. Unlike an extent tag, a link tag only
      * occupies one item in the DB
      */
-    private void addLinkTagToDb(String elemName, String newId,
-                                List<String> argIds, List<String> argTypes) {
+    public void addLinkTagToDb(String elemName, String newId,
+                               List<String> argIds, List<String> argTypes) {
         mTask.addLinkToBatch(elemName, newId, argIds, argTypes);
         mTask.runBatchLinks();
     }
@@ -1884,7 +847,7 @@ public class MaeMainUI extends JPanel {
      * This method is for coloring/underlining text in the entire text window.  It
      * is called when a new file is loaded or toggling all_extents
      */
-    private void assignAllColors() {
+    protected void assignAllColors() {
         //Get hashCollection of where tags are in the document
         //    <String location,<String elements>>.
         HashCollection<String, String> locElem = mTask.getLocElemHash();
@@ -1910,7 +873,7 @@ public class MaeMainUI extends JPanel {
      * krim: This method is for removing all color/underline highlighting from the
      * whole text windows. It is called when toggling all_extents
      */
-    private void unassignAllColors() {
+    protected void unassignAllColors() {
         HashCollection<String, String> locElem = mTask.getLocElemHash();
         ArrayList<String> locs = locElem.getKeyList();
         for (String loc : locs) {
@@ -1930,7 +893,7 @@ public class MaeMainUI extends JPanel {
      *
      * @param spans a list of spans
      */
-    private void assignTextColor(ArrayList<int[]> spans) {
+    public void assignTextColor(ArrayList<int[]> spans) {
         //go through each part of the word being changed and
         //  find what tags are there, and what color it should be.
         for (int[] span : spans) {
@@ -2004,7 +967,7 @@ public class MaeMainUI extends JPanel {
      * @param spans text spans
      * @return the text of the tag spans
      */
-    private String getTextIn(ArrayList<int[]> spans) {
+    public String getTextIn(ArrayList<int[]> spans) {
         String text = "";
         for (int[] span : spans) {
             text += getTextBetween(span[0], span[1]) + MaeStrings.SPANTEXTTRUNC;
@@ -2021,7 +984,7 @@ public class MaeMainUI extends JPanel {
      * @param end   end location of the text
      * @return the text
      */
-    private String getTextBetween(int start, int end) {
+    public String getTextBetween(int start, int end) {
         // TODO implement stripping out white spaces with a proper option
         DefaultStyledDocument styleDoc
                 = (DefaultStyledDocument) mTextPane.getStyledDocument();
@@ -2039,11 +1002,11 @@ public class MaeMainUI extends JPanel {
      * krim: create a list of arguments from a give target tag set used in a
      * link-creation popup windows
      *
-     * @param targetIds target tag set
+     * @param targetIds  target tag set
      * @param emptyFirst add a empty dummy as the first item in the list
      * @return list of argument strings "type - id - text"
      */
-    private ArrayList<String> getComboItems(
+    public ArrayList<String> getComboItems(
             ArrayList<String> targetIds, boolean emptyFirst) {
         ArrayList<String> items = new ArrayList<String>();
         if (emptyFirst) {
@@ -2084,13 +1047,13 @@ public class MaeMainUI extends JPanel {
      */
     private JComponent makeTablePanel(Elem e) {
 
-        MaeTableModel model = new MaeTableModel();
+        MaeTableModel model = new MaeTableModel(this);
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
         JScrollPane scrollPane = new JScrollPane(table);
 
         mElementTables.put(e.getName(), table);
-        table.addMouseListener(new TableMouseAdapter());
+        table.addMouseListener(new TableMouseAdapter(this));
         //go through element attributes and add colums
         ArrayList<Attrib> attributes = e.getAttributes();
         //for some reason, it's necessary to add the columns first,
@@ -2155,6 +1118,7 @@ public class MaeMainUI extends JPanel {
 
     /**
      * creates a table to store all extent tags in one place
+     *
      * @return the GUI component containing the JTable for all extent tags
      */
     private JComponent makeAllTablePanel() {
@@ -2165,7 +1129,7 @@ public class MaeMainUI extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
 
         mElementTables.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
-        table.addMouseListener(new TableMouseAdapter());
+        table.addMouseListener(new TableMouseAdapter(this));
 
         // since all extent tags have three common attribs,
         // use only those as columns of all_table
@@ -2185,7 +1149,7 @@ public class MaeMainUI extends JPanel {
     /**
      * Removes all the tags from the table when a new DTD is loaded.
      */
-    private void resetTablePane() {
+    public void resetTablePane() {
         mBottomTable.removeAll();
         ArrayList<Elem> elements = mTask.getElements();
         // create a tan for all extents and place it at first
@@ -2197,14 +1161,14 @@ public class MaeMainUI extends JPanel {
             TabTitle newTab;
             if (mColorTable.containsKey(name)) {
                 // extent tags are assigned their colors, and by default highlighted
-                newTab = new TabTitle(name, mColorTable.get(name));
+                newTab = new TabTitle(this, name, mColorTable.get(name));
                 mBottomTable.setTabComponentAt(
                         mBottomTable.indexOfTab(name), newTab);
                 mActiveExts.add(name);
                 newTab.setHighlighted(true);
             } else {
                 // link tags are don't have colors, and by default not highlighted
-                newTab = new TabTitle(name);
+                newTab = new TabTitle(this, name);
                 mBottomTable.setTabComponentAt(
                         mBottomTable.indexOfTab(name), newTab);
                 mActiveLinks.remove(name);
@@ -2212,7 +1176,7 @@ public class MaeMainUI extends JPanel {
             }
         }
         // set toggle button in all extents tab after creating all other tabs
-        TabTitle allTab = new TabTitle(MaeStrings.ALL_TABLE_TAB_BACK_NAME);
+        TabTitle allTab = new TabTitle(this, MaeStrings.ALL_TABLE_TAB_BACK_NAME);
         mBottomTable.setTabComponentAt(0, allTab);
         allTab.setHighlighted(true);
     }
@@ -2223,7 +1187,7 @@ public class MaeMainUI extends JPanel {
      * @return a pop-up menu for creating different tags, as well as information
      * about existing tags at the selected location
      */
-    private JPopupMenu createTextContextMenu() {
+    public JPopupMenu createTextContextMenu() {
         JPopupMenu jp = new JPopupMenu();
 
         // add menus for creating Ext tags,
@@ -2246,7 +1210,7 @@ public class MaeMainUI extends JPanel {
         //the action command for that menuItem
         //this is only for extent tags
 
-        UndoSelectListener undoSelectListener = new UndoSelectListener();
+        UndoSelectListener undoSelectListener = new UndoSelectListener(this);
         if (mMode == M_ARG_SEL || mMode == M_MULTI_SPAN) {
             JMenuItem undo = createMenuItem("Undo last selection", MaeHotKeys.UNDO,
                     "Undo", undoSelectListener);
@@ -2262,7 +1226,7 @@ public class MaeMainUI extends JPanel {
 
             JMenuItem exit = createMenuItem(
                     "Exit Multi-span Mode", MaeHotKeys.NORMALMODE,
-                    Integer.toString((M_NORMAL)), new ModeMenuListener());
+                    Integer.toString((M_NORMAL)), new ModeMenuListener(this));
 
             if (mMode == M_ARG_SEL) {
                 String makeLink = "Create a Link tag with selected elements";
@@ -2271,7 +1235,7 @@ public class MaeMainUI extends JPanel {
                 int i = 0;
                 for (String link : mTask.getLinkNames()) {
                     JMenuItem linkItem;
-                    MakeTagListener makeTagListener = new MakeTagListener();
+                    MakeTagListener makeTagListener = new MakeTagListener(this);
 
                     if (i < 10) {
                         linkItem = createMenuItem(
@@ -2307,7 +1271,7 @@ public class MaeMainUI extends JPanel {
                         String.format("Remove %s", id),
                         MaeHotKeys.DELETE,
                         elem + MaeStrings.SEP + id,
-                        new RemoveExtentTagListener());
+                        new RemoveExtentTagListener(this));
                 // set a ext tag as an argument
                 JMenu setArg = createSetAsArgMenu(String.format(
                         "Set %s as an argument of", id), elem, id);
@@ -2334,9 +1298,9 @@ public class MaeMainUI extends JPanel {
 
                         // menu items for removing
                         JMenuItem removeItem = createMenuItem(
-                                "Remove",  MaeHotKeys.DELETE,
+                                "Remove", MaeHotKeys.DELETE,
                                 elem + MaeStrings.SEP + id,
-                                new RemoveExtentTagListener());
+                                new RemoveExtentTagListener(this));
 
                         // menu items for adding tag as an arg
                         JMenu setArg = createSetAsArgMenu(String.format(
@@ -2357,10 +1321,10 @@ public class MaeMainUI extends JPanel {
      * Creates a waterfall menu to add current extent tag as an argument of a link tag
      *
      * @param menuTitle string for top menu item
-     * @param argType element name of current extent tag
-     * @param argId element id if current extent tag
+     * @param argType   element name of current extent tag
+     * @param argId     element id if current extent tag
      * @return a waterfall menu, goes down to 3rd level,
-     *         for each link type, for each argument type, for each link instance
+     * for each link type, for each argument type, for each link instance
      */
     private JMenu createSetAsArgMenu(
             String menuTitle, String argType, String argId) {
@@ -2381,7 +1345,7 @@ public class MaeMainUI extends JPanel {
             // add a link type as a menu item, only when it has real tags
             JMenu linkTypeMenu;
             if (j < 10) {
-                linkTypeMenu = new JMenu(String.format("%d %s", j+1, linkType));
+                linkTypeMenu = new JMenu(String.format("%d %s", j + 1, linkType));
                 linkTypeMenu.setMnemonic(MaeHotKeys.numKeys[j]);
             } else {
                 linkTypeMenu = new JMenu(linkType);
@@ -2392,7 +1356,7 @@ public class MaeMainUI extends JPanel {
             for (String argName : mTask.getArguments(linkType)) {
                 JMenu linkArgMenu;
                 if (k < 10) {
-                    linkArgMenu = new JMenu(String.format("%d %s", k+1, argName));
+                    linkArgMenu = new JMenu(String.format("%d %s", k + 1, argName));
                     linkArgMenu.setMnemonic(MaeHotKeys.numKeys[k]);
                 } else {
                     linkArgMenu = new JMenu(argName);
@@ -2417,7 +1381,7 @@ public class MaeMainUI extends JPanel {
                 // final level - ids of each link
                 // needs to move underspecified items to the top of the menu
                 boolean prior = false;
-                SetAsArgListener setAsArgListener = new SetAsArgListener();
+                SetAsArgListener setAsArgListener = new SetAsArgListener(this);
                 if (mUnderspecified.size() > 0) {
                     for (String unspecId : mUnderspecified) {
                         if (id2Add.contains(unspecId)) {
@@ -2473,10 +1437,11 @@ public class MaeMainUI extends JPanel {
 
     /**
      * Creates the menu with the option to remove selected table rows
+     * TODO refactor to database package
      *
      * @return GUI menu
      */
-    private JPopupMenu createTableContextMenu(MouseEvent event) {
+    public JPopupMenu createTableContextMenu(MouseEvent event) {
         JPopupMenu jp = new JPopupMenu();
 
         // get the title of current tab
@@ -2501,7 +1466,7 @@ public class MaeMainUI extends JPanel {
 
             JMenuItem removeItem = createMenuItem(
                     String.format("Remove %s", id), MaeHotKeys.DELETE,
-                    id, new RemoveSelectedTableRows());
+                    id, new RemoveSelectedTableRows(this));
             jp.add(removeItem);
 
             // if selection was in all_tab, replace elemName
@@ -2548,7 +1513,7 @@ public class MaeMainUI extends JPanel {
                     String.format("Remove selected %d rows", selected));
             removeItem.setActionCommand(idsString);
             removeItem.setAccelerator(MaeHotKeys.DELETE);
-            removeItem.addActionListener(new RemoveSelectedTableRows());
+            removeItem.addActionListener(new RemoveSelectedTableRows(this));
             jp.add(removeItem);
 
             // then if they are extent tags, add item for creating a link with them
@@ -2569,7 +1534,7 @@ public class MaeMainUI extends JPanel {
                 makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
                 int i = 0;
                 for (String link : mTask.getLinkNames()) {
-                    MakeTagListener makeTagListener = new MakeTagListener();
+                    MakeTagListener makeTagListener = new MakeTagListener(this);
 
                     JMenuItem linkItem;
                     if (i < 10) {
@@ -2629,7 +1594,7 @@ public class MaeMainUI extends JPanel {
     /**
      * Remove all highlights from table rows
      */
-    private void clearTableSelections() {
+    public void clearTableSelections() {
         for (Enumeration<String> tables = mElementTables.keys(); tables.hasMoreElements(); ) {
             JTable tab = mElementTables.get(tables.nextElement());
             DefaultTableModel tableModel = (DefaultTableModel) tab.getModel();
@@ -2646,7 +1611,7 @@ public class MaeMainUI extends JPanel {
      * @param linkType target link type
      * @return indices of argument columns
      */
-    private TreeSet<Integer> getArgColIndices(String linkType) {
+    public TreeSet<Integer> getArgColIndices(String linkType) {
 
         JTable tab = mElementTables.get(linkType);
         ArrayList<String> argNames = mTask.getArguments(linkType);
@@ -2665,7 +1630,7 @@ public class MaeMainUI extends JPanel {
     /**
      * Displays the warning for saving your work before opening a new file or DTD.
      */
-    private static void showSaveWarning() {
+    public void showSaveWarning() {
         // TODO re-write wording
         JOptionPane save = new JOptionPane();
         save.setLocation(100, 100);
@@ -2673,6 +1638,7 @@ public class MaeMainUI extends JPanel {
                 "delete any unsaved data.  " +
                 "\nPlease save your data before continuing");
         JOptionPane.showMessageDialog(mMainFrame, text);
+//        JOptionPane.showMessageDialog(this.getParent(), text);
     }
 
     /**
@@ -2683,12 +1649,13 @@ public class MaeMainUI extends JPanel {
      * @return boolean indicating the user accepted the warning or canceled the
      * action.
      */
-    private boolean showDeleteWarning() {
+    public boolean showDeleteWarning() {
         //JOptionPane delete = new JOptionPane();
         String text = ("Deleting extent tag(s) will also delete \n" +
                 "any links that use these extents.  Would you like to continue?");
 
         int message = JOptionPane.showConfirmDialog(mMainFrame,
+//        int message = JOptionPane.showConfirmDialog(this.getParent(),
                 text, "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         return message == 0;
@@ -2697,21 +1664,22 @@ public class MaeMainUI extends JPanel {
     /**
      * Shows information about MAE
      */
-    private void showAboutDialog() {
+    public void showAboutDialog() {
         JOptionPane about = new JOptionPane();
         about.setLocation(100, 100);
         about.setAlignmentX(Component.CENTER_ALIGNMENT);
         about.setAlignmentY(Component.CENTER_ALIGNMENT);
         about.setMessage(String.format("MAE \n Multi-purpose Annotation Editor \n" +
-                "Version %s\n\n" +
-                "Developed in Lab for Linguistics and Computation, " +
-                "Brandeis University 2010-%s.\n\n" +
-                "MAE is a free software. " +
-                "\nThis distribution of MAE (the software and the source code) \n" +
-                " is covered under the GNU General Public License version 3.\n" +
-                "http://www.gnu.org/licenses/"
+                        "Version %s\n\n" +
+                        "Developed in Lab for Linguistics and Computation, " +
+                        "Brandeis University 2010-%s.\n\n" +
+                        "MAE is a free software. " +
+                        "\nThis distribution of MAE (the software and the source code) \n" +
+                        " is covered under the GNU General Public License version 3.\n" +
+                        "http://www.gnu.org/licenses/"
                 , MaeStrings.VERSION, MaeStrings.CUR_YEAR));
         JDialog dialog = about.createDialog(mMainFrame, "About MAE");
+//        JDialog dialog = about.createDialog(this.getParent(), "About MAE");
         dialog.setVisible(true);
     }
 
@@ -2723,7 +1691,7 @@ public class MaeMainUI extends JPanel {
      */
     private JComboBox makeValidValuesComboBox(AttList att) {
         //makes comboBox from List-type attribute
-        JComboBox<String> options = new JComboBox();
+        JComboBox<String> options = new JComboBox<String>();
         options.addItem("");
         for (int j = 0; j < att.getVaildValues().size(); j++) {
             options.addItem(att.getVaildValues().get(j));
@@ -2734,7 +1702,7 @@ public class MaeMainUI extends JPanel {
     /**
      * assigns colors to the elements in the DTD
      */
-    private void assignColors() {
+    public void assignColors() {
         ArrayList<String> elements = mTask.getExtNames();
         for (int i = 0; i < elements.size(); i++) {
             int l = mColors.length;
@@ -2753,7 +1721,7 @@ public class MaeMainUI extends JPanel {
      */
     private JMenu createFileMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-        FileMenuListener fileMenuListener = new FileMenuListener();
+        FileMenuListener fileMenuListener = new FileMenuListener(this);
 
         JMenuItem loadDTD = createMenuItem("Load DTD", MaeHotKeys.NEWTASK,
                 "Load DTD", fileMenuListener);
@@ -2855,7 +1823,7 @@ public class MaeMainUI extends JPanel {
      */
     private JMenu createDisplayMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-        FontSizeMenuListener fsmListener = new FontSizeMenuListener();
+        FontSizeMenuListener fsmListener = new FontSizeMenuListener(this);
         JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.FONTBIG,
                 "Font++", fsmListener);
         JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.FONTSMALL,
@@ -2885,11 +1853,11 @@ public class MaeMainUI extends JPanel {
                     JMenuItem menuItem;
                     if (mainMenu) {
                         menuItem = new JMenuItem(
-                                String.format("(%d) %s", i+1, linkName));
+                                String.format("(%d) %s", i + 1, linkName));
                     } else {
                         menuItem = new JMenuItem(linkName);
                     }
-                    menuItem.addActionListener(new MakeTagListener());
+                    menuItem.addActionListener(new MakeTagListener(this));
                     menuItem.setActionCommand(
                             MaeStrings.ADD_LINK_COMMAND + linkName);
                     if (i < 10) {
@@ -2936,7 +1904,7 @@ public class MaeMainUI extends JPanel {
             } else {
                 menuItem = new JMenuItem(elemName);
             }
-            menuItem.addActionListener(new MakeTagListener());
+            menuItem.addActionListener(new MakeTagListener(this));
             if (i < 10) {
                 if (mainMenu) {
                     menuItem.setMnemonic(MaeHotKeys.numKeys[i]);
@@ -2970,11 +1938,11 @@ public class MaeMainUI extends JPanel {
                     JMenuItem menuItem;
                     if (mainMenu) {
                         menuItem = new JMenuItem(
-                                String.format("(%d) %s", i+1, ncElem.getName()));
+                                String.format("(%d) %s", i + 1, ncElem.getName()));
                     } else {
                         menuItem = new JMenuItem(ncElem.getName());
                     }
-                    menuItem.addActionListener(new MakeTagListener());
+                    menuItem.addActionListener(new MakeTagListener(this));
                     menuItem.setActionCommand(
                             MaeStrings.ADD_NC_COMMAND + ncElem.getName());
                     if (i < 10) {
@@ -3003,7 +1971,7 @@ public class MaeMainUI extends JPanel {
      */
     private JMenu createHelpMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
-        HelpMenuListener helpMenuListener = new HelpMenuListener();
+        HelpMenuListener helpMenuListener = new HelpMenuListener(this);
 
         JMenuItem about = createMenuItem("About MAE", MaeHotKeys.ABOUT,
                 "about", helpMenuListener);
@@ -3025,7 +1993,7 @@ public class MaeMainUI extends JPanel {
     private JMenu createModeMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
 
-        ModeMenuListener modemenuListener = new ModeMenuListener();
+        ModeMenuListener modemenuListener = new ModeMenuListener(this);
 
         JMenuItem multiSpan = createMenuItem(
                 "Multi-span Mode", MaeHotKeys.MSPANMODE,
@@ -3057,7 +2025,8 @@ public class MaeMainUI extends JPanel {
 
     /**
      * creates a grayed-out menu item that informs user of something
-     * @param menu parent menu to which 'guide' goes in
+     *
+     * @param menu  parent menu to which 'guide' goes in
      * @param guide something to tell to user
      */
     private void addGuideItem(JMenu menu, String guide) {
@@ -3069,7 +2038,7 @@ public class MaeMainUI extends JPanel {
     /**
      * Refreshes the GUI menus when a new DTD or file is loaded
      */
-    private void updateMenus() {
+    public void updateMenus() {
         mMenuBar.removeAll();
 
         JMenu fileMenu = createFileMenu("File");
@@ -3121,7 +2090,7 @@ public class MaeMainUI extends JPanel {
      * @param spansString - string of spans
      * @return a ArrayList of int[]
      */
-    protected ArrayList<int[]> parseSpansString(String spansString) {
+    public ArrayList<int[]> parseSpansString(String spansString) {
         ArrayList<int[]> spans = new ArrayList<int[]>();
         if (spansString == null || spansString.equals("")) {
             spans.add(new int[]{-1, -1});
@@ -3156,7 +2125,7 @@ public class MaeMainUI extends JPanel {
      * @param spans - an sorted set of integer pairs
      * @return a formatted string of spans of a tag
      */
-    protected String spansToString(ArrayList<int[]> spans) {
+    public String spansToString(ArrayList<int[]> spans) {
         String spanString = "";
         Iterator<int[]> iter = spans.iterator();
         while (iter.hasNext()) {
@@ -3178,9 +2147,9 @@ public class MaeMainUI extends JPanel {
      * @param spans   - desired text spans to be highlighted
      * @param painter - highlighter OBJ with color
      */
-    private void highlightTextSpans(Highlighter hl,
-                                    ArrayList<int[]> spans,
-                                    Highlighter.HighlightPainter painter) {
+    public void highlightTextSpans(Highlighter hl,
+                                   ArrayList<int[]> spans,
+                                   Highlighter.HighlightPainter painter) {
 
         for (int[] span : spans) {
             int start = span[0], end = span[1];
@@ -3196,8 +2165,10 @@ public class MaeMainUI extends JPanel {
         }
     }
 
-    /** make a list all extent elements in mSpan */
-    private void updateArgList() {
+    /**
+     * make a list all extent elements in mSpan
+     */
+    public void updateArgList() {
         mPossibleArgIds.clear();
 
         int i = 0;
@@ -3221,8 +2192,17 @@ public class MaeMainUI extends JPanel {
         }
     }
 
-    /** Updates the status bar */
-    private void updateStatusBar() {
+    /**
+     * Delayed update on the status bar
+     */
+    public void delayedUpdateStatusBar(long miliseconds) {
+        new Timer().schedule(new TimedUpdateStatusBar(), miliseconds);
+    }
+
+    /**
+     * Updates the status bar
+     */
+    public void updateStatusBar() {
         if (!mTask.hasDTD()) {
             mStatusBar.setText(MaeStrings.SB_NODTD);
         } else if (!isFileOpen) {
@@ -3243,7 +2223,7 @@ public class MaeMainUI extends JPanel {
                                 MaeStrings.SB_MSPAN_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_MSPAN_TEXT +
-                        spansToString(this.mSpans));
+                                spansToString(this.mSpans));
                     }
                     break;
                 case M_ARG_SEL:
@@ -3255,7 +2235,7 @@ public class MaeMainUI extends JPanel {
                             argList.add(String.format("%s - %s"
                                     , id
                                     , getTextByID(
-                                    mTask.getElemNameById(id), id, false)));
+                                            mTask.getElemNameById(id), id, false)));
                         }
                         mStatusBar.setText(String.format(
                                 MaeStrings.SB_MARGS_TAG
@@ -3266,8 +2246,10 @@ public class MaeMainUI extends JPanel {
         }
     }
 
-    /** add asterisk to windows title when file is changed */
-    private void updateTitle() {
+    /**
+     * add asterisk to windows title when file is changed
+     */
+    public void updateTitle() {
         String title = MaeStrings.TITLE_PREFIX + " - ";
         if (mWorkingFileName.equals("")) {
             title = title + "no file open";
@@ -3280,23 +2262,29 @@ public class MaeMainUI extends JPanel {
         mMainFrame.setTitle(title);
     }
 
-    /** Sets MAE mode to Normal */
-    private void returnToNormalMode(boolean statusBarAlert) {
+    /**
+     * Sets MAE mode to Normal
+     */
+    public void returnToNormalMode(boolean statusBarAlert) {
 
         if (mMode != M_NORMAL && statusBarAlert) {
             mStatusBar.setText(MaeStrings.SB_NORM_MODE);
-            new Timer().schedule(new TimedUpdateStatusBar(), 3000);
+            delayedUpdateStatusBar(3000);
         }
         mMode = M_NORMAL;
     }
 
-    /** check if anything is selected in text pane */
-    private Boolean isSpansEmpty() {
+    /**
+     * check if anything is selected in text pane
+     */
+    public Boolean isSpansEmpty() {
         return this.mSpans.size() == 0 || this.mSpans.get(0)[0] == -1;
     }
 
-    /** Resets the selected spans to default non-selection (-1~-1) */
-    private void resetSpans() {
+    /**
+     * Resets the selected spans to default non-selection (-1~-1)
+     */
+    public void resetSpans() {
         isTextSelected = false;
 
         mSpans.clear();
@@ -3309,32 +2297,28 @@ public class MaeMainUI extends JPanel {
         mPossibleArgIds.clear();
     }
 
-    /** Creates the GUI */
-    private static void createAndShowGUI() {
+    /**
+     * Creates the GUI
+     */
+    public static void createAndShowGUI() {
         JFrame.setDefaultLookAndFeelDecorated(true);
 
         //Create and set up the window.
-        mMainFrame = new JFrame(MaeStrings.TITLE_PREFIX);
-        mMainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        JFrame mainFrame = new JFrame(MaeStrings.TITLE_PREFIX);
+        mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        JComponent newContentPane = new MaeMainUI();
-        newContentPane.setOpaque(true); //content panes must be opaque
-        mMainFrame.setContentPane(newContentPane);
+        MaeMainUI mainUI = new MaeMainUI();
+//        JComponent newContentPane = mainUI;
+//        newContentPane.setOpaque(true); //content panes must be opaque
+        mainFrame.setContentPane(mainUI);
+        mainUI.setMainFrame(mainFrame);
 
         //Display the window.
-        mMainFrame.pack();
-        mMainFrame.setSize(900, 500);
-        mMainFrame.setVisible(true);
-    }
+        mainFrame.pack();
+        mainFrame.setSize(900, 500);
+        mainFrame.setVisible(true);
 
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        createAndShowGUI();
-                    }
-                });
     }
 }
+

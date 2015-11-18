@@ -22,24 +22,40 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
+package edu.brandeis.cs.nlp.mae.view;
 
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
-import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
- * Created by krim on 11/17/15.
+ * PopupListener determines whether the link creation window should be
+ * displayed.
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class TextMouseAdapter extends MouseAdapter {
+
+    private MaeMainUI maeMainUI;
+
+    public TextMouseAdapter(MaeMainUI maeMainUI) {
+        this.maeMainUI = maeMainUI;
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        maybeShowTextPopup(e);
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        maybeShowTextPopup(e);
+    }
+
+    private void maybeShowTextPopup(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            maeMainUI.setTextPopup(maeMainUI.createTextContextMenu());
+            maeMainUI.getTextPopup().show(e.getComponent(),
+                    e.getX(), e.getY());
+        }
     }
 }

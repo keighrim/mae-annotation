@@ -22,24 +22,16 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.ui;
 
-
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
-
-import javax.swing.*;
+import javax.swing.text.DefaultHighlighter;
+import java.awt.*;
 
 /**
- * Created by krim on 11/17/15.
+ * Allows new highlighters for the JTextPane
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+class TextHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
+    TextHighlightPainter(Color color) {
+        super(color);
     }
 }

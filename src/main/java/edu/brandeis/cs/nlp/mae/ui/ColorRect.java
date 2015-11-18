@@ -22,24 +22,36 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
-
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+package edu.brandeis.cs.nlp.mae.ui;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
- * Created by krim on 11/17/15.
+ * filled color icon class to be used in tab titles as toggle buttons
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class ColorRect implements Icon {
+    private int size;
+    private Color color;
+
+    public ColorRect(Color c, int size) {
+        this.color = c;
+        this.size = size;
+    }
+
+    @Override
+    public void paintIcon(Component c, Graphics g, int x, int y) {
+        g.setColor(this.color);
+        g.fillRect(x, y, this.size, this.size);
+    }
+
+    @Override
+    public int getIconWidth() {
+        return this.size;
+    }
+
+    @Override
+    public int getIconHeight() {
+        return this.size;
     }
 }

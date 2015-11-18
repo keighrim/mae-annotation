@@ -22,24 +22,17 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.view;
 
-
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
-
-import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 /**
- * Created by krim on 11/17/15.
+ * ALlTableModel creates a TableModel that is not editable at all This is only
+ * used to create the all extents tab
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class AllTableModel extends DefaultTableModel {
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return false;
     }
 }

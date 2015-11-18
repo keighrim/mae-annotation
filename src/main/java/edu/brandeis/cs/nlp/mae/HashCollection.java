@@ -55,7 +55,7 @@ public class HashCollection<K,V>{
     /**
      * returns true if their's only one key and one item associated with that key
      */
-    boolean isSizeOne() {
+    public boolean isSizeOne() {
         Object[] array  = mHash.keySet().toArray();
         return array.length == 1 && mHash.get(array[0]).size() == 1;
     }

@@ -22,24 +22,33 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
+package edu.brandeis.cs.nlp.mae.view;
 
-
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
-import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
- * Created by krim on 11/17/15.
+ * This listener is associated with 'set as argument of...' menu items
+ * callable from context menus from either bottom table or main text pane
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class SetAsArgListener implements ActionListener {
+    private MaeMainUI maeMainUI;
+
+    public SetAsArgListener(MaeMainUI maeMainUI) {
+        this.maeMainUI = maeMainUI;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        // command looks like this:
+        // linkType(0), linkId(1), argName(2), argId(3), argText(4)
+        String[] command = actionEvent.getActionCommand().split(MaeStrings.SEP);
+        maeMainUI.setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
+        int argNum = maeMainUI.getTask().getArguments(command[0]).indexOf(command[2]);
+        String argType = maeMainUI.getTask().getElemNameById(command[3]);
+        maeMainUI.getTask().addArgument(command[1], argNum, command[3], argType);
     }
 }
