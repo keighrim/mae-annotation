@@ -34,6 +34,8 @@ import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.ui.menu.*;
 import edu.brandeis.cs.nlp.mae.view.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -55,6 +57,8 @@ import java.util.Timer;
  */
 
 public class MaeMainUI extends JPanel {
+
+    protected static final Logger logger = LoggerFactory.getLogger(MaeMainUI.class.getName());
 
     private static final long serialVersionUID = 9404268L;
 
@@ -425,6 +429,8 @@ public class MaeMainUI extends JPanel {
         mPrevSpans = new ArrayList<ArrayList<int[]>>();
         mLastSelection = new ArrayList<int[]>();
         resetSpans();
+
+        logger.info("Hello world! MAE started successfully.");
 
 
     }
