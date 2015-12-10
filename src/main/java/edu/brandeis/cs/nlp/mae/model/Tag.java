@@ -37,10 +37,10 @@ import java.util.ArrayList;
 
 public abstract class Tag {
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(id = true)
     protected String tid;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false)
     protected TagType tagtype;
 
     protected boolean isFulfilled;

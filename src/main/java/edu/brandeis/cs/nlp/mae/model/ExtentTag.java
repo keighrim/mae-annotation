@@ -61,7 +61,13 @@ public class ExtentTag extends Tag {
         this.setText(text);
     }
 
-    private void setSpans(ArrayList<int[]> spans) {
+    public void setSpans(int...locations) {
+        for (int location : locations) {
+            new CharIndex(location, this);
+        }
+    }
+
+    public void setSpans(ArrayList<int[]> spans) {
         for (int[] span : spans) {
             for (int i=span[0]; i<span[1]; i++) {
                 new CharIndex(i, this);

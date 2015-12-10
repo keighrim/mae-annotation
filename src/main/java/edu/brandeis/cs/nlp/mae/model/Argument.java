@@ -40,7 +40,7 @@ public class Argument {
     @DatabaseField(foreign = true)
     private ExtentTag argument;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false)
     private ArgumentType argumentType;
 
     private boolean isFulfilled;

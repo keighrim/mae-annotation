@@ -24,7 +24,9 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 
 /**
  * Created by krim on 12/9/2015.
@@ -36,6 +38,9 @@ public class ArgumentType {
 
     @DatabaseField(foreign = true, canBeNull = false)
     private TagType tagType;
+
+    @ForeignCollectionField
+    private ForeignCollection<Argument> arguments;
 
     @DatabaseField(canBeNull =false)
     private String name;
@@ -59,6 +64,10 @@ public class ArgumentType {
 
     public void setTagType(TagType tagType) {
         this.tagType = tagType;
+    }
+
+    public ForeignCollection<Argument> getArguments() {
+        return arguments;
     }
 
     public String getName() {

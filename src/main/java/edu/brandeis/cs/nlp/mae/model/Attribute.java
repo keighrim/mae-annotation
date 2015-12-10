@@ -40,6 +40,13 @@ public class Attribute {
     @DatabaseField(foreign = true, canBeNull = false)
     private Tag tag;
 
+    // TODO 151209 solve this inheritance problem
+    @DatabaseField(foreign = true)
+    private ExtentTag extentTag;
+
+    @DatabaseField(foreign = true)
+    private LinkTag linkTag;
+
     @DatabaseField(canBeNull = false)
     private String name;
 
