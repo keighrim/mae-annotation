@@ -50,6 +50,8 @@ public class MaeStrings {
     public final static String COMBO_DELIMITER = " - ";
     public final static String SPANDELIMITER = "~";
     public final static String SPANSEPARATOR = ",";
+    public final static String ATT_VALUESET_SEPARATOR = ":|:";
+    // TODO 151209 are these two below safe?
     public final static String SPANTEXTTRUNC = " ... ";
     public final static String LONGTEXTTRUNC = " … ";
     public final static String ADD_NC_COMMAND = "ADDNC:";
