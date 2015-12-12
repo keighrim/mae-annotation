@@ -40,7 +40,7 @@ public class CharIndex {
     @DatabaseField(index = true, canBeNull = false)
     private int location;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
     private ExtentTag tag;
 
     public CharIndex() {

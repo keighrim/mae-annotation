@@ -30,6 +30,8 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by krim on 11/19/15.
@@ -40,6 +42,9 @@ public class ExtentTag extends Tag {
 
     @DatabaseField
     private String text;
+
+    @ForeignCollectionField
+    protected ForeignCollection<Attribute> attributes;
 
     @ForeignCollectionField
     private ForeignCollection<CharIndex> spans;
@@ -55,24 +60,27 @@ public class ExtentTag extends Tag {
 
     }
 
-    public ExtentTag(String tid, TagType tagType, ArrayList<int[]> spans, String text) {
-        super(tid, tagType);
-        this.setSpans(spans);
-        this.setText(text);
+    @Override
+    public ForeignCollection<Attribute> getAttributes() {
+        return attributes;
     }
 
-    public void setSpans(int...locations) {
+    public List<CharIndex> setSpans(int...locations) {
+        List<CharIndex> indices = new LinkedList<CharIndex>();
         for (int location : locations) {
-            new CharIndex(location, this);
+            indices.add(new CharIndex(location, this));
         }
+        return indices;
     }
 
-    public void setSpans(ArrayList<int[]> spans) {
+    public List<CharIndex> setSpans(ArrayList<int[]> spans) {
+        List<CharIndex> indices = new LinkedList<CharIndex>();
         for (int[] span : spans) {
             for (int i=span[0]; i<span[1]; i++) {
-                new CharIndex(i, this);
+                indices.add(new CharIndex(i, this));
             }
         }
+        return indices;
     }
 
     @Override
@@ -87,6 +95,10 @@ public class ExtentTag extends Tag {
 
     public ForeignCollection<CharIndex> getSpans() {
         return spans;
+    }
+
+    public List<CharIndex> getSpansAsList() {
+        return new ArrayList<CharIndex>(spans);
     }
 
     public String getText() {

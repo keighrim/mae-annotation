@@ -40,6 +40,9 @@ import java.util.ArrayList;
 public class LinkTag extends Tag {
 
     @ForeignCollectionField
+    protected ForeignCollection<Attribute> attributes;
+
+    @ForeignCollectionField
     private ForeignCollection<Argument> arguments;
 
     public LinkTag() {
@@ -57,6 +60,11 @@ public class LinkTag extends Tag {
             checkRequiredArgs();
         }
         return isFulfilled;
+    }
+
+    @Override
+    public ForeignCollection<Attribute> getAttributes() {
+        return attributes;
     }
 
     private void checkRequiredArgs() throws SQLException {

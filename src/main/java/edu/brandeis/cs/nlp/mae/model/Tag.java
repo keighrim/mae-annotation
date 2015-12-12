@@ -26,7 +26,6 @@ package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.field.ForeignCollectionField;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -40,13 +39,10 @@ public abstract class Tag {
     @DatabaseField(id = true)
     protected String tid;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
     protected TagType tagtype;
 
     protected boolean isFulfilled;
-
-    @ForeignCollectionField
-    protected ForeignCollection<Attribute> attributes;
 
     public Tag() {
 
@@ -100,9 +96,7 @@ public abstract class Tag {
         }
     }
 
-    public ForeignCollection<Attribute> getAttributes() {
-        return attributes;
-    }
+    abstract ForeignCollection<Attribute> getAttributes();
 
     @Override
     public int hashCode() {

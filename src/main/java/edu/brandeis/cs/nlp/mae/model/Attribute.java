@@ -34,21 +34,17 @@ public class Attribute {
     @DatabaseField(generatedId = true)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
     private AttributeType attributeType;
 
-    @DatabaseField(foreign = true, canBeNull = false)
-    private Tag tag;
+    @DatabaseField(canBeNull = false)
+    private String tid;
 
-    // TODO 151209 solve this inheritance problem
-    @DatabaseField(foreign = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private ExtentTag extentTag;
 
-    @DatabaseField(foreign = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private LinkTag linkTag;
-
-    @DatabaseField(canBeNull = false)
-    private String name;
 
     @DatabaseField(canBeNull = false)
     private String value;
@@ -57,15 +53,38 @@ public class Attribute {
 
     }
 
-    public Attribute(AttributeType attributeType, Tag tag, String name) {
-        this(attributeType, tag, name, attributeType.getDefaultValue());
+    public Attribute(Tag tag, AttributeType attributeType) {
+        this(tag, attributeType, attributeType.getDefaultValue());
     }
 
-    public Attribute(AttributeType attributeType, Tag tag, String name, String value) {
+    public Attribute(Tag tag, AttributeType attributeType, String value) {
         this.setAttributeType(attributeType);
         this.setTag(tag);
-        this.setName(name);
         this.setValue(value);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public ExtentTag getExtentTag() {
+        return extentTag;
+    }
+
+    public void setExtentTag(ExtentTag extentTag) {
+        this.extentTag = extentTag;
+    }
+
+    public LinkTag getLinkTag() {
+        return linkTag;
+    }
+
+    public void setLinkTag(LinkTag linkTag) {
+        this.linkTag = linkTag;
     }
 
     public AttributeType getAttributeType() {
@@ -76,20 +95,21 @@ public class Attribute {
         this.attributeType = attributeType;
     }
 
-    public Tag getTag() {
-        return tag;
+    public String getTid() {
+        return this.tid;
+    }
+
+    public void setTid(String tid) {
+        this.tid = tid;
     }
 
     public void setTag(Tag tag) {
-        this.tag = tag;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        if (tag instanceof ExtentTag) {
+            this.setExtentTag((ExtentTag) tag);
+        } else if (tag instanceof LinkTag) {
+            this.setLinkTag((LinkTag) tag);
+        }
+        this.setTid(tag.getTid());
     }
 
     public String getValue() {
@@ -97,6 +117,11 @@ public class Attribute {
     }
 
     public void setValue(String value) {
+        // TODO 151212 check if the value is valid (using valid valueset from aType)
         this.value = value;
+    }
+
+    public String getName() {
+        return this.attributeType.getName();
     }
 }

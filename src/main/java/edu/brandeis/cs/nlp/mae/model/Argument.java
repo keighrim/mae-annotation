@@ -34,13 +34,13 @@ public class Argument {
     @DatabaseField(generatedId = true)
     private int id;
 
-    @DatabaseField(foreign = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private LinkTag linker;
 
-    @DatabaseField(foreign = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private ExtentTag argument;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
     private ArgumentType argumentType;
 
     private boolean isFulfilled;
