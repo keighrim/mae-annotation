@@ -27,6 +27,8 @@ package edu.brandeis.cs.nlp.mae.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.util.List;
+
 /**
  * Created by krim on 11/19/15.
  */
@@ -59,14 +61,19 @@ public class Attribute {
 
     }
 
-    public Attribute(Tag tag, AttributeType attributeType) {
+    public Attribute(Tag tag, AttributeType attributeType) throws ModelException {
         this(tag, attributeType, attributeType.getDefaultValue());
     }
 
-    public Attribute(Tag tag, AttributeType attributeType, String value) {
+    public Attribute(Tag tag, AttributeType attributeType, String value)
+            throws ModelException {
         this.setAttributeType(attributeType);
         this.setTag(tag);
-        this.setValue(value);
+        try {
+            this.setValue(value);
+        } catch (ModelException ex) {
+            throw ex;
+        }
     }
 
     public int getId() {
@@ -118,9 +125,18 @@ public class Attribute {
         return value;
     }
 
-    public void setValue(String value) {
-        // TODO 151212 check if the value is valid (using valid valueset from aType)
-        this.value = value;
+    public void setValue(String value) throws ModelException {
+        if (this.getAttributeType().getValueset() == null) {
+            this.value = value;
+        } else {
+            List<String> validValues = this.getAttributeType().getValuesetAsList();
+            if (validValues.contains(value)) {
+                this.value = value;
+            } else {
+                throw new ModelException(String.format(
+                        "\"%s\" is not a valid value for %s", value, this.getName()));
+            }
+        }
     }
 
     public String getName() {
