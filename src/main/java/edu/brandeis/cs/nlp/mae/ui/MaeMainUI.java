@@ -32,7 +32,10 @@ import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
 import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
 import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.ui.menu.*;
+import edu.brandeis.cs.nlp.mae.ui.menu.FileMenuListener;
+import edu.brandeis.cs.nlp.mae.ui.menu.FontSizeMenuListener;
+import edu.brandeis.cs.nlp.mae.ui.menu.HelpMenuListener;
+import edu.brandeis.cs.nlp.mae.ui.menu.ModeMenuListener;
 import edu.brandeis.cs.nlp.mae.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -570,7 +573,7 @@ public class MaeMainUI extends JPanel {
 
         // krim: take a string of spans and init a set of spans(start-end int pairs)
         String spansString = a.get("spans");
-        mSpans = parseSpansString(spansString);
+        mSpans = ExtentTag.parseSpansString(spansString);
         if (!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
@@ -738,7 +741,7 @@ public class MaeMainUI extends JPanel {
                 //redo color for this text--assumes that lines
                 //have already been removed from the DB
                 if (elem instanceof ElemExtent) {
-                    assignTextColor(parseSpansString(
+                    assignTextColor(ExtentTag.parseSpansString(
                             (String) tableModel.getValueAt(i, SPANS_COL)));
                 }
                 tableModel.removeRow(i);
@@ -2090,63 +2093,6 @@ public class MaeMainUI extends JPanel {
     }
 
     /**
-     * Takes a string representing possibly multiple spans of an extent tag Return
-     * array of integer pairs
-     *
-     * @param spansString - string of spans
-     * @return a ArrayList of int[]
-     */
-    public ArrayList<int[]> parseSpansString(String spansString) {
-        ArrayList<int[]> spans = new ArrayList<int[]>();
-        if (spansString == null || spansString.equals("")) {
-            spans.add(new int[]{-1, -1});
-            return spans;
-        }
-
-        // check if the tag being processed is non-consuming
-        if (spansString.equals("-1~-1")) {
-            spans.add(new int[]{-1, -1});
-            return spans;
-        }
-
-        // split each span
-        String[] pairs = spansString.split(MaeStrings.SPANSEPARATOR);
-        for (String pair : pairs) {
-            int[] span = new int[2];
-
-            // parse start and end points
-            span[0] = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[0]);
-            span[1] = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[1]);
-
-            spans.add(span);
-        }
-        return spans;
-    }
-
-    /**
-     * Takes an array of integer pairs, then merge it into a string. Each span
-     * separated by SPANSEPARATOR start and end point of each span joined with
-     * SPANDELIMITER
-     *
-     * @param spans - an sorted set of integer pairs
-     * @return a formatted string of spans of a tag
-     */
-    public String spansToString(ArrayList<int[]> spans) {
-        String spanString = "";
-        Iterator<int[]> iter = spans.iterator();
-        while (iter.hasNext()) {
-            int[] span = iter.next();
-            if (iter.hasNext()) {
-                spanString += span[0] + MaeStrings.SPANDELIMITER + span[1]
-                        + MaeStrings.SPANSEPARATOR;
-            } else {
-                spanString += span[0] + MaeStrings.SPANDELIMITER + span[1];
-            }
-        }
-        return spanString;
-    }
-
-    /**
      * Highlight given spans with given highlighter and painter(color)
      *
      * @param hl      - Highlighter OBJ from text panel
@@ -2220,7 +2166,7 @@ public class MaeMainUI extends JPanel {
                         mStatusBar.setText(MaeStrings.SB_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_TEXT
-                                + spansToString(this.mSpans));
+                                + ExtentTag.spansToString(this.mSpans));
                     }
                     break;
                 case M_MULTI_SPAN:
@@ -2229,7 +2175,7 @@ public class MaeMainUI extends JPanel {
                                 MaeStrings.SB_MSPAN_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_MSPAN_TEXT +
-                                spansToString(this.mSpans));
+                                ExtentTag.spansToString(this.mSpans));
                     }
                     break;
                 case M_ARG_SEL:

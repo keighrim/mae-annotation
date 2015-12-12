@@ -26,10 +26,7 @@ package edu.brandeis.cs.nlp.mae.database;
 
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.model.AttID;
-import edu.brandeis.cs.nlp.mae.model.Attrib;
-import edu.brandeis.cs.nlp.mae.model.Elem;
-import edu.brandeis.cs.nlp.mae.model.ElemLink;
+import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
 import javax.swing.*;
@@ -282,7 +279,7 @@ public class MakeTagListener implements ActionListener {
             }
             // since link tags never have spans and text, below is safe
             else if (att.getName().equals(MaeStrings.SPANS_COL_NAME)) {
-                newData[curCol] = maeMainUI.spansToString(maeMainUI.getSpans());
+                newData[curCol] = ExtentTag.spansToString(maeMainUI.getSpans());
             } else if (att.getName().equals(MaeStrings.TEXT_COL_NAME)
                     && !maeMainUI.isSpansEmpty()) {
                 newData[curCol] = maeMainUI.getTextIn(maeMainUI.getSpans());

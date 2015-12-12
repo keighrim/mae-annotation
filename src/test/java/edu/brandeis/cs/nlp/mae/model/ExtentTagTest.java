@@ -27,12 +27,12 @@ package edu.brandeis.cs.nlp.mae.model;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,9 +103,17 @@ public class ExtentTagTest {
     public void tearDown() throws Exception {
         // destroy the data source which should close underlying connections
         if (cs != null){
-//            this.dropAllTables(cs);
+            this.dropAllTables(cs);
             cs.close();
         }
+    }
+
+    private ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
+        ExtentTag tag = new ExtentTag(tid, tagType);
+        tag.setText(text);
+        for (CharIndex ci: tag.setSpans(spans)) { charIndexDao.create(ci); }
+        eTagDao.create(tag);
+        return tag;
     }
 
     @Test
@@ -152,19 +160,9 @@ public class ExtentTagTest {
 
     @Test
     public void canQueryByTagType() throws Exception {
-        ExtentTag nTag = new ExtentTag("N01", noun);
-        for (CharIndex ci: nTag.setSpans(0, 1, 2, 3, 4)) { charIndexDao.create(ci); }
-        nTag.setText("Crown");
-        eTagDao.create(nTag);
 
-        int[] span = new int[] {2, 5};
-        ArrayList<int[]> spans = new ArrayList<int[]>();
-        spans.add(span);
-        ExtentTag vTag = new ExtentTag("V01", verb);
-        for (CharIndex ci: vTag.setSpans(spans)) { charIndexDao.create(ci); }
-        eTagDao.create(vTag);
-        vTag.setText("own");
-        eTagDao.update(vTag);
+        createTag("N01", noun, "Crown", new int[]{0,1,2,3,4});
+        createTag("V01", verb, "own", new int[]{2,3,4});
 
         assertEquals(
                 "Expected 2 tags in DB, found " + eTagDao.countOf(),
@@ -189,10 +187,7 @@ public class ExtentTagTest {
     @Test
     public void canHaveMutableAttribute() throws Exception {
 
-        ExtentTag nTag = new ExtentTag("N01", noun);
-        for (CharIndex ci: nTag.setSpans(0, 1, 2, 3, 4)) { charIndexDao.create(ci); }
-        nTag.setText("Crown");
-        eTagDao.create(nTag);
+        ExtentTag nTag = createTag("N01", noun, "Crown", new int[]{0,1,2,3,4});
 
         AttributeType properNoun = new AttributeType(noun, "isProper");
         attTypeDao.create(properNoun);
@@ -212,13 +207,62 @@ public class ExtentTagTest {
                 "Expected N01 to be proper noun, found: " + retrievedAtt.getValue(),
                 Boolean.toString(true), retrievedAtt.getValue());
 
+        retrievedAtt.setValue(Boolean.toString(false));
+        attDao.update(retrievedAtt);
+        eTagDao.update(nTag);
+
+        List<Attribute> retrievedAttsAfterUpdate
+                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
+        Attribute retrievedAttAfterUpdate = retrievedAttsAfterUpdate.get(0);
+        assertEquals(
+                "Expected N01 to updated to non proper noun, found: " + retrievedAttAfterUpdate.getValue(),
+                Boolean.toString(false), retrievedAttAfterUpdate.getValue());
+
     }
 
-    @Ignore
+    @Test
+    public void canReturnSpansString() throws Exception {
+        createTag("N02", noun,
+                "John ... Smith", new int[]{3,4,5,6,10,11,12,13,14});
+
+        ExtentTag retrievedTag = eTagDao.queryForAll().get(0);
+
+        assertEquals(
+                "Expected ETag can generate spans string, found: " + retrievedTag.getSpansAsString(),
+                "3~7,10~15", retrievedTag.getSpansAsString());
+    }
+
     @Test
     public void canQueryByLocation() throws Exception {
-        //TODO 151209 write here
+        createTag("N01", noun, "Crown", new int[]{0,1,2,3,4});
+        createTag("V01", verb, "own", new int[]{2,3,4});
 
+        List<CharIndex> retrievedIndices
+                = charIndexDao.queryForEq(ModelStrings.TAB_CI_COL_LOCATION, 3);
+
+        assertEquals(
+                "Expected 2 tags at offset 3, found: " + retrievedIndices.size(),
+                2, retrievedIndices.size()
+        );
+
+        QueryBuilder<CharIndex, Integer> ciQb = charIndexDao.queryBuilder();
+        ciQb.where().eq(ModelStrings.TAB_CI_COL_LOCATION, 3);
+        QueryBuilder<ExtentTag, Integer> tagQb = eTagDao.queryBuilder();
+        List<ExtentTag> retrievedTags = tagQb.join(ciQb).query();
+
+        assertEquals(
+                "Expected 2 tags from querying 3, found: " + retrievedTags.size(),
+                2, retrievedTags.size()
+        );
+
+        ciQb.reset();
+        tagQb.reset();
+        ciQb.where().eq(ModelStrings.TAB_CI_COL_LOCATION, 1);
+        retrievedTags = tagQb.join(ciQb).query();
+
+        assertEquals(
+                "Expected 1 tags from querying 1, found: " + retrievedTags.size(),
+                1, retrievedTags.size()
+        );
     }
-    //            "jonathan"
 }
