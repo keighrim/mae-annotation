@@ -33,16 +33,17 @@ import com.j256.ormlite.table.DatabaseTable;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = "tagtype")
+@DatabaseTable(tableName = ModelStrings.TAB_TT)
 public class TagType {
 
-    @DatabaseField(id = true)
+    @DatabaseField(id = true, columnName = ModelStrings.TAB_TT_COL_NAME)
     private String name;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_TT_COL_COLOR)
     private int color;
 
-    @DatabaseField(unique = true, canBeNull = false)
+    @DatabaseField(unique = true, canBeNull = false,
+            columnName = ModelStrings.TAB_TT_COL_PREFIX)
     private String prefix;
 
     @ForeignCollectionField
@@ -67,12 +68,8 @@ public class TagType {
 
     }
 
-    public boolean isExtent() {
-        return this.getArgumentTypes() == null || this.getArgumentTypes().size() == 0;
-    }
-
-    public boolean isLink() {
-        return !this.isExtent();
+    public String getId() {
+        return this.getName();
     }
 
     public String getName() {
@@ -81,6 +78,14 @@ public class TagType {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isExtent() {
+        return this.getArgumentTypes() == null || this.getArgumentTypes().size() == 0;
+    }
+
+    public boolean isLink() {
+        return !this.isExtent();
     }
 
     public int getColor() {

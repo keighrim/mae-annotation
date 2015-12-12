@@ -36,7 +36,7 @@ import java.util.ArrayList;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = "linktag")
+@DatabaseTable(tableName = ModelStrings.TAB_LTAG)
 public class LinkTag extends Tag {
 
     @ForeignCollectionField
@@ -54,12 +54,12 @@ public class LinkTag extends Tag {
     }
 
     @Override
-    boolean isFulfilled() throws SQLException {
+    boolean isComplete() throws SQLException {
         checkRequiredAtts();
-        if (isFulfilled) {
+        if (isComplete) {
             checkRequiredArgs();
         }
-        return isFulfilled;
+        return isComplete;
     }
 
     @Override
@@ -68,12 +68,12 @@ public class LinkTag extends Tag {
     }
 
     private void checkRequiredArgs() throws SQLException {
-        setFulfilled(true);
+        setComplete(true);
         ArrayList<String> curArgNames = new ArrayList<String>();
         for (Argument arg : getArguments()) {
             // this for-each loop always goes through all items,
             // making sure DAO connection is closed after iteration.
-            if (arg.isFulfilled()) {
+            if (arg.isComplete()) {
                 curArgNames.add(arg.getName());
             }
         }
@@ -85,7 +85,7 @@ public class LinkTag extends Tag {
             while (iterArgType.hasNext()) {
                 ArgumentType argType = iterArgType.next();
                 if (argType.isRequired() && !curArgNames.contains(argType.getName())) {
-                    setFulfilled(false);
+                    setComplete(false);
                     break;
                 }
             }

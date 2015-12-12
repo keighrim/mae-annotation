@@ -37,10 +37,10 @@ import java.util.List;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = "extenttag")
+@DatabaseTable(tableName = ModelStrings.TAB_ETAG)
 public class ExtentTag extends Tag {
 
-    @DatabaseField
+    @DatabaseField(columnName = ModelStrings.TAB_ETAG_COL_TEXT)
     private String text;
 
     @ForeignCollectionField
@@ -84,9 +84,9 @@ public class ExtentTag extends Tag {
     }
 
     @Override
-    public boolean isFulfilled() {
+    public boolean isComplete() {
         checkRequiredAtts();
-        return isFulfilled;
+        return isComplete;
     }
 
     public boolean isConsuming() {

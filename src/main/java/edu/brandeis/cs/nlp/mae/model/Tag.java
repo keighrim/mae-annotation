@@ -36,13 +36,15 @@ import java.util.ArrayList;
 
 public abstract class Tag {
 
-    @DatabaseField(id = true)
+    @DatabaseField(id = true, columnName = ModelStrings.TAB_TAG_COL_TID)
     protected String tid;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_TAG_FCOL_TT)
     protected TagType tagtype;
 
-    protected boolean isFulfilled;
+    // TODO 151212 make an option to force completeness checking or ignore
+    protected boolean isComplete;
 
     public Tag() {
 
@@ -52,8 +54,12 @@ public abstract class Tag {
         // TODO 151209 need a method to get a proper next id, maybe in DAO?
         this.setTid(tid);
         this.setTagtype(tagType);
-        this.setFulfilled(false);
+        this.setComplete(false);
 
+    }
+
+    public String getId() {
+        return this.getTid();
     }
 
     public String getTid() {
@@ -72,14 +78,14 @@ public abstract class Tag {
         this.tagtype = tagtype;
     }
 
-    protected void setFulfilled(boolean fulfilled) {
-        isFulfilled = fulfilled;
+    protected void setComplete(boolean complete) {
+        isComplete = complete;
     }
 
-    abstract boolean isFulfilled() throws SQLException;
+    abstract boolean isComplete() throws SQLException;
 
     protected void checkRequiredAtts() {
-        setFulfilled(true);
+        setComplete(true);
         ArrayList<String> curAttNames = new ArrayList<String>();
         for (Attribute att : getAttributes()) {
             // this for each loop always goes through all items,
@@ -90,7 +96,7 @@ public abstract class Tag {
         }
         for (AttributeType attType : getTagtype().getAttributeTypes()) {
             if (attType.isRequired() && !curAttNames.contains(attType.getName())) {
-                setFulfilled(false);
+                setComplete(false);
                 break;
             }
         }

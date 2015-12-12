@@ -31,16 +31,18 @@ import com.j256.ormlite.table.DatabaseTable;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = "offset")
+@DatabaseTable(tableName = ModelStrings.TAB_CI)
 public class CharIndex {
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_CI_COL_ID)
     private int id;
 
-    @DatabaseField(index = true, canBeNull = false)
+    @DatabaseField(index = true, canBeNull = false,
+            columnName = ModelStrings.TAB_CI_COL_LOCATION)
     private int location;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_CI_FCOL_ETAG)
     private ExtentTag tag;
 
     public CharIndex() {
@@ -50,6 +52,10 @@ public class CharIndex {
     public CharIndex(int location, ExtentTag tag) {
         this.setLocation(location);
         this.setTag(tag);
+    }
+
+    public int getId() {
+        return id;
     }
 
     public int getLocation() {

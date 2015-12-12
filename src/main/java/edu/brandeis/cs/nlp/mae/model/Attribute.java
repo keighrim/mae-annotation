@@ -25,28 +25,34 @@
 package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 /**
  * Created by krim on 11/19/15.
  */
+
+@DatabaseTable(tableName = ModelStrings.TAB_ATT)
 public class Attribute {
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ATT_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ATT_FCOL_AT)
     private AttributeType attributeType;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_ATT_COL_TID)
     private String tid;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ATT_FCOL_ETAG)
     private ExtentTag extentTag;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ATT_FCOL_LTAG)
     private LinkTag linkTag;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_ATT_COL_VALUE)
     private String value;
 
     public Attribute() {
@@ -65,10 +71,6 @@ public class Attribute {
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public ExtentTag getExtentTag() {

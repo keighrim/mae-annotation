@@ -25,25 +25,31 @@
 package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 /**
  * Created by krim on 11/19/15.
  */
+
+@DatabaseTable(tableName = ModelStrings.TAB_ARG)
 public class Argument {
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ARG_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ARG_FCOL_LTAG)
     private LinkTag linker;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ARG_FCOL_ETAG)
     private ExtentTag argument;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
+            columnName = ModelStrings.TAB_ARG_FCOL_ART)
     private ArgumentType argumentType;
 
-    private boolean isFulfilled;
+    private boolean isComplete;
 
 
     public Argument() {
@@ -51,7 +57,7 @@ public class Argument {
 
     public Argument(ArgumentType argumentType) {
         this.setArgumentType(argumentType);
-        this.setFulfilled(false);
+        this.setComplete(false);
 
     }
 
@@ -59,7 +65,11 @@ public class Argument {
         this.linker = linker;
         this.argument = argument;
         this.argumentType = argumentType;
-        this.setFulfilled(true);
+        this.setComplete(true);
+    }
+
+    public int getId() {
+        return id;
     }
 
     public LinkTag getLinker() {
@@ -68,8 +78,8 @@ public class Argument {
 
     public void setLinker(LinkTag linker) {
         this.linker = linker;
-        if (!this.isFulfilled && this.getArgument() != null) {
-            this.setFulfilled(true);
+        if (!this.isComplete && this.getArgument() != null) {
+            this.setComplete(true);
         }
     }
 
@@ -79,8 +89,8 @@ public class Argument {
 
     public void setArgument(ExtentTag argument) {
         this.argument = argument;
-        if (!this.isFulfilled && this.getLinker() != null) {
-            this.setFulfilled(true);
+        if (!this.isComplete && this.getLinker() != null) {
+            this.setComplete(true);
         }
     }
 
@@ -92,12 +102,12 @@ public class Argument {
         this.argumentType = argumentType;
     }
 
-    public boolean isFulfilled() {
-        return isFulfilled;
+    public boolean isComplete() {
+        return isComplete;
     }
 
-    public void setFulfilled(boolean fulfilled) {
-        isFulfilled = fulfilled;
+    public void setComplete(boolean complete) {
+        isComplete = complete;
     }
 
     public String getName() {

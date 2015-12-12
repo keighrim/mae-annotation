@@ -138,7 +138,8 @@ public class ExtentTagTest {
         nTag.setText("Crown");
         eTagDao.create(nTag);
 
-        List<ExtentTag> retrievedTags = eTagDao.queryForEq("tid", "N01");
+        List<ExtentTag> retrievedTags
+                = eTagDao.queryForEq(ModelStrings.TAB_TAG_COL_TID, "N01");
         assertEquals(
                 "Expected 1 tag in DB, found " + retrievedTags.size(),
                 1, retrievedTags.size());
@@ -169,11 +170,12 @@ public class ExtentTagTest {
                 "Expected 2 tags in DB, found " + eTagDao.countOf(),
                 2, eTagDao.countOf());
 
-        // TODO 151209 make column names modularized as string resources
         ExtentTag retrievedNTag
-                = eTagDao.queryBuilder().where().eq("tagtype_id", noun.getName()).queryForFirst();
+                = eTagDao.queryBuilder().where().
+                eq(ModelStrings.TAB_TAG_FCOL_TT, noun.getName()).queryForFirst();
         ExtentTag retrievedVTag
-                = eTagDao.queryBuilder().where().eq("tagtype_id", verb.getName()).query().get(0);
+                = eTagDao.queryBuilder().where().
+                eq(ModelStrings.TAB_TAG_FCOL_TT, verb.getName()).query().get(0);
         assertEquals(
                 "Expected 3 chars allocated to vTag set by List, found: " + retrievedVTag.getSpans().size(),
                 3, retrievedVTag.getSpansAsList().size()
@@ -197,7 +199,8 @@ public class ExtentTagTest {
         Attribute att = new Attribute(nTag, properNoun, Boolean.toString(true));
         attDao.create(att);
 
-        List<Attribute> retrievedAtts = attDao.queryForEq("extenttag_id", "N01");
+        List<Attribute> retrievedAtts
+                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
         assertEquals(
                 "Expected 1 att is assgined, found: " + retrievedAtts.size(),
                 1, retrievedAtts.size());

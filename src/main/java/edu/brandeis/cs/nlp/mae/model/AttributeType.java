@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 import com.sun.deploy.util.StringUtils;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 
@@ -34,27 +35,30 @@ import java.util.List;
 /**
  * Created by krim on 11/19/15.
  */
+
+@DatabaseTable(tableName = ModelStrings.TAB_AT)
 public class AttributeType {
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_AT_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, canBeNull = false,
+            columnName = ModelStrings.TAB_AT_FCOL_TT)
     private TagType tagType;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_NAME)
     private String name;
 
-    @DatabaseField
+    @DatabaseField(columnName = ModelStrings.TAB_AT_COL_VALUESET)
     private String valueset;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_DEFVALUE)
     private String defaultValue;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_IDREF)
     private boolean isIdRef;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_REQ)
     private boolean isRequired;
 
     public AttributeType() {
@@ -68,6 +72,10 @@ public class AttributeType {
         this.setIdRef(false);
         this.defaultValue = "";
         this.valueset = null;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public TagType getTagType() {
