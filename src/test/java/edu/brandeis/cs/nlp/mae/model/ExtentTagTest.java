@@ -50,8 +50,8 @@ public class ExtentTagTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(ExtentTagTest.class.getName());
 
-    private final static String DATABASE_URL = MaeStrings.TEST_DB_URL;
-    private ConnectionSource cs;
+    protected final static String DATABASE_URL = MaeStrings.TEST_DB_URL;
+    protected ConnectionSource cs;
 
     Dao<CharIndex, Integer> charIndexDao;
     Dao<ExtentTag, Integer> eTagDao;
@@ -69,7 +69,7 @@ public class ExtentTagTest {
         this.setupDatabase(cs);
     }
 
-    private void setupDatabase(ConnectionSource source) throws SQLException {
+    protected void setupDatabase(ConnectionSource source) throws SQLException {
         eTagDao = DaoManager.createDao(source, ExtentTag.class);
         tagTypeDao = DaoManager.createDao(source, TagType.class);
         attTypeDao = DaoManager.createDao(source, AttributeType.class);
@@ -91,7 +91,7 @@ public class ExtentTagTest {
 
     }
 
-    private void dropAllTables(ConnectionSource source) throws SQLException {
+    protected void dropAllTables(ConnectionSource source) throws SQLException {
         TableUtils.dropTable(source, CharIndex.class, true);
         TableUtils.dropTable(source, ExtentTag.class, true);
         TableUtils.dropTable(source, TagType.class, true);
@@ -108,7 +108,7 @@ public class ExtentTagTest {
         }
     }
 
-    private ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
+    protected ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
         ExtentTag tag = new ExtentTag(tid, tagType);
         tag.setText(text);
         for (CharIndex ci: tag.setSpans(spans)) { charIndexDao.create(ci); }

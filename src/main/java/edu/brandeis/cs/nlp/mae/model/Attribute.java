@@ -134,7 +134,8 @@ public class Attribute {
                 this.value = value;
             } else {
                 throw new ModelException(String.format(
-                        "\"%s\" is not a valid value for %s", value, this.getName()));
+                        "%s: \"%s\" is not a valid value for %s",
+                        this.getClass().getSimpleName(), value, this.getName()));
             }
         }
     }

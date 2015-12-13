@@ -29,6 +29,9 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * Created by krim on 11/19/15.
  */
@@ -123,6 +126,22 @@ public class TagType {
     @Override
     public int hashCode() {
         return this.name.hashCode();
+    }
+
+    public List<String> getAttributeTypesAsString() {
+        LinkedList<String> attTypes = new LinkedList<>();
+        for (AttributeType attType : this.getAttributeTypes()) {
+            attTypes.add(attType.getName());
+        }
+        return attTypes;
+    }
+
+    public List<String> getArgumentTypesAsString() {
+        LinkedList<String> argTypes = new LinkedList<>();
+        for (ArgumentType argType : this.getArgumentTypes()) {
+            argTypes.add(argType.getName());
+        }
+        return argTypes;
     }
 
 }

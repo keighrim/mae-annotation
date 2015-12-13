@@ -29,6 +29,9 @@ import com.j256.ormlite.field.DatabaseField;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by krim on 11/19/15.
@@ -109,4 +112,21 @@ public abstract class Tag {
         return this.tid.hashCode();
     }
 
+    public static Map<String, String> getArgumentsWithNames(Collection<Argument> arguments) {
+        HashMap<String, String> argumentsWithNames = new HashMap<>();
+        for (Argument argument : arguments) {
+            argumentsWithNames.put(argument.getName(), argument.getArgument().getTid());
+        }
+        return argumentsWithNames;
+
+    }
+
+    public static Map<String, String> getAttbutesWithNames(Collection<Attribute> attributes) {
+        HashMap<String, String> attributesWithNames = new HashMap<>();
+        for (Attribute attribute : attributes) {
+            attributesWithNames.put(attribute.getName(), attribute.getValue());
+        }
+        return attributesWithNames;
+
+    }
 }

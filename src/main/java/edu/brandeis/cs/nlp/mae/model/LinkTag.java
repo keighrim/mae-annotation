@@ -31,6 +31,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by krim on 11/19/15.
@@ -47,6 +48,10 @@ public class LinkTag extends Tag {
 
     public LinkTag() {
 
+    }
+
+    public LinkTag(String tid, TagType tagType) {
+        super(tid, tagType);
     }
 
     public ForeignCollection<Argument> getArguments() {
@@ -92,5 +97,13 @@ public class LinkTag extends Tag {
         } finally {
             iterArgType.close();
         }
+    }
+
+    public Map<String, String> getArgumentsWithNames() {
+        return Tag.getArgumentsWithNames(this.getArguments());
+    }
+
+    public Map<String, String> getAttbutesWithNames() {
+        return Tag.getAttbutesWithNames(this.getAttributes());
     }
 }

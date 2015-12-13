@@ -210,5 +210,8 @@ public class ExtentTag extends Tag {
 
     }
 
+    public Map<String, String> getAttbutesWithNames() {
+        return Tag.getAttbutesWithNames(this.getAttributes());
+    }
 
 }
