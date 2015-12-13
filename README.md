@@ -1,7 +1,6 @@
 # Multi-purpose Annotation Environment [![GitHub license](https://img.shields.io/github/license/keighrim/mae-annotation.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html) [![Latest release](https://img.shields.io/github/release/keighrim/mae-annotation.svg)](https://github.com/keighrim/mae-annotation/releases) [![Open issues](https://img.shields.io/github/issues/keighrim/mae-annotation.svg)](https://github.com/keighrim/mae-annotation/issues)
 * CI status
-release: [![Travis CI](https://img.shields.io/travis/keighrim/mae-annotation/1.0-snapshot.svg)](https://travis-ci.org/keighrim/mae-annotation/) pre-release: [![TravisCI-develop](https://img.shields.io/travis/keighrim/mae-annotation/develop.svg)](https://travis-ci.org/keighrim/mae-annotation/branches) 1.0-snapshot: [![TravisCI-1.0-snapshot](https://img.shields.io/travis/keighrim/mae-annotation/1.0-snapshot.svg)](https://travis-ci.org/keighrim/mae-annotation/branches) 
-
+release: [![Travis CI](https://img.shields.io/travis/keighrim/mae-annotation.svg)](https://travis-ci.org/keighrim/mae-annotation/) pre-release: [![TravisCI-develop](https://img.shields.io/travis/keighrim/mae-annotation/develop.svg)](https://travis-ci.org/keighrim/mae-annotation/branches) 1.0-snapshot: [![TravisCI-1.0-snapshot](https://img.shields.io/travis/keighrim/mae-annotation/v1.0-snapshot.svg)](https://travis-ci.org/keighrim/mae-annotation/branches) 
 
 ## We are working on a new MAE & MAI integrated 1.0 version!
 
