@@ -1,3 +1,4 @@
+
 /*
  * MAE - Multi-purpose Annotation Environment
  *
@@ -22,24 +23,62 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
-
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
-
-import javax.swing.*;
+package edu.brandeis.cs.nlp.mae.model;
 
 /**
- * Created by krim on 11/17/15.
+ * 
+ * ID attributes have special properties, so they 
+ * have their own class that keeps track of the 
+ * prefix.
+ * @author Amber Stubbs, Keigh Rim
+ *
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
-    }
+
+
+public class AttID extends Attrib{
+
+AttID(){
+}
+
+public AttID(String name, String pre, boolean r){
+    setName(name);
+    setRequired(r);
+    setPrefix(pre);
+    setDefaultValue("");
+}
+
+public String getID(){
+   return(prefix + Integer.toString(number));
+}
+
+public void setPrefix(String pre){
+    prefix=pre;
+}
+
+public String getPrefix(){
+    return prefix;
+}
+
+public void setNumber(int i){
+    number=i;
+}
+
+public int getNumber(){
+    return number;
+}
+
+public void incrementNumber(){
+    number++;
+}
+
+public void printInfo(){
+    System.out.println("Attribute name =" + getName() + " , required = " + isRequired());
+}
+
+public String toString(){
+    return("Attribute name =" + getName() + " , required = " + isRequired() );
+}
+
+private String prefix;
+private int number;
 }

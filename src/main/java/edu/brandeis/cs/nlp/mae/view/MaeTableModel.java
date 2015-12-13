@@ -22,24 +22,29 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
+package edu.brandeis.cs.nlp.mae.view;
 
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
-import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 /**
- * Created by krim on 11/17/15.
+ * AnnTableModel creates a TableModel that allows the ID column to be
+ * uneditable.  This helps prevent user-created database conflicts by ensuring
+ * the IDs being generated will not be changed, and makes it so that users can
+ * double-click on the ID in order to see where that tag appears in the text.
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class MaeTableModel extends DefaultTableModel {
+    static final long serialVersionUID = 552012L;
+
+    private MaeMainUI maeMainUI;
+
+    public MaeTableModel(MaeMainUI maeMainUI) {
+        this.maeMainUI = maeMainUI;
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return (col != maeMainUI.ID_COL) && (col != maeMainUI.SRC_COL);
     }
 }

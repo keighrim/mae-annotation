@@ -22,24 +22,44 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
-
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
-
-import javax.swing.*;
+package edu.brandeis.cs.nlp.mae.model;
 
 /**
- * Created by krim on 11/17/15.
+ * Used for tag attributes that provide a list of options
+ * @author Amber Stubbs, Keigh Rim
+ *
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+
+
+import java.util.ArrayList;
+
+public class AttList extends Attrib{
+
+    AttList(){
     }
+
+
+    public AttList(String name, boolean required,
+                   ArrayList<String> validList, String defaultValue){
+        setName(name);
+        setRequired(required);
+        setVaildValues(validList);
+        setDefaultValue(defaultValue);
+    }
+
+    public ArrayList<String> getVaildValues(){
+        return vaildValues;
+    }
+
+    public void setVaildValues(ArrayList<String> vaildList){
+        vaildValues =vaildList;
+    }
+
+    public String toString(){
+        return("Attribute name =" + getName() + " , required = " + isRequired() + "also list" );
+    }
+
+
+    private ArrayList<String> vaildValues;
+
 }

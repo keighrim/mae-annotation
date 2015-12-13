@@ -22,24 +22,34 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae;
-
+package edu.brandeis.cs.nlp.mae.ui.menu;
 
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
-import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
- * Created by krim on 11/17/15.
+ * Class that changes the size of the text from the top menu
  */
-public class MaeMain {
-    /** Main */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(
-                new Runnable() {
-                    public void run() {
-                        MaeMainUI.createAndShowGUI();
-                    }
-                });
+public class FontSizeMenuListener implements ActionListener {
+    private MaeMainUI maeMainUI;
+
+    public FontSizeMenuListener(MaeMainUI maeMainUI) {
+        this.maeMainUI = maeMainUI;
+    }
+
+    public void actionPerformed(ActionEvent actionEvent) {
+        String command = actionEvent.getActionCommand();
+        if (command.equals("Font++")) {
+            Font font = maeMainUI.getTextPane().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
+            maeMainUI.getTextPane().setFont(font2);
+        } else if (command.equals("Font--")) {
+            Font font = maeMainUI.getTextPane().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
+            maeMainUI.getTextPane().setFont(font2);
+        }
     }
 }
