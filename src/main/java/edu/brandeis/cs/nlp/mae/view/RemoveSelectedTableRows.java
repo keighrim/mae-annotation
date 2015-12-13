@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.HashCollection;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
+import edu.brandeis.cs.nlp.mae.model.ModelHelpers;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
 import javax.swing.*;
@@ -64,7 +65,7 @@ public class RemoveSelectedTableRows implements ActionListener {
                         // if removing an extent tag, re-assign highlighting
                         if (elem instanceof ElemExtent) {
                             maeMainUI.getTask().removeExtentByID(id);
-                            maeMainUI.assignTextColor(maeMainUI.parseSpansString(
+                            maeMainUI.assignTextColor(ModelHelpers.parseSpansString(
                                     (String) tableModel.getValueAt(i, maeMainUI.SPANS_COL)));
                             //remove links that use the tag being removed
                             HashCollection<String, String> links

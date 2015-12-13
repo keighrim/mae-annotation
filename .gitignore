@@ -63,6 +63,7 @@ gen
 
 ### sqlite db file
 *.db
+*.sqlite3
 
 
 ### Java template

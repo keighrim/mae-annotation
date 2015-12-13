@@ -43,6 +43,13 @@ public class MaeStrings {
             = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
     public final static String VERSION = "0.13.3.0";
     public final static String TITLE_PREFIX = "MAE " + VERSION;
+    public final static String DB_DRIVER = "jdbc:sqlite:";
+    public final static String ANN_DB_FILE = "mae.db";
+    public final static String ANN_DB_URL = DB_DRIVER + ANN_DB_FILE;
+    public final static String ADJ_DB_FILE = "mai.db";
+    public final static String ADJ_DB_URL = DB_DRIVER + ADJ_DB_FILE;
+    public final static String TEST_DB_FILE = "test.db";
+    public final static String TEST_DB_URL = DB_DRIVER + TEST_DB_FILE;
 
     /*
     Internal data structures and actionEvents
@@ -50,6 +57,8 @@ public class MaeStrings {
     public final static String COMBO_DELIMITER = " - ";
     public final static String SPANDELIMITER = "~";
     public final static String SPANSEPARATOR = ",";
+    public final static String ATT_VALUESET_SEPARATOR = ":|:";
+    // TODO 151209 are these two below safe?
     public final static String SPANTEXTTRUNC = " ... ";
     public final static String LONGTEXTTRUNC = " … ";
     public final static String ADD_NC_COMMAND = "ADDNC:";
