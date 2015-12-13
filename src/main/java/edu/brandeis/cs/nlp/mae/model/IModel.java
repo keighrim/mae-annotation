@@ -24,54 +24,8 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
-import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.table.DatabaseTable;
-
 /**
- * Created by krim on 11/19/15.
+ * Created by krim on 12/13/2015.
  */
-
-@DatabaseTable(tableName = ModelStrings.TAB_CI)
-public class CharIndex implements IModel {
-
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_CI_COL_ID)
-    private int id;
-
-    @DatabaseField(index = true, canBeNull = false,
-            columnName = ModelStrings.TAB_CI_COL_LOCATION)
-    private int location;
-
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_CI_FCOL_ETAG)
-    private ExtentTag tag;
-
-    public CharIndex() {
-
-    }
-
-    public CharIndex(int location, ExtentTag tag) {
-        this.setLocation(location);
-        this.setTag(tag);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public int getLocation() {
-        return location;
-    }
-
-    public void setLocation(int location) {
-        this.location = location;
-    }
-
-    public ExtentTag getTag() {
-        return tag;
-    }
-
-    public void setTag(ExtentTag tag) {
-        this.tag = tag;
-    }
-
+public interface IModel {
 }

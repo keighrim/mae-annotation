@@ -38,7 +38,7 @@ import java.util.Map;
  */
 
 @DatabaseTable(tableName = ModelStrings.TAB_LTAG)
-public class LinkTag extends Tag {
+public class LinkTag extends Tag implements IModel {
 
     @ForeignCollectionField
     protected ForeignCollection<Attribute> attributes;

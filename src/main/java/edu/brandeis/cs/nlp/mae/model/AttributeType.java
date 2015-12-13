@@ -37,7 +37,7 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = ModelStrings.TAB_AT)
-public class AttributeType {
+public class AttributeType implements IModel {
 
     @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_AT_COL_ID)
     private int id;

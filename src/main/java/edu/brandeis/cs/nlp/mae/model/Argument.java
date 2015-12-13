@@ -32,7 +32,7 @@ import com.j256.ormlite.table.DatabaseTable;
  */
 
 @DatabaseTable(tableName = ModelStrings.TAB_ARG)
-public class Argument {
+public class Argument implements IModel {
 
     @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ARG_COL_ID)
     private int id;

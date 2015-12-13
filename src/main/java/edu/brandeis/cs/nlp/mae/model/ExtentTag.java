@@ -36,7 +36,7 @@ import java.util.*;
  */
 
 @DatabaseTable(tableName = ModelStrings.TAB_ETAG)
-public class ExtentTag extends Tag {
+public class ExtentTag extends Tag implements IModel {
 
     @DatabaseField(columnName = ModelStrings.TAB_ETAG_COL_TEXT)
     private String text;

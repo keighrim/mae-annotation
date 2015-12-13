@@ -35,7 +35,7 @@ import java.util.Map;
  * Created by krim on 11/19/15.
  */
 
-public abstract class Tag {
+public abstract class Tag implements IModel {
 
     @DatabaseField(id = true, columnName = ModelStrings.TAB_TAG_COL_TID)
     protected String tid;

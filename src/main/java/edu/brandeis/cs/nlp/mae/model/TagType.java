@@ -37,7 +37,7 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = ModelStrings.TAB_TT)
-public class TagType {
+public class TagType implements IModel {
 
     @DatabaseField(id = true, columnName = ModelStrings.TAB_TT_COL_NAME)
     private String name;
