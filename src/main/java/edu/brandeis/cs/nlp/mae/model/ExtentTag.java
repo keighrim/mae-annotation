@@ -121,6 +121,7 @@ public class ExtentTag extends Tag {
         this.text = text;
     }
 
+    @Override
     public Map<String, String> getAttbutesWithNames() {
         return ModelHelpers.getAttbutesWithNames(this.getAttributes());
     }

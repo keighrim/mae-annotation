@@ -29,6 +29,7 @@ import com.j256.ormlite.field.DatabaseField;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by krim on 11/19/15.
@@ -103,6 +104,8 @@ public abstract class Tag {
     }
 
     abstract ForeignCollection<Attribute> getAttributes();
+
+    abstract Map<String, String> getAttbutesWithNames();
 
     @Override
     public int hashCode() {

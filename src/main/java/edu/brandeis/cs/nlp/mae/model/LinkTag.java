@@ -103,6 +103,7 @@ public class LinkTag extends Tag {
         return ModelHelpers.getArgumentsWithNames(this.getArguments());
     }
 
+    @Override
     public Map<String, String> getAttbutesWithNames() {
         return ModelHelpers.getAttbutesWithNames(this.getAttributes());
     }
