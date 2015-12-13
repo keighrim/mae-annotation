@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.model;
+package edu.brandeis.cs.nlp.mae.database;
 
 /**
  *
@@ -32,6 +32,10 @@ package edu.brandeis.cs.nlp.mae.model;
  * @author Amber Stubbs, Keigh Rim
  *
  */
+
+import edu.brandeis.cs.nlp.mae.model.AttID;
+import edu.brandeis.cs.nlp.mae.model.Elem;
+import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 
 import java.util.ArrayList;
 

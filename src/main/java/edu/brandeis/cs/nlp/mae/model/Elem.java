@@ -31,8 +31,6 @@ package edu.brandeis.cs.nlp.mae.model;
  *
  */
 
-import edu.brandeis.cs.nlp.mae.model.Attrib;
-
 import java.util.ArrayList;
 
 public class Elem {
@@ -90,7 +88,7 @@ public class Elem {
         return false;
     }
 
-    void printInfo(){
+    public void printInfo(){
         System.out.println(name);
         System.out.println("Attributes:");
         for(int i=0;i<attributes.size();i++){

@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.model.*;
 
 import java.io.File;

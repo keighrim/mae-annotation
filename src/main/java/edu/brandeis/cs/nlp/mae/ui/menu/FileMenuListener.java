@@ -25,10 +25,10 @@
 package edu.brandeis.cs.nlp.mae.ui.menu;
 
 import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.FileOperations;
 import edu.brandeis.cs.nlp.mae.io.XMLFileLoader;
-import edu.brandeis.cs.nlp.mae.model.DTD;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
 import javax.swing.*;
