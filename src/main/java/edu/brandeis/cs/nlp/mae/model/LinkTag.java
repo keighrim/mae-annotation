@@ -99,11 +99,11 @@ public class LinkTag extends Tag {
         }
     }
 
-    public Map<String, String> getArgumentsWithNames() {
-        return Tag.getArgumentsWithNames(this.getArguments());
+    public Map<String, String> getArgumentTidsWithNames() {
+        return ModelHelpers.getArgumentsWithNames(this.getArguments());
     }
 
     public Map<String, String> getAttbutesWithNames() {
-        return Tag.getAttbutesWithNames(this.getAttributes());
+        return ModelHelpers.getAttbutesWithNames(this.getAttributes());
     }
 }

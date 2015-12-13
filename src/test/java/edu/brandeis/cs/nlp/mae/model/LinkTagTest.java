@@ -129,19 +129,24 @@ public class LinkTagTest extends ExtentTagTest {
                 2, retrievedTag.getArguments().size());
 
 
-        Map<String, String> arguments = retrievedTag.getArgumentsWithNames();
+        Map<String, String> arguments = retrievedTag.getArgumentTidsWithNames();
 
         List<String> argTypes = new LinkedList<>(arguments.keySet());
         List<String> goldTypes = Arrays.asList("agent", "predicate");
         assertTrue(
-                "Expected tag to has \"agent\" and \"predicate\" arg types, found " + argTypes,
+                "Expected tag to have \"agent\" and \"predicate\" arg types, found " + argTypes,
                 argTypes.containsAll(goldTypes) && goldTypes.containsAll(argTypes)
         );
         List<String> args = new LinkedList<>(arguments.values());
         List<String> golds = Arrays.asList("N01", "V01");
         assertTrue(
-                "Expected tag to has \"N01\" and \"V01\" as arguments, found " + args,
+                "Expected tag to have \"N01\" and \"V01\" as arguments, found " + args,
                 args.containsAll(golds) && golds.containsAll(args)
+        );
+
+        assertTrue(
+                "Expected argument names and values properly mapped, found " + arguments.toString(),
+                arguments.get("agent").equals("N01") && arguments.get("predicate").equals("V01")
         );
     }
 }

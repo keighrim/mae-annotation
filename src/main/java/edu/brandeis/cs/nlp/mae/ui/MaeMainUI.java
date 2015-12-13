@@ -573,7 +573,7 @@ public class MaeMainUI extends JPanel {
 
         // krim: take a string of spans and init a set of spans(start-end int pairs)
         String spansString = a.get("spans");
-        mSpans = ExtentTag.parseSpansString(spansString);
+        mSpans = ModelHelpers.parseSpansString(spansString);
         if (!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
@@ -741,7 +741,7 @@ public class MaeMainUI extends JPanel {
                 //redo color for this text--assumes that lines
                 //have already been removed from the DB
                 if (elem instanceof ElemExtent) {
-                    assignTextColor(ExtentTag.parseSpansString(
+                    assignTextColor(ModelHelpers.parseSpansString(
                             (String) tableModel.getValueAt(i, SPANS_COL)));
                 }
                 tableModel.removeRow(i);
@@ -2166,7 +2166,7 @@ public class MaeMainUI extends JPanel {
                         mStatusBar.setText(MaeStrings.SB_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_TEXT
-                                + ExtentTag.spansToString(this.mSpans));
+                                + ModelHelpers.spansToString(this.mSpans));
                     }
                     break;
                 case M_MULTI_SPAN:
@@ -2175,7 +2175,7 @@ public class MaeMainUI extends JPanel {
                                 MaeStrings.SB_MSPAN_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_MSPAN_TEXT +
-                                ExtentTag.spansToString(this.mSpans));
+                                ModelHelpers.spansToString(this.mSpans));
                     }
                     break;
                 case M_ARG_SEL:

@@ -279,7 +279,7 @@ public class MakeTagListener implements ActionListener {
             }
             // since link tags never have spans and text, below is safe
             else if (att.getName().equals(MaeStrings.SPANS_COL_NAME)) {
-                newData[curCol] = ExtentTag.spansToString(maeMainUI.getSpans());
+                newData[curCol] = ModelHelpers.spansToString(maeMainUI.getSpans());
             } else if (att.getName().equals(MaeStrings.TEXT_COL_NAME)
                     && !maeMainUI.isSpansEmpty()) {
                 newData[curCol] = maeMainUI.getTextIn(maeMainUI.getSpans());

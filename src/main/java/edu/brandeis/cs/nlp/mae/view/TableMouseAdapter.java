@@ -27,7 +27,7 @@ package edu.brandeis.cs.nlp.mae.view;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 import edu.brandeis.cs.nlp.mae.model.ElemLink;
-import edu.brandeis.cs.nlp.mae.model.ExtentTag;
+import edu.brandeis.cs.nlp.mae.model.ModelHelpers;
 import edu.brandeis.cs.nlp.mae.ui.Colors;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
 
@@ -76,7 +76,7 @@ public class TableMouseAdapter extends MouseAdapter {
 
             if (el instanceof ElemExtent) {
                 // use table column[1] to get spanString then parse it
-                ArrayList<int[]> spansSelect = ExtentTag.parseSpansString(
+                ArrayList<int[]> spansSelect = ModelHelpers.parseSpansString(
                         (String) tableModel.getValueAt(selectedRow, maeMainUI.SPANS_COL));
                 maeMainUI.highlightTextSpans(hl, spansSelect, Colors.getVividHighliter());
             } //end if ElemExtent
