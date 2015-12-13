@@ -82,7 +82,8 @@ public class DTDLoader {
                 }
             }
             tag = tag.replaceAll("\\s+", " ");
-            tag = tag.replaceAll("[“”]", "\"");
+            tag = tag.replaceAll("[\u201C\u201D]", "\"");
+            tag = tag.replaceAll("[\u2018\u2019]", "'");
             process(tag);
         }
     }

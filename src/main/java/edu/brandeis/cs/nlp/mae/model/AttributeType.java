@@ -26,7 +26,7 @@ package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import com.sun.deploy.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 
 import java.util.Arrays;

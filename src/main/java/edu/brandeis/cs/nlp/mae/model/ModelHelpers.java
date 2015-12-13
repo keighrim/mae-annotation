@@ -41,7 +41,7 @@ public class ModelHelpers {
      * @param spansString - string of spans
      * @return a ArrayList of int[]
      */
-    public static List<int[]> parseSpansString(String spansString) {
+    public static ArrayList<int[]> parseSpansString(String spansString) {
         ArrayList<int[]> spans = new ArrayList<>();
         if (spansString == null || spansString.equals("") || spansString.equals("-1~-1")) {
             spans.add(new int[]{-1, -1});
