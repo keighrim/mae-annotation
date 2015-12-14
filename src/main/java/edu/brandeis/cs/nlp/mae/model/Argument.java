@@ -68,8 +68,8 @@ public class Argument implements IModel {
         this.setComplete(true);
     }
 
-    public int getId() {
-        return id;
+    public String getId() {
+        return Integer.toString(id);
     }
 
     public LinkTag getLinker() {

@@ -54,8 +54,8 @@ public class CharIndex implements IModel {
         this.setTag(tag);
     }
 
-    public int getId() {
-        return id;
+    public String getId() {
+        return Integer.toString(id);
     }
 
     public int getLocation() {

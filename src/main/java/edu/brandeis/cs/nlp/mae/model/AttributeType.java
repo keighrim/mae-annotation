@@ -74,8 +74,8 @@ public class AttributeType implements IModel {
         this.valueset = null;
     }
 
-    public int getId() {
-        return id;
+    public String getId() {
+        return Integer.toString(id);
     }
 
     public TagType getTagType() {

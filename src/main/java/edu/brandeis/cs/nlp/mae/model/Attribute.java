@@ -76,8 +76,8 @@ public class Attribute implements IModel {
         }
     }
 
-    public int getId() {
-        return id;
+    public String getId() {
+        return Integer.toString(id);
     }
 
     public ExtentTag getExtentTag() {

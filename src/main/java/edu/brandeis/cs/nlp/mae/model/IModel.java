@@ -28,4 +28,5 @@ package edu.brandeis.cs.nlp.mae.model;
  * Created by krim on 12/13/2015.
  */
 public interface IModel {
+    public String getId();
 }

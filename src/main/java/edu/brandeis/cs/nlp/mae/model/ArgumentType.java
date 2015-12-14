@@ -62,8 +62,8 @@ public class ArgumentType implements IModel {
         this.setRequired(false);
     }
 
-    public int getId() {
-        return id;
+    public String getId() {
+        return Integer.toString(id);
     }
 
     public TagType getTagType() {
