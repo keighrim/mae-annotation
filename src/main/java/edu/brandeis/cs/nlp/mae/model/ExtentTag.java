@@ -28,6 +28,7 @@ import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
+import edu.brandeis.cs.nlp.mae.database.ExtentTagDao;
 
 import java.util.*;
 
@@ -35,13 +36,13 @@ import java.util.*;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_ETAG)
+@DatabaseTable(tableName = ModelStrings.TAB_ETAG, daoClass = ExtentTagDao.class)
 public class ExtentTag extends Tag implements IModel {
 
     @DatabaseField(columnName = ModelStrings.TAB_ETAG_COL_TEXT)
     private String text;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     protected ForeignCollection<Attribute> attributes;
 
     @ForeignCollectionField(eager = true)

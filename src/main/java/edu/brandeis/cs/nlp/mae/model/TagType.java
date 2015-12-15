@@ -49,13 +49,13 @@ public class TagType implements IModel {
             columnName = ModelStrings.TAB_TT_COL_PREFIX)
     private String prefix;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<AttributeType> attributeTypes;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<ArgumentType> argumentTypes;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<Tag> tags;
 
     public TagType() {

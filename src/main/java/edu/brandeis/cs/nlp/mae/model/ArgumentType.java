@@ -43,7 +43,7 @@ public class ArgumentType implements IModel {
             columnName = ModelStrings.TAB_ART_FCOL_TT)
     private TagType tagType;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;
 
     @DatabaseField(canBeNull =false, columnName = ModelStrings.TAB_ART_COL_NAME)

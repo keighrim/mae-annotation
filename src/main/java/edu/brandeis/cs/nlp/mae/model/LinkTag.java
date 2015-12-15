@@ -28,6 +28,7 @@ import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
+import edu.brandeis.cs.nlp.mae.database.LinkTagDao;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -37,13 +38,13 @@ import java.util.Map;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_LTAG)
+@DatabaseTable(tableName = ModelStrings.TAB_LTAG, daoClass = LinkTagDao.class)
 public class LinkTag extends Tag implements IModel {
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     protected ForeignCollection<Attribute> attributes;
 
-    @ForeignCollectionField
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;
 
     public LinkTag() {

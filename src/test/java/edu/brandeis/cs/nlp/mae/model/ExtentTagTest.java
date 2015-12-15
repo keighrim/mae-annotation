@@ -54,7 +54,7 @@ public class ExtentTagTest {
     protected ConnectionSource cs;
 
     Dao<CharIndex, Integer> charIndexDao;
-    Dao<ExtentTag, Integer> eTagDao;
+    Dao<ExtentTag, String> eTagDao;
     Dao<TagType, Integer> tagTypeDao;
     Dao<AttributeType, Integer> attTypeDao;
     Dao<Attribute, Integer> attDao;
@@ -139,7 +139,7 @@ public class ExtentTagTest {
     @Test
     public void canQueryByTid() throws Exception {
         int[] span = new int[] {0, 4};
-        ArrayList<int[]> spans = new ArrayList<int[]>();
+        ArrayList<int[]> spans = new ArrayList<>();
         spans.add(span);
         ExtentTag nTag = new ExtentTag("N01", noun);
         for (CharIndex ci: nTag.setSpans(spans)) { charIndexDao.create(ci); }
@@ -247,7 +247,7 @@ public class ExtentTagTest {
 
         QueryBuilder<CharIndex, Integer> ciQb = charIndexDao.queryBuilder();
         ciQb.where().eq(ModelStrings.TAB_CI_COL_LOCATION, 3);
-        QueryBuilder<ExtentTag, Integer> tagQb = eTagDao.queryBuilder();
+        QueryBuilder<ExtentTag, String> tagQb = eTagDao.queryBuilder();
         List<ExtentTag> retrievedTags = tagQb.join(ciQb).query();
 
         assertEquals(
@@ -265,4 +265,46 @@ public class ExtentTagTest {
                 1, retrievedTags.size()
         );
     }
+
+    @Test
+    public void canDeleteTag() throws Exception{
+
+        ExtentTag nTag = createTag("N01", noun, "John", new int[]{0,1,2,3,4});
+
+        AttributeType properNoun = new AttributeType(noun, "isProper");
+        attTypeDao.create(properNoun);
+        Attribute att = new Attribute(nTag, properNoun, Boolean.toString(true));
+        attDao.create(att);
+
+        ExtentTag retrievedTag = eTagDao.queryForAll().get(0);
+        assertEquals(
+                "Expected 1 att is assigned to N01, found: " + retrievedTag.getAttributes().size(),
+                1, retrievedTag.getAttributes().size()
+        );
+
+
+        Attribute retrievedAtt = (new ArrayList<>(retrievedTag.getAttributes())).get(0);
+        assertEquals(
+                "Expected N01 to have att 'isProper', found: " + retrievedAtt.getName(),
+                "isProper", retrievedAtt.getName());
+
+        eTagDao.delete(retrievedTag);
+        assertEquals(
+                "Expected the tag is gone, found: " + eTagDao.queryForAll().size(),
+                0, eTagDao.queryForAll().size()
+        );
+
+        List<Attribute> retrievedAtts
+                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
+        assertEquals(
+                "Expected att is gone; not retrievable by N01, found: " + retrievedAtts.size() + " attribute",
+                0, retrievedAtts.size());
+        retrievedAtts
+                = attDao.queryForAll();
+        assertEquals(
+                "Expected att is gone; not retrievable by queryAll, found: " + retrievedAtts.size() + " attribute",
+                0, retrievedAtts.size());
+
+    }
+
 }
