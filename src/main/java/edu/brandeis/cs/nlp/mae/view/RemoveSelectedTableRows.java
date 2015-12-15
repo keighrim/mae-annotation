@@ -24,7 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
@@ -68,7 +68,7 @@ public class RemoveSelectedTableRows implements ActionListener {
                             maeMainUI.assignTextColor(ModelHelpers.parseSpansString(
                                     (String) tableModel.getValueAt(i, maeMainUI.SPANS_COL)));
                             //remove links that use the tag being removed
-                            HashCollection<String, String> links
+                            HashedList<String, String> links
                                     = maeMainUI.getTask().getLinksByExtentID(elemName, id);
                             maeMainUI.removeLinkTableRows(links);
                             // also remove item from all extents tab

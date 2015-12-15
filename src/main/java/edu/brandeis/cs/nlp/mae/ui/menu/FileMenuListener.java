@@ -24,7 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.ui.menu;
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.FileOperations;
@@ -154,7 +154,7 @@ public class FileMenuListener implements ActionListener {
                     d.insertString(0, xfl.getTextChars(), regular);
                     // newTags is a hash from tagType to attib list
                     // each attrib is stored in a has from att name to value
-                    HashCollection<String, Hashtable<String, String>> newTags
+                    HashedList<String, Hashtable<String, String>> newTags
                             = xfl.getTagHash();
                     if (newTags.size() > 0) {
                         maeMainUI.processTagHash(newTags);
@@ -215,7 +215,7 @@ public class FileMenuListener implements ActionListener {
                     d.insertString(0, xfl.getTextChars(), regular);
                     // newTags is a hash from tagType to attib list
                     // each attrib is stored in a has from att name to value
-                    HashCollection<String, Hashtable<String, String>> newTags
+                    HashedList<String, Hashtable<String, String>> newTags
                             = xfl.getTagHash();
                     if (newTags.size() > 0) {
                         maeMainUI.processTagHash(newTags);

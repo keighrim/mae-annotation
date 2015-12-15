@@ -32,7 +32,7 @@ package edu.brandeis.cs.nlp.mae.io;
  *
  */
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -41,8 +41,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.Hashtable;
 
 class XMLHandler extends DefaultHandler {
-    private HashCollection<String, Hashtable<String, String>> newTags
-            = new HashCollection<String, Hashtable<String, String>>();
+    private HashedList<String, Hashtable<String, String>> newTags
+            = new HashedList<String, Hashtable<String, String>>();
     private boolean mHasText = false;
     private String mText = "";
 
@@ -65,7 +65,7 @@ class XMLHandler extends DefaultHandler {
                 // add by krim: for legacy support
             }
             convertLegXml(elemInstance);
-            newTags.putEnt(tagName, elemInstance);
+            newTags.putItem(tagName, elemInstance);
         }
     }
 
@@ -82,7 +82,7 @@ class XMLHandler extends DefaultHandler {
     }
 
 
-    HashCollection<String, Hashtable<String, String>> returnTagHash() {
+    HashedList<String, Hashtable<String, String>> returnTagHash() {
         return newTags;
     }
 

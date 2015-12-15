@@ -24,8 +24,8 @@
 
 package edu.brandeis.cs.nlp.mae.database;
 
-import edu.brandeis.cs.nlp.mae.*;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class AnnotationTask {
 
     private Hashtable<String, Elem> mElements;
     private Hashtable<String, AttID> mIdTracker;
-    private HashCollection<String, String> mIdsExist;
+    private HashedList<String, String> mIdsExist;
 
     private AnnotDB mDb;
     private DTD mDtd;
@@ -118,11 +118,11 @@ public class AnnotationTask {
      * @return a HashCollection that will contain all IDs that are in use
      * for each tag in the DTD
      */
-    private HashCollection<String, String> createIDsExist() {
-        HashCollection<String, String> ids = new HashCollection<String, String>();
+    private HashedList<String, String> createIDsExist() {
+        HashedList<String, String> ids = new HashedList<String, String>();
         ArrayList<Elem> elems = mDtd.getElements();
         for (Elem elem : elems) {
-            ids.putEnt(elem.getName(), "");
+            ids.putItem(elem.getName(), "");
         }
         return ids;
     }
@@ -212,28 +212,28 @@ public class AnnotationTask {
     }
 
 
-    public HashCollection<String, String> getLinksByExtentID(String e_name, String id) {
+    public HashedList<String, String> getLinksByExtentID(String e_name, String id) {
         try {
             return (mDb.getLinksByExtentID(e_name, id));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return (new HashCollection<String, String>());
+        return (new HashedList<String, String>());
     }
 
-    public HashCollection<String, String> getLocElemHash() {
+    public HashedList<String, String> getLocElemHash() {
         try {
             return (mDb.getLocElemHash());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return (new HashCollection<String, String>());
+        return (new HashedList<String, String>());
     }
 
     public void addExtToBatch(int pos, String elemName, String newId) {
         try {
             mDb.addExtent(pos, elemName, newId);
-            mIdsExist.putEnt(elemName, newId);
+            mIdsExist.putItem(elemName, newId);
         } catch (Exception e) {
             System.err.println("Error adding extent to DB");
             e.printStackTrace();
@@ -253,7 +253,7 @@ public class AnnotationTask {
     public void addLinkToBatch(String elemName, String newID,
                                List<String> argIds, List<String> argTypes) {
         mDb.addLink(newID, elemName, argIds, argTypes);
-        mIdsExist.putEnt(elemName, newID);
+        mIdsExist.putItem(elemName, newID);
     }
 
     public void addArgument(
@@ -268,7 +268,7 @@ public class AnnotationTask {
 
     public ArrayList<String> getElementsAtLoc(int loc) {
         try {
-            return (mDb.getElementsAtLoc(loc));
+            return (mDb.getTagsAt(loc));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -283,15 +283,15 @@ public class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    public HashCollection<String, String> getTagsIn(ArrayList<int[]> spans) {
-        HashCollection<String, String> nameToId = new HashCollection<String, String>();
+    public HashedList<String, String> getTagsIn(ArrayList<int[]> spans) {
+        HashedList<String, String> nameToId = new HashedList<String, String>();
         for (int[] span : spans) {
-            nameToId.putAll(getTagsBetween(span[0], span[1]));
+            nameToId.merge(getTagsBetween(span[0], span[1]));
         }
         return nameToId;
     }
 
-    public HashCollection<String, String> getTagsBetween(int begin, int end) {
+    public HashedList<String, String> getTagsBetween(int begin, int end) {
         try {
             return (mDb.getTagsInSpan(begin, end));
         } catch (Exception e) {
@@ -300,7 +300,7 @@ public class AnnotationTask {
         return null;
     }
 
-    HashCollection<String, String> getNCTags() {
+    HashedList<String, String> getNCTags() {
         try {
             return mDb.getAllNCTags();
         } catch (Exception e) {
@@ -309,16 +309,16 @@ public class AnnotationTask {
         return null;
     }
 
-    HashCollection<String, String> getAllExtTags(boolean includeNC) {
-        HashCollection<String, String> hc = new HashCollection<String, String>();
+    HashedList<String, String> getAllExtTags(boolean includeNC) {
+        HashedList<String, String> hc = new HashedList<String, String>();
         try {
-            hc.putAll(mDb.getAllConsumingTags());
+            hc.merge(mDb.getAllConsumingTags());
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (includeNC) {
             try {
-                hc.putAll(mDb.getAllNCTags());
+                hc.merge(mDb.getAllNCTags());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -333,19 +333,19 @@ public class AnnotationTask {
      * @param spans a sorted set of start-end pairs
      * @return all tags in every spans
      */
-    public HashCollection<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
-        HashCollection<String, String> hc = new HashCollection<String, String>();
-        hc.putAll(getTagsIn(spans));
-        hc.putAll(mDb.getAllNCTags());
+    public HashedList<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
+        HashedList<String, String> hc = new HashedList<String, String>();
+        hc.merge(getTagsIn(spans));
+        hc.merge(mDb.getAllNCTags());
         return hc;
         /*
         Iterator<int[]> iter = spans.iterator();
         while (iter.hasNext()) {
             int[] span = iter.next();
             if (iter.hasNext()) {
-                hc.putAll(getTagsBetween(span[0], span[1]));
+                hc.merge(getTagsBetween(span[0], span[1]));
             } else {
-                hc.putAll(getTagsInSpansAndNC(span[0], span[1]));
+                hc.merge(getTagsInSpansAndNC(span[0], span[1]));
             }
         }
         return hc;
@@ -404,7 +404,7 @@ public class AnnotationTask {
 
 
     public boolean idExists(String tagname, String id) {
-        ArrayList<String> ids = mIdsExist.get(tagname);
+        ArrayList<String> ids = (ArrayList<String>) mIdsExist.get(tagname);
         return ids.contains(id);
     }
 

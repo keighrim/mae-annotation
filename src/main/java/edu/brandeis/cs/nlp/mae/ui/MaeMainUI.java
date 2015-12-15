@@ -25,7 +25,7 @@
 package edu.brandeis.cs.nlp.mae.ui;
 
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
@@ -518,8 +518,8 @@ public class MaeMainUI extends JPanel {
      * @param elementsToProcess the HashCollection passed from XMLHandler
      */
     public void processTagHash(
-            HashCollection<String, Hashtable<String, String>> elementsToProcess) {
-        ArrayList<String> elemNames = elementsToProcess.getKeyList();
+            HashedList<String, Hashtable<String, String>> elementsToProcess) {
+        ArrayList<String> elemNames = elementsToProcess.keyList();
         //first, add the extent tags
 
         for (String elemName : elemNames) {
@@ -528,7 +528,7 @@ public class MaeMainUI extends JPanel {
                     mElementTables.containsKey(elemName)) {
                 // for each element type there is a list of tag information
                 ArrayList<Hashtable<String, String>> elemInstances
-                        = elementsToProcess.get(elemName);
+                        = (ArrayList<Hashtable<String, String>>) elementsToProcess.get(elemName);
 
                 for (Hashtable<String, String> instance : elemInstances) {
                     if (updateIDandDB(instance, elemName)) {
@@ -546,7 +546,7 @@ public class MaeMainUI extends JPanel {
                     mElementTables.containsKey(elemName)) {
                 /*for each element type there is a list of tag information*/
                 ArrayList<Hashtable<String, String>> elemInstances
-                        = elementsToProcess.get(elemName);
+                        = (ArrayList<Hashtable<String, String>>) elementsToProcess.get(elemName);
 
                 for (Hashtable<String, String> instance : elemInstances) {
                     if (updateIDandDB(instance, elemName)) {
@@ -711,11 +711,11 @@ public class MaeMainUI extends JPanel {
      *
      * @param links HashCollection of types and IDs of links being removed
      */
-    public void removeLinkTableRows(HashCollection<String, String> links) {
-        ArrayList<String> linkTags = links.getKeyList();
+    public void removeLinkTableRows(HashedList<String, String> links) {
+        ArrayList<String> linkTags = links.keyList();
         for (String tag : linkTags) {
             Elem elem = mTask.getElemByName(tag);
-            ArrayList<String> link_ids = links.getList(elem.getName());
+            ArrayList<String> link_ids = links.getAsList(elem.getName());
             if (elem instanceof ElemLink) {
                 for (String id : link_ids) {
                     removeTableRows(elem, id);
@@ -783,15 +783,15 @@ public class MaeMainUI extends JPanel {
     public void findHighlightRows() {
         clearTableSelections();
         //first, get ids and types of elements in selected extents
-        HashCollection<String, String> idHash = mTask.getTagsIn(mSpans);
+        HashedList<String, String> idHash = mTask.getTagsIn(mSpans);
         if (idHash.size() > 0) {
-            ArrayList<String> elemNames = idHash.getKeyList();
+            ArrayList<String> elemNames = idHash.keyList();
             for (String elemName : elemNames) {
-                ArrayList<String> ids = idHash.get(elemName);
+                ArrayList<String> ids = (ArrayList<String>) idHash.get(elemName);
                 for (String id : ids) {
                     highlightTableRows(elemName, id);
                     //returns HashCollection of link ids connected to this
-                    HashCollection<String, String> links
+                    HashedList<String, String> links
                             = mTask.getLinksByExtentID(elemName, id);
                     highlightTableRowsHash(links);
                 }
@@ -842,10 +842,10 @@ public class MaeMainUI extends JPanel {
      *
      * @param hash Hashtable with tag names as keys and IDs as values
      */
-    private void highlightTableRowsHash(HashCollection<String, String> hash) {
-        ArrayList<String> elems = hash.getKeyList();
+    private void highlightTableRowsHash(HashedList<String, String> hash) {
+        ArrayList<String> elems = hash.keyList();
         for (String e : elems) {
-            ArrayList<String> ids = hash.get(e);
+            ArrayList<String> ids = (ArrayList<String>) hash.get(e);
             for (String id : ids) {
                 highlightTableRows(e, id);
             }
@@ -859,10 +859,11 @@ public class MaeMainUI extends JPanel {
     protected void assignAllColors() {
         //Get hashCollection of where tags are in the document
         //    <String location,<String elements>>.
-        HashCollection<String, String> locElem = mTask.getLocElemHash();
-        ArrayList<String> locs = locElem.getKeyList();
+        // TODO 151214 replace mTask.getLocElemHash() with DBDriver.getLocationsWithTags()
+        HashedList<String, String> locElem = mTask.getLocElemHash();
+        ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
-            ArrayList<String> elements = locElem.getList(loc);
+            ArrayList<String> elements = locElem.getAsList(loc);
             if (elements.size() > 1) {
                 setColorAtLocation(mColorTable.get(elements.get(0)), Integer.parseInt(loc), 1, true);
             } else {
@@ -883,8 +884,8 @@ public class MaeMainUI extends JPanel {
      * whole text windows. It is called when toggling all_extents
      */
     protected void unassignAllColors() {
-        HashCollection<String, String> locElem = mTask.getLocElemHash();
-        ArrayList<String> locs = locElem.getKeyList();
+        HashedList<String, String> locElem = mTask.getLocElemHash();
+        ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
             setColorAtLocation(Color.black, Integer.parseInt(loc), 1, false);
         }
@@ -1270,11 +1271,11 @@ public class MaeMainUI extends JPanel {
             jp.add(exit);
 
         } else {
-            HashCollection<String, String> idHash = mTask.getTagsIn(mSpans);
+            HashedList<String, String> idHash = mTask.getTagsIn(mSpans);
             // if only item is retrieved, display directly
             if (idHash.isSizeOne()) {
-                String elem = idHash.getKeyList().get(0);
-                String id = idHash.get(elem).get(0);
+                String elem = idHash.keyList().get(0);
+                String id = ((ArrayList<String>) idHash.get(elem)).get(0);
                 // remove a tag
                 JMenuItem removeItem = createMenuItem(
                         String.format("Remove %s", id),
@@ -1293,9 +1294,9 @@ public class MaeMainUI extends JPanel {
             }
             // else create waterfall menu
             else if (idHash.size() > 0) {
-                ArrayList<String> elems = idHash.getKeyList();
+                ArrayList<String> elems = idHash.keyList();
                 for (String elem : elems) {
-                    ArrayList<String> ids = idHash.get(elem);
+                    ArrayList<String> ids = (ArrayList<String>) idHash.get(elem);
                     for (String id : ids) {
                         jp.addSeparator();
                         String text = getTextByID(elem, id, false);
@@ -2125,10 +2126,10 @@ public class MaeMainUI extends JPanel {
 
         int i = 0;
         for (int[] span : mSpans) {
-            HashCollection<String, String> elems
+            HashedList<String, String> elems
                     = mTask.getTagsBetween(span[0], span[1]);
             boolean first = true;
-            for (String elemName : elems.getKeyList()) {
+            for (String elemName : elems.keyList()) {
                 for (String elemId : elems.get(elemName)) {
                     if (!mPossibleArgIds.contains(elemId)) {
                         if (first) {

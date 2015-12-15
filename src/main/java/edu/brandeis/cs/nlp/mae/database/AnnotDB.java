@@ -25,7 +25,7 @@
 package edu.brandeis.cs.nlp.mae.database;
 
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 
 import java.sql.*;
 import java.util.*;
@@ -200,7 +200,7 @@ class AnnotDB {
      * @return ArrayList of strings containing the types of elements at a location
      * @throws Exception 
      */
-    ArrayList<String> getElementsAtLoc(int loc)
+    ArrayList<String> getTagsAt(int loc)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query = String.format("SELECT * FROM %s WHERE %s = '%s';",
@@ -224,15 +224,15 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    HashCollection<String,String> getLocElemHash()
+    HashedList<String,String> getLocElemHash()
             throws Exception{
-        HashCollection<String,String>elems = new HashCollection<String,String>();
+        HashedList<String,String> elems = new HashedList<String,String>();
         Statement stat = mConn.createStatement();
         String query = String.format("SELECT %s,%s FROM %s;",
                 LOC_COL_NAME, ELEM_NAME_COL_NAME, EXTENT_TABLE_NAME);
         ResultSet rs = stat.executeQuery(query);
         while(rs.next()){
-            elems.putEnt(rs.getString(LOC_COL_NAME),
+            elems.putItem(rs.getString(LOC_COL_NAME),
                     rs.getString(ELEM_NAME_COL_NAME));
         }
         rs.close();
@@ -467,9 +467,9 @@ class AnnotDB {
      * associated with the extent being searched for
      * @throws Exception
      */
-    HashCollection<String,String> getLinksByExtentID(String extType, String extID)
+    HashedList<String,String> getLinksByExtentID(String extType, String extID)
             throws Exception{
-        HashCollection<String,String> links = new HashCollection<String,String>();
+        HashedList<String,String> links = new HashedList<String,String>();
         Statement stat = mConn.createStatement();
         for (int i=0; i<mMaxArgs; i++) {
             try {
@@ -482,7 +482,7 @@ class AnnotDB {
                         argIdCol, extID, argTypeCol, extType);
                 ResultSet rs = stat.executeQuery(query);
                 while (rs.next()) {
-                    links.putEnt(rs.getString(ELEM_NAME_COL_NAME),
+                    links.putItem(rs.getString(ELEM_NAME_COL_NAME),
                             rs.getString(ID_COL_NAME));
                 }
                 rs.close();
@@ -506,7 +506,7 @@ class AnnotDB {
      * tag name as keys and IDs as values.
      * @throws Exception
      */
-    HashCollection<String,String> getTagsInSpan(int begin, int end)
+    HashedList<String,String> getTagsInSpan(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query;
@@ -526,9 +526,9 @@ class AnnotDB {
         }
 
         ResultSet rs = stat.executeQuery(query);
-        HashCollection<String,String> tags = new HashCollection<String,String>();
+        HashedList<String,String> tags = new HashedList<String,String>();
         while(rs.next()){
-            tags.putEnt(rs.getString(ELEM_NAME_COL_NAME),
+            tags.putItem(rs.getString(ELEM_NAME_COL_NAME),
                     rs.getString(ID_COL_NAME));
         }
         rs.close();
@@ -544,10 +544,10 @@ class AnnotDB {
      * that exist between the start and end character offsets with the
      * tag name as keys and IDs as values.
      */
-    HashCollection<String,String> getTagsInSpansAndNC(int begin, int end)
+    HashedList<String,String> getTagsInSpansAndNC(int begin, int end)
             throws Exception{
-        HashCollection<String,String> tags  = getTagsInSpan(begin, end);
-        tags.putAll(getAllNCTags());
+        HashedList<String,String> tags  = getTagsInSpan(begin, end);
+        tags.merge(getAllNCTags());
         return tags;
     }
 
@@ -557,7 +557,7 @@ class AnnotDB {
      * @return HC with tag types as keys, tag ids as values
      * @throws Exception
      */
-    HashCollection<String, String> getAllConsumingTags() throws Exception {
+    HashedList<String, String> getAllConsumingTags() throws Exception {
         return getAllExtTags(true);
     }
 
@@ -567,7 +567,7 @@ class AnnotDB {
      * @return HC with tag types as keys, tag ids as values
      * @throws Exception
      */
-    HashCollection<String,String> getAllNCTags() throws Exception {
+    HashedList<String,String> getAllNCTags() throws Exception {
         return getAllExtTags(false);
     }
 
@@ -577,7 +577,7 @@ class AnnotDB {
      * @param consuming get consuming tags? or NC tags?
      * @throws Exception
      */
-    HashCollection<String,String> getAllExtTags(boolean consuming) throws Exception {
+    HashedList<String,String> getAllExtTags(boolean consuming) throws Exception {
         String op;
         if (consuming) {
             op = "!=";
@@ -590,9 +590,9 @@ class AnnotDB {
                 "SELECT DISTINCT(%s), %s FROM %s WHERE %s %s -1;",
                 ID_COL_NAME, ELEM_NAME_COL_NAME, EXTENT_TABLE_NAME, LOC_COL_NAME, op);
         ResultSet rs = stat.executeQuery(query);
-        HashCollection<String, String> ncTags = new HashCollection<String, String>();
+        HashedList<String, String> ncTags = new HashedList<String, String>();
         while(rs.next()){
-            ncTags.putEnt(rs.getString(ELEM_NAME_COL_NAME),rs.getString(ID_COL_NAME));
+            ncTags.putItem(rs.getString(ELEM_NAME_COL_NAME),rs.getString(ID_COL_NAME));
         }
         rs.close();
 

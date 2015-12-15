@@ -24,7 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.database;
 
-import edu.brandeis.cs.nlp.mae.HashCollection;
+import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
@@ -59,11 +59,11 @@ public class RemoveExtentTagListener implements ActionListener {
             maeMainUI.removeAllTableRow(elemId);
 
             //remove links that use the tag being removed
-            HashCollection<String, String> links
+            HashedList<String, String> links
                     = maeMainUI.getTask().getLinksByExtentID(elemName, elemId);
             maeMainUI.removeLinkTableRows(links);
-            for (String link : links.getKeyList()) {
-                for (String linkId : links.getList(link)) {
+            for (String link : links.keyList()) {
+                for (String linkId : links.getAsList(link)) {
                     maeMainUI.getTask().removeLinkByID(linkId);
                 }
             }
