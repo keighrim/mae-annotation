@@ -40,6 +40,7 @@ public class ModelStrings {
     public final static String TAB_TT_COL_PREFIX = "prefix";
 
     public final static String TAB_TAG_COL_TID = "tid";
+    public final static String TAB_TAG_COL_FN = "filename";
     public final static String TAB_TAG_FCOL_TT = "tag_type_fid";
 
     public final static String TAB_ETAG = "extent_tag";

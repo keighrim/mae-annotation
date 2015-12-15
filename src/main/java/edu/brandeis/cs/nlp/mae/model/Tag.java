@@ -44,8 +44,12 @@ public abstract class Tag implements IModel {
             columnName = ModelStrings.TAB_TAG_FCOL_TT)
     protected TagType tagtype;
 
+    @DatabaseField(columnName = ModelStrings.TAB_TAG_COL_FN)
+    protected String filename;
+
     // TODO 151212 make an option to force completeness checking or ignore
     protected boolean isComplete;
+
 
     public Tag() {
 
@@ -77,6 +81,14 @@ public abstract class Tag implements IModel {
 
     public void setTagtype(TagType tagtype) {
         this.tagtype = tagtype;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     protected void setComplete(boolean complete) {
