@@ -92,29 +92,36 @@ public class ModelHelpers {
      * @return a ArrayList of int[]
      */
     public static ArrayList<int[]> parseCharIndices(List<CharIndex> spans) {
-        ArrayList<int[]> spansList = new ArrayList<>();
-        if (spans == null || spans.size() ==0) {
-            spansList.add(new int[]{-1, -1});
-            return spansList;
+        if (spans == null || spans.size() == 0) {
+            ArrayList<int[]> nonComsumingSpan = new ArrayList<>();
+            nonComsumingSpan.add(new int[]{-1, -1});
+            return nonComsumingSpan;
         }
 
         int[] locations = new int[spans.size()];
         for (int i = 0; i < spans.size(); i++) {
             locations[i] = (spans.get(i).getLocation());
         }
-        Arrays.sort(locations);
+        return spansArrayToList(locations);
 
-        int start = locations[0];
-        int prev = locations[0];
-        for (int i = 1; i < locations.length; i++) {
-            if (i == locations.length - 1) {
-                spansList.add(new int[]{start, locations[i] + 1});
-            } else if (prev + 1 < locations[i]) {
+    }
+
+    public static ArrayList<int[]> spansArrayToList(int[] spans) {
+
+        Arrays.sort(spans);
+
+        ArrayList<int[]> spansList = new ArrayList<>();
+        int start = spans[0];
+        int prev = spans[0];
+        for (int i = 1; i < spans.length; i++) {
+            if (i == spans.length - 1) {
+                spansList.add(new int[]{start, spans[i] + 1});
+            } else if (prev + 1 < spans[i]) {
                 spansList.add(new int[]{start, prev + 1});
-                prev = locations[i];
-                start = locations[i];
+                prev = spans[i];
+                start = spans[i];
             } else {
-                prev = locations[i];
+                prev = spans[i];
             }
         }
         return spansList;

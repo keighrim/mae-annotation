@@ -56,7 +56,10 @@ public class TagType implements IModel {
     private ForeignCollection<ArgumentType> argumentTypes;
 
     @ForeignCollectionField(eager = true)
-    private ForeignCollection<Tag> tags;
+    private ForeignCollection<ExtentTag> extentTags;
+
+    @ForeignCollectionField(eager = true)
+    private ForeignCollection<LinkTag> linkTags;
 
     public TagType() {
 
@@ -115,8 +118,20 @@ public class TagType implements IModel {
         return argumentTypes;
     }
 
-    public ForeignCollection<Tag> getTags() {
-        return tags;
+    public ForeignCollection<ExtentTag> getExtentTags() {
+        return this.extentTags;
+    }
+
+    public ForeignCollection<LinkTag> getLinkTags() {
+        return this.linkTags;
+    }
+
+    public ForeignCollection<? extends Tag> getTags() {
+        if (isExtent()) {
+            return getExtentTags();
+        } else {
+            return getLinkTags();
+        }
     }
 
     public int getNumInstances() {

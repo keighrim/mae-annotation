@@ -61,7 +61,7 @@ public class Argument implements IModel {
 
     }
 
-    public Argument(LinkTag linker, ExtentTag argument, ArgumentType argumentType) {
+    public Argument(LinkTag linker, ArgumentType argumentType, ExtentTag argument) {
         this.linker = linker;
         this.argument = argument;
         this.argumentType = argumentType;

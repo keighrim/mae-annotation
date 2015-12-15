@@ -110,8 +110,8 @@ public class ExtentTagTest {
 
     protected ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
         ExtentTag tag = new ExtentTag(tid, tagType);
-        tag.setText(text);
         for (CharIndex ci: tag.setSpans(spans)) { charIndexDao.create(ci); }
+        tag.setText(text);
         eTagDao.create(tag);
         return tag;
     }

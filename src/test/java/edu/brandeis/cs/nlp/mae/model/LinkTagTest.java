@@ -112,8 +112,8 @@ public class LinkTagTest extends ExtentTagTest {
         ExtentTag vTag = createTag("V01", verb, "own", new int[]{2, 3, 4});
 
         LinkTag link = new LinkTag("A01", semanticRole);
-        Argument agentArg = new Argument(link, nTag, agent);
-        Argument predArg = new Argument(link, vTag, pred);
+        Argument agentArg = new Argument(link, agent, nTag);
+        Argument predArg = new Argument(link, pred, vTag);
         argDao.create(agentArg);
         argDao.create(predArg);
         lTagDao.create(link);
