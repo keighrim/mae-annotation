@@ -248,7 +248,7 @@ class AnnotDB {
      * of each anchor that tag type uses.
      * @throws Exception
      */
-    Hashtable<Integer,String> getLocationsbyElemLink(String elem)
+    Hashtable<Integer,String> getArgumentSpansOf(String elem)
             throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
@@ -298,7 +298,8 @@ class AnnotDB {
      * GUI menu
      * @throws Exception
      */
-    Hashtable<Integer,String> getLocationsbyElemLink(
+    @SuppressWarnings("Duplicates")
+    Hashtable<Integer,String> getArgumentSpansOf(
             String elem, ArrayList<String> activeLinks) throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
@@ -363,7 +364,7 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    ArrayList<int[]> getLocByID(String id) throws Exception{
+    ArrayList<int[]> getSpansByTid(String id) throws Exception{
         Statement stat = mConn.createStatement();
         String query = String.format("SELECT * FROM %s WHERE %s = '%s';",
                 EXTENT_TABLE_NAME, ID_COL_NAME, id);
@@ -407,7 +408,7 @@ class AnnotDB {
      * @return the tag name of the ID being searched for
      * @throws Exception
      */
-    String getElemNameByID(String id)
+    String getTagTypeByTid(String id)
             throws Exception{
         Statement stat = mConn.createStatement();
         String qBase = "SELECT * FROM %s WHERE %s = '%s';";
@@ -467,7 +468,7 @@ class AnnotDB {
      * associated with the extent being searched for
      * @throws Exception
      */
-    HashedList<String,String> getLinksByExtentID(String extType, String extID)
+    HashedList<String,String> getLinksHasArgumentOf(String extType, String extID)
             throws Exception{
         HashedList<String,String> links = new HashedList<String,String>();
         Statement stat = mConn.createStatement();
@@ -506,7 +507,7 @@ class AnnotDB {
      * tag name as keys and IDs as values.
      * @throws Exception
      */
-    HashedList<String,String> getTagsInSpan(int begin, int end)
+    HashedList<String,String> getTagsByTypeBetween(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query;
@@ -546,7 +547,7 @@ class AnnotDB {
      */
     HashedList<String,String> getTagsInSpansAndNC(int begin, int end)
             throws Exception{
-        HashedList<String,String> tags  = getTagsInSpan(begin, end);
+        HashedList<String,String> tags  = getTagsByTypeBetween(begin, end);
         tags.merge(getAllNCTags());
         return tags;
     }
@@ -607,7 +608,7 @@ class AnnotDB {
      * @param linkName a link element name to retrieve
      * @return list of retrieved ids
      */
-    ArrayList<String> getLinkIdsByName(String linkName) {
+    ArrayList<String> getAllLinkTagsOfType(String linkName) {
         HashSet<String> ids = new HashSet<String>();
         try {
             Statement stat = mConn.createStatement();
@@ -625,7 +626,7 @@ class AnnotDB {
         return new ArrayList<String>(ids);
     }
     
-    ArrayList<String> getExtIdsByName(String elemName) {
+    List<String> getAllExtentTagsOfType(String elemName) {
         HashSet<String> ids = new HashSet<String>();
         try {
             Statement stat = mConn.createStatement();
@@ -681,7 +682,7 @@ class AnnotDB {
      * @param id ID
      * @throws Exception
      */
-    void addExtent(int location, String element, String id)
+    void createExtentTag(int location, String element, String id)
             throws Exception{
         mExt2Insert.setInt(LOC_COL, location);
         mExt2Insert.setString(NAME_COL, element);
@@ -717,8 +718,8 @@ class AnnotDB {
      * @param argIds list of ids of relevent arguments
      * @param argTypes list of names of relevent arguments (should correspond to args)
      */
-    void addLink(String id, String name,
-                 List<String> argIds, List<String> argTypes) {
+    void createLinkTag(String id, String name,
+                       List<String> argIds, List<String> argTypes) {
         // first check args and argTypes are matching
         // (maybe checking here is redundant, since we can't give any message to a user)
         if (argIds.size() != argTypes.size()) {

@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -279,7 +280,7 @@ public class MakeTagListener implements ActionListener {
             }
             // since link tags never have spans and text, below is safe
             else if (att.getName().equals(MaeStrings.SPANS_COL_NAME)) {
-                newData[curCol] = ModelHelpers.spansToString(maeMainUI.getSpans());
+                newData[curCol] = SpanHandler.convertPairsToString(maeMainUI.getSpans());
             } else if (att.getName().equals(MaeStrings.TEXT_COL_NAME)
                     && !maeMainUI.isSpansEmpty()) {
                 newData[curCol] = maeMainUI.getTextIn(maeMainUI.getSpans());

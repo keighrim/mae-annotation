@@ -60,7 +60,7 @@ public class RemoveExtentTagListener implements ActionListener {
 
             //remove links that use the tag being removed
             HashedList<String, String> links
-                    = maeMainUI.getTask().getLinksByExtentID(elemName, elemId);
+                    = maeMainUI.getTask().getLinksHasArgumentOf(elemName, elemId);
             maeMainUI.removeLinkTableRows(links);
             for (String link : links.keyList()) {
                 for (String linkId : links.getAsList(link)) {

@@ -48,7 +48,7 @@ public class SetAsArgListener implements ActionListener {
         String[] command = actionEvent.getActionCommand().split(MaeStrings.SEP);
         maeMainUI.setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
         int argNum = maeMainUI.getTask().getArguments(command[0]).indexOf(command[2]);
-        String argType = maeMainUI.getTask().getElemNameById(command[3]);
+        String argType = maeMainUI.getTask().getTagTypeByTid(command[3]);
         maeMainUI.getTask().addArgument(command[1], argNum, command[3], argType);
     }
 }

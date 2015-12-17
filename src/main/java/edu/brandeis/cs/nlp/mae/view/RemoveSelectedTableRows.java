@@ -28,8 +28,8 @@ import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
-import edu.brandeis.cs.nlp.mae.model.ModelHelpers;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -53,7 +53,7 @@ public class RemoveSelectedTableRows implements ActionListener {
             String[] ids = actionEvent.getActionCommand().split(MaeStrings.SEP);
             for (String id : ids) {
                 // load corresponding table and its back-end model
-                String elemName = maeMainUI.getTask().getElemNameById(id);
+                String elemName = maeMainUI.getTask().getTagTypeByTid(id);
                 Elem elem = maeMainUI.getTask().getElemByName(elemName);
                 JTable table = maeMainUI.getElementTables().get(elemName);
                 DefaultTableModel tableModel
@@ -65,11 +65,11 @@ public class RemoveSelectedTableRows implements ActionListener {
                         // if removing an extent tag, re-assign highlighting
                         if (elem instanceof ElemExtent) {
                             maeMainUI.getTask().removeExtentByID(id);
-                            maeMainUI.assignTextColor(ModelHelpers.parseSpansString(
+                            maeMainUI.assignTextColor(SpanHandler.convertStringToPairs(
                                     (String) tableModel.getValueAt(i, maeMainUI.SPANS_COL)));
                             //remove links that use the tag being removed
                             HashedList<String, String> links
-                                    = maeMainUI.getTask().getLinksByExtentID(elemName, id);
+                                    = maeMainUI.getTask().getLinksHasArgumentOf(elemName, id);
                             maeMainUI.removeLinkTableRows(links);
                             // also remove item from all extents tab
                             maeMainUI.removeAllTableRow(id);

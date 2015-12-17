@@ -158,37 +158,37 @@ public class AnnotationTask {
     // Exceptions are usually caught here, rather than passed back to
     // main.
 
-    public ArrayList<int[]> getLocByID(String id) {
+    public ArrayList<int[]> getSpansByTid(String id) {
         try {
-            return mDb.getLocByID(id);
+            return mDb.getSpansByTid(id);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public String getElemNameById(String id) {
+    public String getTagTypeByTid(String id) {
         try {
-            return mDb.getElemNameByID(id);
+            return mDb.getTagTypeByTid(id);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public Hashtable<Integer, String> getLocationsbyElemLink(String elem) {
+    public Hashtable<Integer, String> getArgumentSpansOf(String elem) {
         try {
-            return mDb.getLocationsbyElemLink(elem);
+            return mDb.getArgumentSpansOf(elem);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public Hashtable<Integer, String> getLocationsbyElemLink
+    public Hashtable<Integer, String> getArgumentSpansOf
             (String elem, ArrayList<String> active) {
         try {
-            return mDb.getLocationsbyElemLink(elem, active);
+            return mDb.getArgumentSpansOf(elem, active);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -212,9 +212,9 @@ public class AnnotationTask {
     }
 
 
-    public HashedList<String, String> getLinksByExtentID(String e_name, String id) {
+    public HashedList<String, String> getLinksHasArgumentOf(String e_name, String id) {
         try {
-            return (mDb.getLinksByExtentID(e_name, id));
+            return (mDb.getLinksHasArgumentOf(e_name, id));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -232,7 +232,7 @@ public class AnnotationTask {
 
     public void addExtToBatch(int pos, String elemName, String newId) {
         try {
-            mDb.addExtent(pos, elemName, newId);
+            mDb.createExtentTag(pos, elemName, newId);
             mIdsExist.putItem(elemName, newId);
         } catch (Exception e) {
             System.err.println("Error adding extent to DB");
@@ -252,7 +252,7 @@ public class AnnotationTask {
      */
     public void addLinkToBatch(String elemName, String newID,
                                List<String> argIds, List<String> argTypes) {
-        mDb.addLink(newID, elemName, argIds, argTypes);
+        mDb.createLinkTag(newID, elemName, argIds, argTypes);
         mIdsExist.putItem(elemName, newID);
     }
 
@@ -283,17 +283,17 @@ public class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    public HashedList<String, String> getTagsIn(ArrayList<int[]> spans) {
+    public HashedList<String, String> getTagsByTypeIn(ArrayList<int[]> spans) {
         HashedList<String, String> nameToId = new HashedList<String, String>();
         for (int[] span : spans) {
-            nameToId.merge(getTagsBetween(span[0], span[1]));
+            nameToId.merge(getTagsByTypeBetween(span[0], span[1]));
         }
         return nameToId;
     }
 
-    public HashedList<String, String> getTagsBetween(int begin, int end) {
+    public HashedList<String, String> getTagsByTypeBetween(int begin, int end) {
         try {
-            return (mDb.getTagsInSpan(begin, end));
+            return (mDb.getTagsByTypeBetween(begin, end));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -335,7 +335,7 @@ public class AnnotationTask {
      */
     public HashedList<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
         HashedList<String, String> hc = new HashedList<String, String>();
-        hc.merge(getTagsIn(spans));
+        hc.merge(getTagsByTypeIn(spans));
         hc.merge(mDb.getAllNCTags());
         return hc;
         /*
@@ -343,7 +343,7 @@ public class AnnotationTask {
         while (iter.hasNext()) {
             int[] span = iter.next();
             if (iter.hasNext()) {
-                hc.merge(getTagsBetween(span[0], span[1]));
+                hc.merge(getTagsByTypeBetween(span[0], span[1]));
             } else {
                 hc.merge(getTagsInSpansAndNC(span[0], span[1]));
             }
@@ -431,28 +431,28 @@ public class AnnotationTask {
         return links;
     }
 
-    public ArrayList<String> getLinkIdsByName(String linkName) {
-        return mDb.getLinkIdsByName(linkName);
+    public ArrayList<String> getAllLinkTagsOfType(String linkName) {
+        return mDb.getAllLinkTagsOfType(linkName);
     }
 
     public ArrayList<String> getAllLinkIds() {
         ArrayList<String> linkids = new ArrayList<String>();
         for (String linkName : getLinkNames()) {
-            for (String id : mDb.getLinkIdsByName(linkName)) {
+            for (String id : mDb.getAllLinkTagsOfType(linkName)) {
                 linkids.add(id);
             }
         }
         return linkids;
     }
 
-    public ArrayList<String> getExtIdsByName(String elemName) {
-        return mDb.getExtIdsByName(elemName);
+    public List<String> getAllExtentTagsOfType(String elemName) {
+        return mDb.getAllExtentTagsOfType(elemName);
     }
 
     public ArrayList<String> getAllExtIds() {
         ArrayList<String> extIds = new ArrayList<String>();
         for (String extName : getExtNames()) {
-            for (String id : mDb.getExtIdsByName(extName)) {
+            for (String id : mDb.getAllExtentTagsOfType(extName)) {
                 extIds.add(id);
             }
         }

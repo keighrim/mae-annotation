@@ -29,6 +29,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import edu.brandeis.cs.nlp.mae.database.ExtentTagDao;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import java.util.*;
 
@@ -89,7 +90,7 @@ public class ExtentTag extends Tag implements IModel {
     }
 
     public List<CharIndex> setSpans(String spansString) {
-        return this.setSpans(ModelHelpers.parseSpansString(spansString));
+        return this.setSpans(SpanHandler.convertStringToPairs(spansString));
     }
 
     @Override
@@ -110,8 +111,18 @@ public class ExtentTag extends Tag implements IModel {
         return new ArrayList<>(this.getSpans());
     }
 
+    public int[] getSpansAsArray() {
+        int[] spans = new int[this.getSpans().size()];
+        int i = 0;
+        for (CharIndex ci : getSpans()) {
+            spans[i++] = ci.getLocation();
+        }
+//        Arrays.sort(spans);
+        return spans;
+    }
+
     public String getSpansAsString() {
-        return ModelHelpers.spansToString(ModelHelpers.parseCharIndices(this.getSpansAsList()));
+        return SpanHandler.convertPairsToString(SpanHandler.convertArrayToPairs(this.getSpansAsArray()));
     }
 
     public String getText() {

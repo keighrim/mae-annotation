@@ -176,7 +176,7 @@ public class ExtentTagTest {
                 eq(DBSchema.TAB_TAG_FCOL_TT, verb.getName()).query().get(0);
         assertEquals(
                 "Expected 3 chars allocated to vTag set by List, found: " + retrievedVTag.getSpans().size(),
-                3, retrievedVTag.getSpansAsArray().length;
+                3, retrievedVTag.getSpansAsArray().length
         );
         assertEquals(
                 "Expected same text of nTag after retrieved, found " + retrievedNTag.getText(),

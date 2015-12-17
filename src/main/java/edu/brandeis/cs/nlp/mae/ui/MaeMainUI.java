@@ -36,6 +36,7 @@ import edu.brandeis.cs.nlp.mae.ui.menu.FileMenuListener;
 import edu.brandeis.cs.nlp.mae.ui.menu.FontSizeMenuListener;
 import edu.brandeis.cs.nlp.mae.ui.menu.HelpMenuListener;
 import edu.brandeis.cs.nlp.mae.ui.menu.ModeMenuListener;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -573,7 +574,7 @@ public class MaeMainUI extends JPanel {
 
         // krim: take a string of spans and init a set of spans(start-end int pairs)
         String spansString = a.get("spans");
-        mSpans = ModelHelpers.parseSpansString(spansString);
+        mSpans = SpanHandler.convertStringToPairs(spansString);
         if (!isSpansEmpty()) {
             for (int[] span : mSpans) {
                 int start = span[0], end = span[1];
@@ -608,7 +609,7 @@ public class MaeMainUI extends JPanel {
             if (argId.equals("")) {
                 mUnderspecified.add(argId);
             } else {
-                String type = mTask.getElemNameById(argId);
+                String type = mTask.getTagTypeByTid(argId);
                 argIDs.add(argId);
                 argTypes.add(type);
             }
@@ -741,7 +742,7 @@ public class MaeMainUI extends JPanel {
                 //redo color for this text--assumes that lines
                 //have already been removed from the DB
                 if (elem instanceof ElemExtent) {
-                    assignTextColor(ModelHelpers.parseSpansString(
+                    assignTextColor(SpanHandler.convertStringToPairs(
                             (String) tableModel.getValueAt(i, SPANS_COL)));
                 }
                 tableModel.removeRow(i);
@@ -783,7 +784,7 @@ public class MaeMainUI extends JPanel {
     public void findHighlightRows() {
         clearTableSelections();
         //first, get ids and types of elements in selected extents
-        HashedList<String, String> idHash = mTask.getTagsIn(mSpans);
+        HashedList<String, String> idHash = mTask.getTagsByTypeIn(mSpans);
         if (idHash.size() > 0) {
             ArrayList<String> elemNames = idHash.keyList();
             for (String elemName : elemNames) {
@@ -792,7 +793,7 @@ public class MaeMainUI extends JPanel {
                     highlightTableRows(elemName, id);
                     //returns HashCollection of link ids connected to this
                     HashedList<String, String> links
-                            = mTask.getLinksByExtentID(elemName, id);
+                            = mTask.getLinksHasArgumentOf(elemName, id);
                     highlightTableRowsHash(links);
                 }
             }
@@ -900,6 +901,7 @@ public class MaeMainUI extends JPanel {
     /**
      * krim: This method is for coloring/underlining discontinuous spans in the text
      * window.
+     * TODO 151216 - make spans int[]
      *
      * @param spans a list of spans
      */
@@ -1023,7 +1025,7 @@ public class MaeMainUI extends JPanel {
             items.add("");
         }
         for (String id : targetIds) {
-            String type = mTask.getElemNameById(id);
+            String type = mTask.getTagTypeByTid(id);
             // format relevant info, then add to the list
             items.add(String.format("%s%s%s%s%s",
                     type, MaeStrings.COMBO_DELIMITER,
@@ -1271,7 +1273,7 @@ public class MaeMainUI extends JPanel {
             jp.add(exit);
 
         } else {
-            HashedList<String, String> idHash = mTask.getTagsIn(mSpans);
+            HashedList<String, String> idHash = mTask.getTagsByTypeIn(mSpans);
             // if only item is retrieved, display directly
             if (idHash.isSizeOne()) {
                 String elem = idHash.keyList().get(0);
@@ -1345,7 +1347,7 @@ public class MaeMainUI extends JPanel {
         for (String linkType : mTask.getLinkNames()) {
 
             j++;
-            ArrayList<String> linkIds = mTask.getLinkIdsByName(linkType);
+            ArrayList<String> linkIds = mTask.getAllLinkTagsOfType(linkType);
 
             // check if a tag in each type of link element exists
             if (linkIds.size() == 0) {
@@ -1481,7 +1483,7 @@ public class MaeMainUI extends JPanel {
 
             // if selection was in all_tab, replace elemName
             if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
-                elemName = mTask.getElemNameById(id);
+                elemName = mTask.getTagTypeByTid(id);
             }
             if (mTask.getElemByName(elemName) instanceof ElemExtent) {
                 String target = String.format("%s (%s)",
@@ -2095,6 +2097,7 @@ public class MaeMainUI extends JPanel {
 
     /**
      * Highlight given spans with given highlighter and painter(color)
+     * TODO 151216 make spans to int[]
      *
      * @param hl      - Highlighter OBJ from text panel
      * @param spans   - desired text spans to be highlighted
@@ -2127,7 +2130,7 @@ public class MaeMainUI extends JPanel {
         int i = 0;
         for (int[] span : mSpans) {
             HashedList<String, String> elems
-                    = mTask.getTagsBetween(span[0], span[1]);
+                    = mTask.getTagsByTypeBetween(span[0], span[1]);
             boolean first = true;
             for (String elemName : elems.keyList()) {
                 for (String elemId : elems.get(elemName)) {
@@ -2167,7 +2170,7 @@ public class MaeMainUI extends JPanel {
                         mStatusBar.setText(MaeStrings.SB_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_TEXT
-                                + ModelHelpers.spansToString(this.mSpans));
+                                + SpanHandler.convertPairsToString(this.mSpans));
                     }
                     break;
                 case M_MULTI_SPAN:
@@ -2176,7 +2179,7 @@ public class MaeMainUI extends JPanel {
                                 MaeStrings.SB_MSPAN_NOTEXT);
                     } else {
                         mStatusBar.setText(MaeStrings.SB_MSPAN_TEXT +
-                                ModelHelpers.spansToString(this.mSpans));
+                                SpanHandler.convertPairsToString(this.mSpans));
                     }
                     break;
                 case M_ARG_SEL:
@@ -2188,7 +2191,7 @@ public class MaeMainUI extends JPanel {
                             argList.add(String.format("%s - %s"
                                     , id
                                     , getTextByID(
-                                            mTask.getElemNameById(id), id, false)));
+                                            mTask.getTagTypeByTid(id), id, false)));
                         }
                         mStatusBar.setText(String.format(
                                 MaeStrings.SB_MARGS_TAG

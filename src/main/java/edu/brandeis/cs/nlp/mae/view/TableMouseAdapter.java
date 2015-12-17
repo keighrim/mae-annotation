@@ -27,9 +27,9 @@ package edu.brandeis.cs.nlp.mae.view;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 import edu.brandeis.cs.nlp.mae.model.ElemLink;
-import edu.brandeis.cs.nlp.mae.model.ModelHelpers;
 import edu.brandeis.cs.nlp.mae.ui.Colors;
 import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
@@ -70,13 +70,13 @@ public class TableMouseAdapter extends MouseAdapter {
             int selectedRow = table.getSelectedRow();
             TableModel tableModel = table.getModel();
             String elemId = (String) tableModel.getValueAt(selectedRow, maeMainUI.ID_COL);
-            Elem el = maeMainUI.getTask().getElemByName(maeMainUI.getTask().getElemNameById(elemId));
+            Elem el = maeMainUI.getTask().getElemByName(maeMainUI.getTask().getTagTypeByTid(elemId));
             Highlighter hl = maeMainUI.getTextPane().getHighlighter();
             hl.removeAllHighlights();
 
             if (el instanceof ElemExtent) {
                 // use table column[1] to get spanString then parse it
-                ArrayList<int[]> spansSelect = ModelHelpers.parseSpansString(
+                ArrayList<int[]> spansSelect = SpanHandler.convertStringToPairs(
                         (String) tableModel.getValueAt(selectedRow, maeMainUI.SPANS_COL));
                 maeMainUI.highlightTextSpans(hl, spansSelect, Colors.getVividHighliter());
             } //end if ElemExtent
@@ -92,7 +92,7 @@ public class TableMouseAdapter extends MouseAdapter {
                     String argId = (String) tableModel.getValueAt(selectedRow, i);
                     // argId can be empty (not all arguments required)
                     if (!argId.equals("")) {
-                        ArrayList<int[]> argSpans = maeMainUI.getTask().getLocByID(argId);
+                        ArrayList<int[]> argSpans = maeMainUI.getTask().getSpansByTid(argId);
                         maeMainUI.highlightTextSpans(hl, argSpans, Colors.getHighlighters()[j]);
                     }
                     j++;

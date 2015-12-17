@@ -109,7 +109,7 @@ class ToggleHighlightListener implements ItemListener {
                 (DefaultStyledDocument) maeMainUI.getTextPane().getStyledDocument();
         //get list of locations associated with the selected link
         Hashtable<Integer, String> locs
-                = maeMainUI.getTask().getLocationsbyElemLink(elemName);
+                = maeMainUI.getTask().getArgumentSpansOf(elemName);
 
         // TODO this for loop is redundant in this one and turnOff one
         for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
@@ -135,7 +135,7 @@ class ToggleHighlightListener implements ItemListener {
         }
         active.remove(elemName);
         Hashtable<Integer, String> locs =
-                maeMainUI.getTask().getLocationsbyElemLink(elemName, active);
+                maeMainUI.getTask().getArgumentSpansOf(elemName, active);
 
         for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
             Integer i = e.nextElement();
@@ -149,8 +149,8 @@ class ToggleHighlightListener implements ItemListener {
     }
 
     private void updateElemColor() {
-        for (String id : maeMainUI.getTask().getExtIdsByName(this.elemName)) {
-            maeMainUI.assignTextColor(maeMainUI.getTask().getLocByID(id));
+        for (String id : maeMainUI.getTask().getAllExtentTagsOfType(this.elemName)) {
+            maeMainUI.assignTextColor(maeMainUI.getTask().getSpansByTid(id));
         }
     }
 
