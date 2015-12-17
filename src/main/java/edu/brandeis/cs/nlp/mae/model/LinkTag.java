@@ -41,10 +41,10 @@ import java.util.Map;
 @DatabaseTable(tableName = DBSchema.TAB_LTAG, daoClass = LinkTagDao.class)
 public class LinkTag extends Tag implements IModel {
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_LTAG_FCOL_ATT)
+    @ForeignCollectionField(eager = true)
     protected ForeignCollection<Attribute> attributes;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_LTAG_FCOL_ARG)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;
 
     public LinkTag() {

@@ -38,10 +38,6 @@ public class DBSchema {
     public final static String TAB_TT_COL_NAME = "name";
     public final static String TAB_TT_COL_COLOR = "color";
     public final static String TAB_TT_COL_PREFIX = "prefix";
-    public final static String TAB_TT_FCOL_AT = "att_type_fid";
-    public final static String TAB_TT_FCOL_ART = "arg_type_fid";
-    public final static String TAB_TT_FCOL_ETAG = "extent_tag_fid";
-    public final static String TAB_TT_FCOL_LTAG = "link_tag_fid";
 
     public final static String TAB_TAG_COL_TID = "tid";
     public final static String TAB_TAG_COL_FN = "filename";
@@ -49,12 +45,8 @@ public class DBSchema {
 
     public final static String TAB_ETAG = "extent_tag";
     public final static String TAB_ETAG_COL_TEXT = "text";
-    public final static String TAB_ETAG_FCOL_ATT = "att_fid";
-    public final static String TAB_ETAG_FCOL_SPAN = "char_index_fid";
 
     public final static String TAB_LTAG = "link_tag";
-    public final static String TAB_LTAG_FCOL_ATT = "att_fid";
-    public final static String TAB_LTAG_FCOL_ARG = "arg_fid";
 
     public final static String TAB_AT = "att_type";
     public final static String TAB_AT_COL_ID = "id";
@@ -82,7 +74,6 @@ public class DBSchema {
     public final static String TAB_ART = "arg_type";
     public final static String TAB_ART_COL_ID = "id";
     public final static String TAB_ART_FCOL_TT = "tag_type_fid";
-    public final static String TAB_ART_FCOL_ARG = "arg_fid";
     public final static String TAB_ART_COL_NAME = "name";
     public final static String TAB_ART_COL_REQ = "required";
 }

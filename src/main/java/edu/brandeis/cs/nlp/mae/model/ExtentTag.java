@@ -43,10 +43,10 @@ public class ExtentTag extends Tag implements IModel {
     @DatabaseField(columnName = DBSchema.TAB_ETAG_COL_TEXT)
     private String text;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_ETAG_FCOL_ATT)
+    @ForeignCollectionField(eager = true)
     protected ForeignCollection<Attribute> attributes;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_ETAG_FCOL_SPAN)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<CharIndex> spans;
 
     public ExtentTag() {

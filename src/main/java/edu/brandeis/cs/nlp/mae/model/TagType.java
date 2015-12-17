@@ -48,16 +48,16 @@ public class TagType implements IModel {
     @DatabaseField(unique = true, canBeNull = false, columnName = DBSchema.TAB_TT_COL_PREFIX)
     private String prefix;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_AT)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<AttributeType> attributeTypes;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_ART)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<ArgumentType> argumentTypes;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_ETAG)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<ExtentTag> extentTags;
 
-    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_LTAG)
+    @ForeignCollectionField(eager = true)
     private ForeignCollection<LinkTag> linkTags;
 
     public TagType() {

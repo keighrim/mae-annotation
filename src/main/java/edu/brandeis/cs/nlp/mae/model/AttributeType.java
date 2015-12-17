@@ -24,7 +24,9 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import org.apache.commons.lang3.StringUtils;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
@@ -59,6 +61,10 @@ public class AttributeType implements IModel {
 
     @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_REQ)
     private boolean isRequired;
+
+    @ForeignCollectionField(eager = true)
+    private ForeignCollection<Attribute> attributes;
+
 
     public AttributeType() {
 
@@ -135,5 +141,17 @@ public class AttributeType implements IModel {
 
     public void setRequired(boolean required) {
         isRequired = required;
+    }
+
+    public ForeignCollection<Attribute> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(ForeignCollection<Attribute> attributes) {
+        this.attributes = attributes;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
