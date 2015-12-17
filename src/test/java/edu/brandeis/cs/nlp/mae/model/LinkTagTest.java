@@ -123,7 +123,7 @@ public class LinkTagTest extends ExtentTagTest {
                 1, lTagDao.countOf()
         );
         LinkTag retrievedTag = lTagDao.queryBuilder().where().
-                eq(ModelStrings.TAB_TAG_COL_TID, "A01").queryForFirst();
+                eq(DBSchema.TAB_TAG_COL_TID, "A01").queryForFirst();
         assertEquals(
                 "Expected retrieved link tag has 2 arguments, found " + retrievedTag.getArguments().size(),
                 2, retrievedTag.getArguments().size());

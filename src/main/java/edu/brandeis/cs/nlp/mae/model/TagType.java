@@ -36,29 +36,28 @@ import java.util.List;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_TT)
+@DatabaseTable(tableName = DBSchema.TAB_TT)
 public class TagType implements IModel {
 
-    @DatabaseField(id = true, columnName = ModelStrings.TAB_TT_COL_NAME)
+    @DatabaseField(id = true, columnName = DBSchema.TAB_TT_COL_NAME)
     private String name;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_TT_COL_COLOR)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_TT_COL_COLOR)
     private int color;
 
-    @DatabaseField(unique = true, canBeNull = false,
-            columnName = ModelStrings.TAB_TT_COL_PREFIX)
+    @DatabaseField(unique = true, canBeNull = false, columnName = DBSchema.TAB_TT_COL_PREFIX)
     private String prefix;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_AT)
     private ForeignCollection<AttributeType> attributeTypes;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_ART)
     private ForeignCollection<ArgumentType> argumentTypes;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_ETAG)
     private ForeignCollection<ExtentTag> extentTags;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_TT_FCOL_LTAG)
     private ForeignCollection<LinkTag> linkTags;
 
     public TagType() {

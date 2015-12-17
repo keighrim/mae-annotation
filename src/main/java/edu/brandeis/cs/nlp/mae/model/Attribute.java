@@ -33,28 +33,25 @@ import java.util.List;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_ATT)
+@DatabaseTable(tableName = DBSchema.TAB_ATT)
 public class Attribute implements IModel {
 
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ATT_COL_ID)
+    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_ATT_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ATT_FCOL_AT)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_AT)
     private AttributeType attributeType;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_ATT_COL_TID)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ATT_COL_TID)
     private String tid;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ATT_FCOL_ETAG)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_ETAG)
     private ExtentTag extentTag;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ATT_FCOL_LTAG)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_LTAG)
     private LinkTag linkTag;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_ATT_COL_VALUE)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ATT_COL_VALUE)
     private String value;
 
     public Attribute() {

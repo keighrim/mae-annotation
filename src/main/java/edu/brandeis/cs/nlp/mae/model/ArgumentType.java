@@ -33,23 +33,22 @@ import com.j256.ormlite.table.DatabaseTable;
  * Created by krim on 12/9/2015.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_ART)
+@DatabaseTable(tableName = DBSchema.TAB_ART)
 public class ArgumentType implements IModel {
 
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ART_COL_ID)
+    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_ART_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false,
-            columnName = ModelStrings.TAB_ART_FCOL_TT)
+    @DatabaseField(foreign = true, canBeNull = false, columnName = DBSchema.TAB_ART_FCOL_TT)
     private TagType tagType;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_ART_FCOL_ARG)
     private ForeignCollection<Argument> arguments;
 
-    @DatabaseField(canBeNull =false, columnName = ModelStrings.TAB_ART_COL_NAME)
+    @DatabaseField(canBeNull =false, columnName = DBSchema.TAB_ART_COL_NAME)
     private String name;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_ART_COL_REQ)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ART_COL_REQ)
     private boolean isRequired;
 
     public ArgumentType() {

@@ -37,19 +37,17 @@ import java.util.Map;
 
 public abstract class Tag implements IModel {
 
-    @DatabaseField(id = true, columnName = ModelStrings.TAB_TAG_COL_TID)
+    @DatabaseField(id = true, columnName = DBSchema.TAB_TAG_COL_TID)
     protected String tid;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_TAG_FCOL_TT)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_TAG_FCOL_TT)
     protected TagType tagtype;
 
-    @DatabaseField(columnName = ModelStrings.TAB_TAG_COL_FN)
+    @DatabaseField(columnName = DBSchema.TAB_TAG_COL_FN)
     protected String filename;
 
     // TODO 151212 make an option to force completeness checking or ignore
     protected boolean isComplete;
-
 
     public Tag() {
 

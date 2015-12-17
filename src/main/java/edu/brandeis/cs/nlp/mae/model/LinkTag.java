@@ -38,13 +38,13 @@ import java.util.Map;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_LTAG, daoClass = LinkTagDao.class)
+@DatabaseTable(tableName = DBSchema.TAB_LTAG, daoClass = LinkTagDao.class)
 public class LinkTag extends Tag implements IModel {
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_LTAG_FCOL_ATT)
     protected ForeignCollection<Attribute> attributes;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_LTAG_FCOL_ARG)
     private ForeignCollection<Argument> arguments;
 
     public LinkTag() {
@@ -57,6 +57,14 @@ public class LinkTag extends Tag implements IModel {
 
     public ForeignCollection<Argument> getArguments() {
         return arguments;
+    }
+
+    public ArrayList<ExtentTag> getArgumentTags() {
+        ArrayList<ExtentTag> tags = new ArrayList<>();
+        for (Argument arg : getArguments()) {
+            tags.add(arg.getArgument());
+        }
+        return tags;
     }
 
     @Override

@@ -36,16 +36,16 @@ import java.util.*;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_ETAG, daoClass = ExtentTagDao.class)
+@DatabaseTable(tableName = DBSchema.TAB_ETAG, daoClass = ExtentTagDao.class)
 public class ExtentTag extends Tag implements IModel {
 
-    @DatabaseField(columnName = ModelStrings.TAB_ETAG_COL_TEXT)
+    @DatabaseField(columnName = DBSchema.TAB_ETAG_COL_TEXT)
     private String text;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_ETAG_FCOL_ATT)
     protected ForeignCollection<Attribute> attributes;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = true, columnName = DBSchema.TAB_ETAG_FCOL_SPAN)
     private ForeignCollection<CharIndex> spans;
 
     public ExtentTag() {

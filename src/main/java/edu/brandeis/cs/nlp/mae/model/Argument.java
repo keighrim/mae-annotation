@@ -31,22 +31,19 @@ import com.j256.ormlite.table.DatabaseTable;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_ARG)
+@DatabaseTable(tableName = DBSchema.TAB_ARG)
 public class Argument implements IModel {
 
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_ARG_COL_ID)
+    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_ARG_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ARG_FCOL_LTAG)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_LTAG)
     private LinkTag linker;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ARG_FCOL_ETAG)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ETAG)
     private ExtentTag argument;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_ARG_FCOL_ART)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ART)
     private ArgumentType argumentType;
 
     private boolean isComplete;

@@ -31,18 +31,16 @@ import com.j256.ormlite.table.DatabaseTable;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_CI)
+@DatabaseTable(tableName = DBSchema.TAB_CI)
 public class CharIndex implements IModel {
 
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_CI_COL_ID)
+    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_CI_COL_ID)
     private int id;
 
-    @DatabaseField(index = true, canBeNull = false,
-            columnName = ModelStrings.TAB_CI_COL_LOCATION)
+    @DatabaseField(index = true, canBeNull = false, columnName = DBSchema.TAB_CI_COL_LOCATION)
     private int location;
 
-    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true,
-            columnName = ModelStrings.TAB_CI_FCOL_ETAG)
+    @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_CI_FCOL_ETAG)
     private ExtentTag tag;
 
     public CharIndex() {

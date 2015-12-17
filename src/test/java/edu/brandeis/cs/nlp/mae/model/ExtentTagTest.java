@@ -147,7 +147,7 @@ public class ExtentTagTest {
         eTagDao.create(nTag);
 
         List<ExtentTag> retrievedTags
-                = eTagDao.queryForEq(ModelStrings.TAB_TAG_COL_TID, "N01");
+                = eTagDao.queryForEq(DBSchema.TAB_TAG_COL_TID, "N01");
         assertEquals(
                 "Expected 1 tag in DB, found " + retrievedTags.size(),
                 1, retrievedTags.size());
@@ -170,13 +170,13 @@ public class ExtentTagTest {
 
         ExtentTag retrievedNTag
                 = eTagDao.queryBuilder().where().
-                eq(ModelStrings.TAB_TAG_FCOL_TT, noun.getName()).queryForFirst();
+                eq(DBSchema.TAB_TAG_FCOL_TT, noun.getName()).queryForFirst();
         ExtentTag retrievedVTag
                 = eTagDao.queryBuilder().where().
-                eq(ModelStrings.TAB_TAG_FCOL_TT, verb.getName()).query().get(0);
+                eq(DBSchema.TAB_TAG_FCOL_TT, verb.getName()).query().get(0);
         assertEquals(
                 "Expected 3 chars allocated to vTag set by List, found: " + retrievedVTag.getSpans().size(),
-                3, retrievedVTag.getSpansAsList().size()
+                3, retrievedVTag.getSpansAsArray().length;
         );
         assertEquals(
                 "Expected same text of nTag after retrieved, found " + retrievedNTag.getText(),
@@ -195,7 +195,7 @@ public class ExtentTagTest {
         attDao.create(att);
 
         List<Attribute> retrievedAtts
-                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
+                = attDao.queryForEq(DBSchema.TAB_ATT_FCOL_ETAG, "N01");
         assertEquals(
                 "Expected 1 att is assgined, found: " + retrievedAtts.size(),
                 1, retrievedAtts.size());
@@ -212,7 +212,7 @@ public class ExtentTagTest {
         eTagDao.update(nTag);
 
         List<Attribute> retrievedAttsAfterUpdate
-                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
+                = attDao.queryForEq(DBSchema.TAB_ATT_FCOL_ETAG, "N01");
         Attribute retrievedAttAfterUpdate = retrievedAttsAfterUpdate.get(0);
         assertEquals(
                 "Expected N01 to updated to non proper noun, found: " + retrievedAttAfterUpdate.getValue(),
@@ -238,7 +238,7 @@ public class ExtentTagTest {
         createTag("V01", verb, "own", new int[]{2,3,4});
 
         List<CharIndex> retrievedIndices
-                = charIndexDao.queryForEq(ModelStrings.TAB_CI_COL_LOCATION, 3);
+                = charIndexDao.queryForEq(DBSchema.TAB_CI_COL_LOCATION, 3);
 
         assertEquals(
                 "Expected 2 tags at offset 3, found: " + retrievedIndices.size(),
@@ -246,7 +246,7 @@ public class ExtentTagTest {
         );
 
         QueryBuilder<CharIndex, Integer> ciQb = charIndexDao.queryBuilder();
-        ciQb.where().eq(ModelStrings.TAB_CI_COL_LOCATION, 3);
+        ciQb.where().eq(DBSchema.TAB_CI_COL_LOCATION, 3);
         QueryBuilder<ExtentTag, String> tagQb = eTagDao.queryBuilder();
         List<ExtentTag> retrievedTags = tagQb.join(ciQb).query();
 
@@ -257,7 +257,7 @@ public class ExtentTagTest {
 
         ciQb.reset();
         tagQb.reset();
-        ciQb.where().eq(ModelStrings.TAB_CI_COL_LOCATION, 1);
+        ciQb.where().eq(DBSchema.TAB_CI_COL_LOCATION, 1);
         retrievedTags = tagQb.join(ciQb).query();
 
         assertEquals(
@@ -295,7 +295,7 @@ public class ExtentTagTest {
         );
 
         List<Attribute> retrievedAtts
-                = attDao.queryForEq(ModelStrings.TAB_ATT_FCOL_ETAG, "N01");
+                = attDao.queryForEq(DBSchema.TAB_ATT_FCOL_ETAG, "N01");
         assertEquals(
                 "Expected att is gone; not retrievable by N01, found: " + retrievedAtts.size() + " attribute",
                 0, retrievedAtts.size());

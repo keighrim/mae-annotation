@@ -36,29 +36,28 @@ import java.util.List;
  * Created by krim on 11/19/15.
  */
 
-@DatabaseTable(tableName = ModelStrings.TAB_AT)
+@DatabaseTable(tableName = DBSchema.TAB_AT)
 public class AttributeType implements IModel {
 
-    @DatabaseField(generatedId = true, columnName = ModelStrings.TAB_AT_COL_ID)
+    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_AT_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, canBeNull = false,
-            columnName = ModelStrings.TAB_AT_FCOL_TT)
+    @DatabaseField(foreign = true, canBeNull = false, columnName = DBSchema.TAB_AT_FCOL_TT)
     private TagType tagType;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_NAME)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_NAME)
     private String name;
 
-    @DatabaseField(columnName = ModelStrings.TAB_AT_COL_VALUESET)
+    @DatabaseField(columnName = DBSchema.TAB_AT_COL_VALUESET)
     private String valueset;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_DEFVALUE)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_DEFVALUE)
     private String defaultValue;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_IDREF)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_IDREF)
     private boolean isIdRef;
 
-    @DatabaseField(canBeNull = false, columnName = ModelStrings.TAB_AT_COL_REQ)
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_REQ)
     private boolean isRequired;
 
     public AttributeType() {
