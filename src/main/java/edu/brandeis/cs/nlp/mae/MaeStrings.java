@@ -57,6 +57,10 @@ public class MaeStrings {
     public final static String COMBO_DELIMITER = " - ";
     public final static String SPANDELIMITER = "~";
     public final static String SPANSEPARATOR = ",";
+    public final static int NC_START_END = -1;
+    public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
+            MaeStrings.NC_START_END, MaeStrings.SPANDELIMITER, MaeStrings.NC_START_END);
+
     public final static String ATT_VALUESET_SEPARATOR = ":|:";
     // TODO 151209 are these two below safe?
     public final static String SPANTEXTTRUNC = " ... ";
