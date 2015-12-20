@@ -25,12 +25,12 @@
 package edu.brandeis.cs.nlp.mae.util;
 
 /**
- * This is an implementation of a Hashtable that 
- * stores more than one value per key.  This is done by 
+ * This is an implementation of a Hashtable that
+ * stores more than one value per key.  This is done by
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
- * 
+ *
  * @author Amber Stubbs, Keigh Rim
  *
  *
@@ -40,14 +40,8 @@ import java.util.*;
 
 public class HashedList<K,V> extends HashedCollection<K, V> {
 
-    private HashMap<K,ArrayList<V>> hash;
-
     public HashedList(){
-        hash = new HashMap<>();
-    }
-
-    public HashedList(HashMap<K,ArrayList<V>> hash){
-        this.hash = hash;
+        super.hash = new HashMap<>();
     }
 
     /**
@@ -60,14 +54,12 @@ public class HashedList<K,V> extends HashedCollection<K, V> {
      * @param value value being added to key's array
      */
     public void putItem (K key, V value) {
-        //just add to tail end of existing ArrayList
-        //but only if it's not already there
-        try {
+        if (super.hash.containsKey(key)) {
             getAsList(key).add(value);
-        } catch (NullPointerException e) {
+        } else {
             ArrayList<V> newlist = new ArrayList<>();
             newlist.add(value);
-            hash.put(key, newlist);
+            super.hash.put(key, newlist);
         }
     }
 

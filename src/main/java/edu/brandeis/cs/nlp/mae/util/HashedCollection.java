@@ -30,7 +30,7 @@ package edu.brandeis.cs.nlp.mae.util;
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
- * 
+ *
  * @author Amber Stubbs, Keigh Rim
  *
  *
@@ -40,14 +40,16 @@ import java.util.*;
 
 public abstract class HashedCollection<K,V>{
 
-    private HashMap<K,Collection<V>> hash;
+    protected HashMap<K, Collection<V>> hash;
 
     public HashedCollection(){
         hash = new HashMap<>();
     }
 
-    public HashedCollection(HashMap<K,Collection<V>> hash){
-        this.hash = hash;
+    public HashedCollection(HashMap<K, Collection<V>> hash){
+        for (K key : hash.keySet()) {
+            this.hash.put(key, hash.get(key));
+        }
     }
 
     /**
@@ -69,7 +71,12 @@ public abstract class HashedCollection<K,V>{
     public abstract void putItem(K key, V value);
 
     public void putCollection(K key, Collection<V> collection){
-        get(key).addAll(collection);
+        if (hash.containsKey(key)) {
+            get(key).addAll(collection);
+        } else {
+            hash.put(key, collection);
+        }
+
     }
 
     /**

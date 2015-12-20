@@ -30,25 +30,23 @@ package edu.brandeis.cs.nlp.mae.util;
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
- * 
+ *
  * @author Amber Stubbs, Keigh Rim
  *
  *
  */
+
+import sun.reflect.generics.tree.Tree;
 
 import java.util.HashMap;
 import java.util.TreeSet;
 
 public class HashedSet<K,V> extends HashedCollection<K, V> {
 
-    private HashMap<K,TreeSet<V>> hash;
+//    private HashMap<K,TreeSet<V>> hash;
 
     public HashedSet(){
-        hash = new HashMap<>();
-    }
-
-    public HashedSet(HashMap<K,TreeSet<V>> hash){
-        this.hash = hash;
+        super.hash = new HashMap<>();
     }
 
     /**
@@ -60,13 +58,12 @@ public class HashedSet<K,V> extends HashedCollection<K, V> {
      * @param value value being added to key's array
      */
     public void putItem (K key, V value) {
-        try {
+        if (super.containsKey(key)) {
             getAsList(key).add(value);
-        } catch (NullPointerException e) {
+        } else {
             TreeSet<V> newtree = new TreeSet<>();
             newtree.add(value);
-            hash.put(key, newtree);
+            super.hash.put(key, newtree);
         }
     }
-
 }
