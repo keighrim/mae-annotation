@@ -59,6 +59,10 @@ public class ExtentTagTest {
     Dao<AttributeType, Integer> attTypeDao;
     Dao<Attribute, Integer> attDao;
 
+    Dao<LinkTag, Integer> lTagDao;
+    Dao<ArgumentType, Integer> argTypeDao;
+    Dao<Argument, Integer> argDao;
+
     TagType noun;
     TagType verb;
 
@@ -76,6 +80,10 @@ public class ExtentTagTest {
         attDao = DaoManager.createDao(source, Attribute.class);
         charIndexDao = DaoManager.createDao(source, CharIndex.class);
 
+        lTagDao = DaoManager.createDao(source, LinkTag.class);
+        argTypeDao = DaoManager.createDao(source, ArgumentType.class);
+        argDao = DaoManager.createDao(source, Argument.class);
+
         dropAllTables(source);
 
         TableUtils.createTable(source, CharIndex.class);
@@ -83,6 +91,10 @@ public class ExtentTagTest {
         TableUtils.createTable(source, TagType.class);
         TableUtils.createTable(source, AttributeType.class);
         TableUtils.createTable(source, Attribute.class);
+
+        TableUtils.createTable(source, LinkTag.class);
+        TableUtils.createTable(source, ArgumentType.class);
+        TableUtils.createTable(source, Argument.class);
 
         noun = new TagType("NOUN", "N");
         verb = new TagType("VERB", "V");
@@ -97,6 +109,10 @@ public class ExtentTagTest {
         TableUtils.dropTable(source, TagType.class, true);
         TableUtils.dropTable(source, AttributeType.class, true);
         TableUtils.dropTable(source, Attribute.class, true);
+
+        TableUtils.dropTable(source, LinkTag.class, true);
+        TableUtils.dropTable(source, ArgumentType.class, true);
+        TableUtils.dropTable(source, Argument.class, true);
     }
 
     @After
@@ -109,7 +125,7 @@ public class ExtentTagTest {
     }
 
     protected ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
-        ExtentTag tag = new ExtentTag(tid, tagType);
+        ExtentTag tag = new ExtentTag(tid, tagType, "filename");
         for (CharIndex ci: tag.setSpans(spans)) { charIndexDao.create(ci); }
         tag.setText(text);
         eTagDao.create(tag);
@@ -118,7 +134,7 @@ public class ExtentTagTest {
 
     @Test
     public void canSaveTag() throws Exception {
-        ExtentTag tag = new ExtentTag("N01", noun);
+        ExtentTag tag = new ExtentTag("N01", noun, "filename");
         tag.setText("John");
         for (CharIndex ci: tag.setSpans(1, 2, 3, 4)) { charIndexDao.create(ci); }
         eTagDao.create(tag);
@@ -141,7 +157,7 @@ public class ExtentTagTest {
         int[] span = new int[] {0, 4};
         ArrayList<int[]> spans = new ArrayList<>();
         spans.add(span);
-        ExtentTag nTag = new ExtentTag("N01", noun);
+        ExtentTag nTag = new ExtentTag("N01", noun, "filename");
         for (CharIndex ci: nTag.setSpans(spans)) { charIndexDao.create(ci); }
         nTag.setText("Crown");
         eTagDao.create(nTag);

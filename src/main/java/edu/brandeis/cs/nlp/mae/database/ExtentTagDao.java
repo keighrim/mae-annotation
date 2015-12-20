@@ -68,6 +68,7 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
 
     @Override
     public int update(ExtentTag tag) throws SQLException {
+        refresh(tag);
         for (Attribute att : tag.getAttributes()) {
             attDao.createOrUpdate(att);
         }
@@ -79,6 +80,7 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
 
     @Override
     public int delete(ExtentTag tag) throws SQLException {
+        refresh(tag);
         for (Attribute att : tag.getAttributes()) {
             attDao.delete(att);
         }

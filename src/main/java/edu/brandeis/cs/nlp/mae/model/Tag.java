@@ -53,10 +53,10 @@ public abstract class Tag implements IModel {
 
     }
 
-    public Tag(String tid, TagType tagType) {
-        // TODO 151209 need a method to get a proper next id, maybe in DAO?
+    public Tag(String tid, TagType tagType,String filename) {
         this.setTid(tid);
         this.setTagtype(tagType);
+        this.setFilename(filename);
         this.setComplete(false);
 
     }

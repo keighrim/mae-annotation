@@ -51,9 +51,9 @@ public class LinkTagTest extends ExtentTagTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(LinkTagTest.class.getName());
 
-    Dao<LinkTag, Integer> lTagDao;
-    Dao<ArgumentType, Integer> argTypeDao;
-    Dao<Argument, Integer> argDao;
+//    Dao<LinkTag, Integer> lTagDao;
+//    Dao<ArgumentType, Integer> argTypeDao;
+//    Dao<Argument, Integer> argDao;
 
     TagType semanticRole;
     ArgumentType pred;
@@ -71,13 +71,13 @@ public class LinkTagTest extends ExtentTagTest {
     protected void setupDatabase(ConnectionSource source) throws SQLException {
         super.setupDatabase(source);
 
-        lTagDao = DaoManager.createDao(source, LinkTag.class);
-        argTypeDao = DaoManager.createDao(source, ArgumentType.class);
-        argDao = DaoManager.createDao(source, Argument.class);
+//        lTagDao = DaoManager.createDao(source, LinkTag.class);
+//        argTypeDao = DaoManager.createDao(source, ArgumentType.class);
+//        argDao = DaoManager.createDao(source, Argument.class);
 
-        TableUtils.createTable(source, LinkTag.class);
-        TableUtils.createTable(source, ArgumentType.class);
-        TableUtils.createTable(source, Argument.class);
+//        TableUtils.createTable(source, LinkTag.class);
+//        TableUtils.createTable(source, ArgumentType.class);
+//        TableUtils.createTable(source, Argument.class);
 
         semanticRole = new TagType("AGENT", "A");
         tagTypeDao.create(semanticRole);
@@ -92,9 +92,9 @@ public class LinkTagTest extends ExtentTagTest {
     @Override
     protected void dropAllTables(ConnectionSource source) throws SQLException {
         super.dropAllTables(source);
-        TableUtils.dropTable(source, LinkTag.class, true);
-        TableUtils.dropTable(source, ArgumentType.class, true);
-        TableUtils.dropTable(source, Argument.class, true);
+//        TableUtils.dropTable(source, LinkTag.class, true);
+//        TableUtils.dropTable(source, ArgumentType.class, true);
+//        TableUtils.dropTable(source, Argument.class, true);
     }
 
     @After
@@ -111,7 +111,7 @@ public class LinkTagTest extends ExtentTagTest {
         ExtentTag nTag = createTag("N01", noun, "Crown", new int[]{0, 1, 2, 3, 4});
         ExtentTag vTag = createTag("V01", verb, "own", new int[]{2, 3, 4});
 
-        LinkTag link = new LinkTag("A01", semanticRole);
+        LinkTag link = new LinkTag("A01", semanticRole, "filename");
         Argument agentArg = new Argument(link, agent, nTag);
         Argument predArg = new Argument(link, pred, vTag);
         argDao.create(agentArg);

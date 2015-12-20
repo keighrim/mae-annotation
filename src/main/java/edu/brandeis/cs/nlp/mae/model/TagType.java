@@ -29,6 +29,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +48,9 @@ public class TagType implements IModel {
 
     @DatabaseField(unique = true, canBeNull = false, columnName = DBSchema.TAB_TT_COL_PREFIX)
     private String prefix;
+
+    @DatabaseField
+    private boolean isNonConsuming;
 
     @ForeignCollectionField(eager = true)
     private ForeignCollection<AttributeType> attributeTypes;
@@ -86,7 +90,7 @@ public class TagType implements IModel {
     }
 
     public boolean isExtent() {
-        return this.getArgumentTypes() == null || this.getArgumentTypes().size() == 0;
+        return isNonConsuming() || getArgumentTypes() == null || getArgumentTypes().size() == 0;
     }
 
     public boolean isLink() {
@@ -109,6 +113,18 @@ public class TagType implements IModel {
         this.prefix = prefix;
     }
 
+    public boolean isConsuming() {
+        return !isNonConsuming;
+    }
+
+    public boolean isNonConsuming() {
+        return isNonConsuming;
+    }
+
+    public void setNonConsuming(boolean nonConsuming) {
+        isNonConsuming = nonConsuming;
+    }
+
     public ForeignCollection<AttributeType> getAttributeTypes() {
         return attributeTypes;
     }
@@ -119,6 +135,16 @@ public class TagType implements IModel {
 
     public ForeignCollection<ExtentTag> getExtentTags() {
         return this.extentTags;
+    }
+
+    public List<ExtentTag> getExtentTagsAsList(boolean consumingOnly) {
+        ArrayList<ExtentTag> tags = new ArrayList<>();
+        for (ExtentTag tag : getExtentTags()) {
+            if (tag.isConsuming() || !consumingOnly) {
+                tags.add(tag);
+            }
+        }
+        return tags;
     }
 
     public ForeignCollection<LinkTag> getLinkTags() {

@@ -68,6 +68,7 @@ public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
 
     @Override
     public int update(LinkTag tag) throws SQLException {
+        refresh(tag);
         for (Attribute att : tag.getAttributes()) {
             attDao.createOrUpdate(att);
         }
@@ -79,6 +80,7 @@ public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
 
     @Override
     public int delete(LinkTag tag) throws SQLException {
+        refresh(tag);
         for (Attribute att : tag.getAttributes()) {
             attDao.delete(att);
         }

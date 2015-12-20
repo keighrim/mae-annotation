@@ -53,8 +53,8 @@ public class ExtentTag extends Tag implements IModel {
 
     }
 
-    public ExtentTag(String tid, TagType tagType) {
-        super(tid, tagType);
+    public ExtentTag(String tid, TagType tagType, String filename) {
+        super(tid, tagType, filename);
         this.spans = null;
         this.text = null;
 
@@ -76,17 +76,7 @@ public class ExtentTag extends Tag implements IModel {
     }
 
     public List<CharIndex> setSpans(ArrayList<int[]> spans) {
-        // maybe legacy support?
-        List<CharIndex> indices = new LinkedList<>();
-        if (spans.size() == 1 && Arrays.equals(spans.get(0), new int[]{-1, -1})) {
-            return indices;
-        }
-        for (int[] span : spans) {
-            for (int i=span[0]; i<span[1]; i++) {
-                indices.add(new CharIndex(i, this));
-            }
-        }
-        return indices;
+        return this.setSpans(SpanHandler.convertPairsToArray(spans));
     }
 
     public List<CharIndex> setSpans(String spansString) {

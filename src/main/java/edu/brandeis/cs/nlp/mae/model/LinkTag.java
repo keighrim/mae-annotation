@@ -51,8 +51,8 @@ public class LinkTag extends Tag implements IModel {
 
     }
 
-    public LinkTag(String tid, TagType tagType) {
-        super(tid, tagType);
+    public LinkTag(String tid, TagType tagType, String filename) {
+        super(tid, tagType, filename);
     }
 
     public ForeignCollection<Argument> getArguments() {
