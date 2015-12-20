@@ -70,7 +70,7 @@ public class TableMouseAdapter extends MouseAdapter {
             int selectedRow = table.getSelectedRow();
             TableModel tableModel = table.getModel();
             String elemId = (String) tableModel.getValueAt(selectedRow, maeMainUI.ID_COL);
-            Elem el = maeMainUI.getTask().getElemByName(maeMainUI.getTask().getTagTypeByTid(elemId));
+            Elem el = maeMainUI.getTask().getTagTypeByName(maeMainUI.getTask().getTagTypeByTid(elemId));
             Highlighter hl = maeMainUI.getTextPane().getHighlighter();
             hl.removeAllHighlights();
 

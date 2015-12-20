@@ -104,7 +104,7 @@ public class FileMenuListener implements ActionListener {
                 maeMainUI.returnToNormalMode(false);
                 maeMainUI.getStatusBar().setText("DTD load succeed! Click anywhere to continue.");
 
-                if (maeMainUI.getTask().getElements().size() > 20) {
+                if (maeMainUI.getTask().getAllTagTypes().size() > 20) {
                     maeMainUI.getBottomTable().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
                 } else {
                     maeMainUI.getBottomTable().setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
@@ -283,7 +283,7 @@ public class FileMenuListener implements ActionListener {
             try {
                 FileOperations.saveXML(file,
                         maeMainUI.getTextPane(), maeMainUI.getElementTables(),
-                        maeMainUI.getTask().getElements(), maeMainUI.getTask().getDTDName());
+                        maeMainUI.getTask().getAllTagTypes(), maeMainUI.getTask().getDTDName());
                 maeMainUI.updateTitle();
                 maeMainUI.getStatusBar().setText(
                         String.format("Save Complete: %s", maeMainUI.getWorkingFileName()));

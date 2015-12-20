@@ -43,7 +43,7 @@ class ToggleHighlightListener implements ItemListener {
     public ToggleHighlightListener(MaeMainUI maeMainUI, String elemName) {
         this.maeMainUI = maeMainUI;
         this.elemName = elemName;
-        this.isLink = maeMainUI.getTask().getLinkNames().contains(elemName);
+        this.isLink = maeMainUI.getTask().getLinkTagTypes().contains(elemName);
     }
 
     public String getElemName() {
@@ -81,7 +81,7 @@ class ToggleHighlightListener implements ItemListener {
                 maeMainUI.getActiveExts().add(this.elemName);
 
                 // when all single tabs are turned on, turn all_extents tab on
-                if (maeMainUI.getActiveExts().size() == maeMainUI.getTask().getExtNames().size()) {
+                if (maeMainUI.getActiveExts().size() == maeMainUI.getTask().getExtentTagTypes().size()) {
                     // since allTab is created after all single tabs are created
                     // getTabComponentAt() will return null while loading up
                     // a new DTD file, and will cause a nullpointer exception
@@ -109,7 +109,7 @@ class ToggleHighlightListener implements ItemListener {
                 (DefaultStyledDocument) maeMainUI.getTextPane().getStyledDocument();
         //get list of locations associated with the selected link
         Hashtable<Integer, String> locs
-                = maeMainUI.getTask().getArgumentSpansOf(elemName);
+                = maeMainUI.getTask().getAllLocationsOfTagType(elemName);
 
         // TODO this for loop is redundant in this one and turnOff one
         for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
@@ -135,7 +135,7 @@ class ToggleHighlightListener implements ItemListener {
         }
         active.remove(elemName);
         Hashtable<Integer, String> locs =
-                maeMainUI.getTask().getArgumentSpansOf(elemName, active);
+                maeMainUI.getTask().getAllLocationsOfTagType(elemName, active);
 
         for (Enumeration<Integer> e = locs.keys(); e.hasMoreElements(); ) {
             Integer i = e.nextElement();

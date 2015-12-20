@@ -41,8 +41,8 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.rtf.RTFEditorKit;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Scanner;
 
 public class FileOperations {
@@ -55,8 +55,7 @@ public class FileOperations {
      *
      * @throws Exception
      */
-    public static StyledDocument setText(File f, StyledDocument doc)
-            throws Exception {
+    public static StyledDocument setText(File f, StyledDocument doc) throws Exception {
         // Load the default style and add it as the "regular" text
         Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
         Style regular = doc.addStyle("regular", def);
@@ -100,7 +99,7 @@ public class FileOperations {
     public static void saveXML(File f,
                                JTextPane pane,
                                Hashtable<String, JTable> elementTables,
-                               ArrayList<Elem> elementNames,
+                               List<Elem> elementNames,
                                String dtdName) {
         String paneText = pane.getText();
         try {

@@ -39,6 +39,8 @@ import java.util.List;
  * @author Amber Stubbs, Keigh Rim
  */
 
+// TODO 151219 no longer needed, all functionality is re-implemented in DBDriver
+@Deprecated
 public class AnnotationTask {
 
     private Hashtable<String, Elem> mElements;
@@ -71,7 +73,7 @@ public class AnnotationTask {
 
     private Hashtable<String, Elem> createHash() {
         Hashtable<String, Elem> es = new Hashtable<String, Elem>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem elem : elems) {
             es.put(elem.getName(), elem);
         }
@@ -91,7 +93,7 @@ public class AnnotationTask {
      */
     private Hashtable<String, AttID> createIDTracker() {
         Hashtable<String, AttID> ids = new Hashtable<String, AttID>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem elem : elems) {
             ArrayList<Attrib> attribs = elem.getAttributes();
             for (Attrib attrib : attribs) {
@@ -120,7 +122,7 @@ public class AnnotationTask {
      */
     private HashedList<String, String> createIDsExist() {
         HashedList<String, String> ids = new HashedList<String, String>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem elem : elems) {
             ids.putItem(elem.getName(), "");
         }
@@ -176,19 +178,19 @@ public class AnnotationTask {
         }
     }
 
-    public Hashtable<Integer, String> getArgumentSpansOf(String elem) {
+    public Hashtable<Integer, String> getAllLocationsOfTagType(String elem) {
         try {
-            return mDb.getArgumentSpansOf(elem);
+            return mDb.getAllLocationsOfTagType(elem);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public Hashtable<Integer, String> getArgumentSpansOf
+    public Hashtable<Integer, String> getAllLocationsOfTagType
             (String elem, ArrayList<String> active) {
         try {
-            return mDb.getArgumentSpansOf(elem, active);
+            return mDb.getAllLocationsOfTagType(elem, active);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -221,7 +223,7 @@ public class AnnotationTask {
         return (new HashedList<String, String>());
     }
 
-    public HashedList<String, String> getLocElemHash() {
+    public HashedList<String, String> getAllLocationsWithTags() {
         try {
             return (mDb.getLocElemHash());
         } catch (Exception e) {
@@ -266,7 +268,7 @@ public class AnnotationTask {
 
     }
 
-    public ArrayList<String> getElementsAtLoc(int loc) {
+    public ArrayList<String> getTagsAt(int loc) {
         try {
             return (mDb.getTagsAt(loc));
         } catch (Exception e) {
@@ -283,17 +285,17 @@ public class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    public HashedList<String, String> getTagsByTypeIn(ArrayList<int[]> spans) {
+    public HashedList<String, String> getTagsByTypesIn(ArrayList<int[]> spans) {
         HashedList<String, String> nameToId = new HashedList<String, String>();
         for (int[] span : spans) {
-            nameToId.merge(getTagsByTypeBetween(span[0], span[1]));
+            nameToId.merge(getTagsByTypesBetween(span[0], span[1]));
         }
         return nameToId;
     }
 
-    public HashedList<String, String> getTagsByTypeBetween(int begin, int end) {
+    public HashedList<String, String> getTagsByTypesBetween(int begin, int end) {
         try {
-            return (mDb.getTagsByTypeBetween(begin, end));
+            return (mDb.getTagsByTypesBetween(begin, end));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -335,7 +337,7 @@ public class AnnotationTask {
      */
     public HashedList<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
         HashedList<String, String> hc = new HashedList<String, String>();
-        hc.merge(getTagsByTypeIn(spans));
+        hc.merge(getTagsByTypesIn(spans));
         hc.merge(mDb.getAllNCTags());
         return hc;
         /*
@@ -343,7 +345,7 @@ public class AnnotationTask {
         while (iter.hasNext()) {
             int[] span = iter.next();
             if (iter.hasNext()) {
-                hc.merge(getTagsByTypeBetween(span[0], span[1]));
+                hc.merge(getTagsByTypesBetween(span[0], span[1]));
             } else {
                 hc.merge(getTagsInSpansAndNC(span[0], span[1]));
             }
@@ -394,12 +396,12 @@ public class AnnotationTask {
         hasDTD = true;
     }
 
-    public ArrayList<Elem> getElements() {
-        return mDtd.getElements();
+    public List<Elem> getAllTagTypes() {
+        return mDtd.getAllTagTypes();
     }
 
-    public ArrayList<Elem> getNCElements() {
-        return mDtd.getNCElements();
+    public List<Elem> getNonConsumingTagTypes() {
+        return mDtd.getNonConsumingTagTypes();
     }
 
 
@@ -409,9 +411,9 @@ public class AnnotationTask {
     }
 
 
-    public ArrayList<String> getExtNames() {
+    public ArrayList<String> getExtentTagTypes() {
         ArrayList<String> extents = new ArrayList<String>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem e : elems) {
             if (e instanceof ElemExtent) {
                 extents.add(e.getName());
@@ -420,9 +422,9 @@ public class AnnotationTask {
         return extents;
     }
 
-    public ArrayList<String> getLinkNames() {
+    public ArrayList<String> getLinkTagTypes() {
         ArrayList<String> links = new ArrayList<String>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem e : elems) {
             if (e instanceof ElemLink) {
                 links.add(e.getName());
@@ -431,13 +433,13 @@ public class AnnotationTask {
         return links;
     }
 
-    public ArrayList<String> getAllLinkTagsOfType(String linkName) {
+    public List<String> getAllLinkTagsOfType(String linkName) {
         return mDb.getAllLinkTagsOfType(linkName);
     }
 
-    public ArrayList<String> getAllLinkIds() {
+    public List<String> getAllLinkIds() {
         ArrayList<String> linkids = new ArrayList<String>();
-        for (String linkName : getLinkNames()) {
+        for (String linkName : getLinkTagTypes()) {
             for (String id : mDb.getAllLinkTagsOfType(linkName)) {
                 linkids.add(id);
             }
@@ -449,9 +451,9 @@ public class AnnotationTask {
         return mDb.getAllExtentTagsOfType(elemName);
     }
 
-    public ArrayList<String> getAllExtIds() {
+    public List<String> getAllExtIds() {
         ArrayList<String> extIds = new ArrayList<String>();
-        for (String extName : getExtNames()) {
+        for (String extName : getExtentTagTypes()) {
             for (String id : mDb.getAllExtentTagsOfType(extName)) {
                 extIds.add(id);
             }
@@ -463,7 +465,7 @@ public class AnnotationTask {
         //this method returns a list of element types 
         //where start and end are optional
         ArrayList<String> extents = new ArrayList<String>();
-        ArrayList<Elem> elems = mDtd.getElements();
+        ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem e : elems) {
             if (e instanceof ElemExtent) {
                 ElemExtent ee = (ElemExtent) e;
@@ -480,7 +482,7 @@ public class AnnotationTask {
         return mElements;
     }
 
-    public Elem getElemByName(String name) {
+    public Elem getTagTypeByName(String name) {
         return mElements.get(name);
     }
 
@@ -492,7 +494,7 @@ public class AnnotationTask {
         return mDtd.getName();
     }
 
-    public ArrayList<String> getArguments(String name) {
+    public List<String> getArgumentTypesOfLinkTagType(String name) {
         try {
             ElemLink linkElem = (ElemLink) mElements.get(name);
             return linkElem.getArguments();

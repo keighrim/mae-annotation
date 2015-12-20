@@ -524,7 +524,7 @@ public class MaeMainUI extends JPanel {
         //first, add the extent tags
 
         for (String elemName : elemNames) {
-            Elem elem = mTask.getElemByName(elemName);
+            Elem elem = mTask.getTagTypeByName(elemName);
             if (elem instanceof ElemExtent &&
                     mElementTables.containsKey(elemName)) {
                 // for each element type there is a list of tag information
@@ -542,7 +542,7 @@ public class MaeMainUI extends JPanel {
         // then, go back and add the link tags
         // since they rely on the extent tag info, they need to be added later
         for (String elemName : elemNames) {
-            Elem elem = mTask.getElemByName(elemName);
+            Elem elem = mTask.getTagTypeByName(elemName);
             if (elem instanceof ElemLink &&
                     mElementTables.containsKey(elemName)) {
                 /*for each element type there is a list of tag information*/
@@ -599,7 +599,7 @@ public class MaeMainUI extends JPanel {
      */
     private void addLinkToDbFromHash(
             Hashtable<String, String> a, String elemName, String newId) {
-        ArrayList<String> args = mTask.getArguments(elemName);
+        List<String> args = mTask.getArgumentTypesOfLinkTagType(elemName);
         ArrayList<String> argIDs = new ArrayList<String>();
         ArrayList<String> argTypes = new ArrayList<String>();
         for (String arg : args) {
@@ -628,7 +628,7 @@ public class MaeMainUI extends JPanel {
      */
     private boolean updateIDandDB(
             Hashtable<String, String> elemAttVal, String elemName) {
-        Elem elem = mTask.getElemByName(elemName);
+        Elem elem = mTask.getTagTypeByName(elemName);
         ArrayList<Attrib> attributes = elem.getAttributes();
         String newId = "";
         for (Attrib attribute : attributes) {
@@ -715,8 +715,8 @@ public class MaeMainUI extends JPanel {
     public void removeLinkTableRows(HashedList<String, String> links) {
         ArrayList<String> linkTags = links.keyList();
         for (String tag : linkTags) {
-            Elem elem = mTask.getElemByName(tag);
-            ArrayList<String> link_ids = links.getAsList(elem.getName());
+            Elem elem = mTask.getTagTypeByName(tag);
+            ArrayList<String> link_ids = (ArrayList<String>) links.get(elem.getName());
             if (elem instanceof ElemLink) {
                 for (String id : link_ids) {
                     removeTableRows(elem, id);
@@ -784,7 +784,7 @@ public class MaeMainUI extends JPanel {
     public void findHighlightRows() {
         clearTableSelections();
         //first, get ids and types of elements in selected extents
-        HashedList<String, String> idHash = mTask.getTagsByTypeIn(mSpans);
+        HashedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
         if (idHash.size() > 0) {
             ArrayList<String> elemNames = idHash.keyList();
             for (String elemName : elemNames) {
@@ -861,17 +861,18 @@ public class MaeMainUI extends JPanel {
         //Get hashCollection of where tags are in the document
         //    <String location,<String elements>>.
         // TODO 151214 replace mTask.getLocElemHash() with DBDriver.getLocationsWithTags()
-        HashedList<String, String> locElem = mTask.getLocElemHash();
+        // TODO 151216 renamed first, but let's see how it affects
+        HashedList<String, String> locElem = mTask.getAllLocationsWithTags();
         ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
-            ArrayList<String> elements = locElem.getAsList(loc);
+            ArrayList<String> elements = (ArrayList<String>) locElem.get(loc);
             if (elements.size() > 1) {
                 setColorAtLocation(mColorTable.get(elements.get(0)), Integer.parseInt(loc), 1, true);
             } else {
                 setColorAtLocation(mColorTable.get(elements.get(0)), Integer.parseInt(loc), 1, false);
             }
         }
-        ArrayList<String> elemNames = mTask.getExtNames();
+        List<String> elemNames = mTask.getExtentTagTypes();
         mActiveExts = new HashSet<String>(elemNames);
         for (String elemName : elemNames) {
             TabTitle tab = (TabTitle) mBottomTable.getTabComponentAt(
@@ -885,12 +886,12 @@ public class MaeMainUI extends JPanel {
      * whole text windows. It is called when toggling all_extents
      */
     protected void unassignAllColors() {
-        HashedList<String, String> locElem = mTask.getLocElemHash();
+        HashedList<String, String> locElem = mTask.getAllLocationsWithTags();
         ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
             setColorAtLocation(Color.black, Integer.parseInt(loc), 1, false);
         }
-        for (String elemName : mTask.getExtNames()) {
+        for (String elemName : mTask.getExtentTagTypes()) {
             TabTitle tab = (TabTitle) mBottomTable.getTabComponentAt(
                     mBottomTable.indexOfTab(elemName));
             tab.setHighlighted(false);
@@ -931,7 +932,7 @@ public class MaeMainUI extends JPanel {
             ArrayList<String> cand = new ArrayList<String>();
 
             // exclude unactivated elements
-            for (String elemName : mTask.getElementsAtLoc(i)) {
+            for (String elemName : mTask.getTagsAt(i)) {
                 if (mActiveExts.contains(elemName)) {
                     cand.add(elemName);
                 }
@@ -1163,7 +1164,7 @@ public class MaeMainUI extends JPanel {
      */
     public void resetTablePane() {
         mBottomTable.removeAll();
-        ArrayList<Elem> elements = mTask.getElements();
+        List<Elem> elements = mTask.getAllTagTypes();
         // create a tan for all extents and place it at first
         mBottomTable.addTab(MaeStrings.ALL_TABLE_TAB_BACK_NAME, makeAllTablePanel());
         //create a tab for each element in the annotation task
@@ -1245,7 +1246,7 @@ public class MaeMainUI extends JPanel {
                 JMenu makeLinkItem = new JMenu(makeLink);
                 makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
                 int i = 0;
-                for (String link : mTask.getLinkNames()) {
+                for (String link : mTask.getLinkTagTypes()) {
                     JMenuItem linkItem;
                     MakeTagListener makeTagListener = new MakeTagListener(this);
 
@@ -1273,7 +1274,7 @@ public class MaeMainUI extends JPanel {
             jp.add(exit);
 
         } else {
-            HashedList<String, String> idHash = mTask.getTagsByTypeIn(mSpans);
+            HashedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
             // if only item is retrieved, display directly
             if (idHash.isSizeOne()) {
                 String elem = idHash.keyList().get(0);
@@ -1344,10 +1345,10 @@ public class MaeMainUI extends JPanel {
 
         // waterfall menu top level - link names
         int j = -1;
-        for (String linkType : mTask.getLinkNames()) {
+        for (String linkType : mTask.getLinkTagTypes()) {
 
             j++;
-            ArrayList<String> linkIds = mTask.getAllLinkTagsOfType(linkType);
+            List<String> linkIds = mTask.getAllLinkTagsOfType(linkType);
 
             // check if a tag in each type of link element exists
             if (linkIds.size() == 0) {
@@ -1365,7 +1366,7 @@ public class MaeMainUI extends JPanel {
 
             // next level - actual relevant arguments
             int k = 0;
-            for (String argName : mTask.getArguments(linkType)) {
+            for (String argName : mTask.getArgumentTypesOfLinkTagType(linkType)) {
                 JMenu linkArgMenu;
                 if (k < 10) {
                     linkArgMenu = new JMenu(String.format("%d %s", k + 1, argName));
@@ -1485,7 +1486,7 @@ public class MaeMainUI extends JPanel {
             if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
                 elemName = mTask.getTagTypeByTid(id);
             }
-            if (mTask.getElemByName(elemName) instanceof ElemExtent) {
+            if (mTask.getTagTypeByName(elemName) instanceof ElemExtent) {
                 String target = String.format("%s (%s)",
                         id, getTextByID(elemName, id, false));
                 JMenu setArg = createSetAsArgMenu(String.format(
@@ -1530,7 +1531,7 @@ public class MaeMainUI extends JPanel {
 
             // then if they are extent tags, add item for creating a link with them
             if (elemName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME) ||
-                    mTask.getElemByName(elemName) instanceof ElemExtent) {
+                    mTask.getTagTypeByName(elemName) instanceof ElemExtent) {
                 // calling table context menu will reset text selection
                 resetSpans();
                 // retrieve ids of all selected tags
@@ -1545,7 +1546,7 @@ public class MaeMainUI extends JPanel {
                 JMenu makeLinkItem = new JMenu(makeLink);
                 makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
                 int i = 0;
-                for (String link : mTask.getLinkNames()) {
+                for (String link : mTask.getLinkTagTypes()) {
                     MakeTagListener makeTagListener = new MakeTagListener(this);
 
                     JMenuItem linkItem;
@@ -1626,7 +1627,7 @@ public class MaeMainUI extends JPanel {
     public TreeSet<Integer> getArgColIndices(String linkType) {
 
         JTable tab = mElementTables.get(linkType);
-        ArrayList<String> argNames = mTask.getArguments(linkType);
+        List<String> argNames = mTask.getArgumentTypesOfLinkTagType(linkType);
         TreeSet<Integer> argColumns = new TreeSet<Integer>();
         for (int i = 0; i < tab.getModel().getColumnCount(); i++) {
             for (String argName : argNames) {
@@ -1715,7 +1716,7 @@ public class MaeMainUI extends JPanel {
      * assigns colors to the elements in the DTD
      */
     public void assignColors() {
-        ArrayList<String> elements = mTask.getExtNames();
+        List<String> elements = mTask.getExtentTagTypes();
         for (int i = 0; i < elements.size(); i++) {
             int l = mColors.length;
             int k = i;
@@ -1855,7 +1856,7 @@ public class MaeMainUI extends JPanel {
         JMenu menu = new JMenu(menuTitle);
 
         if (mTask.hasDTD()) {
-            ArrayList<String> linkNames = mTask.getLinkNames();
+            ArrayList<String> linkNames = mTask.getLinkTagTypes();
 
             if (linkNames.size() == 0) {
                 addGuideItem(menu, "no link tags defined");
@@ -1906,7 +1907,7 @@ public class MaeMainUI extends JPanel {
         }
 
         int i = 0;
-        for (String elemName : mTask.getExtNames()) {
+        for (String elemName : mTask.getExtentTagTypes()) {
             JMenuItem menuItem;
             if (mainMenu) {
                 menuItem = new JMenuItem(
@@ -1940,7 +1941,7 @@ public class MaeMainUI extends JPanel {
         JMenu menu = new JMenu(menuTitle);
 
         if (mTask.hasDTD()) {
-            ArrayList<Elem> ncElems = mTask.getNCElements();
+            List<Elem> ncElems = mTask.getNonConsumingTagTypes();
 
             if (ncElems.size() == 0) {
                 addGuideItem(menu, "no NC tag defined");
@@ -2130,7 +2131,7 @@ public class MaeMainUI extends JPanel {
         int i = 0;
         for (int[] span : mSpans) {
             HashedList<String, String> elems
-                    = mTask.getTagsByTypeBetween(span[0], span[1]);
+                    = mTask.getTagsByTypesBetween(span[0], span[1]);
             boolean first = true;
             for (String elemName : elems.keyList()) {
                 for (String elemId : elems.get(elemName)) {
@@ -2186,7 +2187,7 @@ public class MaeMainUI extends JPanel {
                     if (isSpansEmpty()) {
                         mStatusBar.setText(MaeStrings.SB_MARGS_NOTAG);
                     } else {
-                        ArrayList<String> argList = new ArrayList<String>();
+                        ArrayList<String> argList = new ArrayList<>();
                         for (String id : mPossibleArgIds) {
                             argList.add(String.format("%s - %s"
                                     , id

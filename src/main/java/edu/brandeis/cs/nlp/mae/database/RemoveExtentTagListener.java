@@ -49,7 +49,7 @@ public class RemoveExtentTagListener implements ActionListener {
             // command looks like this: elemName + SEP + elemId
             String elemName = command.split(MaeStrings.SEP)[0];
             String elemId = command.split(MaeStrings.SEP)[1];
-            Elem elem = maeMainUI.getTask().getElemByName(elemName);
+            Elem elem = maeMainUI.getTask().getTagTypeByName(elemName);
 
             // removes extent tags and related link tags from DB
             maeMainUI.getTask().removeExtentByID(elemId);
@@ -63,7 +63,7 @@ public class RemoveExtentTagListener implements ActionListener {
                     = maeMainUI.getTask().getLinksHasArgumentOf(elemName, elemId);
             maeMainUI.removeLinkTableRows(links);
             for (String link : links.keyList()) {
-                for (String linkId : links.getAsList(link)) {
+                for (String linkId : links.get(link)) {
                     maeMainUI.getTask().removeLinkByID(linkId);
                 }
             }

@@ -55,6 +55,8 @@ import java.util.*;
  *
  */
 
+// TODO 151219 no longer needed, all functionality is re-implemented in DBDriver
+@Deprecated
 class AnnotDB {
     // krim: class renamed corresponding MAI
 
@@ -248,7 +250,7 @@ class AnnotDB {
      * of each anchor that tag type uses.
      * @throws Exception
      */
-    Hashtable<Integer,String> getArgumentSpansOf(String elem)
+    Hashtable<Integer,String> getAllLocationsOfTagType(String elem)
             throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
@@ -267,7 +269,7 @@ class AnnotDB {
                         argIds.add(id);
                     }
                 } catch (SQLException ignored) {
-                    // ignore querying beyond current #args 
+                    // ignore querying beyond current #args
                     // (querying continues to maxargs)
                 }
             }
@@ -288,18 +290,18 @@ class AnnotDB {
 
     /**
      * Used to determine what areas of the text should be bolded
-     * and italicized when a link tag is unselected from the 
+     * and italicized when a link tag is unselected from the
      * menu.
      *
      * @param elem name of the link tag being looked at
      * @param activeLinks an ArrayList of the
-     * @return a hashTable of locations that should be 
+     * @return a hashTable of locations that should be
      * bolded and italicized based on the selections in the
      * GUI menu
      * @throws Exception
      */
     @SuppressWarnings("Duplicates")
-    Hashtable<Integer,String> getArgumentSpansOf(
+    Hashtable<Integer,String> getAllLocationsOfTagType(
             String elem, ArrayList<String> activeLinks) throws Exception{
         Statement stat = mConn.createStatement();
         //first, get all the IDs for the extents associated with the ElemLink
@@ -320,7 +322,7 @@ class AnnotDB {
         }
         rs.close();
 
-        //then, go through and remove all the IDs that are associated with other 
+        //then, go through and remove all the IDs that are associated with other
         //actively bolded link tags
         for (String activated : activeLinks) {
             ArrayList<String> outIDs = new ArrayList<String>();
@@ -361,7 +363,7 @@ class AnnotDB {
      * @param id the ID tag being searched for
      * @return a string containing the start and end locations
      * of the tag being searched for.
-     * 
+     *
      * @throws Exception
      */
     ArrayList<int[]> getSpansByTid(String id) throws Exception{
@@ -403,7 +405,7 @@ class AnnotDB {
 
     /**
      * Return the type of an element searched by id
-     * 
+     *
      * @param id the ID of the string being searched for
      * @return the tag name of the ID being searched for
      * @throws Exception
@@ -431,7 +433,7 @@ class AnnotDB {
 
     /**
      * Removes an extent tag from the extents table
-     * 
+     *
      * @param id the ID of the tag being removed
      * @throws Exception
      */
@@ -459,12 +461,12 @@ class AnnotDB {
 
 
     /**
-     * Returns the links that an extent participates in as 
+     * Returns the links that an extent participates in as
      * a to or from anchor.
-     * 
+     *
      * @param extType type of tag being searched for
      * @param extID ID of tag being searched for
-     * @return HashCollection of tag names and IDs that are 
+     * @return HashCollection of tag names and IDs that are
      * associated with the extent being searched for
      * @throws Exception
      */
@@ -507,7 +509,7 @@ class AnnotDB {
      * tag name as keys and IDs as values.
      * @throws Exception
      */
-    HashedList<String,String> getTagsByTypeBetween(int begin, int end)
+    HashedList<String,String> getTagsByTypesBetween(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query;
@@ -535,7 +537,7 @@ class AnnotDB {
         rs.close();
         return tags;
     }
-    
+
     /**
      * Returns tags in the provided span as well as all non-consuming tags
      *
@@ -547,7 +549,7 @@ class AnnotDB {
      */
     HashedList<String,String> getTagsInSpansAndNC(int begin, int end)
             throws Exception{
-        HashedList<String,String> tags  = getTagsByTypeBetween(begin, end);
+        HashedList<String,String> tags  = getTagsByTypesBetween(begin, end);
         tags.merge(getAllNCTags());
         return tags;
     }
@@ -563,8 +565,8 @@ class AnnotDB {
     }
 
     /**
-     * get all NC tags in DB, return as a HashCollection 
-     * 
+     * get all NC tags in DB, return as a HashCollection
+     *
      * @return HC with tag types as keys, tag ids as values
      * @throws Exception
      */
@@ -604,7 +606,7 @@ class AnnotDB {
 
     /**
      * Get all ids of link tags in DB, given a name(type) of a link tag
-     * * 
+     * *
      * @param linkName a link element name to retrieve
      * @return list of retrieved ids
      */
@@ -625,7 +627,7 @@ class AnnotDB {
         }
         return new ArrayList<String>(ids);
     }
-    
+
     List<String> getAllExtentTagsOfType(String elemName) {
         HashSet<String> ids = new HashSet<String>();
         try {
@@ -646,7 +648,7 @@ class AnnotDB {
 
     /**
      * Checks to see if an ID is already in use in the DB.
-     * 
+     *
      * @param id ID being searched for
      * @return true or false
      * @throws Exception
@@ -676,7 +678,7 @@ class AnnotDB {
 
     /**
      * Adds a single extent to the batch command
-     * 
+     *
      * @param location character offset
      * @param element tag name
      * @param id ID
@@ -692,7 +694,7 @@ class AnnotDB {
 
     /**
      * Adds a set of extents to the DB at once
-     * 
+     *
      * @throws Exception
      */
     void batchExtents() throws Exception{

@@ -65,7 +65,7 @@ public class SpanHandler {
             }
             spans.add(span);
         }
-        spans.sort(new SpansPairComparator());
+        Collections.sort(spans, new SpansPairComparator());
         logger.debug("=== Conversion finished ===");
         return spans;
     }

@@ -54,7 +54,7 @@ public class RemoveSelectedTableRows implements ActionListener {
             for (String id : ids) {
                 // load corresponding table and its back-end model
                 String elemName = maeMainUI.getTask().getTagTypeByTid(id);
-                Elem elem = maeMainUI.getTask().getElemByName(elemName);
+                Elem elem = maeMainUI.getTask().getTagTypeByName(elemName);
                 JTable table = maeMainUI.getElementTables().get(elemName);
                 DefaultTableModel tableModel
                         = (DefaultTableModel) table.getModel();

@@ -81,7 +81,7 @@ public class MakeTagListener implements ActionListener {
         }
 
         // get a new ID
-        newElem = maeMainUI.getTask().getElemByName(newName);
+        newElem = maeMainUI.getTask().getTagTypeByName(newName);
         newId = maeMainUI.getTask().getNextID(newName);
 
         // first add a new tag to table
@@ -264,7 +264,7 @@ public class MakeTagListener implements ActionListener {
 
     private String[] createEmptyRowData(String elemName, String newId) {
         // get the target element and a list of its attrib
-        Elem e = maeMainUI.getTask().getElemByName(elemName);
+        Elem e = maeMainUI.getTask().getTagTypeByName(elemName);
         ArrayList<Attrib> attributes = e.getAttributes();
         String[] newData = new String[attributes.size() + 1];
 

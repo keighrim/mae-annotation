@@ -33,12 +33,15 @@ package edu.brandeis.cs.nlp.mae.database;
  *
  */
 
+
 import edu.brandeis.cs.nlp.mae.model.AttID;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 
 import java.util.ArrayList;
 
+// TODO 151219 no longer needed, all functionality is re-implemented in DBDriver
+@Deprecated
 public class DTD {
 
     private ArrayList<Elem> mElements;
@@ -94,7 +97,7 @@ public class DTD {
         return false;
     }
 
-    public ArrayList<Elem> getElements(){
+    public ArrayList<Elem> getAllTagTypes(){
         return mElements;
     }
 
@@ -117,7 +120,7 @@ public class DTD {
      *
      * @return
      */
-    public ArrayList<Elem> getNCElements(){
+    public ArrayList<Elem> getNonConsumingTagTypes(){
         ArrayList<Elem> NCElems = new ArrayList<Elem>();
         //returns a list of non-consuming extent tags
         for (Elem e : mElements) {
