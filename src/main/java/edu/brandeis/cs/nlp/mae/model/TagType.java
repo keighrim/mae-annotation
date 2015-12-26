@@ -184,4 +184,9 @@ public class TagType implements IModel {
         return argTypes;
     }
 
+    public String toString() {
+        return String.format("%s - att: %s, arg: %s", getName(), getAttributeTypesAsString(), getArgumentTypesAsString());
+    }
+
+
 }

@@ -31,6 +31,7 @@ import com.j256.ormlite.table.DatabaseTable;
 import org.apache.commons.lang3.StringUtils;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -69,7 +70,11 @@ public class AttributeType extends TagProperty implements IModel {
     }
 
     public List<String> getValuesetAsList() {
-        return Arrays.asList(this.getValueset().split(MaeStrings.ATT_VALUESET_SEPARATOR));
+        if (getValueset() == null) {
+            return new ArrayList<>();
+        } else {
+            return Arrays.asList(this.getValueset().split(MaeStrings.ATT_VALUESET_SEPARATOR));
+        }
     }
 
     public void setValuesetFromList(List<String> valueset) {
@@ -100,4 +105,8 @@ public class AttributeType extends TagProperty implements IModel {
         this.attributes = attributes;
     }
 
+    public String toString() {
+        return String.format("%s of %s - value: %s (%s), required: %s, idref: %s",
+                getName(), getTagType().getName(), getValuesetAsList().toString(), getDefaultValue(), isRequired(), isIdRef());
+    }
 }

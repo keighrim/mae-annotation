@@ -61,7 +61,7 @@ public class MaeStrings {
     public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
             MaeStrings.NC_START_END, MaeStrings.SPANDELIMITER, MaeStrings.NC_START_END);
 
-    public final static String ATT_VALUESET_SEPARATOR = ":|:";
+    public final static String ATT_VALUESET_SEPARATOR = ":::";
     // TODO 151209 are these two below safe?
     public final static String SPANTEXTTRUNC = " ... ";
     public final static String LONGTEXTTRUNC = " … ";

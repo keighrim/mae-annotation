@@ -33,6 +33,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.NewDTDLoader;
+import edu.brandeis.cs.nlp.mae.io.NewXMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.HashedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -62,6 +63,8 @@ public class DatabaseDriver {
     // this should be distinguishable over diff tasks and diff versions
     private String dtdName;
     private String workingFileName;
+
+    // TODO 151227 add another table: task with columns: dtd_root, dtd_filename, last_saved_xml_filename, ...
 
     private Dao<CharIndex, Integer> charIndexDao;
     private Dao<TagType, Integer> tagTypeDao;
@@ -136,15 +139,16 @@ public class DatabaseDriver {
     }
 
     public void setUpDtd(File file) throws MaeIODTDException, FileNotFoundException, SQLException {
-        NewDTDLoader dtdl = new NewDTDLoader(file, this);
+        NewDTDLoader dtdl = new NewDTDLoader(this);
+        dtdl.read(file);
 
-        // TODO 151219 write this to init DTDLoader inside with (this) param,
-        // add specifications from DTDLoader to DB
     }
 
-    public void readAnnotation(String filename) {
-        // TODO 151219 write this to init XMLLoader inside with (this) param,
-        // add all existing annotation to DB
+    public void readAnnotation(File file) {
+        // TODO 151227 implement XMLLoader class
+        NewXMLLoader xmll = new NewXMLLoader(this);
+        xmll.read(file);
+
     }
 
     private void resetQueryBuilders() {
@@ -317,7 +321,7 @@ public class DatabaseDriver {
     }
 
     List<? extends Tag> getAllTagsOfType(TagType type) throws SQLException {
-        // TODO 151215 need thorough test, split into two methods if necessary (each for link and etag)
+        // TODO 151215 split into two methods if necessary (each for link and etag)
         tagTypeDao.refresh(type);
         return new ArrayList<>(type.getTags());
     }
@@ -368,24 +372,7 @@ public class DatabaseDriver {
         return createExtentTag(tid, tagType, text, SpanHandler.convertStringToPairs(spansString));
     }
 
-    // no text
-    public ExtentTag createExtentTag(String tid, TagType tagType, int...spans) throws SQLException {
-        // TODO 151215 add getTextFromSpans(), or so in somewhere
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertArrayToPairs(spans));
-        return null;
-    }
-
-    public ExtentTag createExtentTag(String tid, TagType tagType, ArrayList<int[]> spans) throws SQLException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), spans);
-        return null;
-    }
-
-    public ExtentTag createExtentTag(String tid, TagType tagType, String spansString) throws SQLException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertStringToPairs(spansString));
-        return null;
-    }
-
-    //no tid, but text
+    //no tid: how to get tid?
     public ExtentTag createExtentTag(TagType tagType, String text, int...spans) throws SQLException {
 //        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertArrayToPairs(spans));
         return null;
@@ -397,22 +384,6 @@ public class DatabaseDriver {
     }
 
     public ExtentTag createExtentTag(TagType tagType, String text, String spansString) throws SQLException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertStringToPairs(spansString));
-        return null;
-    }
-
-    // no text, no tid
-    public ExtentTag createExtentTag(TagType tagType, int...spans) throws SQLException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertArrayToPairs(spans));
-        return null;
-    }
-
-    public ExtentTag createExtentTag(TagType tagType, ArrayList<int[]> spans) throws SQLException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), spans);
-        return null;
-    }
-
-    public ExtentTag createExtentTag(TagType tagType, String spansString) throws SQLException {
 //        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertStringToPairs(spansString));
         return null;
     }

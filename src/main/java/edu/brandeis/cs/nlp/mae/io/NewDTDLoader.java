@@ -28,17 +28,19 @@ import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.database.DatabaseDriver;
 import edu.brandeis.cs.nlp.mae.model.ArgumentType;
 import edu.brandeis.cs.nlp.mae.model.AttributeType;
-import edu.brandeis.cs.nlp.mae.model.TagProperty;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,45 +58,68 @@ public class NewDTDLoader {
 
     private DatabaseDriver driver;
     private ArrayList<TagType> loadedTagTypes;
-    private ArrayList<String> prefixes;
+    private HashMap<String, String> prefixes;
 
-    public NewDTDLoader(File f, DatabaseDriver driver) throws MaeIODTDException, FileNotFoundException, SQLException {
+    public NewDTDLoader(DatabaseDriver driver) throws MaeIODTDException, FileNotFoundException, SQLException {
         this.driver = driver;
-        this.prefixes = new ArrayList<>();
+        this.prefixes = new HashMap<>();
         this.loadedTagTypes = new ArrayList<>();
-        readFile(f);
     }
 
-    private void readFile(File f) throws MaeIODTDException, FileNotFoundException, SQLException {
-        logger.info("loading file: " + f.getName());
-        Scanner sc = new Scanner(f, "UTF-8");
-        String next = sc.nextLine();
-        int i = 1;
+   public void read(File file) throws FileNotFoundException, MaeIODTDException, SQLException {
+        logger.info("reading document definitions from: " + file.getName());
+        this.read(new FileInputStream(file));
+    }
+
+    public void read(String string) throws MaeIODTDException, FileNotFoundException, SQLException {
+        this.read(IOUtils.toInputStream(string));
+
+    }
+    public void read(InputStream stream) throws MaeIODTDException, FileNotFoundException, SQLException {
+        Scanner sc = new Scanner(stream, "UTF-8");
+        int lineNum = 1;
         while (sc.hasNextLine()) {
+            String next = sc.nextLine();
             // getting rid of comments
             if (next.contains("<!--")) {
-                while (!next.contains("-->")) {
-                    sc.nextLine();
-                    i++;
+                while (sc.hasNextLine() && !next.contains("-->")) {
+                    next = sc.nextLine();
+                    lineNum++;
                 }
                 next = sc.nextLine();
-                i++;
             }
 
             //then, concatenate lines about a tag into one string
             String element = "";
             if (next.contains("<")) {
                 element += next;
-                while (!next.contains(">")) {
+                while (sc.hasNextLine() && !next.contains(">")) {
                     next = sc.nextLine();
-                    i++;
+                    lineNum++;
                     element += next;
                 }
             }
+            lineNum++;
             // remove some problematic unicode characters before processing
             element = normalizeLine(element);
-            process(element, i);
+            process(element, lineNum);
         }
+        validateLinkTagTypes();
+    }
+
+    private void validateLinkTagTypes() throws SQLException {
+        for (TagType linktag: driver.getLinkTagTypes()) {
+            if (linktag.getArgumentTypes().size() == 0) {
+                addDefaultArguments(linktag);
+            }
+        }
+    }
+
+    private void addDefaultArguments(TagType linktag) throws SQLException {
+        // default arguments are NOT req, but note that args are always IDref
+        driver.createArgumentType(linktag, "from");
+        driver.createArgumentType(linktag, "to");
+
     }
 
     public String normalizeLine(String line) {
@@ -122,15 +147,14 @@ public class NewDTDLoader {
     }
 
     private void processTagType(String element, int lineNum) throws MaeIODTDException, SQLException {
-        Pattern tTypePattern = Pattern.compile( "<! *ELEMENT +(\\S+) +(EMPTY|\\( *#PCDATA\\s*\\)) *>" );
+        Pattern tTypePattern = Pattern.compile( "<! *ELEMENT +(\\S+) +(\\bEMPTY\\b|\\( *(#\\bPCDATA\\b)\\s*\\)) *>" );
         Matcher tTypeMatcher = tTypePattern.matcher(element);
-//        if (tTypeMatcher.matches()) {
-//        while (tTypeMatcher.find()) {
         if (tTypeMatcher.find()) {
             String name = tTypeMatcher.group(1);
+            boolean isLink = tTypeMatcher.group(3) == null || !tTypeMatcher.group(3).equals("#PCDATA");
             String prefix = generatePrefix(name);
             logger.debug(String.format("adding a tag type: %s (%s)", name, prefix));
-            loadedTagTypes.add(driver.createTagType(name, prefix));
+            loadedTagTypes.add(driver.createTagType(name, prefix, isLink));
         } else {
             this.error(String.format("DTD seems to be ill-formed: %s at %d", element, lineNum));
         }
@@ -139,7 +163,7 @@ public class NewDTDLoader {
     private String generatePrefix(String fullname) throws MaeIODTDException {
         int prefixLen = 1;
         String prefix = fullname.substring(0, prefixLen);
-        while (prefixes.contains(prefix)) {
+        while (prefixes.values().contains(prefix)) {
             if (prefix.length() >= fullname.length()) {
                 String message = "duplicate TagType name found: " + fullname;
                 logger.error(message);
@@ -148,6 +172,7 @@ public class NewDTDLoader {
             prefixLen++;
             prefix = fullname.substring(0, prefixLen);
         }
+        prefixes.put(fullname, prefix);
         return prefix;
     }
 
@@ -178,38 +203,30 @@ public class NewDTDLoader {
     }
 
     private void processAttribute(String element, int lineNum) throws MaeIODTDException, SQLException {
-        Pattern attPattern = Pattern.compile( "<! *ATTLIST +(\\S+) +(\\S+) +(\\( *.+ *\\)|CDATA|ID|IDREF +)?(prefix=\"(.+)\" *)?(#REQUIRED|#IMPLIED)? *(\"(.+)\")?" );
+        Pattern attPattern = Pattern.compile( "<! *ATTLIST +(\\S+) +(\\S+) +(\\( *.+ *\\)|\\bCDATA\\b|\\bID\\b|\\bIDREF\\b)? *(prefix=\"(.+)\")? *(#\\bREQUIRED\\b|#\\bIMPLIED\\b)? *(\"(.+)\")?" );
         Matcher attMatcher = attPattern.matcher(element);
 
-        List<String> allMatches = new ArrayList<>();
-
-        TagProperty type;
-
-        if (attMatcher.matches()) {
-            // TODO 151226 this way or .group(n) ?
-            while (attMatcher.find()) {
-                allMatches.add(attMatcher.group());
-            }
-            String tagTypeName = allMatches.get(1);
-            String attTypeName = allMatches.get(2);
-            String valueset = allMatches.get(3);
+        if (attMatcher.find()) {
+            String tagTypeName = attMatcher.group(1);
+            String attTypeName = attMatcher.group(2);
+            String valueset = attMatcher.group(3);
             if (valueset == null) {
                 valueset = "CDATA";
             }
-            String prefix = allMatches.get(5);
-            boolean required = allMatches.get(6).equals("#REQUIRED");
-            String defaultValue = allMatches.get(8);
+            String prefix = attMatcher.group(5);
+            boolean required = attMatcher.group(6) != null && attMatcher.group(6).equals("#REQUIRED");
+            String defaultValue = attMatcher.group(8);
 
             TagType tagtype = isTagTypeLoaded(tagTypeName);
             if (tagtype == null) {
                 this.error("tag type is not define for an attribute/argument: " + attTypeName);
             } else if (attTypeName.matches("arg[0-9]+")) {
-                type = defineArgument(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
+                defineArgument(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
             } else {
-                type = defineAttribute(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
+                defineAttribute(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
             }
         } else {
-            this.error(String.format("DTD seems to be ill-formed: %s at %d", element, lineNum));
+            this.error(String.format("DTD seems to be ill-formed: \"%s\" at %d", element, lineNum));
         }
     }
 
@@ -220,38 +237,44 @@ public class NewDTDLoader {
                 if (!attTypeName.equals("id")) {
                     this.error("value type \"ID\" should have name \"id\": " + lineNum);
                 } else if (prefix != null) {
-                    if (prefixes.contains(prefix)) {
+                    if (prefixes.values().contains(prefix)) {
                         this.error(String.format("prefix \"%s\" is already being used", prefix));
                     }
                     logger.debug(String.format("setting a custom prefix to tag type \"%s\" : %s ",tagType.getName(), attTypeName));
                     driver.setTagTypePrefix(tagType, prefix);
+                    prefixes.put(tagType.getName(), prefix);
                 }
                 break;
             case "IDREF":
                 type = addAttributeType(tagType, attTypeName);
-                logger.debug("setting as non-consuming: " + attTypeName);
+                logger.debug("setting as id-referencing attribute: " + attTypeName);
                 driver.setAttributeIDRef(type, true);
             case "CDATA":
                 if ((attTypeName.equals("spans") || attTypeName.equals("start")) && !required) {
-                    logger.debug("setting as non-consuming: " + attTypeName);
-                    driver.setTagTypeNonConsuming(tagType, false);
+                    logger.debug("setting as non-consuming: " + tagType.getName());
+                    driver.setTagTypeNonConsuming(tagType, true);
                 } else {
                     type = addAttributeType(tagType, attTypeName);
                 }
                 break;
             default:
-                String[] validValues = valueset.split("\\s*|\\s*");
+                String[] validValues = valueset.replaceAll("(\\( *| *\\))", "").split(" \\| ");
+
                 if (validValues.length < 2) {
-                    this.error(String.format("the set of values should have two or more values: %s at %d", valueset, lineNum));
+                    this.error(String.format("the set of values should have two or more values: \"%s\" at %d", valueset, lineNum));
                 }
                 type = addAttributeType(tagType, attTypeName);
-                logger.debug(String.format("setting valid value set to %s: %s", attTypeName, Arrays.toString(validValues)));
+                logger.debug(String.format("setting valid value set to \"%s\": %s", attTypeName, Arrays.toString(validValues)));
                 driver.setAttributeValueSet(type, validValues);
         }
         if (type != null) {
             if (defaultValue != null) {
-                logger.debug(String.format("setting default value to %s: %s", attTypeName, defaultValue));
-                driver.setAttributeDefaultValue(type, defaultValue);
+                if (type.getValuesetAsList().size() == 0 || type.getValuesetAsList().contains(defaultValue)) {
+                    logger.debug(String.format("setting default value to \"%s\": %s", attTypeName, defaultValue));
+                    driver.setAttributeDefaultValue(type, defaultValue);
+                } else {
+                    this.error(String.format("Default value \"%s\" is not in the pre-defined value set %s: at %d", defaultValue, type.getValuesetAsList().toString(), lineNum));
+                }
             }
             if (required) {
                 logger.debug("setting required: " + attTypeName);
@@ -262,17 +285,16 @@ public class NewDTDLoader {
     }
 
     private AttributeType addAttributeType(TagType tagType, String attTypeName) throws SQLException {
-        logger.debug("adding a new attribute type to DB: " + attTypeName);
+        logger.debug(String.format("adding a new attribute type attached to \"%s\": %s", tagType.getName(), attTypeName));
         return driver.createAttributeType(tagType, attTypeName);
     }
 
     private ArgumentType defineArgument(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, SQLException {
         ArgumentType type = null;
-        // TODO 151226 change isLink(), store boolean in the tagtype object, this is for checking null-argument linktag, later to create default binary from-to arguments
         if (!tagType.isLink()) {
-            this.error(String.format("extent tag \"%s\" can't have an argument %s: %d", tagType.getName(), attTypeName, lineNum));
+            this.error(String.format("extent tag \"%s\" can't have an argument \"%s\" at %d", tagType.getName(), attTypeName, lineNum));
         } else if (defaultValue != null) {
-            this.error("argument can have a default value: " + lineNum);
+            this.error("arguments cannot have a default value: " + lineNum);
         } else if (prefix!=null && !valueset.equals("IDREF")) {
             this.error("argument definition should be set to \"IDREF\": " + lineNum);
         } else if (prefix!=null) {
@@ -287,10 +309,10 @@ public class NewDTDLoader {
         return type;
     }
 
-    private TagType isTagTypeLoaded(String name) {
+    private TagType isTagTypeLoaded(String name) throws SQLException {
         for (TagType tagtype : loadedTagTypes) {
             if (tagtype.getName().equals(name)) {
-                return tagtype;
+                return driver.getTagTypeByName(name);
             }
         }
         return null;
