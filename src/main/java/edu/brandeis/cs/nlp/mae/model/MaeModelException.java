@@ -27,17 +27,17 @@ package edu.brandeis.cs.nlp.mae.model;
 /**
  * Created by krim on 12/12/2015.
  */
-public class ModelException extends Exception {
+public class MaeModelException extends Exception {
 
-    public ModelException() {
+    public MaeModelException() {
         super("Mae-Model-Exception: ");
     }
 
-    public ModelException(String message) {
+    public MaeModelException(String message) {
         super("Mae-Model-Exception: " + message);
     }
 
-    public ModelException(String message, Throwable cause) {
+    public MaeModelException(String message, Throwable cause) {
         super("Mae-Model-Exception: " + message, cause);
     }
 }

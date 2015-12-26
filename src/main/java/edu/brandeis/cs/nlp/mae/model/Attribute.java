@@ -58,17 +58,16 @@ public class Attribute implements IModel {
 
     }
 
-    public Attribute(Tag tag, AttributeType attributeType) throws ModelException {
+    public Attribute(Tag tag, AttributeType attributeType) throws MaeModelException {
         this(tag, attributeType, attributeType.getDefaultValue());
     }
 
-    public Attribute(Tag tag, AttributeType attributeType, String value)
-            throws ModelException {
+    public Attribute(Tag tag, AttributeType attributeType, String value) throws MaeModelException {
         this.setAttributeType(attributeType);
         this.setTag(tag);
         try {
             this.setValue(value);
-        } catch (ModelException ex) {
+        } catch (MaeModelException ex) {
             throw ex;
         }
     }
@@ -122,7 +121,7 @@ public class Attribute implements IModel {
         return value;
     }
 
-    public void setValue(String value) throws ModelException {
+    public void setValue(String value) throws MaeModelException {
         if (this.getAttributeType().getValueset() == null) {
             this.value = value;
         } else {
@@ -130,7 +129,7 @@ public class Attribute implements IModel {
             if (validValues.contains(value)) {
                 this.value = value;
             } else {
-                throw new ModelException(String.format(
+                throw new MaeModelException(String.format(
                         "%s: \"%s\" is not a valid value for %s",
                         this.getClass().getSimpleName(), value, this.getName()));
             }
