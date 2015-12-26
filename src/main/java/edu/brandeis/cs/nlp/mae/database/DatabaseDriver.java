@@ -31,23 +31,37 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
+import edu.brandeis.cs.nlp.mae.io.NewDTDLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.HashedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
-class DatabaseDriver {
+// TODO 151225 split this big chunk of drivers into
+// 1) MaeDriverI.java (interface with setupDB, dropDB, etc)
+// 2) BaseDriverImpl.java (with sqlite in local dir implementation, maybe we can discuss further on diff impl like hashed sqlite in system temp dir)
+// 3) TagDriver.java, AttDriver.java, etc (names are subject to change)
+
+public class DatabaseDriver {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     private String DATABASE_URL;
     private ConnectionSource cs;
-    private String workingFileName;
     private IdHandler idHandler;
+    // this should be distinguishable over diff tasks and diff versions
+    private String dtdName;
+    private String workingFileName;
 
     private Dao<CharIndex, Integer> charIndexDao;
     private Dao<TagType, Integer> tagTypeDao;
@@ -121,7 +135,9 @@ class DatabaseDriver {
         }
     }
 
-    public void setUpDtd(String filename) {
+    public void setUpDtd(File file) throws MaeIODTDException, FileNotFoundException, SQLException {
+        NewDTDLoader dtdl = new NewDTDLoader(file, this);
+
         // TODO 151219 write this to init DTDLoader inside with (this) param,
         // add specifications from DTDLoader to DB
     }
@@ -143,6 +159,14 @@ class DatabaseDriver {
 
     public void setWorkingFileName(String fileName) {
         this.workingFileName = fileName;
+    }
+
+    public String getDtdName() {
+        return dtdName;
+    }
+
+    public void setDtdName(String name) {
+        this.dtdName = name;
     }
 
     List<ExtentTag> getTagsAt(int loc) throws SQLException {
@@ -315,6 +339,12 @@ class DatabaseDriver {
         return type;
     }
 
+    public AttributeType createAttributeType(TagType tagType, String attName) throws  SQLException {
+        AttributeType attType = new AttributeType(tagType, attName);
+        attTypeDao.create(attType);
+        return attType;
+    }
+
     public ArgumentType createArgumentType(TagType tagType, String argName) throws SQLException {
         ArgumentType argType = new ArgumentType(tagType, argName);
         argTypeDao.create(argType);
@@ -402,7 +432,7 @@ class DatabaseDriver {
         return link;
     }
 
-    public void addAttribute(Tag tag, AttributeType attType, String attValue) throws SQLException, ModelException {
+    public void addAttribute(Tag tag, AttributeType attType, String attValue) throws SQLException, MaeModelException {
         attDao.create(new Attribute(tag, attType, attValue));
 
     }
@@ -478,5 +508,45 @@ class DatabaseDriver {
     public List<ArgumentType> getArgumentTypesOfLinkTagType(TagType link) throws SQLException {
         return new ArrayList<>(argTypeDao.queryForEq(DBSchema.TAB_ART_FCOL_TT, link));
    }
+
+    public boolean setTagTypePrefix(TagType tagType, String prefix) throws SQLException {
+        tagType.setPrefix(prefix);
+        return tagTypeDao.update(tagType) == 1;
+    }
+
+    public boolean setTagTypeNonConsuming(TagType tagType, boolean b) throws SQLException {
+        tagType.setNonConsuming(b);
+        return tagTypeDao.update(tagType) == 1;
+    }
+
+    public void setAttributeValueSet(AttributeType attType, List<String> validValues) throws SQLException {
+        attType.setValuesetFromList(validValues);
+        attTypeDao.update(attType);
+    }
+
+    public void setAttributeValueSet(AttributeType attType, String...validValues) throws SQLException {
+        setAttributeValueSet(attType, Arrays.asList(validValues));
+    }
+
+    public void setAttributeDefaultValue(AttributeType attType, String defaultValue) throws SQLException {
+        attType.setDefaultValue(defaultValue);
+        attTypeDao.update(attType);
+    }
+
+    public void setAttributeIDRef(AttributeType attType, boolean b) throws SQLException {
+        attType.setIdRef(b);
+        attTypeDao.update(attType);
+    }
+
+    public void setArgumentRequired(ArgumentType argType) throws SQLException {
+        argType.setRequired(true);
+        argTypeDao.update(argType);
+    }
+
+    public void setAttributeRequired(AttributeType attType) throws SQLException {
+        attType.setRequired(true);
+        attTypeDao.update(attType);
+
+    }
 }
 
