@@ -39,28 +39,13 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_AT)
-public class AttributeType implements IModel {
-
-    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_AT_COL_ID)
-    private int id;
-
-    @DatabaseField(foreign = true, canBeNull = false, columnName = DBSchema.TAB_AT_FCOL_TT)
-    private TagType tagType;
-
-    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_NAME)
-    private String name;
+public class AttributeType extends TagProperty implements IModel {
 
     @DatabaseField(columnName = DBSchema.TAB_AT_COL_VALUESET)
     private String valueset;
 
     @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_DEFVALUE)
     private String defaultValue;
-
-    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_IDREF)
-    private boolean isIdRef;
-
-    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_AT_COL_REQ)
-    private boolean isRequired;
 
     @ForeignCollectionField(eager = true)
     private ForeignCollection<Attribute> attributes;
@@ -77,26 +62,6 @@ public class AttributeType implements IModel {
         this.setIdRef(false);
         this.defaultValue = "";
         this.valueset = null;
-    }
-
-    public String getId() {
-        return Integer.toString(id);
-    }
-
-    public TagType getTagType() {
-        return tagType;
-    }
-
-    public void setTagType(TagType tagType) {
-        this.tagType = tagType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getValueset() {
@@ -127,22 +92,6 @@ public class AttributeType implements IModel {
         this.defaultValue = defaultValue;
     }
 
-    public boolean isIdRef() {
-        return isIdRef;
-    }
-
-    public void setIdRef(boolean idRef) {
-        isIdRef = idRef;
-    }
-
-    public boolean isRequired() {
-        return isRequired;
-    }
-
-    public void setRequired(boolean required) {
-        isRequired = required;
-    }
-
     public ForeignCollection<Attribute> getAttributes() {
         return attributes;
     }
@@ -151,7 +100,4 @@ public class AttributeType implements IModel {
         this.attributes = attributes;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
 }

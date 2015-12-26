@@ -69,11 +69,10 @@ public class TagType implements IModel {
     }
 
     public TagType(String name, String prefix) {
-        // TODO 151209 prefix should be given from DTD loader
         this.setName(name);
+        this.setPrefix(prefix);
         // TODO 151209 write this method
 //        this.setColor(Colors.getNextColor());
-        this.setPrefix(prefix);
 
     }
 

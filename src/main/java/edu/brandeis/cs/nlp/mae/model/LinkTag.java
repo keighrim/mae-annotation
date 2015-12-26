@@ -83,7 +83,7 @@ public class LinkTag extends Tag implements IModel {
 
     private void checkRequiredArgs() throws SQLException {
         setComplete(true);
-        ArrayList<String> curArgNames = new ArrayList<String>();
+        ArrayList<String> curArgNames = new ArrayList<>();
         for (Argument arg : getArguments()) {
             // this for-each loop always goes through all items,
             // making sure DAO connection is closed after iteration.

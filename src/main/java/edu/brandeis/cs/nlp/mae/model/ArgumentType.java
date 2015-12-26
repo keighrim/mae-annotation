@@ -34,62 +34,24 @@ import com.j256.ormlite.table.DatabaseTable;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_ART)
-public class ArgumentType implements IModel {
-
-    @DatabaseField(generatedId = true, columnName = DBSchema.TAB_ART_COL_ID)
-    private int id;
-
-    @DatabaseField(foreign = true, canBeNull = false, columnName = DBSchema.TAB_ART_FCOL_TT)
-    private TagType tagType;
+public class ArgumentType extends TagProperty implements IModel {
 
     @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;
-
-    @DatabaseField(canBeNull =false, columnName = DBSchema.TAB_ART_COL_NAME)
-    private String name;
-
-    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ART_COL_REQ)
-    private boolean isRequired;
 
     public ArgumentType() {
 
     }
 
     public ArgumentType(TagType tagType, String name) {
-        this.tagType = tagType;
-        this.name = name;
+        this.setTagType(tagType);
+        this.setName(name);
         this.setRequired(false);
-    }
-
-    public String getId() {
-        return Integer.toString(id);
-    }
-
-    public TagType getTagType() {
-        return tagType;
-    }
-
-    public void setTagType(TagType tagType) {
-        this.tagType = tagType;
+        this.setIdRef(true);
     }
 
     public ForeignCollection<Argument> getArguments() {
         return arguments;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isRequired() {
-        return isRequired;
-    }
-
-    public void setRequired(boolean required) {
-        isRequired = required;
-    }
 }
