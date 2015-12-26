@@ -333,8 +333,8 @@ public class DatabaseDriver {
 
     }
 
-    public TagType createTagType(String typeName, String prefix) throws SQLException {
-        TagType type  = new TagType(typeName, prefix);
+    public TagType createTagType(String typeName, String prefix, boolean isLink) throws SQLException {
+        TagType type  = new TagType(typeName, prefix, isLink);
         tagTypeDao.create(type);
         return type;
     }

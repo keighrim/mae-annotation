@@ -54,9 +54,9 @@ public class DatabaseDriverTest {
     public void setUp() throws Exception {
         driver = new DatabaseDriver(MaeStrings.TEST_DB_URL);
 
-        noun = driver.createTagType("NOUN", "N");
-        verb = driver.createTagType("VERB", "V");
-        semanticRole = driver.createTagType("SR", "S");
+        noun = driver.createTagType("NOUN", "N", false);
+        verb = driver.createTagType("VERB", "V", false);
+        semanticRole = driver.createTagType("SR", "S", true);
 
         pred = driver.createArgumentType(semanticRole, "predicate");
         agent = driver.createArgumentType(semanticRole, "agent");
@@ -66,6 +66,20 @@ public class DatabaseDriverTest {
     @After
     public void tearDown() throws Exception {
         driver.destroy();
+
+    }
+
+    @Test
+    public void canCreateExtentTagType() throws Exception {
+        TagType adjective = driver.createTagType("ADJ", "AD", false);
+        assertFalse(
+                "Expected newly created tag type to be extent",
+                adjective.isLink());
+
+        TagType retrieved = driver.getTagTypeByName("ADJ");
+        assertTrue(
+                "Expected retrived tag type also to be extent",
+                retrieved.isExtent());
 
     }
 

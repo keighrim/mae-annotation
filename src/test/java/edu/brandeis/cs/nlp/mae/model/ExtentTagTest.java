@@ -96,8 +96,8 @@ public class ExtentTagTest {
         TableUtils.createTable(source, ArgumentType.class);
         TableUtils.createTable(source, Argument.class);
 
-        noun = new TagType("NOUN", "N");
-        verb = new TagType("VERB", "V");
+        noun = new TagType("NOUN", "N", false);
+        verb = new TagType("VERB", "V", false);
         tagTypeDao.create(noun);
         tagTypeDao.create(verb);
 

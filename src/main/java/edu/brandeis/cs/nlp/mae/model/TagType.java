@@ -43,11 +43,11 @@ public class TagType implements IModel {
     @DatabaseField(id = true, columnName = DBSchema.TAB_TT_COL_NAME)
     private String name;
 
-    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_TT_COL_COLOR)
-    private int color;
-
     @DatabaseField(unique = true, canBeNull = false, columnName = DBSchema.TAB_TT_COL_PREFIX)
     private String prefix;
+
+    @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_TT_COL_ISLINK)
+    private boolean isLink;
 
     @DatabaseField
     private boolean isNonConsuming;
@@ -68,10 +68,13 @@ public class TagType implements IModel {
 
     }
 
-    public TagType(String name, String prefix) {
+    public TagType(String name, String prefix, boolean isLink) {
         this.setName(name);
         this.setPrefix(prefix);
-        // TODO 151209 write this method
+        // next two setters should be called in order (setting non-consuming makes the type to be extent)
+        this.setNonConsuming(false);
+        this.setLink(isLink);
+        // TODO 151209 color is not responsible for this model class, it's an UI component
 //        this.setColor(Colors.getNextColor());
 
     }
@@ -89,19 +92,16 @@ public class TagType implements IModel {
     }
 
     public boolean isExtent() {
-        return isNonConsuming() || getArgumentTypes() == null || getArgumentTypes().size() == 0;
+//        return isNonConsuming() || getArgumentTypes() == null || getArgumentTypes().size() == 0;
+        return !isLink;
+    }
+
+    public void setLink(boolean isLink) {
+        this.isLink = isLink;
     }
 
     public boolean isLink() {
-        return !this.isExtent();
-    }
-
-    public int getColor() {
-        return color;
-    }
-
-    public void setColor(int color) {
-        this.color = color;
+        return isLink;
     }
 
     public String getPrefix() {
@@ -122,6 +122,7 @@ public class TagType implements IModel {
 
     public void setNonConsuming(boolean nonConsuming) {
         isNonConsuming = nonConsuming;
+        setLink(false);
     }
 
     public ForeignCollection<AttributeType> getAttributeTypes() {

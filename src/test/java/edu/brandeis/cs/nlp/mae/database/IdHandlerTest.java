@@ -24,16 +24,14 @@
 
 package edu.brandeis.cs.nlp.mae.database;
 
-import com.j256.ormlite.field.DatabaseField;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import org.junit.Before;
 import org.junit.Test;
-import org.omg.CORBA.IDLTypeHelper;
 
 import java.sql.SQLException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by krim on 12/16/15.
@@ -52,7 +50,7 @@ public class IdHandlerTest {
 
     @Test
     public void canGenerateProperNextId() throws SQLException {
-        TagType noun = driver.createTagType("NOUN", "N");
+        TagType noun = driver.createTagType("NOUN", "N", false);
         handler.addId(noun, 0);
         String nextId = handler.getNextID(noun);
         assertEquals(

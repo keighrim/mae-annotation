@@ -79,7 +79,7 @@ public class LinkTagTest extends ExtentTagTest {
 //        TableUtils.createTable(source, ArgumentType.class);
 //        TableUtils.createTable(source, Argument.class);
 
-        semanticRole = new TagType("AGENT", "A");
+        semanticRole = new TagType("AGENT", "A", true);
         tagTypeDao.create(semanticRole);
 
         pred = new ArgumentType(semanticRole, "predicate");
