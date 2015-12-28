@@ -29,6 +29,12 @@ package edu.brandeis.cs.nlp.mae.model;
  */
 public class DBSchema {
 
+    public final static String TAB_TASK = "task_meta";
+    public final static String TAB_TASK_COL_NAME = "task_name";
+    public final static String TAB_TASK_COL_TEXT = "text";
+    public final static String TAB_TASK_COL_TASKFILE = "task_file";
+    public final static String TAB_TASK_COL_ANNFILE = "ann_file";
+
     public final static String TAB_CI = "char_index";
     public final static String TAB_CI_COL_ID = "id";
     public final static String TAB_CI_COL_LOCATION = "location";

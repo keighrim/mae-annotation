@@ -66,12 +66,14 @@ public class NewDTDLoader {
         this.loadedTagTypes = new ArrayList<>();
     }
 
-   public void read(File file) throws FileNotFoundException, MaeIODTDException, MaeDBException {
+    public void read(File file) throws FileNotFoundException, MaeIODTDException, MaeDBException {
         logger.info("reading annotation scheme from: " + file.getName());
+        driver.setTaskFileName(file.getName());
         this.read(new FileInputStream(file));
     }
 
     public void read(String string) throws MaeIODTDException, FileNotFoundException, MaeDBException {
+        logger.info("reading annotation scheme from plain JAVA string");
         this.read(IOUtils.toInputStream(string));
 
     }

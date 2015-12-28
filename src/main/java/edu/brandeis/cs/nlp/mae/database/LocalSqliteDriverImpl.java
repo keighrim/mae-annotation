@@ -58,12 +58,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     private ConnectionSource cs;
     private IdHandler idHandler;
     // this should be distinguishable over diff tasks and diff versions
-    private String dtdName;
-    private String workingFileName;
+    private Task workingTask;
 
     // TODO 151227 add another table: task with columns: dtd_root, dtd_filename, last_saved_xml_filename, ...
     // this will make task context persistent, then later can be used when recover from unexpected termination
 
+    private Dao<Task, Integer> taskDao;
     private Dao<CharIndex, Integer> charIndexDao;
     private Dao<TagType, Integer> tagTypeDao;
     private Dao<ExtentTag, String> eTagDao;
@@ -91,6 +91,9 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             cs = new JdbcConnectionSource(JDBC_DRIVER + SQLITE_FILENAME);
             idHandler = new IdHandler();
             this.setupDatabase(cs);
+            // put a placeholder for task metadata in DB
+            workingTask = new Task(SQLITE_FILENAME);
+            taskDao.create(workingTask);
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -101,6 +104,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public void setupDatabase(ConnectionSource source) throws MaeDBException {
 
         try {
+            taskDao = DaoManager.createDao(source, Task.class);
             charIndexDao = DaoManager.createDao(source, CharIndex.class);
             tagTypeDao = DaoManager.createDao(source, TagType.class);
             eTagDao = DaoManager.createDao(source, ExtentTag.class);
@@ -122,8 +126,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         argTypeQuery = argTypeDao.queryBuilder();
         argQuery = argDao.queryBuilder();
 
-        allDaos = new Dao[]{ charIndexDao, tagTypeDao, eTagDao, lTagDao, attTypeDao, attDao, argTypeDao, argDao};
-
+        allDaos = new Dao[]{ taskDao, charIndexDao, tagTypeDao, eTagDao, lTagDao, attTypeDao, attDao, argTypeDao, argDao};
         allQueryBuilders = new QueryBuilder[]{ charIndexQuery, tagTypeQuery, eTagQuery, lTagQuery, attTypeQuery, attQuery, argTypeQuery, argQuery};
 
         dropAllTables(source);
@@ -175,23 +178,77 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public String getWorkingFileName() {
-        return workingFileName;
+    public String getAnnotationFileName() throws MaeDBException {
+        return workingTask.getAnnotationFileName();
     }
 
     @Override
-    public void setWorkingFileName(String fileName) {
-        this.workingFileName = fileName;
+    public void setAnnotationFileName(String fileName) throws MaeDBException {
+        try {
+            this.workingTask.setAnnotationFileName(fileName);
+            taskDao.update(workingTask);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public String getPrimaryText() throws MaeDBException {
+        return workingTask.getPrimaryText();
+    }
+
+    @Override
+    public void setPrimaryText(String text) throws MaeDBException {
+        try {
+            this.workingTask.setPrimaryText(text);
+            taskDao.update(workingTask);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
     }
 
     @Override
     public String getTaskName() {
-        return dtdName;
+        return workingTask.getName();
     }
 
     @Override
-    public void setTaskName(String name) {
-        this.dtdName = name;
+    public void setTaskName(String name) throws MaeDBException {
+        try {
+            // need to clear task table before updating id column of it
+            TableUtils.clearTable(cs, taskDao.getDataClass());
+            workingTask.setName(name);
+            taskDao.create(workingTask);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public String getTaskFileName() throws MaeDBException {
+        return workingTask.getTaskFileName();
+    }
+
+    @Override
+    public void setTaskFileName(String fileName) throws MaeDBException {
+        try {
+            this.workingTask.setTaskFileName(fileName);
+            taskDao.update(workingTask);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    public boolean isDtdLoaded() {
+        return workingTask.isDtdLoaded();
+    }
+
+    public boolean isAnnotationLoaded() {
+        return workingTask.isAnnotationLoaded();
+    }
+
+    public boolean isPrimaryTextLoaded() {
+        return workingTask.isPrimaryTextLoaded();
     }
 
     public List<ExtentTag> getTagsAt(int loc) throws MaeDBException {
@@ -467,7 +524,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public ExtentTag createExtentTag(String tid, TagType tagType, String text, int... spans) throws MaeDBException {
         try {
-            ExtentTag tag = new ExtentTag(tid, tagType, workingFileName);
+            ExtentTag tag = new ExtentTag(tid, tagType, workingTask.getAnnotationFileName());
             tag.setText(text);
             for (CharIndex ci: tag.setSpans(spans)) {
                 charIndexDao.create(ci);
@@ -507,16 +564,16 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException {
         try {
-        LinkTag link = new LinkTag(tid, tagType, workingFileName);
+            LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
             lTagDao.create(link);
-        return link;
+            return link;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
     }
 
     public LinkTag createLinkTag(String tid, TagType tagType, HashMap<ArgumentType, ExtentTag> arguments) throws MaeDBException {
-        LinkTag link = new LinkTag(tid, tagType, workingFileName);
+        LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
         for (ArgumentType argType : arguments.keySet()) {
             addArgument(link, argType, arguments.get(argType));
         }
@@ -576,7 +633,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     public List<TagType> getTagTypes(boolean includeExtent, boolean includeLink) throws MaeDBException {
         try {
-        ArrayList<TagType> types = new ArrayList<>();
+            ArrayList<TagType> types = new ArrayList<>();
             for (TagType type : tagTypeDao.queryForAll()) {
                 if (type.isLink() && includeLink) {
                     types.add(type);
@@ -607,13 +664,13 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     public List<TagType> getNonConsumingTagTypes() throws MaeDBException {
         try {
-        ArrayList<TagType> types = new ArrayList<>();
+            ArrayList<TagType> types = new ArrayList<>();
             for (TagType type : tagTypeDao.queryForAll()) {
                 if (type.isNonConsuming()) {
                     types.add(type);
                 }
             }
-        return types;
+            return types;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -659,7 +716,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public boolean setTagTypePrefix(TagType tagType, String prefix) throws MaeDBException {
         try {
-        tagType.setPrefix(prefix);
+            tagType.setPrefix(prefix);
             return tagTypeDao.update(tagType) == 1;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -693,7 +750,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAttributeTypeDefaultValue(AttributeType attType, String defaultValue) throws MaeDBException {
         try {
-        attType.setDefaultValue(defaultValue);
+            attType.setDefaultValue(defaultValue);
             attTypeDao.update(attType);
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -703,7 +760,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAttributeTypeIDRef(AttributeType attType, boolean b) throws MaeDBException {
         try {
-        attType.setIdRef(b);
+            attType.setIdRef(b);
             attTypeDao.update(attType);
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -713,7 +770,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAttributeTypeRequired(AttributeType attType) throws MaeDBException {
         try {
-        attType.setRequired(true);
+            attType.setRequired(true);
             attTypeDao.update(attType);
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -724,7 +781,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setArgumentTypeRequired(ArgumentType argType) throws MaeDBException {
         try {
-        argType.setRequired(true);
+            argType.setRequired(true);
             argTypeDao.update(argType);
         } catch (SQLException e) {
             throw catchSQLException(e);

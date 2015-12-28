@@ -47,16 +47,23 @@ public interface MaeDriverI {
     // task
     void readTask(File file) throws MaeDBException, MaeIODTDException, FileNotFoundException;
 
-
     String getTaskName() throws MaeDBException;
 
     void setTaskName(String value) throws MaeDBException;
 
     void readAnnotation(File file) throws MaeDBException, MaeIOXMLException, FileNotFoundException;
 
-    String getWorkingFileName() throws MaeDBException;
+    String getTaskFileName() throws MaeDBException;
 
-    void setWorkingFileName(String fileName) throws MaeDBException;
+    void setTaskFileName(String fileName) throws MaeDBException;
+
+    String getAnnotationFileName() throws MaeDBException;
+
+    void setAnnotationFileName(String fileName) throws MaeDBException;
+
+    String getPrimaryText() throws MaeDBException;
+
+    void setPrimaryText(String text) throws MaeDBException;
 
     // tag types
     TagType createTagType(String name, String prefix, boolean isLink) throws MaeDBException;
