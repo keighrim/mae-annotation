@@ -24,18 +24,12 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
-import com.j256.ormlite.table.TableUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,12 +42,6 @@ import static org.junit.Assert.assertTrue;
  * Created by krim on 12/9/2015.
  */
 public class LinkTagTest extends ExtentTagTest {
-
-    protected static final Logger logger = LoggerFactory.getLogger(LinkTagTest.class.getName());
-
-//    Dao<LinkTag, Integer> lTagDao;
-//    Dao<ArgumentType, Integer> argTypeDao;
-//    Dao<Argument, Integer> argDao;
 
     TagType semanticRole;
     ArgumentType pred;
@@ -68,16 +56,8 @@ public class LinkTagTest extends ExtentTagTest {
     }
 
     @Override
-    protected void setupDatabase(ConnectionSource source) throws SQLException {
+    protected void setupDatabase(ConnectionSource source) throws Exception {
         super.setupDatabase(source);
-
-//        lTagDao = DaoManager.createDao(source, LinkTag.class);
-//        argTypeDao = DaoManager.createDao(source, ArgumentType.class);
-//        argDao = DaoManager.createDao(source, Argument.class);
-
-//        TableUtils.createTable(source, LinkTag.class);
-//        TableUtils.createTable(source, ArgumentType.class);
-//        TableUtils.createTable(source, Argument.class);
 
         semanticRole = new TagType("AGENT", "A", true);
         tagTypeDao.create(semanticRole);
@@ -90,11 +70,8 @@ public class LinkTagTest extends ExtentTagTest {
     }
 
     @Override
-    protected void dropAllTables(ConnectionSource source) throws SQLException {
+    protected void dropAllTables(ConnectionSource source) throws Exception {
         super.dropAllTables(source);
-//        TableUtils.dropTable(source, LinkTag.class, true);
-//        TableUtils.dropTable(source, ArgumentType.class, true);
-//        TableUtils.dropTable(source, Argument.class, true);
     }
 
     @After

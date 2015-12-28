@@ -48,9 +48,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ExtentTagTest {
 
-    protected static final Logger logger = LoggerFactory.getLogger(ExtentTagTest.class.getName());
-
-    protected final static String DATABASE_URL = MaeStrings.TEST_DB_URL;
+    protected final static String DATABASE_URL = "jdbc:sqlite:" + MaeStrings.TEST_DB_FILE;
     protected ConnectionSource cs;
 
     Dao<CharIndex, Integer> charIndexDao;
@@ -73,7 +71,7 @@ public class ExtentTagTest {
         this.setupDatabase(cs);
     }
 
-    protected void setupDatabase(ConnectionSource source) throws SQLException {
+    protected void setupDatabase(ConnectionSource source) throws Exception {
         eTagDao = DaoManager.createDao(source, ExtentTag.class);
         tagTypeDao = DaoManager.createDao(source, TagType.class);
         attTypeDao = DaoManager.createDao(source, AttributeType.class);
@@ -103,7 +101,7 @@ public class ExtentTagTest {
 
     }
 
-    protected void dropAllTables(ConnectionSource source) throws SQLException {
+    protected void dropAllTables(ConnectionSource source) throws Exception {
         TableUtils.dropTable(source, CharIndex.class, true);
         TableUtils.dropTable(source, ExtentTag.class, true);
         TableUtils.dropTable(source, TagType.class, true);
@@ -124,7 +122,7 @@ public class ExtentTagTest {
         }
     }
 
-    protected ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws SQLException {
+    protected ExtentTag createTag(String tid, TagType tagType, String text, int[] spans) throws Exception {
         ExtentTag tag = new ExtentTag(tid, tagType, "filename");
         for (CharIndex ci: tag.setSpans(spans)) { charIndexDao.create(ci); }
         tag.setText(text);

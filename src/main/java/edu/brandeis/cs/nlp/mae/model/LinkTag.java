@@ -68,7 +68,7 @@ public class LinkTag extends Tag implements IModel {
     }
 
     @Override
-    boolean isComplete() throws SQLException {
+    public boolean isComplete() throws SQLException {
         checkRequiredAtts();
         if (isComplete) {
             checkRequiredArgs();
@@ -114,6 +114,8 @@ public class LinkTag extends Tag implements IModel {
 
     @Override
     public Map<String, String> getAttbutesWithNames() {
-        return ModelHelpers.getAttbutesWithNames(this.getAttributes());
+        Map<String, String> map = ModelHelpers.getAttbutesWithNames(this.getAttributes());
+        map.putAll(getArgumentTidsWithNames());
+        return map;
     }
 }

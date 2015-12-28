@@ -25,7 +25,8 @@
 package edu.brandeis.cs.nlp.mae.io;
 
 import edu.brandeis.cs.nlp.mae.database.DTD;
-import edu.brandeis.cs.nlp.mae.database.DatabaseDriver;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ArgumentType;
 import edu.brandeis.cs.nlp.mae.model.AttributeType;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -37,7 +38,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,26 +56,26 @@ public class NewDTDLoader {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
-    private DatabaseDriver driver;
+    private MaeDriverI driver;
     private ArrayList<TagType> loadedTagTypes;
     private HashMap<String, String> prefixes;
 
-    public NewDTDLoader(DatabaseDriver driver) throws MaeIODTDException, FileNotFoundException, SQLException {
+    public NewDTDLoader(MaeDriverI driver) throws MaeIODTDException, FileNotFoundException {
         this.driver = driver;
         this.prefixes = new HashMap<>();
         this.loadedTagTypes = new ArrayList<>();
     }
 
-   public void read(File file) throws FileNotFoundException, MaeIODTDException, SQLException {
-        logger.info("reading document definitions from: " + file.getName());
+   public void read(File file) throws FileNotFoundException, MaeIODTDException, MaeDBException {
+        logger.info("reading annotation scheme from: " + file.getName());
         this.read(new FileInputStream(file));
     }
 
-    public void read(String string) throws MaeIODTDException, FileNotFoundException, SQLException {
+    public void read(String string) throws MaeIODTDException, FileNotFoundException, MaeDBException {
         this.read(IOUtils.toInputStream(string));
 
     }
-    public void read(InputStream stream) throws MaeIODTDException, FileNotFoundException, SQLException {
+    public void read(InputStream stream) throws MaeIODTDException, FileNotFoundException, MaeDBException {
         Scanner sc = new Scanner(stream, "UTF-8");
         int lineNum = 1;
         while (sc.hasNextLine()) {
@@ -107,7 +107,7 @@ public class NewDTDLoader {
         validateLinkTagTypes();
     }
 
-    private void validateLinkTagTypes() throws SQLException {
+    private void validateLinkTagTypes() throws MaeDBException {
         for (TagType linktag: driver.getLinkTagTypes()) {
             if (linktag.getArgumentTypes().size() == 0) {
                 addDefaultArguments(linktag);
@@ -115,7 +115,7 @@ public class NewDTDLoader {
         }
     }
 
-    private void addDefaultArguments(TagType linktag) throws SQLException {
+    private void addDefaultArguments(TagType linktag) throws MaeDBException {
         // default arguments are NOT req, but note that args are always IDref
         driver.createArgumentType(linktag, "from");
         driver.createArgumentType(linktag, "to");
@@ -131,7 +131,7 @@ public class NewDTDLoader {
 
     }
 
-    private void process(String element, int lineNum) throws MaeIODTDException, SQLException {
+    private void process(String element, int lineNum) throws MaeIODTDException, MaeDBException {
 
         if (element.startsWith("<!ELEMENT")) {
             processTagType(element, lineNum);
@@ -146,7 +146,7 @@ public class NewDTDLoader {
         }
     }
 
-    private void processTagType(String element, int lineNum) throws MaeIODTDException, SQLException {
+    private void processTagType(String element, int lineNum) throws MaeIODTDException, MaeDBException {
         Pattern tTypePattern = Pattern.compile( "<! *ELEMENT +(\\S+) +(\\bEMPTY\\b|\\( *(#\\bPCDATA\\b)\\s*\\)) *>" );
         Matcher tTypeMatcher = tTypePattern.matcher(element);
         if (tTypeMatcher.find()) {
@@ -176,7 +176,7 @@ public class NewDTDLoader {
         return prefix;
     }
 
-    private void processMeta(String element, int lineNum) throws MaeIODTDException {
+    private void processMeta(String element, int lineNum) throws MaeIODTDException, MaeDBException {
         // currently it can only process "internal parsed entities" element of DTD
         Pattern elementPattern = Pattern.compile("<!\\s*ENTITY +(.+) +\"(.+)\">");
         Matcher elementMatcher = elementPattern.matcher(element);
@@ -187,11 +187,11 @@ public class NewDTDLoader {
         }
     }
 
-    private boolean addMetadata(String key, String value) {
+    private boolean addMetadata(String key, String value) throws MaeDBException {
         boolean success;
         switch (key) {
             case "name":
-                driver.setDtdName(value);
+                driver.setTaskName(value);
                 logger.debug("adding DTD name: " + value);
                 success = true;
                 break;
@@ -202,7 +202,7 @@ public class NewDTDLoader {
         return success;
     }
 
-    private void processAttribute(String element, int lineNum) throws MaeIODTDException, SQLException {
+    private void processAttribute(String element, int lineNum) throws MaeIODTDException, MaeDBException {
         Pattern attPattern = Pattern.compile( "<! *ATTLIST +(\\S+) +(\\S+) +(\\( *.+ *\\)|\\bCDATA\\b|\\bID\\b|\\bIDREF\\b)? *(prefix=\"(.+)\")? *(#\\bREQUIRED\\b|#\\bIMPLIED\\b)? *(\"(.+)\")?" );
         Matcher attMatcher = attPattern.matcher(element);
 
@@ -230,7 +230,7 @@ public class NewDTDLoader {
         }
     }
 
-    private AttributeType defineAttribute(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, SQLException {
+    private AttributeType defineAttribute(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
         AttributeType type = null;
         switch (valueset) {
             case "ID":
@@ -248,7 +248,7 @@ public class NewDTDLoader {
             case "IDREF":
                 type = addAttributeType(tagType, attTypeName);
                 logger.debug("setting as id-referencing attribute: " + attTypeName);
-                driver.setAttributeIDRef(type, true);
+                driver.setAttributeTypeIDRef(type, true);
             case "CDATA":
                 if ((attTypeName.equals("spans") || attTypeName.equals("start")) && !required) {
                     logger.debug("setting as non-consuming: " + tagType.getName());
@@ -265,31 +265,31 @@ public class NewDTDLoader {
                 }
                 type = addAttributeType(tagType, attTypeName);
                 logger.debug(String.format("setting valid value set to \"%s\": %s", attTypeName, Arrays.toString(validValues)));
-                driver.setAttributeValueSet(type, validValues);
+                driver.setAttributeTypeValueSet(type, Arrays.asList(validValues));
         }
         if (type != null) {
             if (defaultValue != null) {
                 if (type.getValuesetAsList().size() == 0 || type.getValuesetAsList().contains(defaultValue)) {
                     logger.debug(String.format("setting default value to \"%s\": %s", attTypeName, defaultValue));
-                    driver.setAttributeDefaultValue(type, defaultValue);
+                    driver.setAttributeTypeDefaultValue(type, defaultValue);
                 } else {
                     this.error(String.format("Default value \"%s\" is not in the pre-defined value set %s: at %d", defaultValue, type.getValuesetAsList().toString(), lineNum));
                 }
             }
             if (required) {
                 logger.debug("setting required: " + attTypeName);
-                driver.setAttributeRequired(type);
+                driver.setAttributeTypeRequired(type);
             }
         }
         return type;
     }
 
-    private AttributeType addAttributeType(TagType tagType, String attTypeName) throws SQLException {
+    private AttributeType addAttributeType(TagType tagType, String attTypeName) throws MaeDBException {
         logger.debug(String.format("adding a new attribute type attached to \"%s\": %s", tagType.getName(), attTypeName));
         return driver.createAttributeType(tagType, attTypeName);
     }
 
-    private ArgumentType defineArgument(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, SQLException {
+    private ArgumentType defineArgument(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
         ArgumentType type = null;
         if (!tagType.isLink()) {
             this.error(String.format("extent tag \"%s\" can't have an argument \"%s\" at %d", tagType.getName(), attTypeName, lineNum));
@@ -304,12 +304,12 @@ public class NewDTDLoader {
         }
         if (required && type != null) {
             logger.debug("setting required: " + attTypeName);
-            driver.setArgumentRequired(type);
+            driver.setArgumentTypeRequired(type);
         }
         return type;
     }
 
-    private TagType isTagTypeLoaded(String name) throws SQLException {
+    private TagType isTagTypeLoaded(String name) throws MaeDBException {
         for (TagType tagtype : loadedTagTypes) {
             if (tagtype.getName().equals(name)) {
                 return driver.getTagTypeByName(name);

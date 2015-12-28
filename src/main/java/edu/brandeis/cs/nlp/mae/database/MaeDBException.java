@@ -24,46 +24,19 @@
 
 package edu.brandeis.cs.nlp.mae.database;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.model.TagType;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
-
 /**
- * Created by krim on 12/16/15.
+ * Created by krim on 12/27/2015.
  */
-public class IdHandlerTest {
-
-    private static MaeDriverI driver;
-    private IdHandler handler;
-
-    @Before
-    public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
-        handler = new IdHandler();
-
+public class MaeDBException extends Exception {
+    public MaeDBException() {
+        super("Mae-DB-Exception: ");
     }
 
-    @Test
-    public void canGenerateProperNextId() throws Exception {
-        TagType noun = driver.createTagType("NOUN", "N", false);
-        handler.addId(noun, 0);
-        String nextId = handler.getNextID(noun);
-        assertEquals(
-                "Expected N1 to be generated with only 0 in tracker, found: " + nextId,
-                "N1", nextId
-        );
-
-        handler.addId(noun, "N04");
-        nextId = handler.getNextID(noun);
-        assertEquals(
-                "Expected N1 to be generated with 0 & 4 in tracker, found: " + nextId,
-                "N1", nextId
-        );
+    public MaeDBException(String message) {
+        super("Mae-DB-Exception: " + message);
     }
 
+    public MaeDBException(String message, Throwable cause) {
+        super("Mae-DB-Exception: " + message, cause);
+    }
 }

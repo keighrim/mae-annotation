@@ -25,7 +25,7 @@
 package edu.brandeis.cs.nlp.mae.io;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.database.DatabaseDriver;
+import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.model.ArgumentType;
 import edu.brandeis.cs.nlp.mae.model.AttributeType;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class DTDLoaderTest {
 
-    private DatabaseDriver driver;
+    private LocalSqliteDriverImpl driver;
     private NewDTDLoader dtdLoader;
 
     @After
@@ -57,7 +57,7 @@ public class DTDLoaderTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new DatabaseDriver(MaeStrings.TEST_DB_URL);
+        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
         dtdLoader = new NewDTDLoader(driver);
 
     }
@@ -77,8 +77,8 @@ public class DTDLoaderTest {
             typeNames.add(type.getName());
         }
         assertTrue(
-                "Expected DTD name is successfully read, found: " + driver.getDtdName(),
-                driver.getDtdName().equals("NounVerbTask")
+                "Expected DTD name is successfully read, found: " + driver.getTaskName(),
+                driver.getTaskName().equals("NounVerbTask")
         );
         assertEquals(
                 "Expected 3 tag types defined from DTD, found: " + types.size(),

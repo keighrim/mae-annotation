@@ -93,7 +93,7 @@ public abstract class Tag implements IModel {
         isComplete = complete;
     }
 
-    abstract boolean isComplete() throws SQLException;
+    public abstract boolean isComplete() throws SQLException;
 
     protected void checkRequiredAtts() {
         setComplete(true);
@@ -113,9 +113,9 @@ public abstract class Tag implements IModel {
         }
     }
 
-    abstract ForeignCollection<Attribute> getAttributes();
+    public abstract ForeignCollection<Attribute> getAttributes();
 
-    abstract Map<String, String> getAttbutesWithNames();
+    public abstract Map<String, String> getAttbutesWithNames();
 
     @Override
     public int hashCode() {

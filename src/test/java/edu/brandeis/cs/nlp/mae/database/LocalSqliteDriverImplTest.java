@@ -30,7 +30,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +38,9 @@ import static org.junit.Assert.*;
 /**
  * Created by krim on 12/13/2015.
  */
-public class DatabaseDriverTest {
+public class LocalSqliteDriverImplTest {
 
-    private DatabaseDriver driver;
+    private LocalSqliteDriverImpl driver;
 
     TagType noun;
     TagType verb;
@@ -52,7 +51,7 @@ public class DatabaseDriverTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new DatabaseDriver(MaeStrings.TEST_DB_URL);
+        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
 
         noun = driver.createTagType("NOUN", "N", false);
         verb = driver.createTagType("VERB", "V", false);
@@ -84,9 +83,9 @@ public class DatabaseDriverTest {
     }
 
     @Test
-    public void canRetrieveExtentTagsByType() throws SQLException {
-        driver.createExtentTag("N01", noun, "jenny", new int[]{5,6,7,8,9});
-        driver.createExtentTag("V01", verb, "loves", new int[]{11, 12, 13, 14, 15});
+    public void canRetrieveExtentTagsByType() throws Exception {
+        driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
@@ -101,7 +100,7 @@ public class DatabaseDriverTest {
     }
 
     @Test
-    public void canRetrieveLinkTagsByType() throws SQLException {
+    public void canRetrieveLinkTagsByType() throws Exception {
         ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", new int[]{5,6,7,8,9});
         ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", new int[]{11, 12, 13, 14, 15});
 
