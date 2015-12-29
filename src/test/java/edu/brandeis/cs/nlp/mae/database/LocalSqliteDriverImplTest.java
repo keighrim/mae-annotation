@@ -26,6 +26,7 @@ package edu.brandeis.cs.nlp.mae.database;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.HashedSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +78,7 @@ public class LocalSqliteDriverImplTest {
 
         TagType retrieved = driver.getTagTypeByName("ADJ");
         assertTrue(
-                "Expected retrived tag type also to be extent",
+                "Expected retrieved tag type also to be extent",
                 retrieved.isExtent());
 
     }
@@ -85,7 +86,6 @@ public class LocalSqliteDriverImplTest {
     @Test
     public void canRetrieveExtentTagsByType() throws Exception {
         driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
-        driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
@@ -97,6 +97,31 @@ public class LocalSqliteDriverImplTest {
                 "Expected 1 extent tag is retrieved by only extent query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
 
+    }
+
+    @Test
+    public void canRetrieveAllExtentTagsByTypes() throws Exception {
+        driver.createExtentTag("N01", noun, "jenny", 5, 6, 7, 8, 9);
+        driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
+
+        HashedSet<TagType, ExtentTag> retrievedTags = driver.getAllExtentTagsByTypes(false);
+        assertEquals(
+                "Expected 2 types of tags are stored, found: " + retrievedTags.size(),
+                2, retrievedTags.size());
+
+        for (TagType type : retrievedTags.keySet()) {
+//        List<TagType> types = driver.getAllTagTypes();
+//        for (TagType type : types) { // <-- this doesn't work
+            if (type.getName().equals("NOUN")) {
+                assertEquals(
+                        "Expected 1 noun tag is store, found: " + retrievedTags.get(type).size(),
+                        1, retrievedTags.get(type).size());
+            } else if (type.getName().equals("VERB")) {
+                assertEquals(
+                        "Expected 1 verb tag is store, found: " + retrievedTags.get(type).size(),
+                        1, retrievedTags.get(type).size());
+            }
+        }
     }
 
     @Test

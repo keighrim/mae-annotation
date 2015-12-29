@@ -55,7 +55,7 @@ public class NewXMLLoader {
         this.driver = driver;
     }
 
-    public void read(File file) throws FileNotFoundException, MaeIOXMLException, MaeDBException {
+    public void read(File file) throws MaeIOXMLException, MaeDBException {
         try {
             logger.info("reading annotations from XML file: " + file.getName());
             driver.setAnnotationFileName(file.getName());
@@ -75,23 +75,27 @@ public class NewXMLLoader {
 
     public void read(InputStream stream) throws MaeIOXMLException, MaeDBException {
         try {
-//            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-//            Document doc = dBuilder.parse(stream);
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
             Node taskName = doc.getDocumentElement();
             NodeList taskNodes = taskName.getChildNodes();
+            boolean textExists = false;
             for (int i = 0; i < taskNodes.getLength(); i++) {
                 Node child = taskNodes.item(i);
                 if (child.getNodeName().equalsIgnoreCase("text")) {
-                    logger.debug("reading primary document...");
                     readPrimaryText(child);
+                    textExists = true;
                 } else if (child.getNodeName().equalsIgnoreCase("tags")) {
-                    logger.debug("reading annotations...");
                     readAnnotations(child);
-                } else {
+                } else if (child.getNodeType() == Node.ELEMENT_NODE) {
                     logger.warn(String.format("undefined element found in input XML: %s at %s", child.getNodeName(), child.getUserData("lineNum")));
                 }
+                // ignore non-element, such as <!--commend-->, or #text
+            }
+            if (!textExists) {
+                String message = "input document does not contains a primary text!";
+                logger.error(message);
+                throw new MaeIOXMLException(message);
             }
 
         } catch (ParserConfigurationException | SAXException e) {
@@ -106,10 +110,14 @@ public class NewXMLLoader {
     }
 
     private void readAnnotations(Node tagsNode) throws MaeDBException, MaeIOXMLException {
+        logger.debug("reading annotations... at " + tagsNode.getUserData("lineNum"));
         List<Node> linkTags = new LinkedList<>();
         NodeList annotations = tagsNode.getChildNodes();
         for (int i = 0; i < annotations.getLength(); i++) {
             Node annotation = annotations.item(i);
+            if (annotation.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
 
             TagType tagType = driver.getTagTypeByName(annotation.getNodeName());
             if (tagType.isLink()) {
@@ -130,18 +138,29 @@ public class NewXMLLoader {
         NamedNodeMap nodeAttributes = tagNode.getAttributes();
 
         String tid = nodeAttributes.getNamedItem("id").getNodeValue();
+        if (tid == null) {
+            String message = "annotation must have id attribute at " + tagNode.getUserData("lineNum");
+            logger.error(message);
+            throw new MaeIOXMLException(message);
+        }
         nodeAttributes.removeNamedItem("id");
 
         int[] spans;
         if (nodeAttributes.getNamedItem("spans") != null) {
-            nodeAttributes.removeNamedItem("spans");
             spans = SpanHandler.convertStringToArray(nodeAttributes.getNamedItem("spans").getNodeValue());
+            nodeAttributes.removeNamedItem("spans");
         } else {
-            int start = Integer.parseInt(nodeAttributes.getNamedItem("start").getNodeValue());
-            nodeAttributes.removeNamedItem("start");
-            int end = Integer.parseInt(nodeAttributes.getNamedItem("end").getNodeValue());
-            nodeAttributes.removeNamedItem("end");
-            spans = SpanHandler.range(start, end);
+            try {
+                int start = Integer.parseInt(nodeAttributes.getNamedItem("start").getNodeValue());
+                int end = Integer.parseInt(nodeAttributes.getNamedItem("end").getNodeValue());
+                nodeAttributes.removeNamedItem("start");
+                nodeAttributes.removeNamedItem("end");
+                spans = SpanHandler.range(start, end);
+            } catch (NumberFormatException | NullPointerException e) {
+                String message = "an extent tag must have either spans or start-end attributes at " + tagNode.getUserData("lineNum");
+                logger.error(message);
+                throw new MaeIOXMLException(message);
+            }
         }
 
         String text = nodeAttributes.getNamedItem("text").getNodeValue();
@@ -228,6 +247,7 @@ public class NewXMLLoader {
     }
 
     private void readPrimaryText(Node textNode) throws MaeDBException {
+        logger.debug("reading primary document... at " + textNode.getUserData("lineNum"));
         driver.setPrimaryText(textNode.getTextContent());
 
     }

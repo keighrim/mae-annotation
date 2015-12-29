@@ -365,7 +365,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
-    public HashedSet<TagType, LinkTag> getLinksHasArgumentOf(ExtentTag argument) throws MaeDBException{
+    public HashedSet<TagType, LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
         try {
             HashedSet<TagType, LinkTag> links = new HashedSet<>();
             List<Argument> results = null;
@@ -383,17 +383,13 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     public HashedSet<TagType, ExtentTag> getAllExtentTagsByTypes(boolean consumingOnly) throws MaeDBException {
         HashedSet<TagType, ExtentTag> tagsByTypes = new HashedSet<>();
-        try {
-            for (TagType type : tagTypeDao.queryForAll()) {
-                if (type.isExtent()) {
-                    tagsByTypes.putCollection(type, type.getExtentTagsAsList(consumingOnly));
-                }
+        for (TagType type : getAllTagTypes()) {
+            if (type.isExtent()) {
+                tagsByTypes.putCollection(type, type.getExtentTagsAsList(consumingOnly));
             }
-            return tagsByTypes;
-
-        } catch (SQLException e) {
-            throw catchSQLException(e);
         }
+        return tagsByTypes;
+
     }
 
     @Override
@@ -493,26 +489,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException {
         return tag.getAttbutesWithNames();
 
-//        HashMap map = new HashMap<>();
-//        for (AttributeType attType: getAttributeTypesOfTagType(tag.getTagtype())) {
-//            try {
-//                Attribute att = attQuery.where().eq(DBSchema.TAB_ATT_COL_TID, tag.getId()).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
-//                 TODO 151228 is this a right way to use queryForFirst? will it return null if no match?
-//                if (att != null) {
-//                    map.put(att.getName(), att.getValue());
-//                } else {
-//                    map.put(att.getName(), "");
-//                }
-//            } catch (SQLException e) {
-//                throw catchSQLException(e);
-//            }
-//            map.put(attType.getName(), "");
-//        }
-//        for (Attribute att : tag.getAttributes()) {
-//            map.put(att.getName(), att.getValue());
-//        }
-//        return map;
-
     }
 
     @Override
@@ -535,35 +511,38 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
                 charIndexDao.create(ci);
             }
             eTagDao.create(tag);
-            idHandler.addId(tagType, tid);
+            boolean added = idHandler.addId(tagType, tid);
+            if (!added) {
+                throw new MaeDBException("tag id is already in DB!: " + tid);
+            }
             return tag;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
     }
 
-    public ExtentTag createExtentTag(String tid, TagType tagType, String text, ArrayList<int[]> spans) throws MaeDBException {
-        return createExtentTag(tid, tagType, text, SpanHandler.convertPairsToArray(spans));
+    public ExtentTag createExtentTag(String tid, TagType tagType, String text, ArrayList<int[]> spansList) throws MaeDBException {
+        return createExtentTag(tid, tagType, text, SpanHandler.convertPairsToArray(spansList));
     }
 
     public ExtentTag createExtentTag(String tid, TagType tagType, String text, String spansString) throws MaeDBException {
         return createExtentTag(tid, tagType, text, SpanHandler.convertStringToPairs(spansString));
     }
 
-    //no tid: how to get tid?
+    @Override
     public ExtentTag createExtentTag(TagType tagType, String text, int...spans) throws MaeDBException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertArrayToPairs(spans));
-        return null;
+        String tid = idHandler.getNextID(tagType);
+        return createExtentTag(tid, tagType, text, spans);
     }
 
-    public ExtentTag createExtentTag(TagType tagType, String text, ArrayList<int[]> spans) throws MaeDBException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), spans);
-        return null;
+    public ExtentTag createExtentTag(TagType tagType, String text, ArrayList<int[]> spansList) throws MaeDBException {
+        String tid = idHandler.getNextID(tagType);
+        return createExtentTag(tid, tagType, text, spansList);
     }
 
     public ExtentTag createExtentTag(TagType tagType, String text, String spansString) throws MaeDBException {
-//        return createExtentTag(tid, tagType, getTextFromSpans(spans), ModelHelpers.convertStringToPairs(spansString));
-        return null;
+        String tid = idHandler.getNextID(tagType);
+        return createExtentTag(tid, tagType, text, spansString);
     }
 
     @Override
@@ -575,6 +554,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    @Override
+    public LinkTag createLinkTag(TagType tagtype) throws MaeDBException {
+        return createLinkTag(idHandler.getNextID(tagtype), tagtype);
     }
 
     public LinkTag createLinkTag(String tid, TagType tagType, HashMap<ArgumentType, ExtentTag> arguments) throws MaeDBException {
@@ -632,7 +616,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             if (dbFile.delete()) {
                 logger.info("driver is completely destroyed");
             } else {
-                logger.error("file is not deleted: " + SQLITE_FILENAME);
+                logger.error("DB file is not deleted: " + SQLITE_FILENAME);
 
             }
         }

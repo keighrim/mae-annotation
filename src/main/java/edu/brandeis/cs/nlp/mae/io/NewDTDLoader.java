@@ -60,13 +60,13 @@ public class NewDTDLoader {
     private ArrayList<TagType> loadedTagTypes;
     private HashMap<String, String> prefixes;
 
-    public NewDTDLoader(MaeDriverI driver) throws MaeIODTDException, FileNotFoundException {
+    public NewDTDLoader(MaeDriverI driver) throws MaeIODTDException {
         this.driver = driver;
         this.prefixes = new HashMap<>();
         this.loadedTagTypes = new ArrayList<>();
     }
 
-    public void read(File file) throws FileNotFoundException, MaeIODTDException, MaeDBException {
+    public void read(File file) throws MaeIODTDException, MaeDBException {
         try {
             logger.info("reading annotation scheme from: " + file.getName());
             driver.setTaskFileName(file.getName());
@@ -285,7 +285,7 @@ public class NewDTDLoader {
                 }
             }
             if (required) {
-                logger.debug("setting required: " + attTypeName);
+                logger.debug("setting to a required attribute: " + attTypeName);
                 driver.setAttributeTypeRequired(type);
             }
         }
@@ -297,10 +297,10 @@ public class NewDTDLoader {
         return driver.createAttributeType(tagType, attTypeName);
     }
 
-    private ArgumentType defineArgument(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
+    private ArgumentType defineArgument(int lineNum, TagType tagType, String argTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
         ArgumentType type = null;
         if (!tagType.isLink()) {
-            this.error(String.format("extent tag \"%s\" can't have an argument \"%s\" at %d", tagType.getName(), attTypeName, lineNum));
+            this.error(String.format("extent tag \"%s\" can't have an argument \"%s\" at %d", tagType.getName(), argTypeName, lineNum));
         } else if (defaultValue != null) {
             this.error("arguments cannot have a default value: " + lineNum);
         } else if (prefix!=null && !valueset.equals("IDREF")) {
@@ -308,10 +308,10 @@ public class NewDTDLoader {
         } else if (prefix!=null) {
             type = driver.createArgumentType(tagType, prefix);
         } else {
-            type = driver.createArgumentType(tagType, attTypeName);
+            type = driver.createArgumentType(tagType, argTypeName);
         }
         if (required && type != null) {
-            logger.debug("setting required: " + attTypeName);
+            logger.debug("setting to a required argument: " + argTypeName);
             driver.setArgumentTypeRequired(type);
         }
         return type;

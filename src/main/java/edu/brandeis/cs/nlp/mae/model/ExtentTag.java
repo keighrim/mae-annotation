@@ -90,7 +90,7 @@ public class ExtentTag extends Tag implements IModel {
     }
 
     public boolean isConsuming() {
-        return getSpans() == null || getSpans().size() == 0;
+        return getSpans() != null && getSpans().size() > 0;
     }
 
     public ForeignCollection<CharIndex> getSpans() {
