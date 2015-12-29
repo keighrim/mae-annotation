@@ -80,6 +80,9 @@ public interface MaeDriverI {
 
     boolean setTagTypeNonConsuming(TagType tagType, boolean b) throws MaeDBException;
 
+    // tag common
+    Tag getTagByTid(String tid) throws MaeDBException;
+
     // extent tags
     ExtentTag createExtentTag(String tid, TagType tagType, String text, int[] spans) throws MaeDBException;
 
@@ -110,7 +113,7 @@ public interface MaeDriverI {
     void setAttributeTypeRequired(AttributeType type) throws MaeDBException;
 
     // atts
-    Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException, MaeModelException;
+    Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException;
 
     Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException;
 

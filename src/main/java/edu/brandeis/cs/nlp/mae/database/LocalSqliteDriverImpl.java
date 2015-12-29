@@ -339,17 +339,22 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
-    public TagType getTagTypeByTid(String tid) throws MaeDBException {
-
+    @Override
+    public Tag getTagByTid(String tid) throws MaeDBException {
         try {
             if (eTagDao.queryForId(tid) != null) {
-                return eTagDao.queryForId(tid).getTagtype();
+                return eTagDao.queryForId(tid);
             } else {
-                return lTagDao.queryForId(tid).getTagtype();
+                return lTagDao.queryForId(tid);
             }
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    public TagType getTagTypeByTid(String tid) throws MaeDBException {
+        return getTagByTid(tid).getTagtype();
+
     }
 
     public void removeTag(Tag tag) throws Exception {
@@ -586,13 +591,15 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException, MaeModelException {
+    public Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
         try {
             Attribute att = new Attribute(tag, attType, attValue);
             attDao.create(att);
             return att;
         } catch (SQLException e) {
             throw catchSQLException(e);
+        } catch (MaeModelException e) {
+            throw new MaeDBException("failed to add an attribute: " + e.getMessage(), e);
         }
 
     }

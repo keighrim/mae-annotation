@@ -67,17 +67,23 @@ public class NewDTDLoader {
     }
 
     public void read(File file) throws FileNotFoundException, MaeIODTDException, MaeDBException {
-        logger.info("reading annotation scheme from: " + file.getName());
-        driver.setTaskFileName(file.getName());
-        this.read(new FileInputStream(file));
+        try {
+            logger.info("reading annotation scheme from: " + file.getName());
+            driver.setTaskFileName(file.getName());
+            this.read(new FileInputStream(file));
+        } catch (FileNotFoundException e) {
+            String message = "file not found: " + file.getName();
+            logger.error(message);
+            throw new MaeIODTDException(message, e);
+        }
     }
 
-    public void read(String string) throws MaeIODTDException, FileNotFoundException, MaeDBException {
+    public void read(String string) throws MaeIODTDException, MaeDBException {
         logger.info("reading annotation scheme from plain JAVA string");
         this.read(IOUtils.toInputStream(string));
 
     }
-    public void read(InputStream stream) throws MaeIODTDException, FileNotFoundException, MaeDBException {
+    public void read(InputStream stream) throws MaeIODTDException, MaeDBException {
         Scanner sc = new Scanner(stream, "UTF-8");
         int lineNum = 1;
         while (sc.hasNextLine()) {
