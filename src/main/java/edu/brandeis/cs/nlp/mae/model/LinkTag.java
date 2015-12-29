@@ -29,10 +29,10 @@ import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import edu.brandeis.cs.nlp.mae.database.LinkTagDao;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by krim on 11/19/15.
@@ -108,14 +108,44 @@ public class LinkTag extends Tag implements IModel {
         }
     }
 
+    public Map<String, String> getArgumentTidsAndTextsWithNames() {
+        Map<String, String> argumentsNames = new LinkedHashMap<>();
+        for (Argument argument : getArguments()) {
+            argumentsNames.put(argument.getName() + "ID", argument.getArgument().getTid());
+            argumentsNames.put(argument.getName() + "Text", argument.getArgument().getText());
+        }
+        return argumentsNames;
+
+    }
+
     public Map<String, String> getArgumentTidsWithNames() {
-        return ModelHelpers.getArgumentsWithNames(this.getArguments());
+        Map<String, String> argumentsWithNames = new LinkedHashMap<>();
+        for (Argument argument : getArguments()) {
+            argumentsWithNames.put(argument.getName(), argument.getArgument().getTid());
+        }
+        return argumentsWithNames;
+
     }
 
     @Override
-    public Map<String, String> getAttbutesWithNames() {
-        Map<String, String> map = ModelHelpers.getAttbutesWithNames(this.getAttributes());
-        map.putAll(getArgumentTidsWithNames());
+    public Map<String, String> getAttributesWithNames() {
+        // make sure arguments are inserted before attributes
+        Map<String, String> map = getArgumentTidsAndTextsWithNames();
+        map.putAll(super.getAttributesWithNames());
         return map;
     }
+
+    @Override
+    public String toJsonString() {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    @Override
+    public String toXmlString() {
+        // TODO 151229 maybe re-implement this (and one in ExtentTag) using DOM in the future for robustness?
+        String tagTypeName = getTagtype().getName();
+        String attributes = getAttributesXmlString();
+        return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, attributes}, " "));
+    }
+
 }

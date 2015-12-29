@@ -30,6 +30,7 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import edu.brandeis.cs.nlp.mae.database.ExtentTagDao;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -124,8 +125,18 @@ public class ExtentTag extends Tag implements IModel {
     }
 
     @Override
-    public Map<String, String> getAttbutesWithNames() {
-        return ModelHelpers.getAttbutesWithNames(this.getAttributes());
+    public String toJsonString() {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    @Override
+    public String toXmlString() {
+        String tagTypeName = getTagtype().getName();
+        String idAtt = String.format("id=\"%s\"", tid);
+        String spansAtt = String.format("spans=\"%s\"", getSpansAsString());
+        String textAtt = String.format("text=\"%s\"", text);
+        String attributes = getAttributesXmlString();
+        return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, idAtt, spansAtt, textAtt, attributes}, " "));
     }
 
 }

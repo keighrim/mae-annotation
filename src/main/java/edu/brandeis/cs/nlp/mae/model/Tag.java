@@ -26,10 +26,10 @@ package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by krim on 11/19/15.
@@ -58,6 +58,15 @@ public abstract class Tag implements IModel {
         this.setTagtype(tagType);
         this.setFilename(filename);
         this.setComplete(false);
+
+    }
+
+    public Map<String, String> getAttributesWithNames() {
+        Map<String, String> attributesWithNames = new LinkedHashMap<>();
+        for (Attribute attribute : getAttributes()) {
+            attributesWithNames.put(attribute.getName(), attribute.getValue());
+        }
+        return attributesWithNames;
 
     }
 
@@ -115,11 +124,22 @@ public abstract class Tag implements IModel {
 
     public abstract ForeignCollection<Attribute> getAttributes();
 
-    public abstract Map<String, String> getAttbutesWithNames();
-
     @Override
     public int hashCode() {
         return this.tid.hashCode();
     }
 
+    public abstract String toJsonString();
+
+    public abstract String toXmlString();
+
+    protected String getAttributesXmlString() {
+        Map<String, String> attMap = getAttributesWithNames();
+        List<String> attList = new ArrayList<>();
+        for (String attName : attMap.keySet()) {
+
+            attList.add(String.format("%s=\"%s\"", attName, attMap.get(attName)));
+        }
+        return StringUtils.join(attList, " ");
+    }
 }

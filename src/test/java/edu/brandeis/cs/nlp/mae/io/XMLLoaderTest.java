@@ -162,7 +162,7 @@ public class XMLLoaderTest {
                         "Expected v0's associated text is \"wants\", found: " + v0.getText(),
                         "wants", v0.getText()
                 );
-                Map<String, String> retrievedAttributes = v0.getAttbutesWithNames();
+                Map<String, String> retrievedAttributes = v0.getAttributesWithNames();
                 assertFalse(
                         "Expected v0 has no tense: ", retrievedAttributes.keySet().contains("tense")
                 );

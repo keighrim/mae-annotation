@@ -34,7 +34,16 @@ import java.util.*;
  */
 public class ModelHelpers {
 
-    public static Map<String, String> getArgumentsWithNames(Collection<Argument> arguments) {
+    public static Map<String, String> getArgumentTextsWithNames(Collection<Argument> arguments) {
+        HashMap<String, String> argumentTextsWithNames = new HashMap<>();
+        for (Argument argument : arguments) {
+            argumentTextsWithNames.put(argument.getName(), argument.getArgument().getText());
+        }
+        return argumentTextsWithNames;
+
+    }
+
+    public static Map<String, String> getArgumentTidsWithNames(Collection<Argument> arguments) {
         HashMap<String, String> argumentsWithNames = new HashMap<>();
         for (Argument argument : arguments) {
             argumentsWithNames.put(argument.getName(), argument.getArgument().getTid());
@@ -43,12 +52,4 @@ public class ModelHelpers {
 
     }
 
-    public static Map<String, String> getAttbutesWithNames(Collection<Attribute> attributes) {
-        HashMap<String, String> attributesWithNames = new HashMap<>();
-        for (Attribute attribute : attributes) {
-            attributesWithNames.put(attribute.getName(), attribute.getValue());
-        }
-        return attributesWithNames;
-
-    }
 }

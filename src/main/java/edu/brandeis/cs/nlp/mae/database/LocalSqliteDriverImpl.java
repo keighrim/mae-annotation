@@ -60,9 +60,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     // this should be distinguishable over diff tasks and diff versions
     private Task workingTask;
 
-    // TODO 151227 add another table: task with columns: dtd_root, dtd_filename, last_saved_xml_filename, ...
-    // this will make task context persistent, then later can be used when recover from unexpected termination
-
     private Dao<Task, Integer> taskDao;
     private Dao<CharIndex, Integer> charIndexDao;
     private Dao<TagType, Integer> tagTypeDao;
@@ -165,7 +162,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public void readAnnotation(File file) throws FileNotFoundException, MaeIOXMLException, MaeDBException {
-        // TODO 151227 implement XMLLoader class
         NewXMLLoader xmll = new NewXMLLoader(this);
         xmll.read(file);
 
@@ -487,7 +483,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException {
-        return tag.getAttbutesWithNames();
+        return tag.getAttributesWithNames();
 
     }
 
@@ -684,16 +680,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             throw catchSQLException(e);
         }
     }
-
-    // TODO 151216 do we need this?
-//    public boolean hasDTD() {
-//        return hasDTD;
-//    }
-
-    // TODO 151216 how to keep DTD name in the future?
-//    public String getDTDName() {
-//        return mDtd.getName();
-//    }
 
     @Override
     public List<ArgumentType> getArgumentTypesOfLinkTagType(TagType link) throws MaeDBException {
