@@ -22,13 +22,13 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.view;
+package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 import edu.brandeis.cs.nlp.mae.model.ElemLink;
-import edu.brandeis.cs.nlp.mae.ui.Colors;
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.Colors;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;

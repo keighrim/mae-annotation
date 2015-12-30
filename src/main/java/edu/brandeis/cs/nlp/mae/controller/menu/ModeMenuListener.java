@@ -22,9 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui.menu;
+package edu.brandeis.cs.nlp.mae.controller.menu;
 
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

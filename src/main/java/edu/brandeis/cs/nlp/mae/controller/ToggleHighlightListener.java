@@ -22,7 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui;
+package edu.brandeis.cs.nlp.mae.controller;
+
+import edu.brandeis.cs.nlp.mae.view.TabTitle;
 
 import javax.swing.text.*;
 import java.awt.event.ItemEvent;
@@ -34,7 +36,7 @@ import java.util.Hashtable;
 /**
  * This is the class to toggle hightlight color for a specific tagnamw
  */
-class ToggleHighlightListener implements ItemListener {
+public class ToggleHighlightListener implements ItemListener {
 
     private MaeMainUI maeMainUI;
     private String elemName;

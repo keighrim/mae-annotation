@@ -24,7 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
 import javax.swing.table.DefaultTableModel;
 

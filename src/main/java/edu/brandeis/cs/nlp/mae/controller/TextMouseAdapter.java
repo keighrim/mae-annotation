@@ -22,36 +22,40 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui;
+package edu.brandeis.cs.nlp.mae.controller;
 
-import javax.swing.*;
-import java.awt.*;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
- * Rectangle icon class to be used in tab titles as toggle buttons
+ * PopupListener determines whether the link creation window should be
+ * displayed.
  */
-public class BorderRect implements Icon {
-    private int size;
-    private Color color;
+public class TextMouseAdapter extends MouseAdapter {
 
-    public BorderRect(Color c, int size) {
-        this.color = c;
-        this.size = size;
+    private MaeMainUI maeMainUI;
+
+    public TextMouseAdapter(MaeMainUI maeMainUI) {
+        this.maeMainUI = maeMainUI;
     }
 
     @Override
-    public void paintIcon(Component c, Graphics g, int x, int y) {
-        g.setColor(this.color);
-        g.drawRect(x, y, this.size, this.size);
+    public void mousePressed(MouseEvent e) {
+        maybeShowTextPopup(e);
     }
 
     @Override
-    public int getIconWidth() {
-        return this.size;
+    public void mouseReleased(MouseEvent e) {
+        maybeShowTextPopup(e);
     }
 
-    @Override
-    public int getIconHeight() {
-        return this.size;
+    private void maybeShowTextPopup(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            maeMainUI.setTextPopup(maeMainUI.createTextContextMenu());
+            maeMainUI.getTextPopup().show(e.getComponent(),
+                    e.getX(), e.getY());
+        }
     }
 }

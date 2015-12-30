@@ -22,14 +22,14 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui.menu;
+package edu.brandeis.cs.nlp.mae.controller.menu;
 
 import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.FileOperations;
 import edu.brandeis.cs.nlp.mae.io.XMLFileLoader;
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
 import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;

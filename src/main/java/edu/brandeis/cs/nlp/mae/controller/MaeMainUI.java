@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui;
+package edu.brandeis.cs.nlp.mae.controller;
 
 
 import edu.brandeis.cs.nlp.mae.util.HashedList;
@@ -32,10 +32,10 @@ import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
 import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
 import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.ui.menu.FileMenuListener;
-import edu.brandeis.cs.nlp.mae.ui.menu.FontSizeMenuListener;
-import edu.brandeis.cs.nlp.mae.ui.menu.HelpMenuListener;
-import edu.brandeis.cs.nlp.mae.ui.menu.ModeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.FileMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.FontSizeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.HelpMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.ModeMenuListener;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.*;
 import org.slf4j.Logger;
@@ -62,6 +62,7 @@ import java.util.Timer;
 
 public class MaeMainUI extends JPanel {
 
+    // TODO: 12/29/2015 re-factor any swing components as class fields into separate classes
     protected static final Logger logger = LoggerFactory.getLogger(MaeMainUI.class.getName());
 
     private static final long serialVersionUID = 9404268L;
@@ -381,7 +382,7 @@ public class MaeMainUI extends JPanel {
         /* GUI components */
         // file choosers
         mLoadFC = new JFileChooser(".");
-        mLoadFC.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        mLoadFC.setFileSelectionMode(JFileChooser.FILES_ONLY);
         mSaveFC = new JFileChooser(".");
         mSaveFC.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 

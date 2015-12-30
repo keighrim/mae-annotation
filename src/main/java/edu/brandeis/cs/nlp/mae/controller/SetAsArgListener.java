@@ -22,34 +22,33 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui.menu;
+package edu.brandeis.cs.nlp.mae.controller;
 
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Class that changes the size of the text from the top menu
+ * This listener is associated with 'set as argument of...' menu items
+ * callable from context menus from either bottom table or main text pane
  */
-public class FontSizeMenuListener implements ActionListener {
+public class SetAsArgListener implements ActionListener {
     private MaeMainUI maeMainUI;
 
-    public FontSizeMenuListener(MaeMainUI maeMainUI) {
+    public SetAsArgListener(MaeMainUI maeMainUI) {
         this.maeMainUI = maeMainUI;
     }
 
+    @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        String command = actionEvent.getActionCommand();
-        if (command.equals("Font++")) {
-            Font font = maeMainUI.getTextPane().getFont();
-            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
-            maeMainUI.getTextPane().setFont(font2);
-        } else if (command.equals("Font--")) {
-            Font font = maeMainUI.getTextPane().getFont();
-            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
-            maeMainUI.getTextPane().setFont(font2);
-        }
+        // command looks like this:
+        // linkType(0), linkId(1), argName(2), argId(3), argText(4)
+        String[] command = actionEvent.getActionCommand().split(MaeStrings.SEP);
+        maeMainUI.setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
+        int argNum = maeMainUI.getTask().getArgumentTypesOfLinkTagType(command[0]).indexOf(command[2]);
+        String argType = maeMainUI.getTask().getTagTypeByTid(command[3]);
+        maeMainUI.getTask().addArgument(command[1], argNum, command[3], argType);
     }
 }

@@ -27,7 +27,7 @@ package edu.brandeis.cs.nlp.mae.database;
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;

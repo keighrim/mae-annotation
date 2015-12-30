@@ -27,7 +27,7 @@ package edu.brandeis.cs.nlp.mae.database;
 import edu.brandeis.cs.nlp.mae.util.HashedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.Elem;
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

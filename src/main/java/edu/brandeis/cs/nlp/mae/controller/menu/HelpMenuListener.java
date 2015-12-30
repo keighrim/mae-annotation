@@ -22,33 +22,44 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.view;
+package edu.brandeis.cs.nlp.mae.controller.menu;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.ui.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
- * This listener is associated with 'set as argument of...' menu items
- * callable from context menus from either bottom table or main text pane
+ * Listens for the request from the Help Menu
  */
-public class SetAsArgListener implements ActionListener {
+public class HelpMenuListener implements ActionListener {
     private MaeMainUI maeMainUI;
 
-    public SetAsArgListener(MaeMainUI maeMainUI) {
+    public HelpMenuListener(MaeMainUI maeMainUI) {
         this.maeMainUI = maeMainUI;
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        // command looks like this:
-        // linkType(0), linkId(1), argName(2), argId(3), argText(4)
-        String[] command = actionEvent.getActionCommand().split(MaeStrings.SEP);
-        maeMainUI.setArgumentInTable(command[0], command[1], command[2], command[3], command[4]);
-        int argNum = maeMainUI.getTask().getArgumentTypesOfLinkTagType(command[0]).indexOf(command[2]);
-        String argType = maeMainUI.getTask().getTagTypeByTid(command[3]);
-        maeMainUI.getTask().addArgument(command[1], argNum, command[3], argType);
+        String command = actionEvent.getActionCommand();
+        if (command.equals("about")) {
+            maeMainUI.showAboutDialog();
+        } else if (command.equals("web")) {
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().browse(
+                            new URI(MaeStrings.PROJECT_WEBPAGE));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

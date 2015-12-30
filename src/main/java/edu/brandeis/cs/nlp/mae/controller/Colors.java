@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui;
+package edu.brandeis.cs.nlp.mae.controller;
 
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;

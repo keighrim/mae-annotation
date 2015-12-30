@@ -22,9 +22,13 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.ui;
+package edu.brandeis.cs.nlp.mae.view;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.BorderRect;
+import edu.brandeis.cs.nlp.mae.controller.ColorRect;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.controller.ToggleHighlightListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -95,7 +99,7 @@ public class TabTitle extends JPanel {
      *
      * @return element name
      */
-    String getTitleName() {
+    public String getTitleName() {
         return this.elemName;
     }
 
@@ -104,7 +108,7 @@ public class TabTitle extends JPanel {
      *
      * @param b whether turn on or off highlighting
      */
-    void setHighlighted(Boolean b) {
+    public void setHighlighted(Boolean b) {
         this.toggle.setSelected(b);
     }
 
@@ -113,7 +117,7 @@ public class TabTitle extends JPanel {
      *
      * @return true if current tab is highlighted
      */
-    boolean isHighlighted() {
+    public boolean isHighlighted() {
         return this.toggle.isSelected();
     }
 }
