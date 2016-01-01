@@ -67,6 +67,16 @@ public class LinkTag extends Tag implements IModel {
         return tags;
     }
 
+    public Argument getArgumentByTypeName(String argTypeName) {
+        for (Argument arg : getArguments()) {
+            if (arg.getArgumentType().getName().equals(argTypeName)) {
+                return arg;
+            }
+        }
+        return null;
+    }
+
+
     @Override
     public boolean isComplete() throws SQLException {
         checkRequiredAtts();

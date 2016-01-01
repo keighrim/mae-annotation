@@ -85,7 +85,7 @@ public class Task implements IModel {
         this.annotationFileName = annotationFileName;
     }
 
-    public boolean isDtdLoaded() {
+    public boolean isTaskLoaded() {
         return getTaskFileName() == null;
     }
 

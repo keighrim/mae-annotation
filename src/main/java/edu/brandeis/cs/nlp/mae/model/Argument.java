@@ -80,6 +80,14 @@ public class Argument implements IModel {
         }
     }
 
+    public String getArgumentText() {
+        return getArgument().getText();
+    }
+
+    public String getArgumentId() {
+        return getArgument().getId();
+    }
+
     public ExtentTag getArgument() {
         return argument;
     }

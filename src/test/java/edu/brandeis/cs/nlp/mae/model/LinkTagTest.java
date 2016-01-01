@@ -105,7 +105,6 @@ public class LinkTagTest extends ExtentTagTest {
                 "Expected retrieved link tag has 2 arguments, found " + retrievedTag.getArguments().size(),
                 2, retrievedTag.getArguments().size());
 
-
         Map<String, String> arguments = retrievedTag.getArgumentTidsWithNames();
 
         List<String> argTypes = new LinkedList<>(arguments.keySet());
@@ -114,17 +113,31 @@ public class LinkTagTest extends ExtentTagTest {
                 "Expected tag to have \"agent\" and \"predicate\" arg types, found " + argTypes,
                 argTypes.containsAll(goldTypes) && goldTypes.containsAll(argTypes)
         );
-        List<String> args = new LinkedList<>(arguments.values());
-        List<String> golds = Arrays.asList("N01", "V01");
-        assertTrue(
-                "Expected tag to have \"N01\" and \"V01\" as arguments, found " + args,
-                args.containsAll(golds) && golds.containsAll(args)
-        );
-
         assertTrue(
                 "Expected argument names and values properly mapped, found " + arguments.toString(),
                 arguments.get("agent").equals("N01") && arguments.get("predicate").equals("V01")
         );
+
+        Argument retrievedAgent = retrievedTag.getArgumentByTypeName("agent");
+        assertTrue(
+                "Expected agent argument can return id of its argument tag, found: " + retrievedAgent.getArgumentId(),
+                retrievedAgent.getArgumentId().equals("N01")
+        );
+        assertTrue(
+                "Expected agent argument can return text of its argument tag, found: " + retrievedAgent.getArgumentText(),
+                retrievedAgent.getArgumentText().equals("Crown")
+        );
+
+        Argument retrievedPred = retrievedTag.getArgumentByTypeName("predicate");
+        assertTrue(
+                "Expected predicate argument can return id of its argument tag, found: " + retrievedPred.getArgumentId(),
+                retrievedPred.getArgumentId().equals("V01")
+        );
+        assertTrue(
+                "Expected predicate argument can return text of its argument tag, found: " + retrievedPred.getArgumentType(),
+                retrievedPred.getArgumentText().equals("own")
+        );
+
     }
 }
 
