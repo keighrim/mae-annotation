@@ -25,8 +25,8 @@
 package edu.brandeis.cs.nlp.mae.util;
 
 /**
- * This is an implementation of a Hashtable that
- * stores more than one value per key.  This is done by
+ * This is an implementation of a Hashtable that 
+ * stores more than one value per key.  This is done by 
  * having every key associated with an ArrayList, and every
  * new value being stored in the array is added to the end of
  * the list (unless the list already contains that value)
@@ -36,17 +36,20 @@ package edu.brandeis.cs.nlp.mae.util;
  *
  */
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
-public class HashedList<K,V> extends HashedCollection<K, V> {
+public class MappedSet<K,V> extends MappedCollection<K, V> {
 
-    public HashedList(){
-        super.hash = new HashMap<>();
+    private TreeMap<K,TreeSet<V>> hash;
+
+    public MappedSet(){
+        hash = new TreeMap<>();
     }
 
     /**
-     * Associate yet another value with a key in a Hashtable that allows duplicates.
-     * TODO 151214 figure out why we need to allow duplicates
+     * Associate yet another value with a key in a Hashtable that doesn't allows duplicates, but sorted
      * Also use to put the first key/value.
      * Add an entity to a key's arrayList
      *
@@ -54,13 +57,12 @@ public class HashedList<K,V> extends HashedCollection<K, V> {
      * @param value value being added to key's array
      */
     public void putItem (K key, V value) {
-        if (super.hash.containsKey(key)) {
+        if (super.containsKey(key)) {
             getAsList(key).add(value);
         } else {
-            ArrayList<V> newlist = new ArrayList<>();
-            newlist.add(value);
-            super.hash.put(key, newlist);
+            TreeSet<V> newtree = new TreeSet<>();
+            newtree.add(value);
+            hash.put(key, newtree);
         }
     }
-
 }

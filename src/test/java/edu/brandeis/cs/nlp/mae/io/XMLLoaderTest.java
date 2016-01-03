@@ -30,7 +30,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
-import edu.brandeis.cs.nlp.mae.util.HashedSet;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -130,7 +130,7 @@ public class XMLLoaderTest {
         String sample = SAMPLE_HEADER + SAMPLE_TEXT + SAMPLE_TAGS_START + SAMPLE_TAG_N0 + SAMPLE_TAG_N1 + SAMPLE_TAG_N2 + SAMPLE_TAG_V0 + SAMPLE_TAGS_END + SAMPLE_END;
         xmlLoader.read(sample);
 
-        HashedSet<TagType, ExtentTag> allTags = driver.getAllExtentTagsByTypes(false);
+        MappedSet<TagType, ExtentTag> allTags = driver.getAllExtentTagsByTypes(false);
 
         for (TagType type : allTags.keySet()) {
             if (type.getName().equals("NOUN")) {

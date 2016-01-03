@@ -38,15 +38,16 @@ package edu.brandeis.cs.nlp.mae.util;
 
 import java.util.*;
 
-public abstract class HashedCollection<K,V>{
+public abstract class MappedCollection<K,V>{
 
-    protected HashMap<K, Collection<V>> hash;
+    // TODO: 1/2/2016 consider using treeset, so that when query all tagtypes at a certain locatoin, we can get tagtypes sorted, which conveniently get consistent colors through contiguous locations
+    protected TreeMap<K, Collection<V>> hash;
 
-    public HashedCollection(){
-        hash = new HashMap<>();
+    public MappedCollection(){
+        hash = new TreeMap<>();
     }
 
-    public HashedCollection(HashMap<K, Collection<V>> hash){
+    public MappedCollection(HashMap<K, Collection<V>> hash){
         for (K key : hash.keySet()) {
             this.hash.put(key, hash.get(key));
         }
@@ -83,7 +84,7 @@ public abstract class HashedCollection<K,V>{
      * Add all key-value pairs of a new HashCollection to this object
      * @param newHash - target HashCollection
      */
-    public void merge(HashedCollection<K,V> newHash){
+    public void merge(MappedCollection<K,V> newHash){
         for (K key : newHash.keySet()) {
             putCollection(key, newHash.get(key));
         }
@@ -110,7 +111,7 @@ public abstract class HashedCollection<K,V>{
     }
 
     public void clear() {
-        hash = new HashMap<>();
+        hash = new TreeMap<>();
     }
 
     public boolean containsKey(K key){

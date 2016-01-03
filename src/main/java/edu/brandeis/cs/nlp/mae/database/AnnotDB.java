@@ -25,7 +25,7 @@
 package edu.brandeis.cs.nlp.mae.database;
 
 
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 
 import java.sql.*;
 import java.util.*;
@@ -226,9 +226,9 @@ class AnnotDB {
      * 
      * @throws Exception
      */
-    HashedList<String,String> getLocElemHash()
+    MappedList<String,String> getLocElemHash()
             throws Exception{
-        HashedList<String,String> elems = new HashedList<String,String>();
+        MappedList<String,String> elems = new MappedList<String,String>();
         Statement stat = mConn.createStatement();
         String query = String.format("SELECT %s,%s FROM %s;",
                 LOC_COL_NAME, ELEM_NAME_COL_NAME, EXTENT_TABLE_NAME);
@@ -470,9 +470,9 @@ class AnnotDB {
      * associated with the extent being searched for
      * @throws Exception
      */
-    HashedList<String,String> getLinksHasArgumentOf(String extType, String extID)
+    MappedList<String,String> getLinksHasArgumentOf(String extType, String extID)
             throws Exception{
-        HashedList<String,String> links = new HashedList<String,String>();
+        MappedList<String,String> links = new MappedList<String,String>();
         Statement stat = mConn.createStatement();
         for (int i=0; i<mMaxArgs; i++) {
             try {
@@ -509,7 +509,7 @@ class AnnotDB {
      * tag name as keys and IDs as values.
      * @throws Exception
      */
-    HashedList<String,String> getTagsByTypesBetween(int begin, int end)
+    MappedList<String,String> getTagsByTypesBetween(int begin, int end)
             throws Exception{
         Statement stat = mConn.createStatement();
         String query;
@@ -529,7 +529,7 @@ class AnnotDB {
         }
 
         ResultSet rs = stat.executeQuery(query);
-        HashedList<String,String> tags = new HashedList<String,String>();
+        MappedList<String,String> tags = new MappedList<String,String>();
         while(rs.next()){
             tags.putItem(rs.getString(ELEM_NAME_COL_NAME),
                     rs.getString(ID_COL_NAME));
@@ -547,9 +547,9 @@ class AnnotDB {
      * that exist between the start and end character offsets with the
      * tag name as keys and IDs as values.
      */
-    HashedList<String,String> getTagsInSpansAndNC(int begin, int end)
+    MappedList<String,String> getTagsInSpansAndNC(int begin, int end)
             throws Exception{
-        HashedList<String,String> tags  = getTagsByTypesBetween(begin, end);
+        MappedList<String,String> tags  = getTagsByTypesBetween(begin, end);
         tags.merge(getAllNCTags());
         return tags;
     }
@@ -560,7 +560,7 @@ class AnnotDB {
      * @return HC with tag types as keys, tag ids as values
      * @throws Exception
      */
-    HashedList<String, String> getAllConsumingTags() throws Exception {
+    MappedList<String, String> getAllConsumingTags() throws Exception {
         return getAllExtTags(true);
     }
 
@@ -570,7 +570,7 @@ class AnnotDB {
      * @return HC with tag types as keys, tag ids as values
      * @throws Exception
      */
-    HashedList<String,String> getAllNCTags() throws Exception {
+    MappedList<String,String> getAllNCTags() throws Exception {
         return getAllExtTags(false);
     }
 
@@ -580,7 +580,7 @@ class AnnotDB {
      * @param consuming get consuming tags? or NC tags?
      * @throws Exception
      */
-    HashedList<String,String> getAllExtTags(boolean consuming) throws Exception {
+    MappedList<String,String> getAllExtTags(boolean consuming) throws Exception {
         String op;
         if (consuming) {
             op = "!=";
@@ -593,7 +593,7 @@ class AnnotDB {
                 "SELECT DISTINCT(%s), %s FROM %s WHERE %s %s -1;",
                 ID_COL_NAME, ELEM_NAME_COL_NAME, EXTENT_TABLE_NAME, LOC_COL_NAME, op);
         ResultSet rs = stat.executeQuery(query);
-        HashedList<String, String> ncTags = new HashedList<String, String>();
+        MappedList<String, String> ncTags = new MappedList<String, String>();
         while(rs.next()){
             ncTags.putItem(rs.getString(ELEM_NAME_COL_NAME),rs.getString(ID_COL_NAME));
         }

@@ -25,7 +25,7 @@
 package edu.brandeis.cs.nlp.mae.database;
 
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class AnnotationTask {
 
     private Hashtable<String, Elem> mElements;
     private Hashtable<String, AttID> mIdTracker;
-    private HashedList<String, String> mIdsExist;
+    private MappedList<String, String> mIdsExist;
 
     private AnnotDB mDb;
     private DTD mDtd;
@@ -120,8 +120,8 @@ public class AnnotationTask {
      * @return a HashCollection that will contain all IDs that are in use
      * for each tag in the DTD
      */
-    private HashedList<String, String> createIDsExist() {
-        HashedList<String, String> ids = new HashedList<String, String>();
+    private MappedList<String, String> createIDsExist() {
+        MappedList<String, String> ids = new MappedList<String, String>();
         ArrayList<Elem> elems = mDtd.getAllTagTypes();
         for (Elem elem : elems) {
             ids.putItem(elem.getName(), "");
@@ -214,22 +214,22 @@ public class AnnotationTask {
     }
 
 
-    public HashedList<String, String> getLinksHasArgumentOf(String e_name, String id) {
+    public MappedList<String, String> getLinksHasArgumentOf(String e_name, String id) {
         try {
             return (mDb.getLinksHasArgumentOf(e_name, id));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return (new HashedList<String, String>());
+        return (new MappedList<String, String>());
     }
 
-    public HashedList<String, String> getAllLocationsWithTags() {
+    public MappedList<String, String> getAllLocationsWithTags() {
         try {
             return (mDb.getLocElemHash());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return (new HashedList<String, String>());
+        return (new MappedList<String, String>());
     }
 
     public void addExtToBatch(int pos, String elemName, String newId) {
@@ -285,15 +285,15 @@ public class AnnotationTask {
      * @param spans a list of start-end pairs
      * @return all tags in every span
      */
-    public HashedList<String, String> getTagsByTypesIn(ArrayList<int[]> spans) {
-        HashedList<String, String> nameToId = new HashedList<String, String>();
+    public MappedList<String, String> getTagsByTypesIn(ArrayList<int[]> spans) {
+        MappedList<String, String> nameToId = new MappedList<String, String>();
         for (int[] span : spans) {
             nameToId.merge(getTagsByTypesBetween(span[0], span[1]));
         }
         return nameToId;
     }
 
-    public HashedList<String, String> getTagsByTypesBetween(int begin, int end) {
+    public MappedList<String, String> getTagsByTypesBetween(int begin, int end) {
         try {
             return (mDb.getTagsByTypesBetween(begin, end));
         } catch (Exception e) {
@@ -302,7 +302,7 @@ public class AnnotationTask {
         return null;
     }
 
-    HashedList<String, String> getNCTags() {
+    MappedList<String, String> getNCTags() {
         try {
             return mDb.getAllNCTags();
         } catch (Exception e) {
@@ -311,8 +311,8 @@ public class AnnotationTask {
         return null;
     }
 
-    HashedList<String, String> getAllExtTags(boolean includeNC) {
-        HashedList<String, String> hc = new HashedList<String, String>();
+    MappedList<String, String> getAllExtTags(boolean includeNC) {
+        MappedList<String, String> hc = new MappedList<String, String>();
         try {
             hc.merge(mDb.getAllConsumingTags());
         } catch (Exception e) {
@@ -335,8 +335,8 @@ public class AnnotationTask {
      * @param spans a sorted set of start-end pairs
      * @return all tags in every spans
      */
-    public HashedList<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
-        HashedList<String, String> hc = new HashedList<String, String>();
+    public MappedList<String, String> getTagsInSpansAndNC(ArrayList<int[]> spans) throws Exception {
+        MappedList<String, String> hc = new MappedList<String, String>();
         hc.merge(getTagsByTypesIn(spans));
         hc.merge(mDb.getAllNCTags());
         return hc;

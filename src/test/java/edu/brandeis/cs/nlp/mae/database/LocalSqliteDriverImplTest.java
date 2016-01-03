@@ -26,7 +26,7 @@ package edu.brandeis.cs.nlp.mae.database;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.util.HashedSet;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -104,7 +104,7 @@ public class LocalSqliteDriverImplTest {
         driver.createExtentTag("N01", noun, "jenny", 5, 6, 7, 8, 9);
         driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
-        HashedSet<TagType, ExtentTag> retrievedTags = driver.getAllExtentTagsByTypes(false);
+        MappedSet<TagType, ExtentTag> retrievedTags = driver.getAllExtentTagsByTypes(false);
         assertEquals(
                 "Expected 2 types of tags are stored, found: " + retrievedTags.size(),
                 2, retrievedTags.size());

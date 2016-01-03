@@ -32,7 +32,7 @@ package edu.brandeis.cs.nlp.mae.io;
  *
  */
 
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -41,8 +41,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.Hashtable;
 
 class XMLHandler extends DefaultHandler {
-    private HashedList<String, Hashtable<String, String>> newTags
-            = new HashedList<String, Hashtable<String, String>>();
+    private MappedList<String, Hashtable<String, String>> newTags
+            = new MappedList<String, Hashtable<String, String>>();
     private boolean mHasText = false;
     private String mText = "";
 
@@ -82,7 +82,7 @@ class XMLHandler extends DefaultHandler {
     }
 
 
-    HashedList<String, Hashtable<String, String>> returnTagHash() {
+    MappedList<String, Hashtable<String, String>> returnTagHash() {
         return newTags;
     }
 

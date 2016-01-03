@@ -24,7 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -72,7 +72,7 @@ public class XMLFileLoader{
         }
     }
 
-    public HashedList<String,Hashtable<String,String>> getTagHash(){
+    public MappedList<String,Hashtable<String,String>> getTagHash(){
         return mXmlfile.returnTagHash();
     }
 
