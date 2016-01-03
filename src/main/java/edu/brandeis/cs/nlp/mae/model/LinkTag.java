@@ -158,4 +158,10 @@ public class LinkTag extends Tag implements IModel {
         return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, attributes}, " "));
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s-%s", getId(), getArgumentTidsWithNames().toString());
+    }
+
+
 }

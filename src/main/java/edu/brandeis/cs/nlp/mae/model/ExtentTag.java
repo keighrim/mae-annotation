@@ -117,7 +117,12 @@ public class ExtentTag extends Tag implements IModel {
     }
 
     public String getText() {
-        return text;
+        if (isConsuming()) {
+            return text;
+        } else {
+            // TODO: 1/3/2016 encapsulate this string
+            return "";
+        }
     }
 
     public void setText(String text) {
@@ -137,6 +142,17 @@ public class ExtentTag extends Tag implements IModel {
         String textAtt = String.format("text=\"%s\"", text);
         String attributes = getAttributesXmlString();
         return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, idAtt, spansAtt, textAtt, attributes}, " "));
+    }
+
+    @Override
+    public String toString() {
+        String tagText;
+        if (isConsuming()) {
+            tagText = getText();
+        } else {
+            tagText = "=NC=";
+        }
+        return String.format("%s (%s)", getId(), tagText);
     }
 
 }

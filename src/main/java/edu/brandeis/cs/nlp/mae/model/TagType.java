@@ -38,7 +38,7 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_TT)
-public class TagType implements IModel {
+public class TagType implements IModel, Comparable<TagType> {
 
     @DatabaseField(id = true, columnName = DBSchema.TAB_TT_COL_NAME)
     private String name;
@@ -189,4 +189,8 @@ public class TagType implements IModel {
     }
 
 
+    @Override
+    public int compareTo(TagType tagType) {
+        return getPrefix().compareTo(tagType.getPrefix());
+    }
 }

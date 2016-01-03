@@ -84,6 +84,21 @@ public class LocalSqliteDriverImplTest {
     }
 
     @Test
+    public void canDeleteTag() throws Exception {
+        ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        assertEquals(
+                "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
+                1, retrievedTags.size());
+
+        driver.removeTag(tag);
+        retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        assertEquals(
+                "Expected 1 extent tag is successfully deleted, found: " + retrievedTags.size(),
+                0, retrievedTags.size());
+    }
+
+    @Test
     public void canRetrieveExtentTagsByType() throws Exception {
         driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
 

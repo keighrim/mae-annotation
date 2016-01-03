@@ -35,7 +35,7 @@ import java.util.*;
  * Created by krim on 11/19/15.
  */
 
-public abstract class Tag implements IModel {
+public abstract class Tag implements IModel, Comparable<Tag> {
 
     @DatabaseField(id = true, columnName = DBSchema.TAB_TAG_COL_TID)
     protected String tid;
@@ -127,6 +127,11 @@ public abstract class Tag implements IModel {
     @Override
     public int hashCode() {
         return this.tid.hashCode();
+    }
+
+    @Override
+    public int compareTo(Tag tag) {
+        return getId().compareTo(tag.getId());
     }
 
     public abstract String toJsonString();

@@ -139,4 +139,10 @@ public class Attribute implements IModel {
     public String getName() {
         return this.attributeType.getName();
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s - %s", getName(), getValue());
+    }
+
 }

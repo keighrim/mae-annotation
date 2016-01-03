@@ -286,7 +286,7 @@ public class NewDTDLoader {
             }
             if (required) {
                 logger.debug("setting to a required attribute: " + attTypeName);
-                driver.setAttributeTypeRequired(type);
+                driver.setAttributeTypeRequired(type, true);
             }
         }
         return type;
@@ -312,7 +312,7 @@ public class NewDTDLoader {
         }
         if (required && type != null) {
             logger.debug("setting to a required argument: " + argTypeName);
-            driver.setArgumentTypeRequired(type);
+            driver.setArgumentTypeRequired(type, true);
         }
         return type;
     }

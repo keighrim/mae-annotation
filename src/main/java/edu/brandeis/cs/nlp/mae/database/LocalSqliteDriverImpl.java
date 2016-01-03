@@ -36,7 +36,7 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
 import edu.brandeis.cs.nlp.mae.io.NewDTDLoader;
 import edu.brandeis.cs.nlp.mae.io.NewXMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.util.HashedSet;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +59,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     private IdHandler idHandler;
     // this should be distinguishable over diff tasks and diff versions
     private Task workingTask;
+    private boolean workChanged;
 
     private Dao<Task, Integer> taskDao;
     private Dao<CharIndex, Integer> charIndexDao;
@@ -156,6 +157,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void readTask(File file) throws MaeIODTDException, MaeDBException, FileNotFoundException {
         NewDTDLoader dtdl = new NewDTDLoader(this);
+        dropAllTables(cs);
+        createAllTables(cs);
         dtdl.read(file);
 
     }
@@ -164,6 +167,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public void readAnnotation(File file) throws FileNotFoundException, MaeIOXMLException, MaeDBException {
         NewXMLLoader xmll = new NewXMLLoader(this);
         xmll.read(file);
+        setAnnotationChanged(false);
 
     }
 
@@ -235,29 +239,52 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
-    public boolean isDtdLoaded() {
-        return workingTask.isDtdLoaded();
+    @Override
+    public boolean isTaskLoaded() {
+        return workingTask.isTaskLoaded();
     }
 
+    @Override
     public boolean isAnnotationLoaded() {
         return workingTask.isAnnotationLoaded();
     }
 
+    @Override
+    public void setAnnotationChanged(boolean b) {
+        workChanged = b;
+    }
+
+    @Override
+    public boolean isAnnotationChanged() {
+        return workChanged;
+    }
+
+    @Override
     public boolean isPrimaryTextLoaded() {
         return workingTask.isPrimaryTextLoaded();
     }
 
-    public List<ExtentTag> getTagsAt(int loc) throws MaeDBException {
+    @Override
+    public List<ExtentTag> getTagsAt(int location) throws MaeDBException {
 
         try {
-            List<ExtentTag> results = null;
-            charIndexQuery.where().eq(DBSchema.TAB_CI_COL_LOCATION, loc);
+            List<ExtentTag> results;
+            charIndexQuery.where().eq(DBSchema.TAB_CI_COL_LOCATION, location);
             results = eTagQuery.join(charIndexQuery).query();
             resetQueryBuilders();
             return results;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    @Override
+    public List<ExtentTag> getTagsIn(int[] locations) throws MaeDBException {
+        Set<ExtentTag> tags = new TreeSet<>();
+        for (int location : locations) {
+            tags.addAll(getTagsAt(location));
+        }
+        return new ArrayList<>(tags);
     }
 
     public List<String> getTagIdsAt(int loc) throws MaeDBException {
@@ -268,24 +295,27 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         return tids;
     }
 
-    public HashedSet<CharIndex, ExtentTag> getAllLocationsWithTags() throws MaeDBException{
+    @Override
+    public List<Integer> getAllAnchors() throws MaeDBException{
+        // TODO: 1/3/2016  old implementation was getting location:Set<Tag> hashedset, now only returns locations and then querying associated tags is another responsibility
+        // ==> make sure this is not a dangerous decision
         // TODO 151214 when making hghlights, implement getProperColor()
         // to get the first turned-on TagType from a sorted List<TagType>, and also check that's the last (to make it bold)
 
-        HashedSet<CharIndex, ExtentTag> locationsWithTags = new HashedSet<>();
+        List<Integer> anchors = new ArrayList<>();
 
         try {
             for (CharIndex location : charIndexDao.queryForAll()) {
-                locationsWithTags.putItem(location, location.getTag());
+                anchors.add(location.getLocation());
             }
-            return locationsWithTags;
+            return anchors;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
 
     }
 
-    public List<Integer> getAllLocationsOfTagType(TagType type) throws MaeDBException{
+    public List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException{
 
         try {
             List<CharIndex> locations;
@@ -314,10 +344,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     }
 
-    public List<Integer> getAllLocationsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException{
-        List<Integer> targetSpans = getAllLocationsOfTagType(type);
+    @Override
+    public List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException{
+        List<Integer> targetSpans = getAllAnchorsOfTagType(type);
         for (TagType exclude : exculdes) {
-            targetSpans.removeAll(getAllLocationsOfTagType(exclude));
+            targetSpans.removeAll(getAllAnchorsOfTagType(exclude));
         }
         return targetSpans;
 
@@ -348,6 +379,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
+    @Override
     public TagType getTagTypeByTid(String tid) throws MaeDBException {
         return getTagByTid(tid).getTagtype();
 
@@ -359,11 +391,13 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } else {
             lTagDao.delete((LinkTag) tag);
         }
+        logger.debug("a tag is deleted: " + tag.getId());
+        setAnnotationChanged(true);
     }
 
-    public HashedSet<TagType, LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
+    public MappedSet<TagType, LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
         try {
-            HashedSet<TagType, LinkTag> links = new HashedSet<>();
+            MappedSet<TagType, LinkTag> links = new MappedSet<>();
             List<Argument> results = null;
             results = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_ETAG, argument).query();
             for (Argument result : results) {
@@ -377,8 +411,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
-    public HashedSet<TagType, ExtentTag> getAllExtentTagsByTypes(boolean consumingOnly) throws MaeDBException {
-        HashedSet<TagType, ExtentTag> tagsByTypes = new HashedSet<>();
+    public MappedSet<TagType, ExtentTag> getAllExtentTagsByTypes(boolean consumingOnly) throws MaeDBException {
+        MappedSet<TagType, ExtentTag> tagsByTypes = new MappedSet<>();
         for (TagType type : getAllTagTypes()) {
             if (type.isExtent()) {
                 tagsByTypes.putCollection(type, type.getExtentTagsAsList(consumingOnly));
@@ -389,8 +423,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public HashedSet<TagType,ExtentTag> getTagsByTypesAt(int location) throws MaeDBException{
-        HashedSet<TagType, ExtentTag> tags = new HashedSet<>();
+    public MappedSet<TagType,ExtentTag> getTagsByTypesAt(int location) throws MaeDBException{
+        MappedSet<TagType, ExtentTag> tags = new MappedSet<>();
         for (ExtentTag tag : getTagsAt(location)) {
             tags.putItem(tag.getTagtype(), tag);
         }
@@ -398,20 +432,20 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public HashedSet<TagType,ExtentTag> getTagsByTypesIn(int... locations) throws MaeDBException{
-        HashedSet<TagType, ExtentTag> tags = new HashedSet<>();
+    public MappedSet<TagType,ExtentTag> getTagsByTypesIn(int... locations) throws MaeDBException{
+        MappedSet<TagType, ExtentTag> tags = new MappedSet<>();
         for (int location : locations) {
             tags.merge(getTagsByTypesAt(location));
         }
         return tags;
     }
 
-    public HashedSet<TagType,ExtentTag> getTagsByTypesIn(String spansString) throws MaeDBException {
+    public MappedSet<TagType,ExtentTag> getTagsByTypesIn(String spansString) throws MaeDBException {
         return getTagsByTypesIn(SpanHandler.convertStringToPairs(spansString));
     }
 
-    public HashedSet<TagType,ExtentTag> getTagsByTypesIn(ArrayList<int[]> spansPairs) throws MaeDBException {
-        HashedSet<TagType, ExtentTag> tags = new HashedSet<>();
+    public MappedSet<TagType,ExtentTag> getTagsByTypesIn(ArrayList<int[]> spansPairs) throws MaeDBException {
+        MappedSet<TagType, ExtentTag> tags = new MappedSet<>();
         for (int[] pair : spansPairs) {
             tags.merge(getTagsByTypesBetween(pair[0], pair[1]));
         }
@@ -419,8 +453,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public HashedSet<TagType,ExtentTag> getTagsByTypesBetween(int begin, int end) throws MaeDBException{
-        HashedSet<TagType, ExtentTag> tags = new HashedSet<>();
+    public MappedSet<TagType,ExtentTag> getTagsByTypesBetween(int begin, int end) throws MaeDBException{
+        MappedSet<TagType, ExtentTag> tags = new MappedSet<>();
         for (int i=begin; i<end; i++) {
             tags.merge(getTagsByTypesAt(i));
         }
@@ -455,6 +489,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             TagType type  = new TagType(typeName, prefix, isLink);
             tagTypeDao.create(type);
+            logger.debug("a new tag type is created: " + typeName);
+            setAnnotationChanged(true);
             return type;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -462,10 +498,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public AttributeType createAttributeType(TagType tagType, String attName) throws  MaeDBException {
+    public AttributeType createAttributeType(TagType tagType, String attTypeName) throws  MaeDBException {
         try {
-            AttributeType attType = new AttributeType(tagType, attName);
+            AttributeType attType = new AttributeType(tagType, attTypeName);
             attTypeDao.create(attType);
+            logger.debug("a new attribute type is created: " + attTypeName);
+            setAnnotationChanged(true);
             return attType;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -488,10 +526,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public ArgumentType createArgumentType(TagType tagType, String argName) throws MaeDBException {
+    public ArgumentType createArgumentType(TagType tagType, String argTypeName) throws MaeDBException {
         try {
-            ArgumentType argType = new ArgumentType(tagType, argName);
+            ArgumentType argType = new ArgumentType(tagType, argTypeName);
             argTypeDao.create(argType);
+            logger.debug("a new argument type is created: " + argTypeName);
+            setAnnotationChanged(true);
             return argType;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -511,6 +551,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             if (!added) {
                 throw new MaeDBException("tag id is already in DB!: " + tid);
             }
+            logger.debug("a new extent tag is created: " + tid);
+            setAnnotationChanged(true);
             return tag;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -546,6 +588,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
             lTagDao.create(link);
+            logger.debug("a new link tag is created: " + tid);
+            setAnnotationChanged(true);
             return link;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -558,12 +602,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     public LinkTag createLinkTag(String tid, TagType tagType, HashMap<ArgumentType, ExtentTag> arguments) throws MaeDBException {
-        LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
+        LinkTag link = createLinkTag(tid, tagType);
         for (ArgumentType argType : arguments.keySet()) {
             addArgument(link, argType, arguments.get(argType));
         }
         try {
-            lTagDao.create(link);
+            lTagDao.update(link);
             return link;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -575,6 +619,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             Attribute att = new Attribute(tag, attType, attValue);
             attDao.create(att);
+            logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
+            setAnnotationChanged(true);
             return att;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -589,6 +635,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             Argument arg = new Argument(linker, argType, argument);
             argDao.create(arg);
+            logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
+            setAnnotationChanged(true);
             return arg;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -694,7 +742,13 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public boolean setTagTypePrefix(TagType tagType, String prefix) throws MaeDBException {
         try {
             tagType.setPrefix(prefix);
-            return tagTypeDao.update(tagType) == 1;
+            boolean success = tagTypeDao.update(tagType) == 1;
+            if (success) {
+                logger.debug(String.format("assigned prefix \"%s\" to a tag type: %s", prefix, tagType.getName()));
+            } else {
+                logger.error(String.format("failed to assign prefix \"%s\" to a tag type: %s", prefix, tagType.getName()));
+            }
+            return success;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -702,9 +756,15 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public boolean setTagTypeNonConsuming(TagType tagType, boolean b) throws MaeDBException {
-        tagType.setNonConsuming(b);
         try {
-            return tagTypeDao.update(tagType) == 1;
+            tagType.setNonConsuming(b);
+            boolean success = tagTypeDao.update(tagType) == 1;
+            if (success) {
+                logger.debug(String.format("set a tag type \"%s\" to be: %s", tagType.getName(), b? "non-consuming": "only-consuming"));
+            } else {
+                logger.error(String.format("failed to set a tag type \"%s\" to be: %s", tagType.getName(), b? "non-consuming": "only-consuming"));
+            }
+            return success;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -715,6 +775,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         attType.setValuesetFromList(validValues);
         try {
             attTypeDao.update(attType);
+            logger.debug(String.format("assigned a valid value set \"%s\" to an attribute type: %s", validValues.toString(), attType.getName()));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -729,6 +790,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             attType.setDefaultValue(defaultValue);
             attTypeDao.update(attType);
+            logger.debug(String.format("assigned the default value \"%s\" to an attribute type: %s", defaultValue, attType.getName()));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -739,16 +801,18 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             attType.setIdRef(b);
             attTypeDao.update(attType);
+            logger.debug(String.format("set an attribute type \"%s\" to be: %s", attType.getName(), b? "idref": "free-text"));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
     }
 
     @Override
-    public void setAttributeTypeRequired(AttributeType attType) throws MaeDBException {
+    public void setAttributeTypeRequired(AttributeType attType, boolean b) throws MaeDBException {
         try {
             attType.setRequired(true);
             attTypeDao.update(attType);
+            logger.debug(String.format("set an attribute type \"%s\" to be: %s", attType.getName(), b? "required": "optional"));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -756,10 +820,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public void setArgumentTypeRequired(ArgumentType argType) throws MaeDBException {
+    public void setArgumentTypeRequired(ArgumentType argType, boolean b) throws MaeDBException {
         try {
             argType.setRequired(true);
             argTypeDao.update(argType);
+            logger.debug(String.format("set an argument type \"%s\" to be: %s", argType.getName(), b? "required": "optional"));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
