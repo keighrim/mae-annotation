@@ -48,7 +48,7 @@ public class SpanHandler {
         logger.debug(String.format("=== String %s -> Pairs ===", spansString));
         ArrayList<int[]> spans = new ArrayList<>();
         if (spansString == null || spansString.equals("") || spansString.equals(MaeStrings.NCSPAN_PLACEHOLDER)) {
-            spans.add(new int[]{MaeStrings.NC_START_END, MaeStrings.NC_START_END});
+            spans.add(new int[]{MaeStrings.NC_START, MaeStrings.NC_END});
             return spans;
         }
 
@@ -109,7 +109,7 @@ public class SpanHandler {
 
         if (spans == null || spans.length == 0) {
             ArrayList<int[]> nonComsumingSpan = new ArrayList<>();
-            nonComsumingSpan.add(new int[]{MaeStrings.NC_START_END, MaeStrings.NC_START_END});
+            nonComsumingSpan.add(new int[]{MaeStrings.NC_START, MaeStrings.NC_END});
             return nonComsumingSpan;
         }
 
@@ -156,6 +156,9 @@ public class SpanHandler {
         Arrays.sort(spans);
 
         int prev = spans[0];
+        if (spans.length == 1) {
+            return String.format("%d%s%d", prev, MaeStrings.SPANDELIMITER, prev+1);
+        }
         String spansString = Integer.toString(prev);
         for (int i = 1; i < spans.length; i++) {
             if (i == spans.length - 1) {

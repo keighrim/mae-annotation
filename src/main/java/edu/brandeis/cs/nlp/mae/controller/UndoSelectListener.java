@@ -24,8 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
-import edu.brandeis.cs.nlp.mae.controller.Colors;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 
 import javax.swing.text.Highlighter;
 import java.awt.event.ActionEvent;
@@ -57,10 +56,10 @@ public class UndoSelectListener implements ActionListener {
             int[] lastSpan = maeMainUI.getLastSelection().remove(maeMainUI.getLastSelection().size() - 1);
             tmp.add(lastSpan);
 
-            Highlighter hl = maeMainUI.getTextPane().getHighlighter();
+            Highlighter hl = maeMainUI.getTextPanel().getHighlighter();
             hl.removeAllHighlights();
-            maeMainUI.highlightTextSpans(hl, maeMainUI.getSpans(), Colors.getDefaultHighliter());
-            maeMainUI.highlightTextSpans(hl, tmp, Colors.getFadingHighlighter());
+            maeMainUI.highlightTextSpans(hl, maeMainUI.getSpans(), ColorHandler.getDefaultHighlighter());
+            maeMainUI.highlightTextSpans(hl, tmp, ColorHandler.getFadingHighlighter());
 
             maeMainUI.getStatusBar().setText(String.format(
                     "Removed '%s' from selection!" +
@@ -74,7 +73,7 @@ public class UndoSelectListener implements ActionListener {
         }
         maeMainUI.delayedUpdateStatusBar(1000);
         if (maeMainUI.getMode() == MaeMainUI.M_ARG_SEL) {
-            maeMainUI.updateArgList();
+            maeMainUI.getPotentialArgsInSelectedOrder();
         }
 
     }

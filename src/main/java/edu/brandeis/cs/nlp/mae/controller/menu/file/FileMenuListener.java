@@ -22,9 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller.menu;
+package edu.brandeis.cs.nlp.mae.controller.menu.file;
 
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.database.DTD;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.FileOperations;
@@ -46,7 +46,7 @@ import java.util.Hashtable;
  * Listener for the File menu; determines what action to take for loading/saving
  * documents.
  */
-public class FileMenuListener implements ActionListener {
+public class FileMenuListener extends AbstractAction implements ActionListener {
     private MaeMainUI maeMainUI;
 
     public FileMenuListener(MaeMainUI maeMainUI) {
@@ -57,7 +57,8 @@ public class FileMenuListener implements ActionListener {
     public void actionPerformed(ActionEvent actionEvent) {
         String command = actionEvent.getActionCommand();
 
-        if (command.equals("Load DTD")) {
+        // TODO: 12/31/2015 each if-branch to separate action class
+        if (command.equals("Load DTD")) { // separation done
             if (maeMainUI.isFileOpen() && maeMainUI.isTaskChanged()) {
                 maeMainUI.showSaveWarning();
             }
@@ -87,7 +88,7 @@ public class FileMenuListener implements ActionListener {
         if (maeMainUI.getLoadFC().showOpenDialog(maeMainUI) == JFileChooser.APPROVE_OPTION) {
             File file = maeMainUI.getLoadFC().getSelectedFile();
             try {
-                maeMainUI.getTextPane().setStyledDocument(new DefaultStyledDocument());
+                maeMainUI.getTextPanel().setStyledDocument(new DefaultStyledDocument());
                 DTDLoader dtdl = new DTDLoader(file);
                 maeMainUI.getTask().resetDb();
                 DTD d = dtdl.getDTD();
@@ -95,7 +96,7 @@ public class FileMenuListener implements ActionListener {
                 maeMainUI.getActiveLinks().clear();
                 maeMainUI.getActiveExts().clear();
                 maeMainUI.assignColors();
-                maeMainUI.resetTablePane();
+                maeMainUI.resetTablePanel();
 
                 // refresh interfaces
                 maeMainUI.updateMenus();
@@ -136,36 +137,36 @@ public class FileMenuListener implements ActionListener {
                 maeMainUI.getTask().setWorkingFile(maeMainUI.getWorkingFileName());
 
                 // refresh interfaces
-                maeMainUI.resetTablePane();
+                maeMainUI.resetTablePanel();
                 maeMainUI.updateMenus();
                 maeMainUI.resetSpans();
                 maeMainUI.returnToNormalMode(false);
 
-                maeMainUI.getTextPane().setStyledDocument(new DefaultStyledDocument());
-                maeMainUI.getTextPane().setContentType("text/plain; charset=UTF-8");
+                maeMainUI.getTextPanel().setStyledDocument(new DefaultStyledDocument());
+                maeMainUI.getTextPanel().setContentType("text/plain; charset=UTF-8");
                 maeMainUI.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
                 if (FileOperations.hasTags(file)) {
                     XMLFileLoader xfl = new XMLFileLoader(file);
-                    StyledDocument d = maeMainUI.getTextPane().getStyledDocument();
+                    StyledDocument d = maeMainUI.getTextPanel().getStyledDocument();
                     Style def = StyleContext.getDefaultStyleContext()
                             .getStyle(StyleContext.DEFAULT_STYLE);
                     Style regular = d.addStyle("regular", def);
                     d.insertString(0, xfl.getTextChars(), regular);
                     // newTags is a hash from tagType to attib list
                     // each attrib is stored in a has from att name to value
-                    HashedList<String, Hashtable<String, String>> newTags
+                    MappedList<String, Hashtable<String, String>> newTags
                             = xfl.getTagHash();
                     if (newTags.size() > 0) {
                         maeMainUI.processTagHash(newTags);
                     }
                 } else {  // that is, if it's only a text file
-                    StyledDocument d = maeMainUI.getTextPane().getStyledDocument();
-                    maeMainUI.getTextPane().setStyledDocument(FileOperations.setText(file, d));
+                    StyledDocument d = maeMainUI.getTextPanel().getStyledDocument();
+                    maeMainUI.getTextPanel().setStyledDocument(FileOperations.setText(file, d));
                 }
-                maeMainUI.getTextPane().requestFocus(true);
-                maeMainUI.getTextPane().getCaret().setDot(0);
-                maeMainUI.getTextPane().getCaret().moveDot(1);
+                maeMainUI.getTextPanel().requestFocus(true);
+                maeMainUI.getTextPanel().getCaret().setDot(0);
+                maeMainUI.getTextPanel().getCaret().moveDot(1);
             } catch (Exception ex) {
                 maeMainUI.setFileOpen(false);
                 ex.printStackTrace();
@@ -174,7 +175,7 @@ public class FileMenuListener implements ActionListener {
             }
         }
         maeMainUI.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        maeMainUI.getTextPane().setCaretPosition(0);
+        maeMainUI.getTextPanel().setCaretPosition(0);
         // refresh status bar after all caret events
         if (succeed) {
             status = "File load succeed! Click anywhere to continue.";
@@ -197,36 +198,36 @@ public class FileMenuListener implements ActionListener {
                 maeMainUI.getTask().setWorkingFile(maeMainUI.getWorkingFileName());
 
                 // refresh interfaces
-                maeMainUI.resetTablePane();
+                maeMainUI.resetTablePanel();
                 maeMainUI.updateMenus();
                 maeMainUI.resetSpans();
                 maeMainUI.returnToNormalMode(false);
 
-                maeMainUI.getTextPane().setStyledDocument(new DefaultStyledDocument());
-                maeMainUI.getTextPane().setContentType("text/plain; charset=UTF-8");
+                maeMainUI.getTextPanel().setStyledDocument(new DefaultStyledDocument());
+                maeMainUI.getTextPanel().setContentType("text/plain; charset=UTF-8");
                 maeMainUI.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
                 if (FileOperations.hasTags(file)) {
                     XMLFileLoader xfl = new XMLFileLoader(file);
-                    StyledDocument d = maeMainUI.getTextPane().getStyledDocument();
+                    StyledDocument d = maeMainUI.getTextPanel().getStyledDocument();
                     Style def = StyleContext.getDefaultStyleContext()
                             .getStyle(StyleContext.DEFAULT_STYLE);
                     Style regular = d.addStyle("regular", def);
                     d.insertString(0, xfl.getTextChars(), regular);
                     // newTags is a hash from tagType to attib list
                     // each attrib is stored in a has from att name to value
-                    HashedList<String, Hashtable<String, String>> newTags
+                    MappedList<String, Hashtable<String, String>> newTags
                             = xfl.getTagHash();
                     if (newTags.size() > 0) {
                         maeMainUI.processTagHash(newTags);
                     }
                 } else {  // that is, if it's only a text file
-                    StyledDocument d = maeMainUI.getTextPane().getStyledDocument();
-                    maeMainUI.getTextPane().setStyledDocument(FileOperations.setText(file, d));
+                    StyledDocument d = maeMainUI.getTextPanel().getStyledDocument();
+                    maeMainUI.getTextPanel().setStyledDocument(FileOperations.setText(file, d));
                 }
-                maeMainUI.getTextPane().requestFocus(true);
-                maeMainUI.getTextPane().getCaret().setDot(0);
-                maeMainUI.getTextPane().getCaret().moveDot(1);
+                maeMainUI.getTextPanel().requestFocus(true);
+                maeMainUI.getTextPanel().getCaret().setDot(0);
+                maeMainUI.getTextPanel().getCaret().moveDot(1);
             } catch (Exception ex) {
                 maeMainUI.setFileOpen(false);
                 ex.printStackTrace();
@@ -235,7 +236,7 @@ public class FileMenuListener implements ActionListener {
             }
         }
         maeMainUI.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        maeMainUI.getTextPane().setCaretPosition(0);
+        maeMainUI.getTextPanel().setCaretPosition(0);
         // refresh status bar after all caret events
         if (succeed) {
             status = "File load succeed! Click anywhere to continue.";
@@ -251,7 +252,7 @@ public class FileMenuListener implements ActionListener {
             File file = maeMainUI.getSaveFC().getSelectedFile();
             maeMainUI.setTaskChanged(false);
             try {
-                FileOperations.saveRTF(file, maeMainUI.getTextPane());
+                FileOperations.saveRTF(file, maeMainUI.getTextPanel());
                 maeMainUI.getStatusBar().setText("Save Complete :" + rtfName);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -282,7 +283,7 @@ public class FileMenuListener implements ActionListener {
             maeMainUI.getTask().setWorkingFile(maeMainUI.getWorkingFileName());
             try {
                 FileOperations.saveXML(file,
-                        maeMainUI.getTextPane(), maeMainUI.getElementTables(),
+                        maeMainUI.getTextPanel(), maeMainUI.getElementTables(),
                         maeMainUI.getTask().getAllTagTypes(), maeMainUI.getTask().getDTDName());
                 maeMainUI.updateTitle();
                 maeMainUI.getStatusBar().setText(
@@ -296,12 +297,12 @@ public class FileMenuListener implements ActionListener {
 
     void closeFile() {
         maeMainUI.setFileOpen(false);
-        maeMainUI.getTextPane().setStyledDocument(new DefaultStyledDocument());
+        maeMainUI.getTextPanel().setStyledDocument(new DefaultStyledDocument());
         maeMainUI.getTask().resetDb();
         maeMainUI.getActiveLinks().clear();
         maeMainUI.getActiveExts().clear();
         maeMainUI.assignColors();
-        maeMainUI.resetTablePane();
+        maeMainUI.resetTablePanel();
         maeMainUI.updateMenus();
         maeMainUI.resetSpans();
         maeMainUI.returnToNormalMode(false);

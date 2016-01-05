@@ -22,45 +22,34 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller.menu;
+package edu.brandeis.cs.nlp.mae.controller.menu.font;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Listener to select special modes
+ * Class that changes the size of the text from the top menu
  */
-public class ModeMenuListener implements ActionListener {
+public class FontSizeMenuListener implements ActionListener {
     private MaeMainUI maeMainUI;
 
-    public ModeMenuListener(MaeMainUI maeMainUI) {
+    public FontSizeMenuListener(MaeMainUI maeMainUI) {
         this.maeMainUI = maeMainUI;
     }
 
-    // TODO add adjud mode
     public void actionPerformed(ActionEvent actionEvent) {
-        int action = Integer.parseInt(actionEvent.getActionCommand());
-
-        switch (action) {
-            // return to normal mode
-            case MaeMainUI.M_NORMAL:
-                maeMainUI.returnToNormalMode(true);
-                break;
-            case MaeMainUI.M_MULTI_SPAN:
-                maeMainUI.setMode(MaeMainUI.M_MULTI_SPAN);
-                maeMainUI.getStatusBar().setText(
-                        "Multi-span mode! Click anywhere to continue.");
-                break;
-            case MaeMainUI.M_ARG_SEL:
-                maeMainUI.setMode(MaeMainUI.M_ARG_SEL);
-                maeMainUI.getStatusBar().setText(
-                        "Argument select mode! Click anywhere to continue.");
-                break;
+        String command = actionEvent.getActionCommand();
+        if (command.equals("Font++")) {
+            Font font = maeMainUI.getTextPanel().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
+            maeMainUI.getTextPanel().setFont(font2);
+        } else if (command.equals("Font--")) {
+            Font font = maeMainUI.getTextPanel().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
+            maeMainUI.getTextPanel().setFont(font2);
         }
-        maeMainUI.updateMenus();
-        maeMainUI.resetSpans();
-        maeMainUI.delayedUpdateStatusBar(3000);
     }
 }

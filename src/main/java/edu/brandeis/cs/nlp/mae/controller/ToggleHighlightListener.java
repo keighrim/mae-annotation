@@ -108,7 +108,7 @@ public class ToggleHighlightListener implements ItemListener {
 
     private void turnOnLink() {
         DefaultStyledDocument styleDoc =
-                (DefaultStyledDocument) maeMainUI.getTextPane().getStyledDocument();
+                (DefaultStyledDocument) maeMainUI.getTextPanel().getStyledDocument();
         //get list of locations associated with the selected link
         Hashtable<Integer, String> locs
                 = maeMainUI.getTask().getAllLocationsOfTagType(elemName);
@@ -127,7 +127,7 @@ public class ToggleHighlightListener implements ItemListener {
 
     private void turnOffLink() {
         DefaultStyledDocument styleDoc =
-                (DefaultStyledDocument) maeMainUI.getTextPane().getStyledDocument();
+                (DefaultStyledDocument) maeMainUI.getTextPanel().getStyledDocument();
         //if boldness is being removed, have to make sure it doesn't
         //take away boldness of other tags that are selected
         //get list of active displays

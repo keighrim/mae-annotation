@@ -27,8 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.model.Elem;
 import edu.brandeis.cs.nlp.mae.model.ElemExtent;
 import edu.brandeis.cs.nlp.mae.model.ElemLink;
-import edu.brandeis.cs.nlp.mae.controller.Colors;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;
@@ -71,14 +70,14 @@ public class TableMouseAdapter extends MouseAdapter {
             TableModel tableModel = table.getModel();
             String elemId = (String) tableModel.getValueAt(selectedRow, maeMainUI.ID_COL);
             Elem el = maeMainUI.getTask().getTagTypeByName(maeMainUI.getTask().getTagTypeByTid(elemId));
-            Highlighter hl = maeMainUI.getTextPane().getHighlighter();
+            Highlighter hl = maeMainUI.getTextPanel().getHighlighter();
             hl.removeAllHighlights();
 
             if (el instanceof ElemExtent) {
                 // use table column[1] to get spanString then parse it
                 ArrayList<int[]> spansSelect = SpanHandler.convertStringToPairs(
                         (String) tableModel.getValueAt(selectedRow, maeMainUI.SPANS_COL));
-                maeMainUI.highlightTextSpans(hl, spansSelect, Colors.getVividHighliter());
+                maeMainUI.highlightTextSpans(hl, spansSelect, ColorHandler.getVividHighliter());
             } //end if ElemExtent
 
             // krim: below is used to highlight linked extents
@@ -93,7 +92,8 @@ public class TableMouseAdapter extends MouseAdapter {
                     // argId can be empty (not all arguments required)
                     if (!argId.equals("")) {
                         ArrayList<int[]> argSpans = maeMainUI.getTask().getSpansByTid(argId);
-                        maeMainUI.highlightTextSpans(hl, argSpans, Colors.getHighlighters()[j]);
+                        // TODO: 1/3/2016 we might need to add more highlighters for n-ary links
+                        maeMainUI.highlightTextSpans(hl, argSpans, ColorHandler.getVividHighliter());
                     }
                     j++;
                 }

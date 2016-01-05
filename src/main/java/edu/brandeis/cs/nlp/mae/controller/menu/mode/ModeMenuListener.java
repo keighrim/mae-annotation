@@ -22,34 +22,45 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller.menu;
+package edu.brandeis.cs.nlp.mae.controller.menu.mode;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Class that changes the size of the text from the top menu
+ * Listener to select special modes
  */
-public class FontSizeMenuListener implements ActionListener {
+public class ModeMenuListener implements ActionListener {
     private MaeMainUI maeMainUI;
 
-    public FontSizeMenuListener(MaeMainUI maeMainUI) {
+    public ModeMenuListener(MaeMainUI maeMainUI) {
         this.maeMainUI = maeMainUI;
     }
 
+    // TODO add adjud mode
     public void actionPerformed(ActionEvent actionEvent) {
-        String command = actionEvent.getActionCommand();
-        if (command.equals("Font++")) {
-            Font font = maeMainUI.getTextPane().getFont();
-            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
-            maeMainUI.getTextPane().setFont(font2);
-        } else if (command.equals("Font--")) {
-            Font font = maeMainUI.getTextPane().getFont();
-            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
-            maeMainUI.getTextPane().setFont(font2);
+        int action = Integer.parseInt(actionEvent.getActionCommand());
+
+        switch (action) {
+            // return to normal mode
+            case MaeMainUI.M_NORMAL:
+                maeMainUI.returnToNormalMode(true);
+                break;
+            case MaeMainUI.M_MULTI_SPAN:
+                maeMainUI.setMode(MaeMainUI.M_MULTI_SPAN);
+                maeMainUI.getStatusBar().setText(
+                        "Multi-span mode! Click anywhere to continue.");
+                break;
+            case MaeMainUI.M_ARG_SEL:
+                maeMainUI.setMode(MaeMainUI.M_ARG_SEL);
+                maeMainUI.getStatusBar().setText(
+                        "Argument select mode! Click anywhere to continue.");
+                break;
         }
+        maeMainUI.updateMenus();
+        maeMainUI.resetSpans();
+        maeMainUI.delayedUpdateStatusBar(3000);
     }
 }

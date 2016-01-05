@@ -57,9 +57,10 @@ public class MaeStrings {
     public final static String COMBO_DELIMITER = " - ";
     public final static String SPANDELIMITER = "~";
     public final static String SPANSEPARATOR = ",";
-    public final static int NC_START_END = -1;
+    public final static int NC_START = -1;
+    public final static int NC_END = -1;
     public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
-            MaeStrings.NC_START_END, MaeStrings.SPANDELIMITER, MaeStrings.NC_START_END);
+            MaeStrings.NC_START, MaeStrings.SPANDELIMITER, MaeStrings.NC_END);
 
     public final static String ATT_VALUESET_SEPARATOR = ":::";
     // TODO 151209 are these two below safe?
@@ -87,20 +88,26 @@ public class MaeStrings {
     public final static String SB_NOTEXT = "No Text Selected";
     public final static String SB_TAG= " %d Tags Selected: %s";
     public final static String SB_NOTAG = "No Tags Selected";
-    public final static String SB_NORM_MODE
+    public final static String SB_NORM_MODE_NOTI
             = "Now in normal mode! Click anywhere to continue.";
-    public final static String SB_MSPAN_MODE = "[Multi-span] ";
-    public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE + SB_TEXT;
-    public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE + SB_NOTEXT;
-    public final static String SB_MARGS_MODE = "[Arguments select] ";
-    public final static String SB_MARGS_TAG = SB_MARGS_MODE + SB_TAG;
-    public final static String SB_MARGS_NOTAG = SB_MARGS_MODE + SB_NOTAG;
+    public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
+    public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE_PREFIX + SB_TEXT;
+    public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE_PREFIX + SB_NOTEXT;
+    public final static String SB_MARGS_MODE_PREFIX = "[Arguments select] ";
+    public final static String SB_MARGS_TAG = SB_MARGS_MODE_PREFIX + SB_TAG;
+    public final static String SB_MARGS_NOTAG = SB_MARGS_MODE_PREFIX + SB_NOTAG;
 
     
     /*
-    menu items 
+    menus
     */
+    public final static String MENU_FILE = "File";
+    public final static String MENU_MODE = "Mode";
+    public final static String MENU_FONT = "Font";
+    public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
+
+
     
     
     /*
@@ -108,4 +115,5 @@ public class MaeStrings {
      */
     public final static String NO_TASK_IND = "No DTD";
     public final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
+    public static final String UNSAVED_SUFFIX = " *";
 }

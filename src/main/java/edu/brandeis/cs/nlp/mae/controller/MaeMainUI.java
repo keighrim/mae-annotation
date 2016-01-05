@@ -25,17 +25,18 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 
-import edu.brandeis.cs.nlp.mae.util.HashedList;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
 import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
 import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.controller.menu.FileMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.FontSizeMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.HelpMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.ModeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.file.FileMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.font.FontSizeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.help.HelpMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.menu.mode.ModeMenuListener;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.*;
 import org.slf4j.Logger;
@@ -87,7 +88,8 @@ public class MaeMainUI extends JPanel {
         this.mActiveExts = mActiveExts;
     }
 
-    private Color[] mColors = Colors.getColors();
+
+    private List<Color> mColors = new ColorHandler(30).getColors();
 
     // thses are for highlighter colors
     private Color mLightOrange = new Color(255, 204, 51);
@@ -96,15 +98,11 @@ public class MaeMainUI extends JPanel {
     private Color mCyan = Color.cyan;
     private Color mLightGray = Color.lightGray;
 
-    private TextHighlightPainter mOrangeHL = new TextHighlightPainter(mLightOrange);
-    private TextHighlightPainter mGreenHL = new TextHighlightPainter(mGreen);
-    private TextHighlightPainter mPinkHL = new TextHighlightPainter(mPink);
-    private TextHighlightPainter mCyanHL = new TextHighlightPainter(mCyan);
-    private TextHighlightPainter mGrayHL = Colors.getFadingHighlighter();
-    private Highlighter.HighlightPainter mDefHL = Colors.getDefaultHighliter();
+    private Highlighter.HighlightPainter mDefHL = ColorHandler.getDefaultHighlighter();
+    private Highlighter.HighlightPainter mGrayHL = ColorHandler.getFadingHighlighter();
 
     // default color is excluded from the list; it's for indicating selection
-    private TextHighlightPainter[] mHighlighters = Colors.getHighlighters();
+//    private TextHighlightPainter[] mHighlighters = ColorHandler.getHighlighters();
 
     public boolean isFileOpen() {
         return isFileOpen;
@@ -249,7 +247,7 @@ public class MaeMainUI extends JPanel {
     public int LAST_ESSE_COL = 4;
 
     //GUI components
-    private JFrame mMainFrame;
+    protected JFrame mMainFrame;
 
     public JFrame getLinkPopupFrame() {
         return mLinkPopupFrame;
@@ -259,7 +257,7 @@ public class MaeMainUI extends JPanel {
         this.mLinkPopupFrame = mLinkPopupFrame;
     }
 
-    private JFrame mLinkPopupFrame;
+    protected JFrame mLinkPopupFrame;
     private JScrollPane mScrollPane;
 
     public Hashtable<String, JTable> getElementTables() {
@@ -280,9 +278,9 @@ public class MaeMainUI extends JPanel {
         this.mBottomTable = mBottomTable;
     }
 
-    private JTabbedPane mBottomTable;
+    protected JTabbedPane mBottomTable;
 
-    public JTextPane getTextPane() {
+    public JTextPane getTextPanel() {
         return mTextPane;
     }
 
@@ -290,13 +288,13 @@ public class MaeMainUI extends JPanel {
         this.mTextPane = mTextPane;
     }
 
-    private JTextPane mTextPane;
+    protected JTextPane mTextPane;
     private JPanel mTopPanel;
 
     private JMenuBar mMenuBar;
 
     // TODO refactor this into separate class
-    private JLabel mStatusBar;
+    protected JLabel mStatusBar;
 
     public JPopupMenu getTextPopup() {
         return mTextPopup;
@@ -306,7 +304,7 @@ public class MaeMainUI extends JPanel {
         this.mTextPopup = mTextPopup;
     }
 
-    private JPopupMenu mTextPopup;
+    protected JPopupMenu mTextPopup;
 
     public JPopupMenu getTablePopup() {
         return mTablePopup;
@@ -316,7 +314,7 @@ public class MaeMainUI extends JPanel {
         this.mTablePopup = mTablePopup;
     }
 
-    private JPopupMenu mTablePopup;
+    protected JPopupMenu mTablePopup;
 
     public JFileChooser getLoadFC() {
         return mLoadFC;
@@ -334,8 +332,8 @@ public class MaeMainUI extends JPanel {
         this.mSaveFC = mSaveFC;
     }
 
-    private JFileChooser mLoadFC;
-    private JFileChooser mSaveFC;
+    protected JFileChooser mLoadFC;
+    protected JFileChooser mSaveFC;
 
     public AnnotationTask getTask() {
         return mTask;
@@ -520,7 +518,7 @@ public class MaeMainUI extends JPanel {
      * @param elementsToProcess the HashCollection passed from XMLHandler
      */
     public void processTagHash(
-            HashedList<String, Hashtable<String, String>> elementsToProcess) {
+            MappedList<String, Hashtable<String, String>> elementsToProcess) {
         ArrayList<String> elemNames = elementsToProcess.keyList();
         //first, add the extent tags
 
@@ -713,7 +711,7 @@ public class MaeMainUI extends JPanel {
      *
      * @param links HashCollection of types and IDs of links being removed
      */
-    public void removeLinkTableRows(HashedList<String, String> links) {
+    public void removeLinkTableRows(MappedList<String, String> links) {
         ArrayList<String> linkTags = links.keyList();
         for (String tag : linkTags) {
             Elem elem = mTask.getTagTypeByName(tag);
@@ -785,7 +783,7 @@ public class MaeMainUI extends JPanel {
     public void findHighlightRows() {
         clearTableSelections();
         //first, get ids and types of elements in selected extents
-        HashedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
+        MappedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
         if (idHash.size() > 0) {
             ArrayList<String> elemNames = idHash.keyList();
             for (String elemName : elemNames) {
@@ -793,7 +791,7 @@ public class MaeMainUI extends JPanel {
                 for (String id : ids) {
                     highlightTableRows(elemName, id);
                     //returns HashCollection of link ids connected to this
-                    HashedList<String, String> links
+                    MappedList<String, String> links
                             = mTask.getLinksHasArgumentOf(elemName, id);
                     highlightTableRowsHash(links);
                 }
@@ -844,7 +842,7 @@ public class MaeMainUI extends JPanel {
      *
      * @param hash Hashtable with tag names as keys and IDs as values
      */
-    private void highlightTableRowsHash(HashedList<String, String> hash) {
+    private void highlightTableRowsHash(MappedList<String, String> hash) {
         ArrayList<String> elems = hash.keyList();
         for (String e : elems) {
             ArrayList<String> ids = (ArrayList<String>) hash.get(e);
@@ -863,7 +861,7 @@ public class MaeMainUI extends JPanel {
         //    <String location,<String elements>>.
         // TODO 151214 replace mTask.getLocElemHash() with DBDriver.getLocationsWithTags()
         // TODO 151216 renamed first, but let's see how it affects
-        HashedList<String, String> locElem = mTask.getAllLocationsWithTags();
+        MappedList<String, String> locElem = mTask.getAllLocationsWithTags();
         ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
             ArrayList<String> elements = (ArrayList<String>) locElem.get(loc);
@@ -887,7 +885,7 @@ public class MaeMainUI extends JPanel {
      * whole text windows. It is called when toggling all_extents
      */
     protected void unassignAllColors() {
-        HashedList<String, String> locElem = mTask.getAllLocationsWithTags();
+        MappedList<String, String> locElem = mTask.getAllLocationsWithTags();
         ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {
             setColorAtLocation(Color.black, Integer.parseInt(loc), 1, false);
@@ -1022,7 +1020,7 @@ public class MaeMainUI extends JPanel {
      */
     public ArrayList<String> getComboItems(
             ArrayList<String> targetIds, boolean emptyFirst) {
-        ArrayList<String> items = new ArrayList<String>();
+        ArrayList<String> items = new ArrayList<>();
         if (emptyFirst) {
             items.add("");
         }
@@ -1163,7 +1161,7 @@ public class MaeMainUI extends JPanel {
     /**
      * Removes all the tags from the table when a new DTD is loaded.
      */
-    public void resetTablePane() {
+    public void resetTablePanel() {
         mBottomTable.removeAll();
         List<Elem> elements = mTask.getAllTagTypes();
         // create a tan for all extents and place it at first
@@ -1275,7 +1273,7 @@ public class MaeMainUI extends JPanel {
             jp.add(exit);
 
         } else {
-            HashedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
+            MappedList<String, String> idHash = mTask.getTagsByTypesIn(mSpans);
             // if only item is retrieved, display directly
             if (idHash.isSizeOne()) {
                 String elem = idHash.keyList().get(0);
@@ -1719,12 +1717,12 @@ public class MaeMainUI extends JPanel {
     public void assignColors() {
         List<String> elements = mTask.getExtentTagTypes();
         for (int i = 0; i < elements.size(); i++) {
-            int l = mColors.length;
+            int l = mColors.size();
             int k = i;
             if (i >= l) {
                 k = i % l;
             }
-            mColorTable.put(elements.get(i), mColors[k]);
+            mColorTable.put(elements.get(i), mColors.get(k));
         }
     }
 
@@ -2126,12 +2124,12 @@ public class MaeMainUI extends JPanel {
     /**
      * make a list all extent elements in mSpan
      */
-    public void updateArgList() {
+    public void getPotentialArgsInSelectedOrder() {
         mPossibleArgIds.clear();
 
         int i = 0;
         for (int[] span : mSpans) {
-            HashedList<String, String> elems
+            MappedList<String, String> elems
                     = mTask.getTagsByTypesBetween(span[0], span[1]);
             boolean first = true;
             for (String elemName : elems.keyList()) {
@@ -2226,7 +2224,7 @@ public class MaeMainUI extends JPanel {
     public void returnToNormalMode(boolean statusBarAlert) {
 
         if (mMode != M_NORMAL && statusBarAlert) {
-            mStatusBar.setText(MaeStrings.SB_NORM_MODE);
+            mStatusBar.setText(MaeStrings.SB_NORM_MODE_NOTI);
             delayedUpdateStatusBar(3000);
         }
         mMode = M_NORMAL;

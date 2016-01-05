@@ -211,6 +211,20 @@ public class SpanHandlerTest {
                 String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 4), string
         );
 
+        array = new int[]{0,1};
+        string = SpanHandler.convertArrayToString(array);
+        assertEquals(
+                "Should convert an doubleton span, found: " + string,
+                String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 2), string
+        );
+
+         array = new int[]{0};
+        string = SpanHandler.convertArrayToString(array);
+        assertEquals(
+                "Should convert an singleton span, found: " + string,
+                String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 1), string
+        );
+
         array = new int[]{0,1,2,3,7,8,9,10};
         string = SpanHandler.convertArrayToString(array);
         assertEquals(

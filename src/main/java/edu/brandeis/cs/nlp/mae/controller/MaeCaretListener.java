@@ -24,8 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
-import edu.brandeis.cs.nlp.mae.controller.Colors;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -47,7 +46,7 @@ public class MaeCaretListener implements CaretListener {
 
     @Override
     public void caretUpdate(CaretEvent e) {
-        Highlighter hl = maeMainUI.getTextPane().getHighlighter();
+        Highlighter hl = maeMainUI.getTextPanel().getHighlighter();
         //when the caret is moved, remove the any link highlights
         hl.removeAllHighlights();
 
@@ -87,7 +86,7 @@ public class MaeCaretListener implements CaretListener {
             }
             maeMainUI.getSpans().add(new int[]{start, end});
             if (maeMainUI.getMode() == MaeMainUI.M_ARG_SEL) {
-                maeMainUI.updateArgList();
+                maeMainUI.getPotentialArgsInSelectedOrder();
             }
         }
 
@@ -96,7 +95,7 @@ public class MaeCaretListener implements CaretListener {
 
         // krim: need to update current selection and status bar
         if (!maeMainUI.isSpansEmpty()) {
-            maeMainUI.highlightTextSpans(hl, maeMainUI.getSpans(), Colors.getDefaultHighliter());
+            maeMainUI.highlightTextSpans(hl, maeMainUI.getSpans(), ColorHandler.getDefaultHighlighter());
             maeMainUI.setSpans(removeOverlapping(maeMainUI.getSpans()));
         }
         maeMainUI.updateStatusBar();
