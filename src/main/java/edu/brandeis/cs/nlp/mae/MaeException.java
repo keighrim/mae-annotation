@@ -22,16 +22,21 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
-
-import javax.swing.text.DefaultHighlighter;
-import java.awt.*;
+package edu.brandeis.cs.nlp.mae;
 
 /**
- * Allows new highlighters for the JTextPane
+ * Created by krim on 1/3/2016.
  */
-class TextHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
-    TextHighlightPainter(Color color) {
-        super(color);
+public class MaeException extends Exception {
+    public MaeException() {
+        super("Mae-Exception: ");
+    }
+
+    public MaeException(String message) {
+        super("Mae-Exception: " + message);
+    }
+
+    public MaeException(String message, Throwable cause) {
+        super("Mae-Exception: " + message, cause);
     }
 }

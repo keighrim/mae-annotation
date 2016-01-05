@@ -24,11 +24,13 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+
 /**
  * Created by krim on 12/22/2015.
  */
 
-public class MaeIOException extends Exception {
+public class MaeIOException extends MaeException {
 
     public MaeIOException() {
         super("Mae-IO-Exception: ");

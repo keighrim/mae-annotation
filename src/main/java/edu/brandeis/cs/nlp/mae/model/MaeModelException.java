@@ -24,10 +24,12 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+
 /**
  * Created by krim on 12/12/2015.
  */
-public class MaeModelException extends Exception {
+public class MaeModelException extends MaeException {
 
     public MaeModelException() {
         super("Mae-Model-Exception: ");

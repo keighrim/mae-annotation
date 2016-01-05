@@ -24,34 +24,21 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
-import javax.swing.*;
-import java.awt.*;
+import edu.brandeis.cs.nlp.mae.MaeException;
 
 /**
- * Rectangle icon class to be used in tab titles as toggle buttons
+ * Created by krim on 1/3/2016.
  */
-public class BorderRect implements Icon {
-    private int size;
-    private Color color;
-
-    public BorderRect(Color c, int size) {
-        this.color = c;
-        this.size = size;
+public class MaeControlException extends MaeException {
+    public MaeControlException() {
+        super("Mae-Control-Exception: ");
     }
 
-    @Override
-    public void paintIcon(Component c, Graphics g, int x, int y) {
-        g.setColor(this.color);
-        g.drawRect(x, y, this.size, this.size);
+    public MaeControlException(String message) {
+        super("Mae-Control-Exception: " + message);
     }
 
-    @Override
-    public int getIconWidth() {
-        return this.size;
-    }
-
-    @Override
-    public int getIconHeight() {
-        return this.size;
+    public MaeControlException(String message, Throwable cause) {
+        super("Mae-Control-Exception: " + message, cause);
     }
 }

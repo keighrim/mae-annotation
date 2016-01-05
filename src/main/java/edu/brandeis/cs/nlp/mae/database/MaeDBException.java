@@ -24,10 +24,12 @@
 
 package edu.brandeis.cs.nlp.mae.database;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+
 /**
  * Created by krim on 12/27/2015.
  */
-public class MaeDBException extends Exception {
+public class MaeDBException extends MaeException {
     public MaeDBException() {
         super("Mae-DB-Exception: ");
     }
