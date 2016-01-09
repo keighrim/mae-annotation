@@ -395,14 +395,14 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         setAnnotationChanged(true);
     }
 
-    public MappedSet<TagType, LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
+    @Override
+    public Set<LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
         try {
-            MappedSet<TagType, LinkTag> links = new MappedSet<>();
+            TreeSet<LinkTag> links = new TreeSet<>();
             List<Argument> results = null;
             results = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_ETAG, argument).query();
             for (Argument result : results) {
-                LinkTag linker = result.getLinker();
-                links.putItem(linker.getTagtype(), linker);
+                links.add(result.getLinker());
             }
             resetQueryBuilders();
             return links;

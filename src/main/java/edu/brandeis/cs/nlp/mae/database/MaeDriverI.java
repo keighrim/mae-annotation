@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krim on 12/27/2015.
@@ -86,7 +87,7 @@ public interface MaeDriverI {
     // tag types
     TagType createTagType(String name, String prefix, boolean isLink) throws MaeDBException;
 
-    List<TagType> getAllTagTypes() throws MaeDBException;
+    List<TagType> getAllTagTypes() throws MaeDBException; // return list to keep inserted order (when read DTD, tagtypes are inserted to DB in order of their appearence in DTD)
 
     List<TagType> getExtentTagTypes() throws MaeDBException;
 
@@ -128,6 +129,8 @@ public interface MaeDriverI {
     LinkTag createLinkTag(TagType tagType) throws MaeDBException;
 
     List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException;
+
+    Set<LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException;
 
     // att types
     AttributeType createAttributeType(TagType linktag, String from) throws MaeDBException;

@@ -104,7 +104,7 @@ public class StatusBarController extends MaeControllerI {
                 setEmptySelectionText();
                 return;
             }
-            int[] spans = getMainController().getSelectedSpans();
+            int[] spans = getMainController().getSelectedTextSpans();
             switch (getMainController().getMode()) {
                 case MaeMainController.MODE_NORMAL:
                     setText(MaeStrings.SB_TEXT

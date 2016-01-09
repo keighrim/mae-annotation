@@ -59,5 +59,5 @@ public abstract class MaeControllerI {
 
     abstract void reset() throws MaeException;
 
-    abstract void addListeners();
+    abstract void addListeners() throws MaeException;
 }

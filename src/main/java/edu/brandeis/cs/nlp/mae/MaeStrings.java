@@ -70,6 +70,7 @@ public class MaeStrings {
     public final static String ADD_LINK_COMMAND = "ADDLINK:";
     public final static String ADD_LINK_WITH_ARGS_COMMAND = "ADDLINKARGS:";
     public final static String ALL_TABLE_TAB_BACK_NAME = new Object().toString();
+    public final static String ALL_TABLE_TAB_PREFIX = "@ALL@";
     public final static String ALL_TABLE_TAB_FRONT_NAME = "All Extents";
     public final static String SRC_COL_NAME = "source";
     public final static String ID_COL_NAME = "id";
@@ -82,14 +83,14 @@ public class MaeStrings {
     /*
     Status bar messages
      */
+    public static final String WAIT_MESSAGE = "Processing...";
     public final static String SB_NODTD = "No DTD loaded.";
     public final static String SB_NOFILE = "No file loaded.";
     public final static String SB_TEXT = "Selected: ";
     public final static String SB_NOTEXT = "No Text Selected";
     public final static String SB_TAG= " %d Tags Selected: %s";
     public final static String SB_NOTAG = "No Tags Selected";
-    public final static String SB_NORM_MODE_NOTI
-            = "Now in normal mode! Click anywhere to continue.";
+    public final static String SB_NORM_MODE_NOTI = "Now in normal mode! Click anywhere to continue.";
     public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
     public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE_PREFIX + SB_TEXT;
     public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE_PREFIX + SB_NOTEXT;
@@ -97,7 +98,7 @@ public class MaeStrings {
     public final static String SB_MARGS_TAG = SB_MARGS_MODE_PREFIX + SB_TAG;
     public final static String SB_MARGS_NOTAG = SB_MARGS_MODE_PREFIX + SB_NOTAG;
 
-    
+
     /*
     menus
     */
@@ -108,12 +109,17 @@ public class MaeStrings {
     public final static String MENU_NOTEXT = SB_NOTEXT;
 
 
-    
-    
     /*
     general messages
      */
     public final static String NO_TASK_IND = "No DTD";
     public final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
     public static final String UNSAVED_SUFFIX = " *";
+
+    /*
+    popup messages
+     */
+    public static final String WARN_POPUP_TITLE = "Attention, Please";
+    public static final String ERROR_POPUP_TITLE = "Aagh";
+
 }

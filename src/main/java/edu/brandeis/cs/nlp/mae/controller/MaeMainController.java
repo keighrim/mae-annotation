@@ -24,27 +24,24 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
+import edu.brandeis.cs.nlp.mae.model.LinkTag;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
-import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.xml.soap.Text;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,27 +58,24 @@ public class MaeMainController extends JPanel {
     private int mode;
 
     private JFrame mainFrame;
-    // TODO: 12/31/2015 write these controllers
 
 
-    private StatusBarController statusBar; // TODO: 1/1/2016 done
-    // TODO: 12/31/2015 context menu, highlighting
-    private TextPanelController textPanel;
-    // TODO: 12/31/2015 context menu, att edit, toggling
-    private MaeControllerI tablePanel;
-    // TODO: 12/31/2015 refresh, file choosers
-    // TODO: 1/4/2016 make file chooser init onece, so that it keeps the last path user visited
-    private MaeControllerI menuBar;
-    // TODO: 1/1/2016  warning, help, file choosers popups, also need to inherit UI ControllerI?
+    private StatusBarController statusBar; // 1/1/2016 drafted
+    private TextPanelController textPanel;  // 1/5/2016 drafted
+
+    // TODO: 12/31/2015 add att edit
+    private TablePanelController tablePanel; // 1/8/2016 drafted
+
+    // TODO: 2016-01-09 18:09:29EST all of actions and menuitems, including contextmenus
+    private MaeControllerI menu;
+
+    // TODO: 2016-01-09 18:10:19EST add linkCreation popup view
     private DialogController dialogs;
-    // TODO: 1/4/2016 create etag, create ltag, add argument
+
+    // TODO: 1/4/2016 create etag, create ltag, add argument, ...
 //    private LinkCreationController linkCreator;
 
-    // TODO: 1/4/2016 these should go in table controll
-    private Set<TagType> activeLinkTags;
-    private Set<TagType> activeExtentTags;
     // some booleans for user preference
-    // TODO: 12/31/2015 separate text selection handler
 
     // booleans for user preferences
     private boolean normalModeOnCreation = true; // on by default
@@ -91,7 +85,8 @@ public class MaeMainController extends JPanel {
     private List<MaeDriverI> drivers;
     private MaeDriverI currentDriver;
 
-    private ColorHandler colorHandler;
+    private ColorHandler textHighlighColors;
+    private ColorHandler documentTabColors;
 
     public MaeMainController() {
 
@@ -99,41 +94,38 @@ public class MaeMainController extends JPanel {
 
         //used to keep track of what color goes with what tag
         // keep track of which tag type is highlighted in text pane
-        activeLinkTags = new HashSet<>();
-        activeExtentTags = new HashSet<>();
 
         mode = MODE_NORMAL;
+        documentTabColors = new ColorHandler(6); // by default, 6 colors allowed to distinguish documents
 
         // these components are not attached to mainFrame, but will be called when necessary
+        menu = new MenuController(this);
+        textPanel = new TextPanelController(this);
+        tablePanel = new TablePanelController(this);
+        statusBar = new StatusBarController(this);
         dialogs = new DialogController(this);
+
 //        linkCreator = new LinkCreationController(this);
     }
 
-    /*
     public void addDocument(File annotationFile) {
         if (getDriver().isTaskLoaded()) {
             try {
                 if (getDriver().isAnnotationLoaded()) {
                     // TODO: 1/3/2016 fix here for multi file annotation in the future
                     // TODO: 1/3/2016 maybe we need a method driver.resetAnnotation() to purge out all annotations(tags and atts), but keep task structure
-                    String taskFile = getDriver().getTaskFileName();
+                    String taskFileName = getDriver().getTaskFileName();
+                    File taskFile = new File(taskFileName);
                     destroyCurrentDriver();
-                    newTask(MaeStrings.ANN_DB_FILE);
-                    getDriver().readTask(new File(taskFile));
+                    newTask(MaeStrings.ANN_DB_FILE, taskFile);
+                    getDriver().readTask(taskFile);
                 }
                 getDriver().readAnnotation(annotationFile);
-            } catch (MaeIODTDException e) {
-                e.printStackTrace();
-            } catch (MaeIOXMLException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (MaeDBException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                showError(e.getMessage());
             }
         }
     }
-    */
 
     public static void main(String[] args) {
         MaeMainController main = new MaeMainController();
@@ -148,17 +140,12 @@ public class MaeMainController extends JPanel {
     }
 
     private JFrame initUI() {
-//        return new MaeMainView(menuBar.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
-        return null;
+        return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 
-    public MaeControllerI getMenuBar() {
+    public MaeControllerI getMenu() {
         return null;
     }
-
-//    public void setMenuBar(MenuBarController menuBar) {
-//        this.menuBar = menuBar;
-//    }
 
     public DialogController getDialogs() {
         return dialogs;
@@ -193,37 +180,11 @@ public class MaeMainController extends JPanel {
     }
 
     public Set<TagType> getActiveLinkTags() {
-        return activeLinkTags;
-    }
-
-    public void setActiveLinkTags(Set<TagType> types) {
-        activeLinkTags.clear();
-        for (TagType type : types) {
-            activateLink(type);
-        }
-    }
-
-    public void activateLink(TagType link) {
-        if (link.isLink()) {
-            activeLinkTags.add(link);
-        }
+        return getTablePanel().getActiveLinkTags();
     }
 
     public Set<TagType> getActiveExtentTags() {
-        return activeExtentTags;
-    }
-
-    public void setActiveExtentTags(Set<TagType> types) {
-        activeExtentTags.clear();
-        for (TagType type : types) {
-            activateExtent(type);
-        }
-    }
-
-    public void activateExtent(TagType tag) {
-        if (tag.isExtent()) {
-            activeExtentTags.add(tag);
-        }
+        return getTablePanel().getActiveExtentTags();
     }
 
     public boolean isAnnotationOn() {
@@ -234,8 +195,8 @@ public class MaeMainController extends JPanel {
         return getDriver().isAnnotationChanged();
     }
 
-    public void setAnnotationChanged(boolean b) {
-        getDriver().setAnnotationChanged(b);
+    public void annotationIsChanged() {
+        getDriver().setAnnotationChanged(true);
     }
 
     public boolean normalModeOnCreation() {
@@ -258,7 +219,6 @@ public class MaeMainController extends JPanel {
         return mainFrame;
     }
 
-    // TODO: 12/31/2015 move this to file mainController
     public String getFilenameSuffix() {
         return mFilenameSuffix;
     }
@@ -267,7 +227,6 @@ public class MaeMainController extends JPanel {
         this.mFilenameSuffix = mFilenameSuffix;
     }
 
-    // TODO: 12/31/2015 this
 //    public LinkCreationController getLinkPopupFrame() {
 //        return null;
 //    }
@@ -276,27 +235,16 @@ public class MaeMainController extends JPanel {
 //        this.linkCreator = linkCreator;
 //    }
 
-    public MaeControllerI getTablePanel() {
-        return null;
+    public TablePanelController getTablePanel() {
+        return tablePanel;
     }
-
-//    public void setTablePanel(TablePanelController tablePanel) {
-//        this.tablePanel = tablePanel;
-//    }
 
     public TextPanelController getTextPanel() {
         return textPanel;
     }
 
-    public void setTextPanel(TextPanelController textPanel) {
-        this.textPanel = textPanel;
-    }
     public StatusBarController getStatusBar() {
         return statusBar;
-    }
-
-    public void setStatusBar(StatusBarController statusBar) {
-        this.statusBar = statusBar;
     }
 
     public MaeDriverI getDriver() {
@@ -315,7 +263,7 @@ public class MaeMainController extends JPanel {
             drivers.remove(i);
 //            getTextPanel().closeDocument(i);
         } catch (MaeDBException e) {
-            e.printStackTrace();
+            showError(e.getMessage());
         }
     }
 
@@ -325,9 +273,18 @@ public class MaeMainController extends JPanel {
         currentDriver = null;
     }
 
+    public void sendNotification(String message) {
+        getStatusBar().setText(message);
+        logger.info(message);
+    }
+
     public void sendTemporaryNotification(String message, long periodMillisecond) {
         sendNotification(message);
         getStatusBar().delayedReset(periodMillisecond);
+    }
+
+    public void sendWaitMessage() {
+        getStatusBar().setText(MaeStrings.WAIT_MESSAGE);
     }
 
 
@@ -379,11 +336,6 @@ public class MaeMainController extends JPanel {
         mode = MODE_NORMAL;
     }
 
-    public void sendNotification(String message) {
-        getStatusBar().setText(message);
-        logger.info(message);
-    }
-
     public void newTask(String dbFile, File taskFile) {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
@@ -395,12 +347,8 @@ public class MaeMainController extends JPanel {
             resetTextPanel();
             // TODO: 1/4/2016  at this point, driver should know everything about DB schema, make use of driver inside the table panel
             resetTablePanel();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
-        } catch (MaeIODTDException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
     }
 
@@ -412,12 +360,8 @@ public class MaeMainController extends JPanel {
             getTextPanel().addDocument(getDriver().getAnnotationFileName(), getDriver().getPrimaryText());
             // TODO: 1/4/2016 update tables as per to newly stored annotations from readAnno()
             resetTablePanel();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
-        } catch (MaeIOXMLException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
 
     }
@@ -430,39 +374,33 @@ public class MaeMainController extends JPanel {
 
     public void resetMenuBar() {
 //        try {
-//            ((MenuBarController) getMenuBar()).reset();
-//        } catch (MaeControlException e) {
-//            e.printStackTrace();
-//        } catch (MaeDBException e) {
-//            e.printStackTrace();
-//        } catch (MaeException e) {
-//            e.printStackTrace();
+//            ((MenuBarController) getMenu()).reset();
+//    } catch (Exception e) {
+//        showError(e.getMessage());
 //        }
     }
 
     public void resetTextPanel() {
         try {
             getTextPanel().reset();
-        } catch (MaeControlException e) {
-            e.printStackTrace();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
     }
 
     public void resetTablePanel() {
-//        try {
-//            ((TablePanelController) getTablePanel()).reset();
-//        } catch (MaeControlException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            ((TablePanelController) getTablePanel()).reset();
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
     }
 
     public void resetStatusBar() {
         getStatusBar().reset();
     }
 
-    public int[] getSelectedSpans() {
+    public int[] getSelectedTextSpans() {
         return getTextPanel().getSelected();
     }
 
@@ -474,8 +412,8 @@ public class MaeMainController extends JPanel {
     public void assignColors() {
         try {
             getTextPanel().assignColorsAllActiveTags();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
     }
 
@@ -488,20 +426,16 @@ public class MaeMainController extends JPanel {
         resetMenuBar();
         resetTextPanel();
         resetTablePanel();
+        resetStatusBar();
         returnToNormalMode(false);
-        // TODO: 1/2/2016 write out notification message
-        sendNotification("TODO ");
-        getActiveLinkTags().clear();
-        getActiveExtentTags().clear();
     }
 
     private void resetDrivers() {
         for (MaeDriverI driver : drivers) {
             try {
                 driver.destroy();
-            } catch (MaeDBException e) {
-                // TODO: 1/3/2016 throw an popup
-                e.printStackTrace();
+            } catch (Exception e) {
+                showError(e.getMessage());
             }
         }
     }
@@ -509,35 +443,77 @@ public class MaeMainController extends JPanel {
     public List<ExtentTag> getExtentTagsInSelectedSpans() {
         try {
             return getDriver().getTagsIn(getTextPanel().getSelected());
-        } catch (MaeDBException e) {
-            // TODO: 1/3/2016 throw an popup
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError(e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public Color getColor(TagType type) {
-//         TODO: 1/3/2016 maybe need to re write this, making indexing of tagtypes to maincontroller's responsibility
-//        return getColorHandler().getColor(getTablePanel().getIndexOfTagType(type));
-        return getColorHandler().getColor(0);
+    public JFileChooser getFileChooser() {
+        return getDialogs().getFileChooser();
     }
 
-    public ColorHandler getColorHandler() {
-        return colorHandler;
+    public Color getHighlightColor(TagType type) {
+        return getTextHighlighColors().getColor(getTablePanel().getTabIndexOfTagType(type));
     }
 
-    public void setColorHandler(ColorHandler handler) {
-        colorHandler = handler;
+    public ColorHandler getTextHighlighColors() {
+        return textHighlighColors;
     }
 
-    public void highlightTableRowsOfTagsIn(int start, int end) {
+    public void setDriver(int tabId) {
+        // TODO: 2016-01-08 23:51:59EST finish for multi file support
+        currentDriver = drivers.get(tabId);
+    }
+
+    public boolean isTextSelected() {
+        return getTextPanel().isTextSelected();
+    }
+
+    public void removeAllHighlights() {
+        getTextPanel().removeAllHighlights();
+    }
+
+    public void highlightTagSpans(ExtentTag eTag, Highlighter.HighlightPainter painter) {
         try {
-            List<ExtentTag> releventTags = getDriver().getTagsIn(SpanHandler.range(start, end));
-            // TODO: 1/4/2016 write this
-//        getTablePanel().highlightTableRowsOfTagsIn();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
+            getTextPanel().highlightTextSpans(eTag.getSpansAsArray(), painter);
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
+
+    }
+
+    public void propagateSelectionFromTextPanel() {
+        try {
+            List<ExtentTag> releventTags = getDriver().getTagsIn(getSelectedTextSpans());
+            for (ExtentTag tag : releventTags) {
+                getTablePanel().selectTableRows(tag);
+            }
+            getStatusBar().reset();
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
+    }
+    public void propagateSelectionFromTablePanel(String tid) {
+        removeAllHighlights();
+        try {
+            Tag tag = getDriver().getTagByTid(tid);
+            if (tag.getTagtype().isExtent()) {
+                highlightTagSpans((ExtentTag) tag, ColorHandler.getVividHighliter());
+            } else {
+                for (ExtentTag argTag : ((LinkTag) tag).getArgumentTags()) {
+                    highlightTagSpans(argTag, ColorHandler.getVividHighliter());
+                }
+            }
+
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
+    }
+
+    public JPopupMenu createTableContextMenu() {
+        // TODO: 1/4/2016 write this
+        return null;
     }
 
     public JPopupMenu createTextContextMenu() {
@@ -545,17 +521,5 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public void setDriver(int tabId) {
-        try {
-            currentDriver = drivers.get(tabId);
-        } catch (IndexOutOfBoundsException e) {
-            // TODO: 1/4/2016 what should I do?
-            logger.error("BOOOO tab does not exists: " + tabId);
-        }
-    }
-
-    public boolean isTextSelected() {
-        return getTextPanel().isTextSelected();
-    }
 }
 

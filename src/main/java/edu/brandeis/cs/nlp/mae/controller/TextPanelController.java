@@ -57,7 +57,7 @@ public class TextPanelController extends MaeControllerI{
     private int[] selected;
     private List<int[]> selectionHistory;
 
-    public TextPanelController(Container mainController) throws MaeControlException {
+    public TextPanelController(Container mainController) {
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
@@ -196,7 +196,7 @@ public class TextPanelController extends MaeControllerI{
         for (TagType type : getDriver().getTagsByTypesAt(location).keySet()) {
             if (activeTags.contains(type)) {
                 if (!singular) {
-                    c = mainController.getColor(type);
+                    c = mainController.getHighlightColor(type);
                     singular = true;
                 } else {
                     plural = true;
@@ -342,24 +342,15 @@ public class TextPanelController extends MaeControllerI{
     private class TextPanelMouseListener extends MouseAdapter {
 
         @Override
-        public void mousePressed(MouseEvent e) {
-            maybeShowTextPopup(e);
-        }
-
-        @Override
         public void mouseReleased(MouseEvent e) {
-            maybeShowTextPopup(e);
-        }
-
-        private void maybeShowTextPopup(MouseEvent e) {
             if (e.isPopupTrigger()) {
                 getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
             }
         }
+
     }
 
     private class TextPanelCaretListener implements CaretListener {
-
 
         @Override
         public void caretUpdate(CaretEvent e) {
@@ -377,18 +368,18 @@ public class TextPanelController extends MaeControllerI{
                 }
                 addSelection(new int[]{start, end});
             } else {
-                // TODO: 1/4/2016 test this: in arg sel mode, allow users to select arguments with only clicks: make sure this is safe
+                // in arg sel mode, allow users to select arguments with single clicks
+                // TODO: 1/4/2016 need a test to make sure this is safe
                 if (getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
                     addSelection(new int[]{start, end});
                 }
             }
             try {
                 highlightTextSpans(selected, ColorHandler.getDefaultHighlighter());
-                getMainController().highlightTableRowsOfTagsIn(start, end);
-                getMainController().getStatusBar().reset(); // need to reset even when a single click, because in that way user can reset stat bar from any notification with a click
             } catch (MaeControlException ignored) {
-                // possible badlocationexception is ignored
+                // possible MaeException chained from BadLocationException is ignored
             }
+            getMainController().propagateSelectionFromTextPanel();
         }
     }
 
