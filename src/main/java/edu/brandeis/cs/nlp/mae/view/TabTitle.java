@@ -28,7 +28,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.BorderRect;
 import edu.brandeis.cs.nlp.mae.controller.ColorRect;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
-import edu.brandeis.cs.nlp.mae.controller.ToggleHighlightListener;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.ToggleHighlightListener;
 
 import javax.swing.*;
 import java.awt.*;

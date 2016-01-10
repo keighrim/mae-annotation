@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 
+import edu.brandeis.cs.nlp.mae.controller.deprecated.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
@@ -33,10 +34,10 @@ import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
 import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
 import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.controller.menu.file.FileMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.font.FontSizeMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.help.HelpMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.menu.mode.ModeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.FileMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.FontSizeMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.HelpMenuListener;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.ModeMenuListener;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.*;
 import org.slf4j.Logger;
@@ -856,7 +857,7 @@ public class MaeMainUI extends JPanel {
      * This method is for coloring/underlining text in the entire text window.  It
      * is called when a new file is loaded or toggling all_extents
      */
-    protected void assignAllColors() {
+    public void assignAllColors() {
         //Get hashCollection of where tags are in the document
         //    <String location,<String elements>>.
         // TODO 151214 replace mTask.getLocElemHash() with DBDriver.getLocationsWithTags()
@@ -884,7 +885,7 @@ public class MaeMainUI extends JPanel {
      * krim: This method is for removing all color/underline highlighting from the
      * whole text windows. It is called when toggling all_extents
      */
-    protected void unassignAllColors() {
+    public void unassignAllColors() {
         MappedList<String, String> locElem = mTask.getAllLocationsWithTags();
         ArrayList<String> locs = locElem.keyList();
         for (String loc : locs) {

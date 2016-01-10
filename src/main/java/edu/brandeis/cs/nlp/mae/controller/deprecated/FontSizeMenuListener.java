@@ -22,44 +22,34 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller.menu.help;
+package edu.brandeis.cs.nlp.mae.controller.deprecated;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
- * Listens for the request from the Help Menu
+ * Class that changes the size of the text from the top menu
  */
-public class HelpMenuListener implements ActionListener {
+public class FontSizeMenuListener implements ActionListener {
     private MaeMainUI maeMainUI;
 
-    public HelpMenuListener(MaeMainUI maeMainUI) {
+    public FontSizeMenuListener(MaeMainUI maeMainUI) {
         this.maeMainUI = maeMainUI;
     }
 
-    @Override
     public void actionPerformed(ActionEvent actionEvent) {
         String command = actionEvent.getActionCommand();
-        if (command.equals("about")) {
-            maeMainUI.showAboutDialog();
-        } else if (command.equals("web")) {
-            if (Desktop.isDesktopSupported()) {
-                try {
-                    Desktop.getDesktop().browse(
-                            new URI(MaeStrings.PROJECT_WEBPAGE));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (command.equals("Font++")) {
+            Font font = maeMainUI.getTextPanel().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() + 1);
+            maeMainUI.getTextPanel().setFont(font2);
+        } else if (command.equals("Font--")) {
+            Font font = maeMainUI.getTextPanel().getFont();
+            Font font2 = new Font(font.getName(), font.getStyle(), font.getSize() - 1);
+            maeMainUI.getTextPanel().setFont(font2);
         }
     }
 }

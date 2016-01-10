@@ -22,8 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.deprecated;
 
+import edu.brandeis.cs.nlp.mae.controller.MaeMainUI;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 
 import javax.swing.text.Highlighter;

@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
  */
 
-package edu.brandeis.cs.nlp.mae.controller.menu.file;
+package edu.brandeis.cs.nlp.mae.controller.deprecated;
 
 import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.database.DTD;
