@@ -28,11 +28,9 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.model.ExtentTag;
-import edu.brandeis.cs.nlp.mae.model.LinkTag;
-import edu.brandeis.cs.nlp.mae.model.Tag;
-import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +39,11 @@ import javax.swing.*;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -62,8 +63,6 @@ public class MaeMainController extends JPanel {
 
     private StatusBarController statusBar; // 1/1/2016 drafted
     private TextPanelController textPanel;  // 1/5/2016 drafted
-
-    // TODO: 12/31/2015 add att edit
     private TablePanelController tablePanel; // 1/8/2016 drafted
 
     // TODO: 2016-01-09 18:09:29EST all of actions and menuitems, including contextmenus
@@ -122,7 +121,7 @@ public class MaeMainController extends JPanel {
                 }
                 getDriver().readAnnotation(annotationFile);
             } catch (Exception e) {
-                showError(e.getMessage());
+                showError(e);
             }
         }
     }
@@ -173,6 +172,14 @@ public class MaeMainController extends JPanel {
     public void showError(String message) {
         getDialogs().showError(message);
         logger.error(message);
+    }
+
+    public void showError(Exception e) {
+        getDialogs().showError(e.getMessage());
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.error(sw.toString());
     }
 
     public boolean isTaskLoaded() {
@@ -263,7 +270,7 @@ public class MaeMainController extends JPanel {
             drivers.remove(i);
 //            getTextPanel().closeDocument(i);
         } catch (MaeDBException e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -348,7 +355,7 @@ public class MaeMainController extends JPanel {
             // TODO: 1/4/2016  at this point, driver should know everything about DB schema, make use of driver inside the table panel
             resetTablePanel();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -361,7 +368,7 @@ public class MaeMainController extends JPanel {
             // TODO: 1/4/2016 update tables as per to newly stored annotations from readAnno()
             resetTablePanel();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
 
     }
@@ -376,7 +383,7 @@ public class MaeMainController extends JPanel {
 //        try {
 //            ((MenuBarController) getMenu()).reset();
 //    } catch (Exception e) {
-//        showError(e.getMessage());
+//        showError(e);
 //        }
     }
 
@@ -384,7 +391,7 @@ public class MaeMainController extends JPanel {
         try {
             getTextPanel().reset();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -392,7 +399,7 @@ public class MaeMainController extends JPanel {
         try {
             ((TablePanelController) getTablePanel()).reset();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -413,7 +420,7 @@ public class MaeMainController extends JPanel {
         try {
             getTextPanel().assignColorsAllActiveTags();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -435,7 +442,7 @@ public class MaeMainController extends JPanel {
             try {
                 driver.destroy();
             } catch (Exception e) {
-                showError(e.getMessage());
+                showError(e);
             }
         }
     }
@@ -444,7 +451,7 @@ public class MaeMainController extends JPanel {
         try {
             return getDriver().getTagsIn(getTextPanel().getSelected());
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
             return new ArrayList<>();
         }
     }
@@ -478,7 +485,7 @@ public class MaeMainController extends JPanel {
         try {
             getTextPanel().highlightTextSpans(eTag.getSpansAsArray(), painter);
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
 
     }
@@ -491,7 +498,7 @@ public class MaeMainController extends JPanel {
             }
             getStatusBar().reset();
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
     public void propagateSelectionFromTablePanel(String tid) {
@@ -507,7 +514,7 @@ public class MaeMainController extends JPanel {
             }
 
         } catch (Exception e) {
-            showError(e.getMessage());
+            showError(e);
         }
     }
 
@@ -519,6 +526,73 @@ public class MaeMainController extends JPanel {
     public JPopupMenu createTextContextMenu() {
         // TODO: 1/4/2016 write this
         return null;
+    }
+
+    public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
+
+        try {
+            Tag newTag;
+            if (tagType.isExtent()) {
+                newTag = getDriver().createExtentTag(
+                        insertedRow.remove(MaeStrings.ID_COL_NAME),
+                        tagType,
+                        insertedRow.remove(MaeStrings.SPANS_COL_NAME),
+                        SpanHandler.convertStringToArray(insertedRow.remove(MaeStrings.TEXT_COL_NAME)));
+            } else {
+                newTag = getDriver().createLinkTag(insertedRow.remove(MaeStrings.ID_COL_NAME), tagType);
+                for (ArgumentType argType : tagType.getArgumentTypes()) {
+                    String argIdColName = argType.getName() + MaeStrings.ARG_IDCOL_SUF;
+                    String argTextColName = argType.getName() + MaeStrings.ARG_TEXTCOL_SUF;
+                    String argumentTid = insertedRow.remove(argIdColName);
+                    if (argumentTid.length() > 0 && insertedRow.remove(argTextColName).length() > 0) {
+                        getDriver().addOrUpdateArgument((LinkTag) newTag, argType, (ExtentTag) getDriver().getTagByTid(argumentTid));
+                    }
+                }
+                for (String attName : insertedRow.keySet()) {
+                    String attValue = insertedRow.get(attName);
+                    if (attValue != null && attValue.length() > 0) {
+                        AttributeType attType = getDriver().getAttributeTypeByName(attName);
+                        getDriver().addOrUpdateAttribute(newTag, attType, attValue);
+                    }
+                }
+            }
+
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
+    public void deleteTagFromTableDeletion(String tid) {
+        try {
+            getDriver().deleteTag(getDriver().getTagByTid(tid));
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
+    public void updateTagFromTableUpdate(String tid, String colName, String value) {
+        try {
+            Tag tag = getDriver().getTagByTid(tid);
+
+            if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.SPANS_COL_NAME)) {
+                getDriver().updateTagSpans((ExtentTag) tag, SpanHandler.convertStringToArray(value));
+            } else if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.TEXT_COL_NAME)) {
+                getDriver().updateTagText((ExtentTag) tag, value);
+            } else if (colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
+                String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
+                ArgumentType argType = getDriver().getArgumentTypeByName(argTypeName);
+                LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
+                ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
+                getDriver().addOrUpdateArgument(linker, argType, arg);
+            } else if (colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
+                // do nothing, will be automatically updated when argId is updated
+            } else {
+                AttributeType attType = getDriver().getAttributeTypeByName(colName);
+                getDriver().addOrUpdateAttribute(tag, attType, value);
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
     }
 
 }
