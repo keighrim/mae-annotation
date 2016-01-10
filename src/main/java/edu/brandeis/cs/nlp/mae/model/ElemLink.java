@@ -115,7 +115,7 @@ public class ElemLink extends Elem {
      * @param argName name of an argument to be added
      */
     private void addArgAtts(String argName) {
-        addAttribute(new AttData(argName+ MaeStrings.ID_SUF, true, true));
+        addAttribute(new AttData(argName+ MaeStrings.ARG_IDCOL_SUF, true, true));
         addAttribute(new AttData(argName+"Text", true, false));
     }
 
@@ -131,7 +131,7 @@ public class ElemLink extends Elem {
         } else {
             String oldName = mArguments.get(index);
             if (oldName.equals("arg"+index)) {
-                removeAttribute(oldName+ MaeStrings.ID_SUF);
+                removeAttribute(oldName+ MaeStrings.ARG_IDCOL_SUF);
                 removeAttribute(oldName+"Text");
                 mArguments.set(index, name);
                 addArgAtts(name);

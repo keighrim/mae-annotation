@@ -477,7 +477,7 @@ public class MaeMainUI extends JPanel {
             }
         }
         for (Integer i : argColumns) {
-            if (tableModel.getColumnName(i).equals(argName + MaeStrings.ID_SUF)) {
+            if (tableModel.getColumnName(i).equals(argName + MaeStrings.ARG_IDCOL_SUF)) {
                 argCol = i;
             }
         }
@@ -602,7 +602,7 @@ public class MaeMainUI extends JPanel {
         ArrayList<String> argIDs = new ArrayList<String>();
         ArrayList<String> argTypes = new ArrayList<String>();
         for (String arg : args) {
-            String argId = a.get(arg + MaeStrings.ID_SUF);
+            String argId = a.get(arg + MaeStrings.ARG_IDCOL_SUF);
             // check if id value is a dummy,
             // if is, add the link tag to the underspecified for further lookup
             if (argId.equals("")) {
@@ -1385,7 +1385,7 @@ public class MaeMainUI extends JPanel {
                 // find which column to look for
                 for (Integer i : argCols) {
                     if (tableModel.getColumnName(i).
-                            equals(argName + MaeStrings.ID_SUF)) {
+                            equals(argName + MaeStrings.ARG_IDCOL_SUF)) {
                         argCol = i;
                     }
                 }
@@ -1631,7 +1631,7 @@ public class MaeMainUI extends JPanel {
         for (int i = 0; i < tab.getModel().getColumnCount(); i++) {
             for (String argName : argNames) {
                 if (tab.getModel().getColumnName(i).
-                        equals(argName + MaeStrings.ID_SUF)) {
+                        equals(argName + MaeStrings.ARG_IDCOL_SUF)) {
                     argColumns.add(i);
                 }
             }

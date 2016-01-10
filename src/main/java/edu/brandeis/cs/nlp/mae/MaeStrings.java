@@ -72,12 +72,13 @@ public class MaeStrings {
     public final static String ALL_TABLE_TAB_BACK_NAME = new Object().toString();
     public final static String ALL_TABLE_TAB_PREFIX = "@ALL@";
     public final static String ALL_TABLE_TAB_FRONT_NAME = "All Extents";
-    public final static String SRC_COL_NAME = "source";
+    public final static String SRC_COL_NAME = "@source";
     public final static String ID_COL_NAME = "id";
     public final static String SPANS_COL_NAME = "spans";
     public final static String TEXT_COL_NAME = "text";
     public final static String SEP = "@#";
-    public final static String ID_SUF = "ID";
+    public final static String ARG_IDCOL_SUF = "ID";
+    public final static String ARG_TEXTCOL_SUF = "Text";
 
 
     /*
