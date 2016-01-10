@@ -54,4 +54,9 @@ public class ArgumentType extends TagProperty implements IModel {
         return arguments;
     }
 
+    @Override
+    public boolean equals(Object argumentType) {
+        return argumentType instanceof ArgumentType && getName().equals(((ArgumentType) argumentType).getName());
+
+    }
 }

@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +92,7 @@ public class LocalSqliteDriverImplTest {
                 "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
 
-        driver.removeTag(tag);
+        driver.deleteTag(tag);
         retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
                 "Expected 1 extent tag is successfully deleted, found: " + retrievedTags.size(),
@@ -140,13 +141,37 @@ public class LocalSqliteDriverImplTest {
     }
 
     @Test
+    public void canUpdateAttribute() throws Exception {
+        ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        AttributeType proper = driver.createAttributeType(noun, "proper");
+        driver.addOrUpdateAttribute(nTag, proper, "true");
+
+        assertTrue(
+                "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),
+                nTag.getAttributes().size() == 1
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("true")
+        );
+
+        driver.addOrUpdateAttribute(nTag, proper, "false");
+
+        assertTrue(
+                "Expected an attribute is updated, found: " + nTag.getAttributesWithNames().toString(),
+                nTag.getAttributes().size() == 1
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("false")
+        );
+
+    }
+
+    @Test
     public void canRetrieveLinkTagsByType() throws Exception {
-        ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", new int[]{5,6,7,8,9});
-        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", new int[]{11, 12, 13, 14, 15});
+        ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
-        driver.addArgument(link, agent, nTag);
-        driver.addArgument(link, pred, vTag);
+        driver.addOrUpdateArgument(link, agent, nTag);
+        driver.addOrUpdateArgument(link, pred, vTag);
 
 
         List<LinkTag> retrievedTags = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);

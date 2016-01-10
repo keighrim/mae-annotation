@@ -385,14 +385,24 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     }
 
-    public void removeTag(Tag tag) throws Exception {
-        if (tag instanceof ExtentTag) {
-            eTagDao.delete((ExtentTag) tag);
-        } else {
-            lTagDao.delete((LinkTag) tag);
+    @Override
+    public String getNextId(TagType type) {
+        return idHandler.getNextID(type);
+    }
+
+    @Override
+    public void deleteTag(Tag tag) throws MaeDBException {
+        try {
+            if (tag instanceof ExtentTag) {
+                eTagDao.delete((ExtentTag) tag);
+            } else {
+                lTagDao.delete((LinkTag) tag);
+            }
+            logger.debug("a tag is deleted: " + tag.getId());
+            setAnnotationChanged(true);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
         }
-        logger.debug("a tag is deleted: " + tag.getId());
-        setAnnotationChanged(true);
     }
 
     @Override
@@ -511,6 +521,24 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
+    public AttributeType getAttributeTypeByName(String name) throws MaeDBException {
+        try {
+            return attTypeDao.queryForEq(DBSchema.TAB_AT_COL_NAME, name).get(0);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public ArgumentType getArgumentTypeByName(String name) throws MaeDBException {
+        try {
+            return argTypeDao.queryForEq(DBSchema.TAB_ART_COL_NAME, name).get(0);
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
     public List<AttributeType> getAttributeTypesOfTagType(TagType type) throws MaeDBException {
         try {
             return new ArrayList<>(attTypeDao.queryForEq(DBSchema.TAB_AT_FCOL_TT, type));
@@ -604,7 +632,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public LinkTag createLinkTag(String tid, TagType tagType, HashMap<ArgumentType, ExtentTag> arguments) throws MaeDBException {
         LinkTag link = createLinkTag(tid, tagType);
         for (ArgumentType argType : arguments.keySet()) {
-            addArgument(link, argType, arguments.get(argType));
+            addOrUpdateArgument(link, argType, arguments.get(argType));
         }
         try {
             lTagDao.update(link);
@@ -615,10 +643,20 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
+    public Attribute addOrUpdateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
         try {
+            Attribute oldAtt = attQuery.where().eq(DBSchema.TAB_ATT_FCOL_ETAG, tag).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
+            if (oldAtt != null) {
+                attDao.delete(oldAtt);
+            }
             Attribute att = new Attribute(tag, attType, attValue);
             attDao.create(att);
+            if (tag.getTagtype().isExtent()) {
+                eTagDao.update((ExtentTag) tag);
+            } else {
+                lTagDao.update((LinkTag) tag);
+            }
+            resetQueryBuilders();
             logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
             setAnnotationChanged(true);
             return att;
@@ -631,16 +669,48 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Argument addArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
+    public Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
         try {
+            Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
+            if (oldArg != null) {
+                argDao.delete(oldArg);
+            }
             Argument arg = new Argument(linker, argType, argument);
             argDao.create(arg);
+            lTagDao.update(linker);
+            resetQueryBuilders();
             logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
             setAnnotationChanged(true);
             return arg;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    @Override
+    public boolean updateTagSpans(ExtentTag tag, int[] spans) throws MaeDBException {
+        tag.setSpans(spans);
+        try {
+            if (eTagDao.update(tag) == 1) {
+                setAnnotationChanged(true);
+            }
+            return true;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+
+    }
+
+    @Override
+    public boolean updateTagText(ExtentTag tag, String text) throws MaeDBException {
+        tag.setText(text);
+        try {
+            if (eTagDao.update(tag) == 1) setAnnotationChanged(true);
+            return true;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+
     }
 
     /**

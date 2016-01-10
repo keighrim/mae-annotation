@@ -105,6 +105,12 @@ public class AttributeType extends TagProperty implements IModel {
         this.attributes = attributes;
     }
 
+    @Override
+    public boolean equals(Object attributeType) {
+        return attributeType instanceof AttributeType && getName().equals(((AttributeType) attributeType).getName());
+
+    }
+
     public String toString() {
         return String.format("%s of %s - value: %s (%s), required: %s, idref: %s",
                 getName(), getTagType().getName(), getValuesetAsList().toString(), getDefaultValue(), isRequired(), isIdRef());

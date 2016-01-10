@@ -201,7 +201,7 @@ public class NewXMLLoader {
                 String attValue = nodeAttributes.getNamedItem(argName + "ID").getNodeValue();
                 if (attValue.length() > 0) {
                     ExtentTag argumentTag = (ExtentTag) driver.getTagByTid(attValue);
-                    driver.addArgument(tag, argTypeMap.get(argName), argumentTag);
+                    driver.addOrUpdateArgument(tag, argTypeMap.get(argName), argumentTag);
                 }
                 nodeAttributes.removeNamedItem(argName + "ID");
                 nodeAttributes.removeNamedItem(argName + "Text");
@@ -214,7 +214,7 @@ public class NewXMLLoader {
             if (nodeAttributes.getNamedItem(attName) != null) {
                 String attValue = nodeAttributes.getNamedItem(attName).getNodeValue();
                 if (attValue.length() > 0) {
-                    driver.addAttribute(tag, attTypeMap.get(attName), attValue);
+                    driver.addOrUpdateAttribute(tag, attTypeMap.get(attName), attValue);
                 }
                 nodeAttributes.removeNamedItem(attName);
             }
