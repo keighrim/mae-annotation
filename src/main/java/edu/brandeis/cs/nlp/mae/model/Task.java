@@ -86,15 +86,15 @@ public class Task implements IModel {
     }
 
     public boolean isTaskLoaded() {
-        return getTaskFileName() == null;
+        return getTaskFileName() != null;
     }
 
     public boolean isAnnotationLoaded() {
-        return getAnnotationFileName() == null;
+        return getAnnotationFileName() != null;
     }
 
     public boolean isPrimaryTextLoaded() {
-        return getPrimaryText() == null;
+        return getPrimaryText() != null;
     }
 
     @Override

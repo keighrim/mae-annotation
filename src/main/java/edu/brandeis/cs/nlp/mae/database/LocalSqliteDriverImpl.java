@@ -97,6 +97,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+        workChanged = false;
 
     }
 
@@ -258,7 +259,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public boolean isAnnotationChanged() {
-        return workChanged;
+        return isAnnotationLoaded() && workChanged;
     }
 
     @Override

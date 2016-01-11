@@ -158,8 +158,12 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean showUnsavedChangeWarning() {
-        String warning = "Warning! You will lose all your unsaved changes. \n Are you sure to continue?";
-        return showWarning(warning);
+        if (isAnnotationOn() && isAnnotationChanged()) {
+            String warning = "Warning! You will lose all your unsaved changes. \n Are you sure to continue?";
+            return showWarning(warning);
+        } else {
+            return true;
+        }
 
     }
 
@@ -183,7 +187,7 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean isTaskLoaded() {
-        return !drivers.isEmpty() && currentDriver.isTaskLoaded();
+        return !drivers.isEmpty() && getDriver().isTaskLoaded();
     }
 
     public Set<TagType> getActiveLinkTags() {
