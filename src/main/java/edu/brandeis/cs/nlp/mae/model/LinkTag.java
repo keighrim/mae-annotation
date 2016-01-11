@@ -130,8 +130,10 @@ public class LinkTag extends Tag implements IModel {
 
     public Map<String, String> getArgumentTidsWithNames() {
         Map<String, String> argumentsWithNames = new LinkedHashMap<>();
-        for (Argument argument : getArguments()) {
-            argumentsWithNames.put(argument.getName(), argument.getArgument().getTid());
+        if (getArguments() != null && getArguments().size() > 0) {
+            for (Argument argument : getArguments()) {
+                argumentsWithNames.put(argument.getName(), argument.getArgument().getTid());
+            }
         }
         return argumentsWithNames;
 

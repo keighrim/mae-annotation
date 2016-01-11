@@ -648,6 +648,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Attribute addOrUpdateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
+        logger.debug(String.format("adding an attribute '%s: %s' to tag %s (%s)", attType.getName(), attValue, tag.getId(), tag.getTagtype().getName()));
         try {
             Attribute oldAtt = attQuery.where().eq(DBSchema.TAB_ATT_FCOL_ETAG, tag).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
             if (oldAtt != null) {
@@ -674,6 +675,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
+        logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument.getId(), linker.getId(), linker.getTagtype().getName()));
         try {
             Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
             if (oldArg != null) {

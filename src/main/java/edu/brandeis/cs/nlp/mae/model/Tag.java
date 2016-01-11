@@ -63,8 +63,10 @@ public abstract class Tag implements IModel, Comparable<Tag> {
 
     public Map<String, String> getAttributesWithNames() {
         Map<String, String> attributesWithNames = new LinkedHashMap<>();
-        for (Attribute attribute : getAttributes()) {
-            attributesWithNames.put(attribute.getName(), attribute.getValue());
+        if (getAttributes() != null && getAttributes().size() > 0) {
+            for (Attribute attribute : getAttributes()) {
+                attributesWithNames.put(attribute.getName(), attribute.getValue());
+            }
         }
         return attributesWithNames;
 
@@ -127,6 +129,11 @@ public abstract class Tag implements IModel, Comparable<Tag> {
     @Override
     public int hashCode() {
         return this.tid.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object tag) {
+        return tag instanceof Tag && getId().equals(((Tag) tag).getId());
     }
 
     @Override
