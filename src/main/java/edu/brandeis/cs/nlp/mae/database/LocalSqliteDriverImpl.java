@@ -50,7 +50,8 @@ import java.util.*;
 
 public class LocalSqliteDriverImpl implements MaeDriverI {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    // not static for multi file support: needs to instantiate many Drivers
+    private Logger logger;
 
     static final String JDBC_DRIVER = "jdbc:sqlite:";
 
@@ -85,6 +86,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     public LocalSqliteDriverImpl(String sqlite_filename) throws MaeDBException {
         SQLITE_FILENAME = sqlite_filename;
+        logger = LoggerFactory.getLogger(this.getClass().getName() + SQLITE_FILENAME);
         try {
             cs = new JdbcConnectionSource(JDBC_DRIVER + SQLITE_FILENAME);
             idHandler = new IdHandler();

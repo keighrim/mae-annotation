@@ -47,7 +47,7 @@ import java.util.*;
 public class NewXMLLoader {
 
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    private static final Logger logger = LoggerFactory.getLogger(NewXMLLoader.class.getName());
 
     private MaeDriverI driver;
 

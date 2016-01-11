@@ -55,7 +55,7 @@ public class MaeMainController extends JPanel {
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
     public static final int MODE_ADJUD = 9;
-    protected static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
     private int mode;
 
     private JFrame mainFrame;

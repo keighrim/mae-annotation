@@ -27,6 +27,8 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -40,6 +42,8 @@ import java.util.TimerTask;
  * Created by krim on 12/31/2015.
  */
 public class StatusBarController extends MaeControllerI {
+
+    protected static final Logger logger = LoggerFactory.getLogger(StatusBarController.class);
 
     private JLabel statusBarLabel;
 

@@ -25,6 +25,8 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,6 +35,9 @@ import java.awt.*;
  * Created by krim on 1/2/2016.
  */
 public abstract class MaeControllerI {
+
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
     protected JPanel view;
     protected MaeMainController mainController;
 

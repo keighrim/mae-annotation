@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
 
 public class NewDTDLoader {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    private static final Logger logger = LoggerFactory.getLogger(NewDTDLoader.class.getName());
 
     private MaeDriverI driver;
     private ArrayList<TagType> loadedTagTypes;

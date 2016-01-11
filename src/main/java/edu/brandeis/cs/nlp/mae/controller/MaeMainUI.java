@@ -65,7 +65,7 @@ import java.util.Timer;
 public class MaeMainUI extends JPanel {
 
     // TODO: 12/29/2015 re-factor any swing components as class fields into separate classes
-    protected static final Logger logger = LoggerFactory.getLogger(MaeMainUI.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(MaeMainUI.class.getName());
 
     private static final long serialVersionUID = 9404268L;
 

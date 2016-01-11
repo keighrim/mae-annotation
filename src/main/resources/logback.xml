@@ -47,7 +47,7 @@
 
     <logger name="com.j256.ormlite" level="warn"/>
 
-    <root level="warn">
+    <root level="info">
         <appender-ref ref="STDERR" />
     </root>
 </configuration>
