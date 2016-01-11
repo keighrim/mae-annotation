@@ -24,10 +24,6 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.controller.MaeCaretListener;
-import edu.brandeis.cs.nlp.mae.controller.TextMouseAdapter;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -69,7 +65,6 @@ public class TextPanelView extends JPanel {
 
     public void clear() {
         getTabs().removeAll();
-        addDocument(MaeStrings.NO_TASK_IND, stringToStyledDocument(MaeStrings.NO_TASK_GUIDE));
         setCurrentTab(-1);
         add(getTabs(), BorderLayout.CENTER);
     }

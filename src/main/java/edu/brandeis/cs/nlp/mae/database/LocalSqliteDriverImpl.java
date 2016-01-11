@@ -97,6 +97,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+        logger.info("New JDBC SQLite Driver is initialized, using a local file: " + SQLITE_FILENAME);
         workChanged = false;
 
     }

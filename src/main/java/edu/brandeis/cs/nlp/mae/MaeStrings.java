@@ -96,6 +96,7 @@ public class MaeStrings {
     public final static String SB_TAG= " %d Tags Selected: %s";
     public final static String SB_NOTAG = "No Tags Selected";
     public final static String SB_NORM_MODE_NOTI = "Now in normal mode! Click anywhere to continue.";
+    public final static String SB_NEWTASK = "New task is successfully loaded! Click anywhere to continue.";
     public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
     public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE_PREFIX + SB_TEXT;
     public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE_PREFIX + SB_NOTEXT;

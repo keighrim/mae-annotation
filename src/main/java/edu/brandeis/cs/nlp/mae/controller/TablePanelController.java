@@ -61,7 +61,7 @@ public class TablePanelController extends MaeControllerI {
     private List<TagType> tabOrder;
     private Map<String, JTable> tableMap;
 
-    public TablePanelController(Container mainController) {
+    public TablePanelController(MaeMainController mainController) {
         super(mainController);
         view = new TablePanelView();
         activeExtentTags = new HashSet<>();
@@ -421,6 +421,10 @@ public class TablePanelController extends MaeControllerI {
 
         @Override
         public void tableChanged(TableModelEvent event) {
+            if (event.getFirstRow() == -1 || event.getColumn() == -1) {
+                // ignore changes happened out of table (when initially setting up tables)
+                return;
+            }
             switch (event.getType()) {
                 case TableModelEvent.INSERT:
                     Map<String, String> insertedRow = new HashMap<>();

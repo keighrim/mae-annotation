@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
@@ -66,7 +67,7 @@ public class MaeMainController extends JPanel {
     private TablePanelController tablePanel; // 1/8/2016 drafted
 
     // TODO: 2016-01-09 18:09:29EST all of actions and menuitems, including contextmenus
-    private MaeControllerI menu;
+    private MenuController menu;
 
     // TODO: 2016-01-09 18:10:19EST add linkCreation popup view
     private DialogController dialogs;
@@ -85,6 +86,7 @@ public class MaeMainController extends JPanel {
     private MaeDriverI currentDriver;
 
     private ColorHandler textHighlighColors;
+    private List<TagType> tagsForColor;
     private ColorHandler documentTabColors;
 
     public MaeMainController() {
@@ -95,14 +97,19 @@ public class MaeMainController extends JPanel {
         // keep track of which tag type is highlighted in text pane
 
         mode = MODE_NORMAL;
+        tagsForColor = new ArrayList<>();
         documentTabColors = new ColorHandler(6); // by default, 6 colors allowed to distinguish documents
 
         // these components are not attached to mainFrame, but will be called when necessary
-        menu = new MenuController(this);
-        textPanel = new TextPanelController(this);
-        tablePanel = new TablePanelController(this);
-        statusBar = new StatusBarController(this);
-        dialogs = new DialogController(this);
+        try {
+            menu = new MenuController(this);
+            textPanel = new TextPanelController(this);
+            tablePanel = new TablePanelController(this);
+            statusBar = new StatusBarController(this);
+            dialogs = new DialogController(this);
+        } catch (MaeException e) {
+            showError(e);
+        }
 
 //        linkCreator = new LinkCreationController(this);
     }
@@ -131,6 +138,7 @@ public class MaeMainController extends JPanel {
         JFrame mainFrame = main.initUI();
         main.setWindowFrame(mainFrame);
         mainFrame.pack();
+        mainFrame.setSize(900, 700);
         mainFrame.setVisible(true);
     }
 
@@ -139,11 +147,12 @@ public class MaeMainController extends JPanel {
     }
 
     private JFrame initUI() {
+        logger.debug("initiating UI components.");
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 
-    public MaeControllerI getMenu() {
-        return null;
+    public MenuController getMenu() {
+        return menu;
     }
 
     public DialogController getDialogs() {
@@ -351,13 +360,14 @@ public class MaeMainController extends JPanel {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
-            drivers.clear();
-            drivers.add(new LocalSqliteDriverImpl(dbFile));
-            currentDriver = drivers.get(0);
+            resetDrivers();
+            currentDriver = new LocalSqliteDriverImpl(dbFile);
+            drivers.add(currentDriver);
             getDriver().readTask(taskFile);
-            resetTextPanel();
-            // TODO: 1/4/2016  at this point, driver should know everything about DB schema, make use of driver inside the table panel
-            resetTablePanel();
+            textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+            sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
+            getTextPanel().reset();
+            getTablePanel().reset();
         } catch (Exception e) {
             showError(e);
         }
@@ -365,12 +375,12 @@ public class MaeMainController extends JPanel {
 
     public void newAnnotation(File annotationFile) {
         try {
-            // TODO: 1/4/2016 resetting is limitting multi file support, to support multi files, need a driver init here
-            resetTextPanel();
+            // TODO: 1/4/2016 resetting is limiting multi file support, to support multi files, need a driver init here
+            getTextPanel().reset();
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocument(getDriver().getAnnotationFileName(), getDriver().getPrimaryText());
             // TODO: 1/4/2016 update tables as per to newly stored annotations from readAnno()
-            resetTablePanel();
+            getTablePanel().reset();
         } catch (Exception e) {
             showError(e);
         }
@@ -381,34 +391,6 @@ public class MaeMainController extends JPanel {
         // TODO: 12/31/2015 this is for multi file support
 //        textPanel.selectTab(tabId);
         currentDriver = drivers.get(tabId);
-    }
-
-    public void resetMenuBar() {
-//        try {
-//            ((MenuBarController) getMenu()).reset();
-//    } catch (Exception e) {
-//        showError(e);
-//        }
-    }
-
-    public void resetTextPanel() {
-        try {
-            getTextPanel().reset();
-        } catch (Exception e) {
-            showError(e);
-        }
-    }
-
-    public void resetTablePanel() {
-        try {
-            ((TablePanelController) getTablePanel()).reset();
-        } catch (Exception e) {
-            showError(e);
-        }
-    }
-
-    public void resetStatusBar() {
-        getStatusBar().reset();
     }
 
     public int[] getSelectedTextSpans() {
@@ -434,10 +416,14 @@ public class MaeMainController extends JPanel {
     public void resetAll() {
 
         resetDrivers();
-        resetMenuBar();
-        resetTextPanel();
-        resetTablePanel();
-        resetStatusBar();
+        getMenu().reset();
+        try {
+            getTextPanel().reset();
+            getTablePanel().reset();
+        } catch (MaeException e) {
+            showError(e);
+        }
+        getStatusBar().reset();
         returnToNormalMode(false);
     }
 
@@ -465,7 +451,11 @@ public class MaeMainController extends JPanel {
     }
 
     public Color getHighlightColor(TagType type) {
-        return getTextHighlighColors().getColor(getTablePanel().getTabIndexOfTagType(type));
+        if (!tagsForColor.contains(type)) {
+            tagsForColor.add(type);
+        }
+        return getTextHighlighColors().getColor(tagsForColor.indexOf(type));
+
     }
 
     public ColorHandler getTextHighlighColors() {
@@ -552,18 +542,18 @@ public class MaeMainController extends JPanel {
                         getDriver().addOrUpdateArgument((LinkTag) newTag, argType, (ExtentTag) getDriver().getTagByTid(argumentTid));
                     }
                 }
-                for (String attName : insertedRow.keySet()) {
-                    String attValue = insertedRow.get(attName);
-                    if (attValue != null && attValue.length() > 0) {
-                        AttributeType attType = getDriver().getAttributeTypeByName(attName);
-                        getDriver().addOrUpdateAttribute(newTag, attType, attValue);
-                    }
+            }
+            for (String attName : insertedRow.keySet()) {
+                String attValue = insertedRow.get(attName);
+                if (attValue != null && attValue.length() > 0) {
+                    AttributeType attType = getDriver().getAttributeTypeByName(attName);
+                    getDriver().addOrUpdateAttribute(newTag, attType, attValue);
                 }
             }
-
         } catch (MaeDBException e) {
             showError(e);
         }
+
     }
 
     public void deleteTagFromTableDeletion(String tid) {

@@ -47,12 +47,13 @@ public class StatusBarController extends MaeControllerI {
 
     private JLabel statusBarLabel;
 
-    public StatusBarController(Container mainController) {
+    public StatusBarController(MaeMainController mainController) {
         super(mainController);
-        view = new JPanel();
+        view = new JPanel(new FlowLayout(FlowLayout.LEFT));
         view.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBarLabel = new JLabel();
         view.add(statusBarLabel);
+        reset();
     }
 
     @Override

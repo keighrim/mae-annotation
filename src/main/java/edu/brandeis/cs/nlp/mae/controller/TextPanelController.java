@@ -57,10 +57,11 @@ public class TextPanelController extends MaeControllerI{
     private int[] selected;
     private List<int[]> selectionHistory;
 
-    public TextPanelController(Container mainController) {
+    public TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
+        reset();
     }
 
     public boolean isTextOpen() {
@@ -102,13 +103,18 @@ public class TextPanelController extends MaeControllerI{
     }
 
     @Override
-    void reset() throws MaeControlException, MaeDBException {
+    void reset() throws MaeDBException {
         getView().clear();
+        if (!getMainController().isTaskLoaded()) {
+            getView().addDocument(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+        } else if (!getMainController().isAnnotationOn()) {
+            getView().addDocument(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
+        }
         selectionHistory.clear();
-        mainController.getActiveLinkTags().clear();
-        mainController.getActiveExtentTags().clear();
-        unassignAllColors();
-        removeAllHighlights();
+        if (getMainController().isAnnotationOn()) {
+            unassignAllColors();
+            removeAllHighlights();
+        }
 
     }
 
