@@ -24,7 +24,11 @@
 
 package edu.brandeis.cs.nlp.mae;
 
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+
+import java.io.IOException;
 import java.util.Calendar;
+import java.util.Properties;
 
 /**
  * Contains string resources for MAE main
@@ -37,11 +41,11 @@ public class MaeStrings {
     /*
     External information
      */
-    public final static String PROJECT_WEBPAGE
-            = "https://github.com/keighrim/mae-annotation";
-    public final static String CUR_YEAR
-            = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    public final static String VERSION = "0.13.3.0";
+
+
+    public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
+    public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+    public final static String VERSION = "v1.0-snapshot";
     public final static String TITLE_PREFIX = "MAE " + VERSION;
     public final static String DB_DRIVER = "jdbc:sqlite:";
     public final static String ANN_DB_FILE = "mae.db";
@@ -104,8 +108,14 @@ public class MaeStrings {
     menus
     */
     public final static String MENU_FILE = "File";
+    public final static String MENU_FILE_ITEM_LOADTASK = "New Task Definition";
+    public final static String MENU_FILE_ITEM_OPENFILE = "Open Document";
+    public final static String MENU_FILE_ITEM_SAVEXML = "Save Annotation As XML";
+    public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
+    public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
+    public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
     public final static String MENU_MODE = "Mode";
-    public final static String MENU_FONT = "Font";
+    public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
 
@@ -114,7 +124,9 @@ public class MaeStrings {
     general messages
      */
     public final static String NO_TASK_IND = "No DTD";
-    public final static String NO_TASK_GUIDE = "Start a new task by opening a DTD";
+    public final static String NO_FILE_IND = "No File";
+    public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
+    public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or a XML document with stand-alone annotations.";
     public static final String UNSAVED_SUFFIX = " *";
 
     /*

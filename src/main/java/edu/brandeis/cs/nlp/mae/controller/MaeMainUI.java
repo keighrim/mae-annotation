@@ -1207,16 +1207,16 @@ public class MaeMainUI extends JPanel {
         // only if text selected and not in arg_sel mode
         if (isTextSelected && mMode != M_ARG_SEL) {
             JMenu tagMenu = createTagMenu("Create an Extent tag with selected text", false);
-            tagMenu.setMnemonic(MaeHotKeys.TAGMENU);
+            tagMenu.setMnemonic(MaeHotKeys.mnTAGMENU);
 
             jp.add(tagMenu);
         }
         // add common menus for NC and Link tag creation
         JMenu ncMenu = createNCMenu("Create a NC tag", false);
-        ncMenu.setMnemonic(MaeHotKeys.NCMENU);
+        ncMenu.setMnemonic(MaeHotKeys.mnNCMENU);
         jp.add(ncMenu);
         JMenu linkMenu = createLinkMenu("Create a Link tag without arguments", false);
-        linkMenu.setMnemonic(MaeHotKeys.LINKMENU);
+        linkMenu.setMnemonic(MaeHotKeys.mnLINKMENU);
         jp.add(linkMenu);
 
         //get a hash collection of the element type and id- add info to
@@ -1225,26 +1225,26 @@ public class MaeMainUI extends JPanel {
 
         UndoSelectListener undoSelectListener = new UndoSelectListener(this);
         if (mMode == M_ARG_SEL || mMode == M_MULTI_SPAN) {
-            JMenuItem undo = createMenuItem("Undo last selection", MaeHotKeys.UNDO,
+            JMenuItem undo = createMenuItem("Undo last selection", MaeHotKeys.ksUNDO,
                     "Undo", undoSelectListener);
             if (mSpans.size() < 1) {
                 undo.setEnabled(false);
             }
 
-            JMenuItem over = createMenuItem("Start Over", MaeHotKeys.STARTOVER,
+            JMenuItem over = createMenuItem("Start Over", MaeHotKeys.ksSTARTOVER,
                     "Over", undoSelectListener);
             if (mSpans.size() < 1) {
                 over.setEnabled(false);
             }
 
             JMenuItem exit = createMenuItem(
-                    "Exit Multi-span Mode", MaeHotKeys.NORMALMODE,
+                    "Exit Multi-span Mode", MaeHotKeys.ksNORMALMODE,
                     Integer.toString((M_NORMAL)), new ModeMenuListener(this));
 
             if (mMode == M_ARG_SEL) {
                 String makeLink = "Create a Link tag with selected elements";
                 JMenu makeLinkItem = new JMenu(makeLink);
-                makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
+                makeLinkItem.setMnemonic(MaeHotKeys.mnLINKARGMENU);
                 int i = 0;
                 for (String link : mTask.getLinkTagTypes()) {
                     JMenuItem linkItem;
@@ -1282,13 +1282,13 @@ public class MaeMainUI extends JPanel {
                 // remove a tag
                 JMenuItem removeItem = createMenuItem(
                         String.format("Remove %s", id),
-                        MaeHotKeys.DELETE,
+                        MaeHotKeys.ksDELETE,
                         elem + MaeStrings.SEP + id,
                         new RemoveExtentTagListener(this));
                 // set a ext tag as an argument
                 JMenu setArg = createSetAsArgMenu(String.format(
                         "Set %s as an argument of", id), elem, id);
-                setArg.setMnemonic(MaeHotKeys.SETARGMENU);
+                setArg.setMnemonic(MaeHotKeys.mnSETARGMENU);
 
                 jp.addSeparator();
                 jp.add(removeItem);
@@ -1311,14 +1311,14 @@ public class MaeMainUI extends JPanel {
 
                         // menu items for removing
                         JMenuItem removeItem = createMenuItem(
-                                "Remove", MaeHotKeys.DELETE,
+                                "Remove", MaeHotKeys.ksDELETE,
                                 elem + MaeStrings.SEP + id,
                                 new RemoveExtentTagListener(this));
 
                         // menu items for adding tag as an arg
                         JMenu setArg = createSetAsArgMenu(String.format(
                                 "Set %s as an argument of", id), elem, id);
-                        setArg.setMnemonic(MaeHotKeys.SETARGMENU);
+                        setArg.setMnemonic(MaeHotKeys.mnSETARGMENU);
 
                         idItem.add(removeItem);
                         idItem.add(setArg);
@@ -1478,7 +1478,7 @@ public class MaeMainUI extends JPanel {
             String id = (String) table.getModel().getValueAt(clickedRow, ID_COL);
 
             JMenuItem removeItem = createMenuItem(
-                    String.format("Remove %s", id), MaeHotKeys.DELETE,
+                    String.format("Remove %s", id), MaeHotKeys.ksDELETE,
                     id, new RemoveSelectedTableRows(this));
             jp.add(removeItem);
 
@@ -1491,7 +1491,7 @@ public class MaeMainUI extends JPanel {
                         id, getTextByID(elemName, id, false));
                 JMenu setArg = createSetAsArgMenu(String.format(
                         "Set %s as an argument of", target), elemName, id);
-                setArg.setMnemonic(MaeHotKeys.SETARGMENU);
+                setArg.setMnemonic(MaeHotKeys.mnSETARGMENU);
                 jp.add(setArg);
             }
         }
@@ -1525,7 +1525,7 @@ public class MaeMainUI extends JPanel {
             JMenuItem removeItem = new JMenuItem(
                     String.format("Remove selected %d rows", selected));
             removeItem.setActionCommand(idsString);
-            removeItem.setAccelerator(MaeHotKeys.DELETE);
+            removeItem.setAccelerator(MaeHotKeys.ksDELETE);
             removeItem.addActionListener(new RemoveSelectedTableRows(this));
             jp.add(removeItem);
 
@@ -1544,7 +1544,7 @@ public class MaeMainUI extends JPanel {
                 }
                 String makeLink = "Create a Link tag with selected elements";
                 JMenu makeLinkItem = new JMenu(makeLink);
-                makeLinkItem.setMnemonic(MaeHotKeys.LINKARGMENU);
+                makeLinkItem.setMnemonic(MaeHotKeys.mnLINKARGMENU);
                 int i = 0;
                 for (String link : mTask.getLinkTagTypes()) {
                     MakeTagListener makeTagListener = new MakeTagListener(this);
@@ -1736,10 +1736,10 @@ public class MaeMainUI extends JPanel {
         JMenu menu = new JMenu(menuTitle);
         FileMenuListener fileMenuListener = new FileMenuListener(this);
 
-        JMenuItem loadDTD = createMenuItem("Load DTD", MaeHotKeys.NEWTASK,
+        JMenuItem loadDTD = createMenuItem("Load DTD", MaeHotKeys.ksLOADTASK,
                 "Load DTD", fileMenuListener);
 
-        JMenuItem loadFile = createMenuItem("Load File", MaeHotKeys.OPENFILE,
+        JMenuItem loadFile = createMenuItem("Load File", MaeHotKeys.ksOPENFILE,
                 "Load File", fileMenuListener);
         if (!mTask.hasDTD()) {
             loadFile.setEnabled(false);
@@ -1750,13 +1750,13 @@ public class MaeMainUI extends JPanel {
             loadFile.setText("Load Gold Standard File");
         }
 
-        JMenuItem addFile = createMenuItem("Add Annotation File", MaeHotKeys.ADDFILE,
+        JMenuItem addFile = createMenuItem("Add Annotation File", MaeHotKeys.ksADDFILE,
                 "Add File", fileMenuListener);
         if (!mTask.hasDTD() || mMode != M_ADJUD) {
             addFile.setVisible(false);
         }
 
-        JMenuItem saveFileRTF = createMenuItem("Create RTF", MaeHotKeys.SAVERTF,
+        JMenuItem saveFileRTF = createMenuItem("Create RTF", MaeHotKeys.ksSAVERTF,
                 "Save RTF", fileMenuListener);
         if (!isFileOpen || mMode == M_ADJUD) {
             saveFileRTF.setEnabled(false);
@@ -1764,7 +1764,7 @@ public class MaeMainUI extends JPanel {
             saveFileRTF.setEnabled(true);
         }
 
-        JMenuItem saveFileXML = createMenuItem("Save File As XML", MaeHotKeys.SAVEXML,
+        JMenuItem saveFileXML = createMenuItem("Save File As XML", MaeHotKeys.ksSAVEXML,
                 "Save XML", fileMenuListener);
         if (!isFileOpen) {
             saveFileXML.setEnabled(false);
@@ -1776,7 +1776,7 @@ public class MaeMainUI extends JPanel {
         }
 
         JMenuItem closeFile = createMenuItem(
-                "Close Annotation Files", MaeHotKeys.CLOSEFILE,
+                "Close Annotation Files", MaeHotKeys.ksCLOSEFILE,
                 "Close File", fileMenuListener);
         if (!isFileOpen) {
             closeFile.setEnabled(false);
@@ -1837,9 +1837,9 @@ public class MaeMainUI extends JPanel {
     private JMenu createDisplayMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
         FontSizeMenuListener fsmListener = new FontSizeMenuListener(this);
-        JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.FONTBIG,
+        JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.ksFONTBIG,
                 "Font++", fsmListener);
-        JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.FONTSMALL,
+        JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.ksFONTSMALL,
                 "Font--", fsmListener);
         menu.add(increaseFont);
         menu.add(decreaseFont);
@@ -1986,10 +1986,10 @@ public class MaeMainUI extends JPanel {
         JMenu menu = new JMenu(menuTitle);
         HelpMenuListener helpMenuListener = new HelpMenuListener(this);
 
-        JMenuItem about = createMenuItem("About MAE", MaeHotKeys.ABOUT,
+        JMenuItem about = createMenuItem("About MAE", MaeHotKeys.ksABOUT,
                 "about", helpMenuListener);
         JMenuItem github = createMenuItem(
-                "Visit project website(Github)", MaeHotKeys.WEB,
+                "Visit project website(Github)", MaeHotKeys.ksWEB,
                 "web", helpMenuListener);
         menu.add(about);
         menu.addSeparator();
@@ -2009,17 +2009,17 @@ public class MaeMainUI extends JPanel {
         ModeMenuListener modemenuListener = new ModeMenuListener(this);
 
         JMenuItem multiSpan = createMenuItem(
-                "Multi-span Mode", MaeHotKeys.MSPANMODE,
+                "Multi-span Mode", MaeHotKeys.ksMSPANMODE,
                 Integer.toString(M_MULTI_SPAN), modemenuListener);
         JMenuItem multiArgs = createMenuItem(
-                "Argument selection Mode", MaeHotKeys.ARGSMODE,
+                "Argument selection Mode", MaeHotKeys.ksARGSMODE,
                 Integer.toString(M_ARG_SEL), modemenuListener);
         JMenuItem adjudication = createMenuItem(
-                "Adjudication Mode", MaeHotKeys.ADJUDMODE,
+                "Adjudication Mode", MaeHotKeys.ksADJUDMODE,
                 Integer.toString(M_ADJUD), modemenuListener);
         adjudication.setEnabled(false);
         JMenuItem exitMode = createMenuItem(
-                "Exit to Normal Mode", MaeHotKeys.NORMALMODE,
+                "Exit to Normal Mode", MaeHotKeys.ksNORMALMODE,
                 Integer.toString(M_NORMAL), modemenuListener);
         if (mMode != M_NORMAL) {
             exitMode.setEnabled(true);
@@ -2055,30 +2055,30 @@ public class MaeMainUI extends JPanel {
         mMenuBar.removeAll();
 
         JMenu fileMenu = createFileMenu("File");
-        fileMenu.setMnemonic(MaeHotKeys.FILEMENU);
+        fileMenu.setMnemonic(MaeHotKeys.mnFILEMENU);
         mMenuBar.add(fileMenu);
 
         // some menus are used only after a file is loaded
         if (isFileOpen) {
             JMenu displayMenu = createDisplayMenu("Display");
-            displayMenu.setMnemonic(MaeHotKeys.DPMENU);
+            displayMenu.setMnemonic(MaeHotKeys.mnDPMENU);
             mMenuBar.add(displayMenu);
             JMenu linkMenu = createLinkMenu("Link Tags", true);
-            linkMenu.setMnemonic(MaeHotKeys.LINKMENU);
+            linkMenu.setMnemonic(MaeHotKeys.mnLINKMENU);
             mMenuBar.add(linkMenu);
             JMenu ncMenu = createNCMenu("NC Tags", true);
-            ncMenu.setMnemonic(MaeHotKeys.NCMENU);
+            ncMenu.setMnemonic(MaeHotKeys.mnNCMENU);
             mMenuBar.add(ncMenu);
             JMenu modeMenu = createModeMenu("Modes");
-            modeMenu.setMnemonic(MaeHotKeys.MODEMENU);
+            modeMenu.setMnemonic(MaeHotKeys.mnMODEMENU);
             mMenuBar.add(modeMenu);
         }
         JMenu prefMenu = createPrefMenu("Preference");
-        prefMenu.setMnemonic(MaeHotKeys.PREFMENU);
+        prefMenu.setMnemonic(MaeHotKeys.mnPREFMENU);
         mMenuBar.add(prefMenu);
 
         JMenu helpMenu = createHelpMenu("Help");
-        helpMenu.setMnemonic(MaeHotKeys.HELPMENU);
+        helpMenu.setMnemonic(MaeHotKeys.mnHELPMENU);
         mMenuBar.add(helpMenu);
 
         mMenuBar.updateUI();

@@ -161,15 +161,15 @@ public class MaeHotKeys {
     // context menu keys
     public final static KeyStroke ksNZ
             = KeyStroke.getKeyStroke(KeyEvent.VK_Z, 0);
-    public final static KeyStroke UNDO = ksNZ;
+    public final static KeyStroke ksUNDO = ksNZ;
     
     public final static KeyStroke ksNS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0);
-    public final static KeyStroke STARTOVER = ksNS;
+    public final static KeyStroke ksSTARTOVER = ksNS;
     
     public final static KeyStroke ksND
             = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
-    public final static KeyStroke DELETE = ksND;
+    public final static KeyStroke ksDELETE = ksND;
 
     public final static KeyStroke ksNE
             = KeyStroke.getKeyStroke(KeyEvent.VK_E, 0);
@@ -177,76 +177,77 @@ public class MaeHotKeys {
             = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0);
 
     // menu mnemonics
-    public final static int FILEMENU = KeyEvent.VK_F;
-    public final static int TAGMENU = KeyEvent.VK_C;
-    public final static int LINKMENU = KeyEvent.VK_L;
-    public final static int LINKARGMENU = KeyEvent.VK_K;
-    public final static int SETARGMENU = KeyEvent.VK_S;
-    public final static int NCMENU = KeyEvent.VK_N;
-    public final static int MODEMENU = KeyEvent.VK_M;
-    public final static int DPMENU = KeyEvent.VK_D;
-    public final static int PREFMENU = KeyEvent.VK_P;
-    public final static int HELPMENU = KeyEvent.VK_H;
-    public final static int OK_BUTTON = KeyEvent.VK_O;
-    public final static int CANCEL_BUTTON = KeyEvent.VK_C;
+    public final static int mnFILEMENU = KeyEvent.VK_F;
+    public final static int mnTAGMENU = KeyEvent.VK_C;
+    public final static int mnLINKMENU = KeyEvent.VK_L;
+    public final static int mnLINKARGMENU = KeyEvent.VK_K;
+    public final static int mnSETARGMENU = KeyEvent.VK_S;
+    public final static int mnNCMENU = KeyEvent.VK_N;
+    public final static int mnMODEMENU = KeyEvent.VK_M;
+    public final static int mnDPMENU = KeyEvent.VK_D;
+    public final static int mnPREFMENU = KeyEvent.VK_P;
+    public final static int mnHELPMENU = KeyEvent.VK_H;
+    public final static int mnOK_BUTTON = KeyEvent.VK_O;
+    public final static int mnCANCEL_BUTTON = KeyEvent.VK_C;
     
     // file menu keys
     public final static KeyStroke ksCN
             = KeyStroke.getKeyStroke(KeyEvent.VK_N, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke NEWTASK = ksCN;
+    public final static KeyStroke ksLOADTASK = ksCN;
     
     public final static KeyStroke ksCO
             = KeyStroke.getKeyStroke(KeyEvent.VK_O,
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke OPENFILE = ksCO;
+    public final static KeyStroke ksOPENFILE = ksCO;
 
     public final static KeyStroke ksCI
             = KeyStroke.getKeyStroke(KeyEvent.VK_I,
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke ADDFILE = ksCI;
+    public final static KeyStroke ksADDFILE = ksCI;
 
     public final static KeyStroke ksCR
             = KeyStroke.getKeyStroke(KeyEvent.VK_R, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke SAVERTF = ksCR;
+    public final static KeyStroke ksSAVERTF = ksCR;
 
-    public final static KeyStroke CLOSEFILE = ksF4;
+    public final static KeyStroke ksCLOSEFILE = ksF4;
 
     public final static KeyStroke ksCS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke SAVEXML = ksCS;
+    public final static KeyStroke ksSAVEXML = ksCS;
     
     // display menu keys
     public final static KeyStroke ksCMinus
             = KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke FONTSMALL = ksCMinus;
+    public final static KeyStroke ksFONTSMALL = ksCMinus;
     
     public final static KeyStroke ksCEquals
             = KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke FONTBIG = ksCEquals;
+    public final static KeyStroke ksFONTBIG = ksCEquals;
     
     public final static KeyStroke ksCPlus
             = KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    
+
+    // TODO: 2016-01-10 16:36:05EST for side panel support
     public final static KeyStroke SIDEPANEL = ksF9;
     
     // mode menu keys
     public final static KeyStroke ksCE
             = KeyStroke.getKeyStroke(KeyEvent.VK_E, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke NORMALMODE = ksCE;
-    public final static KeyStroke MSPANMODE = ksC1;
-    public final static KeyStroke ARGSMODE = ksC2;
-    public final static KeyStroke ADJUDMODE = ksC9;
+    public final static KeyStroke ksNORMALMODE = ksCE;
+    public final static KeyStroke ksMSPANMODE = ksC1;
+    public final static KeyStroke ksARGSMODE = ksC2;
+    public final static KeyStroke ksADJUDMODE = ksC9;
 
     // help menu keys
-    public final static  KeyStroke ABOUT = ksF10;
-    public final static  KeyStroke WEB = ksF1;
+    public final static  KeyStroke ksABOUT = ksF10;
+    public final static  KeyStroke ksWEB = ksF1;
     
     // switch between tabs
     public final static KeyStroke ksCTab
@@ -257,6 +258,7 @@ public class MaeHotKeys {
             = KeyStroke.getKeyStroke("ctrl PgUp");
     public final static KeyStroke ksCPgdn
             = KeyStroke.getKeyStroke("ctrl PgDown");
+    // TODO: 2016-01-10 16:37:12EST make separate keyboard shorcuts for tab navigation of text and tabel panels
     public final static KeyStroke NEXTTAB = ksCTab;
     public final static KeyStroke PREVTAB = ksCShTab;
     public final static KeyStroke TABUP = ksCPgup;

@@ -177,7 +177,7 @@ public class MakeTagListener implements ActionListener {
 
         // OK button
         JButton okay = new JButton("OK");
-        okay.setMnemonic(MaeHotKeys.OK_BUTTON);
+        okay.setMnemonic(MaeHotKeys.mnOK_BUTTON);
         okay.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -203,7 +203,7 @@ public class MakeTagListener implements ActionListener {
 
         // cancel button
         JButton cancel = new JButton("Cancel");
-        cancel.setMnemonic(MaeHotKeys.CANCEL_BUTTON);
+        cancel.setMnemonic(MaeHotKeys.mnCANCEL_BUTTON);
         cancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
