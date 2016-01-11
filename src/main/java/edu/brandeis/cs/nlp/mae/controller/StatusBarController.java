@@ -112,23 +112,21 @@ public class StatusBarController extends MaeControllerI {
             int[] spans = getMainController().getSelectedTextSpans();
             switch (getMainController().getMode()) {
                 case MaeMainController.MODE_NORMAL:
-                    setText(MaeStrings.SB_TEXT
-                            + SpanHandler.convertArrayToString(spans));
+                    setText(MaeStrings.SB_TEXT + SpanHandler.convertArrayToString(spans));
+                    break;
                 case MaeMainController.MODE_MULTI_SPAN:
-                    setText(MaeStrings.SB_MSPAN_TEXT +
-                            SpanHandler.convertArrayToString(spans));
+                    setText(MaeStrings.SB_MSPAN_TEXT + SpanHandler.convertArrayToString(spans));
+                    break;
                 case MaeMainController.MODE_ARG_SEL:
                     // TODO: 1/3/2016  this will return all tags sorted in their tid. think about any possible problem can be caused by long- list of sorted tags
                     List<ExtentTag> potentialArguments = getMainController().getExtentTagsInSelectedSpans();
                     ArrayList<String> argList = new ArrayList<>();
                     for (ExtentTag arg : potentialArguments) {
                         // TODO: 1/1/2016 need to encapsulate this string format
-                        argList.add(String.format("%s - %s"
-                                , arg.getTid(), arg.getText()));
+                        argList.add(String.format("%s - %s", arg.getTid(), arg.getText()));
                     }
-                    setText(String.format(
-                            MaeStrings.SB_MARGS_TAG
-                            , potentialArguments.size(), argList.toString()));
+                    setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), argList.toString()));
+                    break;
             }
         }
     }
