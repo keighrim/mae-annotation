@@ -298,9 +298,13 @@ public class MaeMainController extends JPanel {
         logger.info(message);
     }
 
+    public void resetNotificationMessageIn(long millisecond) {
+        getStatusBar().delayedReset(millisecond);
+    }
+
     public void sendTemporaryNotification(String message, long periodMillisecond) {
         sendNotification(message);
-        getStatusBar().delayedReset(periodMillisecond);
+        resetNotificationMessageIn(periodMillisecond);
     }
 
     public void sendWaitMessage() {
@@ -402,10 +406,26 @@ public class MaeMainController extends JPanel {
         // TODO: 1/1/2016 implement multiple files
     }
 
-    public void assignColors() {
+    public void assignTextColorsOver(List<Integer> anchors) {
         try {
-            getTextPanel().assignColorsAllActiveTags();
+            getTextPanel().assignTextColorOver(anchors);
         } catch (Exception e) {
+            showError(e);
+        }
+    }
+
+    public void assignAllTextColors() {
+        try {
+            getTextPanel().assignAllColors();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
+    public void unassignAllTextColors() {
+        try {
+            getTextPanel().unassignAllColors();
+        } catch (MaeDBException e) {
             showError(e);
         }
     }
@@ -456,6 +476,10 @@ public class MaeMainController extends JPanel {
         }
         return getTextHighlighColors().getColor(tagsForColor.indexOf(type));
 
+    }
+
+    public int colorableTagTypes() {
+        return tagsForColor.size();
     }
 
     public ColorHandler getTextHighlighColors() {

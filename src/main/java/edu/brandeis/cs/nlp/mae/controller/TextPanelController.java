@@ -131,10 +131,11 @@ public class TextPanelController extends MaeControllerI{
 
     }
 
-    /**
-     * krim: This method is for removing all color/underline highlighting from the
-     * whole text windows. It is called when toggling all_extents
-     */
+    public void assignAllColors() throws MaeDBException {
+        assignTextColorOver(getDriver().getAllAnchors());
+
+    }
+
     public void unassignAllColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         for (Integer location : anchorLocations) {
@@ -163,10 +164,6 @@ public class TextPanelController extends MaeControllerI{
         return getView().getDocument();
     }
 
-    private MaeDriverI getDriver() {
-        return getMainController().getDriver();
-    }
-
     public void selectTab(int tabId) {
         // TODO: 1/4/2016 finish this for multi file support
 
@@ -184,6 +181,12 @@ public class TextPanelController extends MaeControllerI{
 
     public void assignTextColorOver(int...locations) throws MaeDBException {
         for (int location : locations) {
+            assignTextColorAt(location);
+        }
+    }
+
+    public void assignTextColorOver(List<Integer> locations) throws MaeDBException {
+        for (Integer location : locations) {
             assignTextColorAt(location);
         }
     }
@@ -212,20 +215,6 @@ public class TextPanelController extends MaeControllerI{
             }
         }
         setColorAtLocation(c, location, plural);
-    }
-
-    /**
-     * This method is for coloring/underlining text in the entire text window.  It
-     * is called when a new file is loaded or toggling all_extents
-     */
-    public void assignColorsAllActiveTags() throws MaeDBException {
-        assignTextColorOver(getDriver().getAllAnchors());
-    }
-
-    private void assignTextColorOver(List<Integer> locations) throws MaeDBException {
-        for (Integer location : locations) {
-            assignTextColorAt(location);
-        }
     }
 
     /**

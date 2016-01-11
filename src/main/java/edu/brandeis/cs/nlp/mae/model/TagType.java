@@ -188,6 +188,11 @@ public class TagType implements IModel, Comparable<TagType> {
         return String.format("%s - att: %s, arg: %s", getName(), getAttributeTypesAsString(), getArgumentTypesAsString());
     }
 
+    @Override
+    public boolean equals(Object tagType) {
+        return tagType instanceof TagType && getName().equals(((TagType) tagType).getName());
+
+    }
 
     @Override
     public int compareTo(TagType tagType) {

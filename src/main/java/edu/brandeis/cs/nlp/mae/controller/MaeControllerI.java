@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,10 @@ public abstract class MaeControllerI {
 
     MaeMainController getMainController() {
         return mainController;
+    }
+
+    protected MaeDriverI getDriver() {
+        return getMainController().getDriver();
     }
 
     JPanel getView() {
