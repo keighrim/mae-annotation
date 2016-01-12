@@ -86,6 +86,12 @@ public abstract class Tag implements IModel, Comparable<Tag> {
 
     public TagType getTagtype() {
         return tagtype;
+
+    }
+
+    public String getTagTypeName() {
+        return tagtype.getName();
+
     }
 
     public void setTagtype(TagType tagtype) {

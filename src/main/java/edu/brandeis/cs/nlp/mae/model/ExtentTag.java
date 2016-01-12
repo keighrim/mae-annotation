@@ -136,7 +136,7 @@ public class ExtentTag extends Tag implements IModel {
 
     @Override
     public String toXmlString() {
-        String tagTypeName = getTagtype().getName();
+        String tagTypeName = getTagTypeName();
         String idAtt = String.format("id=\"%s\"", tid);
         String spansAtt = String.format("spans=\"%s\"", getSpansAsString());
         String textAtt = String.format("text=\"%s\"", text);
