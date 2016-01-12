@@ -42,10 +42,8 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by krim on 12/31/2015.
@@ -61,16 +59,44 @@ public class TextPanelController extends MaeControllerI{
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
+        selected = new int[0];
         reset();
     }
 
-    public boolean isTextOpen() {
-        return getView().getCurrentTab() == -1;
+    @Override
+    protected TextPanelView getView() {
+        return view;
+    }
+
+    @Override
+    void reset() throws MaeDBException {
+        getView().clearAllTabs();
+        if (!getMainController().isTaskLoaded()) {
+            getView().addTextTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+        } else if (!getMainController().isAnnotationOn()) {
+            getView().addTextTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
+        } else {
+            selectionHistory.clear();
+            if (getMainController().isAnnotationOn()) {
+                unassignAllFGColors();
+                removeAllBGColors();
+                addListeners();
+            }
+        }
+
+    }
+
+    @Override
+   void addListeners() {
+        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
+        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+        // TODO: 2016-01-11 20:50:41EST this listener is used 4MF
+//        getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
     }
 
     protected void setSelection(int[] spans) {
         selected = spans;
-        mainController.getStatusBar().reset();
+        getMainController().updateStatusBar();
     }
 
     public void clearSelection() {
@@ -89,7 +115,21 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public void addDocument(String documentTitle, String documentText) {
-        getView().addDocument(documentTitle, documentText);
+        // adding a new document wll wipe any existing tabs, either guide or documents
+        // TODO: 2016-01-11 20:47:48EST fix this 4MF
+//        if (!getView().isAnyDocumentOpen()) {
+            getView().clearAllTabs();
+//        }
+        getView().addTextTab(documentTitle, documentText);
+        if (!getView().isAnyDocumentOpen()) {
+            addListeners();
+        }
+        getView().setDocumentOpen(true);
+
+    }
+
+    private DefaultStyledDocument getDocument() {
+        return getView().getDocument();
     }
 
     public void closeDocument(int i) {
@@ -97,142 +137,10 @@ public class TextPanelController extends MaeControllerI{
         getView().getTabs().remove(i);
     }
 
-    @Override
-    protected TextPanelView getView() {
-        return view;
-    }
-
-    @Override
-    void reset() throws MaeDBException {
-        getView().clear();
-        if (!getMainController().isTaskLoaded()) {
-            getView().addDocument(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
-        } else if (!getMainController().isAnnotationOn()) {
-            getView().addDocument(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
-        }
-        selectionHistory.clear();
-        if (getMainController().isAnnotationOn()) {
-            unassignAllColors();
-            removeAllHighlights();
-        }
-
-    }
-
-    @Override
-    void addListeners() {
-        // TODO: 1/3/2016 replace these with new listeners
-        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
-        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
-        getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
-    }
-
-    public void removeAllHighlights() {
-        getView().getDocumentPane().getHighlighter().removeAllHighlights();
-
-    }
-
-    public void assignAllColors() throws MaeDBException {
-        assignTextColorOver(getDriver().getAllAnchors());
-
-    }
-
-    public void unassignAllColors() throws MaeDBException {
-        List<Integer> anchorLocations = getDriver().getAllAnchors();
-        for (Integer location : anchorLocations) {
-            setColorAtLocation(Color.black, location, false);
-        }
-        // TODO: 1/3/2016 should we need emptyActiveTags(), or so here?
-    }
-
-    /**
-     * Sets the color of a specific span of text.  Called for each extent tag.
-     *
-     * @param color The color the text will become. Determined by the tag name and
-     *              colorTable (Hashtable)
-     * @param location the location of the start of the extent
-     * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
-     */
-    private void setColorAtLocation(Color color, int location, boolean underline) {
-        DefaultStyledDocument styleDoc = getDocument();
-        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-        StyleConstants.setForeground(attributeSet, color);
-        StyleConstants.setUnderline(attributeSet, underline);
-        styleDoc.setCharacterAttributes(location, 1, attributeSet, false);
-    }
-
-    private DefaultStyledDocument getDocument() {
-        return getView().getDocument();
-    }
-
     public void selectTab(int tabId) {
         // TODO: 1/4/2016 finish this for multi file support
-
-        getView().setCurrentTab(tabId);
+        getView().selectTab(tabId);
         getMainController().switchAnnotationTab(tabId);
-    }
-
-    public int selectedTab() {
-        return getView().getTabs().getSelectedIndex();
-    }
-
-    public Boolean isTextSelected() {
-        return this.selected == null || this.selected.length == 0;
-    }
-
-    public void assignTextColorOver(int...locations) throws MaeDBException {
-        for (int location : locations) {
-            assignTextColorAt(location);
-        }
-    }
-
-    public void assignTextColorOver(List<Integer> locations) throws MaeDBException {
-        for (Integer location : locations) {
-            assignTextColorAt(location);
-        }
-    }
-
-    /**
-     * This method is for coloring/underlining text in the text window.  It detects
-     * overlaps, and should be called every time a tag is added or removed.
-     */
-    private void assignTextColorAt(int location) throws MaeDBException {
-        boolean singular = false;
-        boolean plural = false;
-        Color c = Color.black; // default color is black
-        Set<TagType> activeTags = getMainController().getActiveExtentTags();
-
-        // exclude unactivated elements
-        for (TagType type : getDriver().getTagsByTypesAt(location).keySet()) {
-            if (activeTags.contains(type)) {
-                if (!singular) {
-                    c = mainController.getHighlightColor(type);
-                    singular = true;
-                } else {
-                    plural = true;
-                    break;
-                }
-
-            }
-        }
-        setColorAtLocation(c, location, plural);
-    }
-
-    /**
-     * Highlight given spans with given highlighter and painter(color)
-     *
-     * @param spans   - desired text spans to be highlighted
-     * @param painter - highlighter OBJ with color
-     */
-    public void highlightTextSpans(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
-        Highlighter hl = getView().getHighligher();
-        for (int span : spans) {
-            try {
-                // TODO: 1/3/2016 make sure second offset is not exclusive
-                hl.addHighlight(span, span, painter);
-            } catch (BadLocationException e) {
-                throw catchViewException("failed to fetch text region: ", e);
-            }
-        }
     }
 
     /**
@@ -255,7 +163,31 @@ public class TextPanelController extends MaeControllerI{
         }
     }
 
-    public List<ExtentTag> getPotentialArgsInSelectedOrder() throws MaeDBException {
+    public int getSelectedTabIndex() {
+        return getView().getTabs().getSelectedIndex();
+    }
+
+    public Boolean isTextSelected() {
+        return this.selected.length == 0;
+    }
+
+    public int[] getSelected() {
+        return selected;
+    }
+
+    public List<int[]> getSelectedAsPairs() {
+        return SpanHandler.convertArrayToPairs(selected);
+    }
+
+    public String getPrimaryText() {
+        return getView().getDocumentPane().getText();
+    }
+
+    public String getSelectedText() throws MaeControlException {
+        return getTextIn(selected, true).replace("\n", " ");
+    }
+
+    public List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
         List<ExtentTag> argsInOrder = new LinkedList<>();
         List<ExtentTag> surplusArgs = new LinkedList<>();
 
@@ -273,16 +205,8 @@ public class TextPanelController extends MaeControllerI{
 
     }
 
-    public String getTextInSelected() throws MaeControlException {
-        return getTextIn(selected, true).replace("\n", " ");
-    }
-
     public String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
         return getTextIn(SpanHandler.convertArrayToPairs(spans), trimWhitespaces);
-    }
-
-    public String getText() {
-        return getView().getDocumentPane().getText();
     }
 
     /**
@@ -326,12 +250,92 @@ public class TextPanelController extends MaeControllerI{
         return text;
     }
 
-    public List<int[]> getSelectedAsPairs() {
-        return SpanHandler.convertArrayToPairs(selected);
+    public void assignFGColorOver(int...locations) throws MaeDBException {
+        for (int location : locations) {
+            assignFGColorAt(location);
+        }
     }
 
-    public int[] getSelected() {
-        return selected;
+    public void removeAllBGColors() {
+        getView().getDocumentPane().getHighlighter().removeAllHighlights();
+
+    }
+
+    public void assignAllFGColors() throws MaeDBException {
+        assignFGColorOver(getDriver().getAllAnchors());
+
+    }
+
+    public void unassignAllFGColors() throws MaeDBException {
+        List<Integer> anchorLocations = getDriver().getAllAnchors();
+        for (Integer location : anchorLocations) {
+            setFGColorAtLocation(Color.black, location, false);
+        }
+    }
+
+    /**
+     * Sets the color of a specific span of text.  Called for each extent tag.
+     *
+     * @param color The color the text will become. Determined by the tag name and
+     *              colorTable (Hashtable)
+     * @param location the location of the start of the extent
+     * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
+     */
+    private void setFGColorAtLocation(Color color, int location, boolean underline) {
+        DefaultStyledDocument styleDoc = getDocument();
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setForeground(attributeSet, color);
+        StyleConstants.setUnderline(attributeSet, underline);
+        styleDoc.setCharacterAttributes(location, 1, attributeSet, false);
+    }
+
+    public void assignFGColorOver(List<Integer> locations) throws MaeDBException {
+        for (Integer location : locations) {
+            assignFGColorAt(location);
+        }
+    }
+
+    /**
+     * This method is for coloring/underlining text in the text window.  It detects
+     * overlaps, and should be called every time a tag is added or removed.
+     */
+    private void assignFGColorAt(int location) throws MaeDBException {
+        boolean singular = false;
+        boolean plural = false;
+        Color c = Color.black; // default color is black
+        Set<TagType> activeTags = getMainController().getActiveExtentTags();
+
+        // exclude unactivated elements
+        for (TagType type : getDriver().getTagsByTypesAt(location).keySet()) {
+            if (activeTags.contains(type)) {
+                if (!singular) {
+                    c = mainController.getHighlightColor(type);
+                    singular = true;
+                } else {
+                    plural = true;
+                    break;
+                }
+
+            }
+        }
+        setFGColorAtLocation(c, location, plural);
+    }
+
+    /**
+     * Highlight given spans with given highlighter and painter(color)
+     *
+     * @param spans   - desired text spans to be highlighted
+     * @param painter - highlighter OBJ with color
+     */
+    public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
+        Highlighter hl = getView().getHighligher();
+        for (int anchor : spans) {
+            try {
+                hl.addHighlight(anchor, anchor, painter);
+            } catch (BadLocationException e) {
+                throw catchViewException("failed to fetch text region: ", e);
+            }
+        }
     }
 
     private class TextPanelMouseListener extends MouseAdapter {
@@ -370,7 +374,7 @@ public class TextPanelController extends MaeControllerI{
                 }
             }
             try {
-                highlightTextSpans(selected, ColorHandler.getDefaultHighlighter());
+                addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
             } catch (MaeControlException ignored) {
                 // possible MaeException chained from BadLocationException is ignored
             }

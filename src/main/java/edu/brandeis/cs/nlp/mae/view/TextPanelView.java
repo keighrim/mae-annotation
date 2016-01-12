@@ -45,31 +45,39 @@ import java.util.HashMap;
 public class TextPanelView extends JPanel {
 
     private JTabbedPane documentTabs;
-    private int currentTab;
-
-    public int getCurrentTab() {
-        return currentTab;
-    }
-
-    public void setCurrentTab(int currentTab) {
-        this.currentTab = currentTab;
-    }
-
+    private boolean documentOpen;
 
     public TextPanelView() {
         super(new BorderLayout());
         documentTabs = new JTabbedPane();
-        clear();
+        clearAllTabs();
 
     }
 
-    public void clear() {
+    public boolean isAnyDocumentOpen() {
+        return documentOpen;
+    }
+
+    public void setDocumentOpen(boolean documentOpen) {
+        this.documentOpen = documentOpen;
+    }
+
+    public int getCurrentTab() {
+        return getTabs().getSelectedIndex();
+    }
+
+
+    public void selectTab(int tab) {
+        getTabs().setSelectedIndex(tab);
+    }
+
+    public void clearAllTabs() {
         getTabs().removeAll();
-        setCurrentTab(-1);
         add(getTabs(), BorderLayout.CENTER);
+        setDocumentOpen(false);
     }
 
-    private StyledDocument stringToStyledDocument(String plainText) {
+    private static StyledDocument stringToStyledDocument(String plainText) {
         StyledDocument document = new DefaultStyledDocument();
         try {
             document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
@@ -79,19 +87,26 @@ public class TextPanelView extends JPanel {
 
     }
 
-    public void addDocument(String documentTitle, String plainText) {
-        addDocument(documentTitle, stringToStyledDocument(plainText));
-    }
-
-    public void addDocument(String documentTitle, StyledDocument document) {
-        if (getCurrentTab() == -1) {
-            getTabs().removeAll();
-        }
+    /**
+     * Used to add a text panel, mainly for guide text.
+     * @param documentTitle
+     * @param guideText
+     */
+    public void addTextTab(String documentTitle, String guideText) {
         // TODO: 1/2/2016 add tooltip for the tab
         // always open a new tab at the end, and switch to the new tab
-        setCurrentTab(getTabs().getTabCount());
-        getTabs().addTab(documentTitle, createDocumentArea(document));
-        getTabs().setSelectedIndex(getCurrentTab());
+        getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText)));
+        selectTab(getTabs().getTabCount() - 1);
+    }
+
+    /**
+     * Add a text panel, then make it working document
+     * @param documentTitle
+     * @param document
+     */
+    public void addDocument(String documentTitle, String document) {
+        addTextTab(documentTitle, document);
+        setDocumentOpen(true);
     }
 
     public JScrollPane createDocumentArea(StyledDocument document) {

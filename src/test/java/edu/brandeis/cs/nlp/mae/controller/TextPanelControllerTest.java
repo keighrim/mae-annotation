@@ -28,8 +28,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.swing.text.StyledDocument;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -68,8 +66,8 @@ public class TextPanelControllerTest {
         );
 
         assertTrue(
-                "Expected text controller can retrieve the whole text, found: " + controller.getText(),
-                controller.getText().equals("0123456789")
+                "Expected text controller can retrieve the whole text, found: " + controller.getPrimaryText(),
+                controller.getPrimaryText().equals("0123456789")
         );
         String z = controller.getTextBetween(0, 3, false);
         assertTrue(
@@ -99,13 +97,13 @@ public class TextPanelControllerTest {
         controller.addDocument("DOC1", "012345");
         controller.addSelection(new int[]{0, 3});
         assertTrue(
-                "Expected span [0,3) is selected, found: " + controller.getTextInSelected(),
-                controller.getTextInSelected().equals("012")
+                "Expected span [0,3) is selected, found: " + controller.getSelectedText(),
+                controller.getSelectedText().equals("012")
         );
         controller.addSelection(new int[]{2, 6});
         assertTrue(
-                "Expected now span [0,6) is selected, found: " + controller.getTextInSelected(),
-                controller.getTextInSelected().equals("012345")
+                "Expected now span [0,6) is selected, found: " + controller.getSelectedText(),
+                controller.getSelectedText().equals("012345")
         );
 
 
