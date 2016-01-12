@@ -47,34 +47,39 @@ import java.util.List;
  */
 public class TablePanelController extends MaeControllerI {
 
-    // TODO: 2016-01-08 23:37:57EST need a listener to update backend models listens to any changes in tables
     // column number of some fixed attributes
     public static final int SRC_COL = 0;
-    public static final int ID_COL = 0;
-    public static final int SPANS_COL = 1;
-    public static final int TEXT_COL = 2;
+    public static final int ID_COL = 1;
+    public static final int SPANS_COL = 2;
+    public static final int TEXT_COL = 3;
+
     TablePanelView view;
+    private TagType dummyForAllTagTab;
     private Set<TagType> activeLinkTags;
     private Set<TagType> activeExtentTags;
-    private TagType dummyForAllTagTab;
     private List<TagType> tabOrder;
     private Map<String, JTable> tableMap;
 
     public TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
         super(mainController);
-        view = new TablePanelView();
-        activeExtentTags = new HashSet<>();
-        activeLinkTags = new HashSet<>();
-        tabOrder = new ArrayList<>();
-        tableMap = new TreeMap<>();
         dummyForAllTagTab = new TagType(MaeStrings.ALL_TABLE_TAB_BACK_NAME, MaeStrings.ALL_TABLE_TAB_PREFIX, false);
+        view = new TablePanelView();
         reset();
 
     }
-
-    public TablePanelView.TogglingTabTitle getTagTabTitle(int tabIndex) {
-        return (TablePanelView.TogglingTabTitle) getView().getTabs().getTabComponentAt(tabIndex);
+    public Set<TagType> getActiveExtentTags() {
+        return activeExtentTags;
     }
+
+    public void setActiveExtentTags(Set<TagType> types) {
+        getActiveExtentTags().clear();
+        for (TagType type : types) {
+            if (!type.isLink()) {
+                getActiveExtentTags().add(type);
+            }
+        }
+    }
+
 
     public Set<TagType> getActiveLinkTags() {
         return activeLinkTags;
@@ -83,16 +88,94 @@ public class TablePanelController extends MaeControllerI {
     public void setActiveLinkTags(Set<TagType> types) {
         getActiveLinkTags().clear();
         for (TagType type : types) {
-            activateLinkTag(type);
+            if (type.isLink()) {
+                getActiveLinkTags().add(type);
+            }
         }
     }
 
-    public void updateTag(Tag tag) throws MaeDBException, MaeControlException {
-        TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagtype().getName()).getModel();
+    @Override
+    protected TablePanelView getView() {
+        return view;
+    }
+
+
+    @Override
+    void reset() {
+        getView().getTabs().removeAll();
+        activeExtentTags = new HashSet<>();
+        activeLinkTags = new HashSet<>();
+        tabOrder = new ArrayList<>();
+        tableMap = new TreeMap<>();
+
+    }
+
+    public void makeAllTables() throws MaeDBException, MaeControlException {
+        if (!getMainController().isTaskLoaded()) {
+            throw new MaeControlException("Cannot make tables without a task definition!");
+        }
+        List<TagType> types = getDriver().getAllTagTypes();
+
+        if (types.size() > 20) {
+            getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        } else {
+            getView().getTabs().setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+        }
+
+        // create a tab for all extents and place it at first
+        getView().addTab(MaeStrings.ALL_TABLE_TAB_BACK_NAME, new TablePanelView.TogglingTabTitle(dummyForAllTagTab), makeAllTagTable());
+        // then create tabs for each element in the annotation task
+        for (TagType type : types) {
+            String name = type.getName();
+            TablePanelView.TogglingTabTitle title;
+            if (type.isExtent()) {
+                title = new TablePanelView.TogglingTabTitle(type, getMainController().getHighlightColor(type));
+            } else {
+                title = new TablePanelView.TogglingTabTitle(type);
+            }
+            getView().addTab(name, title, makeTagTable(type));
+        }
+
+        getActiveLinkTags().clear();
+        getActiveExtentTags().clear();
+        addToggleListeners();
+    }
+
+    public void insertAllTags() throws MaeControlException, MaeDBException {
+        if (!getMainController().isTaskLoaded() || !getMainController().isDocumentOpen()) {
+            throw new MaeControlException("Cannot populate tables without a document open!");
+        }
+        for (TagType type : tabOrder) {
+            if (type.equals(dummyForAllTagTab)) {
+            } else if (type.isExtent()) {
+                for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
+                    insertTagIntoTable(tag);
+                }
+            } else {
+                for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
+                    insertTagIntoTable(tag);
+                }
+            }
+        }
+        addMouseListeners();
+        addTableModelListeners();
+
+    }
+
+    public int getTabIndexOfTagType(TagType type) {
+        return tabOrder.indexOf(type);
+    }
+
+    public TablePanelView.TogglingTabTitle getTagTabTitle(int tabIndex) {
+        return (TablePanelView.TogglingTabTitle) getView().getTabs().getTabComponentAt(tabIndex);
+    }
+
+    public void insertTagIntoTable(Tag tag) throws MaeDBException, MaeControlException {
+        TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
-        insertRowData(tableModel, newRowNum, getTagRowData(tag, tableModel));
+        insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
         if (tag.getTagtype().isExtent()) {
-            insertRowToAllTagsTable(tag);
+            insertTagToAllTagsTable(tag);
         }
     }
 
@@ -100,15 +183,17 @@ public class TablePanelController extends MaeControllerI {
 
         if (insertAt == tableModel.getRowCount()) {
             tableModel.addRow(newRowData);
+            logger.info(String.format("inserting a new row, %s, to %s table", newRowData.toString(), tableModel.getAssociatedTagTypeName()));
         } else if (insertAt < tableModel.getRowCount()) {
             tableModel.updateRow(insertAt, newRowData);
+            logger.info(String.format("updating a row, %s, to %s table at %d", newRowData.toString(), tableModel.getAssociatedTagTypeName(), insertAt));
         } else {
-            // TODO: 2016-01-08 19:50:19EST sophisticate here
+            // TODO: 2016-01-08 19:50:19EST this is for error checking, make sure this works as intended
             throw (new MaeControlException("cannot add a row!"));
         }
     }
 
-    private String[] getTagRowData(Tag tag, TagTableModel tableModel) throws MaeDBException {
+    private String[] convertTagIntoRow(Tag tag, TagTableModel tableModel) throws MaeDBException {
         String[] newRow = new String[tableModel.getColumnCount()];
         Map<String, String> attMap = tag.getAttributesWithNames();
         for (int i = 0; i < tableModel.getColumnCount(); i++) {
@@ -134,82 +219,51 @@ public class TablePanelController extends MaeControllerI {
         return newRow;
     }
 
-    private void insertRowToAllTagsTable(Tag tag) throws MaeControlException, MaeDBException {
+    private void insertTagToAllTagsTable(Tag tag) throws MaeControlException, MaeDBException {
         UneditableTableModel tableModel = (UneditableTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
-        insertRowData(tableModel, tableModel.searchForRowByTid(tag.getId()), getSimpleExtentTagRowData((ExtentTag) tag));
+        insertRowData(tableModel, tableModel.searchForRowByTid(tag.getId()), convertTagIntoSimplifiedRow((ExtentTag) tag));
     }
 
-    private String[] getSimpleExtentTagRowData(ExtentTag tag) throws MaeDBException {
-        // TODO: 2016-01-08 22:27:35EST '4' here is too hard coded, make a way to encapsulate it
+    private String[] convertTagIntoSimplifiedRow(ExtentTag tag) throws MaeDBException {
         return new String[]{getDriver().getAnnotationFileName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
     }
 
-    private void selectAllTagsTableRow(String tid) {
+    public void selectTagFromTable(Tag tag) throws MaeDBException {
+        clearTableSelections();
+        JTable table = tableMap.get(tag.getTagTypeName());
+        TagTableModel tableModel = (TagTableModel) table.getModel();
+        int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
+        table.addRowSelectionInterval(viewIndex, viewIndex);
+        if (tag.getTagtype().isExtent()) {
+            selectTagFromAllTagsTable(tag.getId());
+            for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
+                selectTagFromTable(link);
+            }
+        }
+    }
+
+    private void selectTagFromAllTagsTable(String tid) {
         JTable table = tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME);
         UneditableTableModel tableModel = (UneditableTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tid));
         table.addRowSelectionInterval(viewIndex, viewIndex);
     }
 
-    /**
-     * Update a link tag in the bottom table with a single specific argument
-     *
-     * @param linkName name of link element being updated
-     * @param linkId   id of element being updated
-     * @param argName  name of an argument extent tag being added
-     * @param argId    id of an argument extent tag being added
-     * @param argText  text of an argument extent tag being added
-     */
-    @Deprecated
-    public void setArgumentInTable(String linkName, String linkId, String argName, String argId, String argText) {
-
-    }
-
-    private void activateExtentTag(TagType type) {
-        if (!type.isLink()) {
-            getActiveExtentTags().add(type);
-        }
-    }
-
-    private void removeRowFromAllTagsTable(String tid) {
-        UneditableTableModel tableModel = (UneditableTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
-        tableModel.removeRow(tableModel.searchForRowByTid(tid));
-    }
-
-    public void removeTableRows(Tag tag) throws MaeDBException {
-        TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagtype().getName()).getModel();
+    public void removeTagFromTable(Tag tag) throws MaeDBException {
+        TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
         if (tag.getTagtype().isExtent()) {
-            removeRowFromAllTagsTable(tag.getId());
+            removeTagFromAllTagsTable(tag.getId());
             for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
-                removeTableRows(link);
+                removeTagFromTable(link);
             }
         }
 
     }
 
-    private void activateLinkTag(TagType type) {
-        if (type.isLink()) {
-            getActiveLinkTags().add(type);
-        }
-    }
-
-    public void selectTableRows(Tag tag) throws MaeDBException {
-        clearTableSelections();
-        JTable table = tableMap.get(tag.getTagtype().getName());
-        TagTableModel tableModel = (TagTableModel) table.getModel();
-        int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
-        table.addRowSelectionInterval(viewIndex, viewIndex);
-        if (tag.getTagtype().isExtent()) {
-            selectAllTagsTableRow(tag.getId());
-            for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
-                selectTableRows(link);
-            }
-        }
-    }
-
-    public Set<TagType> getActiveExtentTags() {
-        return activeExtentTags;
+    private void removeTagFromAllTagsTable(String tid) {
+        UneditableTableModel tableModel = (UneditableTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
+        tableModel.removeRow(tableModel.searchForRowByTid(tid));
     }
 
     public void clearTableSelections() {
@@ -221,57 +275,10 @@ public class TablePanelController extends MaeControllerI {
         }
     }
 
-    public int getTabIndexOfTagType(TagType type) {
-        return tabOrder.indexOf(type);
-    }
-
-    public void setActiveExtentTags(Set<TagType> types) {
-        getActiveExtentTags().clear();
-        for (TagType type : types) {
-            activateExtentTag(type);
-        }
-    }
-   @Override
-    protected TablePanelView getView() {
-        return view;
-    }
-
-  @Override
-    void reset() throws MaeControlException, MaeDBException {
-        getView().getTabs().removeAll();
-        if (getMainController().isTaskLoaded()) {
-            List<TagType> types = getDriver().getAllTagTypes();
-
-            // TODO: 12/31/2015 is 20 safe?
-            if (types.size() > 20) {
-                getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-            } else {
-                getView().getTabs().setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
-            }
-
-            // create a tab for all extents and place it at first
-            getView().addTab(MaeStrings.ALL_TABLE_TAB_BACK_NAME, new TablePanelView.TogglingTabTitle(dummyForAllTagTab), makeAllTagTable());
-            //create a tab for each element in the annotation task
-            for (TagType type : types) {
-                String name = type.getName();
-                TablePanelView.TogglingTabTitle title;
-                if (type.isExtent()) {
-                    title = new TablePanelView.TogglingTabTitle(type, getMainController().getHighlightColor(type));
-                } else {
-                    title = new TablePanelView.TogglingTabTitle(type);
-                }
-                getView().addTab(name, title, makeTagTable(type));
-            }
-
-            getActiveLinkTags().clear();
-            getActiveExtentTags().clear();
-            addListeners();
-        } else {
-            view = new TablePanelView();
-        }
-    }
-
     @Override
+    /**
+     * This methods is not actually used, nut exists for documentation purpose. Will be removed later
+     */
     public void addListeners() throws MaeDBException {
         addToggleListeners();
         addMouseListeners();
@@ -280,9 +287,12 @@ public class TablePanelController extends MaeControllerI {
     }
 
     private void addTableModelListeners() {
-        for (JTable table : tableMap.values()) {
-            TagTableModel model = (TagTableModel) table.getModel();
-            model.addTableModelListener(model);
+        // do not add change listener to the all tags table
+        for (String tagTypeName : tableMap.keySet()) {
+            if (!tagTypeName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
+                TagTableModel model = (TagTableModel) tableMap.get(tagTypeName).getModel();
+                model.addTableModelListener(model);
+            }
         }
     }
 
@@ -298,11 +308,81 @@ public class TablePanelController extends MaeControllerI {
         for (int i = 1; i < getView().getTabs().getTabCount(); i++) {
             TablePanelView.TogglingTabTitle title = getTagTabTitle(i);
             title.addToggleListener(new HighlightToggleListener(title.getTagType(), i));
-            if (title.getTagType().isExtent()) {
-                title.setHighlighted(true);
+        }
+        // this will turn on each extent tag title
+        allTagTab.setHighlighted(true);
+    }
+
+    private JComponent makeAllTagTable() {
+
+        UneditableTableModel model = new UneditableTableModel(dummyForAllTagTab);
+        JTable table = makeTagTableFromEmptyModel(model, true);
+        tabOrder.add(dummyForAllTagTab);
+        tableMap.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
+
+        table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
+        return new JScrollPane(table);
+    }
+
+    private JComponent makeTagTable(TagType type) {
+
+        TagTableModel model = type.isExtent()? new TagTableModel(type) : new LinkTagTableModel(type);
+        JTable table = makeTagTableFromEmptyModel(model, type.isExtent());
+        tabOrder.add(type);
+        tableMap.put(type.getName(), table);
+
+        if (type.isLink()) {
+            addArgumentColumns(type, table);
+        }
+        addAttributeColumns(type, table);
+
+        // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn olny when not adjudicating
+        table.getColumnModel().removeColumn(table.getColumn(MaeStrings.SRC_COL_NAME));
+        return new JScrollPane(table);
+    }
+
+    private JTable makeTagTableFromEmptyModel(TagTableModel model, boolean isExtent) {
+        model.addColumn(MaeStrings.SRC_COL_NAME);
+        model.addColumn(MaeStrings.ID_COL_NAME);
+
+        if (isExtent) {
+            // for extent tags, add text and spans columns
+            model.addColumn(MaeStrings.SPANS_COL_NAME);
+            model.addColumn(MaeStrings.TEXT_COL_NAME);
+        }
+
+        JTable table = new JTable(model);
+        table.setAutoCreateRowSorter(true);
+        return table;
+    }
+
+    private void addArgumentColumns(TagType type, JTable table) {
+        LinkTagTableModel model = (LinkTagTableModel) table.getModel();
+        List<ArgumentType> arguments = new ArrayList<>(type.getArgumentTypes());
+        for (ArgumentType argType : arguments) {
+            logger.info(String.format("adding columns for '%s' argument to '%s' link tag table.", argType.getName(), type.getName()));
+            // TODO: 2016-01-07 22:21:08EST this column should be id_ref
+            model.addColumn(argType.getName() + "ID");
+            model.addColumn(argType.getName() + "Text");
+            model.addArgumentTextColumn(model.getColumnCount() - 1);
+        }
+    }
+
+    private void addAttributeColumns(TagType type, JTable table) {
+        List<AttributeType> attributes = new ArrayList<>(type.getAttributeTypes());
+        TagTableModel model = (TagTableModel) table.getModel();
+        for (AttributeType attType : attributes) {
+            logger.info(String.format("adding '%s' attribute column to '%s' tag table.", attType.getName(), type.getName()));
+            model.addColumn(attType.getName());
+            if (attType.isFiniteValueset()) {
+                TableColumn column = table.getColumnModel().getColumn(model.getColumnCount() - 1);
+                JComboBox valueset = makeValidValuesComboBox(attType);
+                column.setCellEditor(new DefaultCellEditor(valueset));
+            } else if (attType.isIdRef()) {
+                // TODO: 2016-01-07 22:25:00EST add idref here
+                // maybe adding a button to pop up to select an argument?
             }
         }
-        allTagTab.setHighlighted(true);
     }
 
     private JComboBox makeValidValuesComboBox(AttributeType att) {
@@ -314,80 +394,9 @@ public class TablePanelController extends MaeControllerI {
         return options;
     }
 
-    private JComponent makeAllTagTable() {
-
-        UneditableTableModel model = new UneditableTableModel(dummyForAllTagTab);
-        JTable table = makeTagTableFromEmptyModel(model, true);
-
-        tabOrder.add(dummyForAllTagTab);
-        tableMap.put(dummyForAllTagTab.getName(), table);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        return scrollPane;
-    }
-
-    private JComponent makeTagTable(TagType type) {
-
-        TagTableModel model = new TagTableModel(type);
-        JTable table = makeTagTableFromEmptyModel(model, type.isExtent());
-
-        indexTagTab(type, table);
-
-        if (type.isLink()) {
-            // when adding a link tag, add argument columns right after id attributes
-            List<ArgumentType> arguments = new ArrayList<>(type.getArgumentTypes());
-            for (ArgumentType argType : arguments) {
-                // TODO: 2016-01-07 22:21:08EST this column should be id_ref
-                model.addColumn(argType.getName() + "ID");
-                model.addColumn(argType.getName() + "Text");
-            }
-        }
-        // then go through element attributes and add columns
-        List<AttributeType> attributes = new ArrayList<>(type.getAttributeTypes());
-        for (AttributeType att : attributes) {
-            logger.info(String.format("adding '%s' attribute column to '%s' tag table.", att.getName(), type.getName()));
-            model.addColumn(att.getName());
-            TableColumn column = table.getColumnModel().getColumn(model.getColumnCount() - 1);
-            if (att.isFiniteValueset()) {
-                JComboBox valueset = makeValidValuesComboBox(att);
-                column.setCellEditor(new DefaultCellEditor(valueset));
-            } else if (att.isIdRef()) {
-                // TODO: 2016-01-07 22:25:00EST add idref here
-                // maybe adding a button to pop up to select an argument?
-            }
-        }
-
-        return new JScrollPane(table);
-    }
-
-    private void indexTagTab(TagType type, JTable table) {
-        tabOrder.add(type);
-        tableMap.put(type.getName(), table);
-    }
-
-    private JTable makeTagTableFromEmptyModel(TagTableModel model, boolean isExtent) {
-//        model.addColumn(MaeStrings.SRC_COL_NAME);
-        model.addColumn(MaeStrings.ID_COL_NAME);
-
-        if (isExtent) {
-            // for extent tags, add text and spans columns
-            model.addColumn(MaeStrings.SPANS_COL_NAME);
-            model.addColumn(MaeStrings.TEXT_COL_NAME);
-        }
-        model.addTableModelListener(model);
-
-        JTable table = new JTable(model);
-        table.setAutoCreateRowSorter(true);
-
-        // if not in adjudication, suppress SRC column to be invisible
-        // TODO: 2016-01-07 21:40:06EST fix this for mai integration
-//        table.getColumnModel().removeColumn(table.getColumnModel().getColumn(SRC_COL));
-
-        return table;
-    }
     /**
      * AnnotationTableModel creates a TableModel that user can't mess with id and source
-     * // TODO: 2016-01-07 22:04:15EST split annTableModel and adjTableModel, then SRC_COL will not be needed here
+     * // TODO: 2016-01-07 22:04:15EST 4MAII split annTableModel and adjTableModel, then SRC_COL will not be needed here
      */
     private class TagTableModel extends DefaultTableModel implements TableModelListener {
         TagType tagType;
@@ -396,6 +405,9 @@ public class TablePanelController extends MaeControllerI {
             this.tagType = tagType;
         }
 
+        public String getAssociatedTagTypeName() {
+            return tagType.getName();
+        }
 
         public void updateRow(int row, String[] rowData) throws MaeControlException {
             if (this.getColumnCount() != rowData.length) {
@@ -450,6 +462,27 @@ public class TablePanelController extends MaeControllerI {
 
     }
 
+    public class LinkTagTableModel extends TagTableModel {
+
+        private Set<Integer> argumentTextColumns;
+
+        public LinkTagTableModel(TagType tagType) {
+            super(tagType);
+            argumentTextColumns = new HashSet<>();
+
+        }
+
+        public void addArgumentTextColumn(int col) {
+            argumentTextColumns.add(col);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return col != ID_COL && col != SRC_COL && !argumentTextColumns.contains(col);
+        }
+
+    }
+
     /**
      * UneditableTableModel creates a TableModel that is not editable at all.
      * This is only used to create the all extents tab
@@ -465,7 +498,6 @@ public class TablePanelController extends MaeControllerI {
             return false;
         }
     }
-
 
     private class HighlightToggleListener implements ItemListener {
 
@@ -488,17 +520,37 @@ public class TablePanelController extends MaeControllerI {
             try {
                 getMainController().sendWaitMessage();
 
-                // checking 0 might be a little bit hardcoding
-                // toggle all extent elements
                 if (tabIndex == 0) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
-                        setActiveExtentTags(new HashSet<>(getDriver().getAllTagTypes()));
-                        logger.info(String.format("activated colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
-                        getMainController().assignAllTextColors();
+                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
+//                        setActiveExtentTags(new HashSet<>(getDriver().getAllTagTypes()));
+
+                        logger.info(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+
+                        for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
+                            // ignore 0th tab (all tags)
+                            TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
+                            if (!tabTitle.isHighlighted() && tabTitle.getTagType().isExtent()) {
+                                tabTitle.setHighlighted(true);
+                            }
+                        }
+                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
+                        // make sure that's right, however it will less efficient if different tags are overlapping much
+//                        getMainController().assignAllTextColors();
                     } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        setActiveExtentTags(Collections.<TagType>emptySet());
-                        logger.info(String.format("deactivated colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
-                        getMainController().unassignAllTextColors();
+                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
+//                        setActiveExtentTags(Collections.<TagType>emptySet());
+
+                        logger.info(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+                        for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
+                            // ignore 0th tab (all tags)
+                            TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
+                            if (tabTitle.isHighlighted() && tabTitle.getTagType().isExtent()) {
+                                tabTitle.setHighlighted(false);
+                            }
+                        }
+                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
+//                        getMainController().unassignAllTextColors();
                     }
                 } else {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -525,18 +577,11 @@ public class TablePanelController extends MaeControllerI {
         }
 
         private void checkAllTab() throws MaeDBException {
+            TablePanelView.TogglingTabTitle allTab = getTagTabTitle(0);
             if (getActiveExtentTags().size() == getMainController().colorableTagTypes()) {
-                // since allTab is created after all single tabs are created
-                // getTabComponentAt() will return null while loading up a new DTD file,
-                // hence we need to check if it's null
-                // TODO: 2016-01-07 20:55:00EST think of a better way
-                TablePanelView.TogglingTabTitle allTab = getTagTabTitle(0);
-//                if (allTab != null) {
-                    allTab.setHighlighted(true);
-//                }
+                allTab.setHighlighted(true);
             }
             if (getActiveExtentTags().size() == 0) {
-                TablePanelView.TogglingTabTitle allTab = getTagTabTitle(0);
                 allTab.setHighlighted(false);
             }
         }

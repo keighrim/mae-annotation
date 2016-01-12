@@ -167,7 +167,7 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean showUnsavedChangeWarning() {
-        if (isAnnotationOn() && isAnnotationChanged()) {
+        if (isDocumentOpen() && isAnnotationChanged()) {
             String warning = "Warning! You will lose all your unsaved changes. \n Are you sure to continue?";
             return showWarning(warning);
         } else {
@@ -207,7 +207,7 @@ public class MaeMainController extends JPanel {
         return getTablePanel().getActiveExtentTags();
     }
 
-    public boolean isAnnotationOn() {
+    public boolean isDocumentOpen() {
         return isTaskLoaded() && getDriver().isAnnotationLoaded();
     }
 
@@ -370,8 +370,11 @@ public class MaeMainController extends JPanel {
             getDriver().readTask(taskFile);
             textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
             sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
+            getMenu().reset();
+            getStatusBar().reset();
             getTextPanel().reset();
             getTablePanel().reset();
+            getTablePanel().makeAllTables();
         } catch (Exception e) {
             showError(e);
         }
@@ -380,11 +383,13 @@ public class MaeMainController extends JPanel {
     public void newAnnotation(File annotationFile) {
         try {
             // TODO: 1/4/2016 resetting is limiting multi file support, to support multi files, need a driver init here
-            getTextPanel().reset();
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocument(getDriver().getAnnotationFileName(), getDriver().getPrimaryText());
-            // TODO: 1/4/2016 update tables as per to newly stored annotations from readAnno()
-            getTablePanel().reset();
+
+            getTablePanel().insertAllTags();
+            getMenu().reset();
+            getTextPanel().reset();
+            getStatusBar().reset();
         } catch (Exception e) {
             showError(e);
         }
@@ -433,18 +438,24 @@ public class MaeMainController extends JPanel {
     public void updateTitle() {
     }
 
-    public void resetAll() {
-
-        resetDrivers();
-        getMenu().reset();
+    private void resetControllers() {
         try {
+            getMenu().reset();
             getTextPanel().reset();
             getTablePanel().reset();
+            getStatusBar().reset();
+            returnToNormalMode(false);
         } catch (MaeException e) {
             showError(e);
         }
-        getStatusBar().reset();
-        returnToNormalMode(false);
+
+
+    }
+
+    private void resetAll() {
+
+        resetDrivers();
+        resetControllers();
     }
 
     private void resetDrivers() {
@@ -459,7 +470,7 @@ public class MaeMainController extends JPanel {
 
     public List<ExtentTag> getExtentTagsInSelectedSpans() {
         try {
-            return getDriver().getTagsIn(getTextPanel().getSelected());
+            return getDriver().getTagsIn(getSelectedTextSpans());
         } catch (Exception e) {
             showError(e);
             return new ArrayList<>();
@@ -512,7 +523,7 @@ public class MaeMainController extends JPanel {
         try {
             List<ExtentTag> releventTags = getDriver().getTagsIn(getSelectedTextSpans());
             for (ExtentTag tag : releventTags) {
-                getTablePanel().selectTableRows(tag);
+                getTablePanel().selectTagFromTable(tag);
             }
             getStatusBar().reset();
         } catch (Exception e) {

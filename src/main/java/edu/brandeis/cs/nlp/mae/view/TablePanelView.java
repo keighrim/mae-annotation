@@ -63,7 +63,6 @@ public class TablePanelView extends JPanel {
         filler.setHorizontalAlignment(JLabel.CENTER);
         panel.setLayout(new GridLayout(1, 1));
         panel.add(filler);
-        getTabs().addTab(MaeStrings.NO_TASK_IND, panel);
         add(getTabs(), BorderLayout.CENTER);
 
     }
