@@ -287,7 +287,7 @@ public class MaeMainController extends JPanel {
 
     public void destroyCurrentDriver() {
         // TODO: 1/4/2016 finish this for multi file support
-//        destroyDriverAt(getTextPanel().selectedTab());
+//        destroyDriverAt(getTextPanel().getSelectedTabIndex());
         currentDriver = null;
     }
 
@@ -307,44 +307,6 @@ public class MaeMainController extends JPanel {
 
     public void sendWaitMessage() {
         getStatusBar().setText(MaeStrings.WAIT_MESSAGE);
-    }
-
-
-    /**
-     * Adds an extent tag to the database, one item per character location Note
-     * that, id DB, all tag is associated with the location of all characters in the
-     * span , meaning 3 letter word ends up with 3 items in the DB mod by krim: to
-     * use list(spans), not 2 integers(start/end)
-     *
-     * @param elemName the type of tag being added
-     * @param newId    the ID of the tag being added
-     */
-    public void addExtTagToDb(String elemName, String newId) {
-        // TODO: 12/31/2015 write this (makeTagListener)
-
-    }
-
-    /**
-     * Adds a link tag to the database. Unlike an extent tag, a link tag only
-     * occupies one item in the DB
-     */
-    public void addLinkTagToDb(String elemName, String newId,
-                               List<String> argIds, List<String> argTypes) {
-        // TODO: 12/31/2015 write this
-    }
-
-    /**
-     * Returns the text associated with an id.  Checks the table so that if there is
-     * a note entered for a non-consuming tag, that information will be there
-     *
-     * @param elem the type of tag of the text being looked for
-     * @param id   The ID of the tag associated with the text being looked for
-     * @return the text being searched for
-     */
-    public String getTextByID(String elem, String id, boolean fullText) {
-        // TODO: 12/31/2015 write this
-        String text = "";
-        return text;
     }
 
     /**
@@ -395,7 +357,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchAnnotationTab(int tabId) {
-        // TODO: 12/31/2015 this is for multi file support
+        // TODO: 12/31/2015 4MF this is for multi file support
 //        textPanel.selectTab(tabId);
         currentDriver = drivers.get(tabId);
     }
@@ -406,12 +368,12 @@ public class MaeMainController extends JPanel {
 
     public File selectSingleFile() {
         return getDialogs().showFileChooseDialogAndSelect();
-        // TODO: 1/1/2016 implement multiple files
+        // TODO: 1/1/2016 4MF implement multiple files
     }
 
     public void assignTextColorsOver(List<Integer> anchors) {
         try {
-            getTextPanel().assignTextColorOver(anchors);
+            getTextPanel().assignFGColorOver(anchors);
         } catch (Exception e) {
             showError(e);
         }
@@ -419,7 +381,7 @@ public class MaeMainController extends JPanel {
 
     public void assignAllTextColors() {
         try {
-            getTextPanel().assignAllColors();
+            getTextPanel().assignAllFGColors();
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -427,7 +389,7 @@ public class MaeMainController extends JPanel {
 
     public void unassignAllTextColors() {
         try {
-            getTextPanel().unassignAllColors();
+            getTextPanel().unassignAllFGColors();
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -479,7 +441,7 @@ public class MaeMainController extends JPanel {
         return getDialogs().getFileChooser();
     }
 
-    public Color getHighlightColor(TagType type) {
+    public Color getFGColor(TagType type) {
         if (!tagsForColor.contains(type)) {
             tagsForColor.add(type);
         }
@@ -505,12 +467,12 @@ public class MaeMainController extends JPanel {
     }
 
     public void removeAllHighlights() {
-        getTextPanel().removeAllHighlights();
+        getTextPanel().removeAllBGColors();
     }
 
     public void highlightTagSpans(ExtentTag eTag, Highlighter.HighlightPainter painter) {
         try {
-            getTextPanel().highlightTextSpans(eTag.getSpansAsArray(), painter);
+            getTextPanel().addBGColorOver(eTag.getSpansAsArray(), painter);
         } catch (Exception e) {
             showError(e);
         }
@@ -523,7 +485,7 @@ public class MaeMainController extends JPanel {
             for (ExtentTag tag : releventTags) {
                 getTablePanel().selectTagFromTable(tag);
             }
-            getStatusBar().reset();
+            getStatusBar().update();
         } catch (Exception e) {
             showError(e);
         }

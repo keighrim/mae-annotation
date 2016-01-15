@@ -71,24 +71,33 @@ public class TextPanelController extends MaeControllerI{
 
     @Override
     void reset() throws MaeDBException {
-        getView().clearAllTabs();
         if (!getMainController().isTaskLoaded()) {
-            getView().addTextTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
-        } else if (!getMainController().isAnnotationOn()) {
-            getView().addTextTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
+            addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+        } else if (!getMainController().isDocumentOpen()) {
+            addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
         } else {
             selectionHistory.clear();
-            if (getMainController().isAnnotationOn()) {
-                unassignAllFGColors();
-                removeAllBGColors();
+            if (getMainController().isDocumentOpen()) {
+                clearColoring();
                 addListeners();
+                assignAllFGColors();
             }
         }
 
     }
 
+    private void clearColoring() throws MaeDBException {
+        unassignAllFGColors();
+        removeAllBGColors();
+    }
+
+    private void addGuideTab(String guideTitle, String guideText) {
+        getView().clearAllTabs();
+        getView().addTextTab(guideTitle, guideText);
+    }
+
     @Override
-   void addListeners() {
+    void addListeners() {
         getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
         getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
         // TODO: 2016-01-11 20:50:41EST this listener is used 4MF
@@ -118,7 +127,7 @@ public class TextPanelController extends MaeControllerI{
         // adding a new document wll wipe any existing tabs, either guide or documents
         // TODO: 2016-01-11 20:47:48EST fix this 4MF
 //        if (!getView().isAnyDocumentOpen()) {
-            getView().clearAllTabs();
+        getView().clearAllTabs();
 //        }
         getView().addTextTab(documentTitle, documentText);
         if (!getView().isAnyDocumentOpen()) {
@@ -168,7 +177,7 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public Boolean isTextSelected() {
-        return this.selected.length == 0;
+        return this.selected.length > 0;
     }
 
     public int[] getSelected() {
@@ -263,7 +272,7 @@ public class TextPanelController extends MaeControllerI{
     public void unassignAllFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         for (Integer location : anchorLocations) {
-            setFGColorAtLocation(Color.black, location, false);
+            setFGColorAtLocation(Color.black, location, false, false);
         }
     }
 
@@ -275,12 +284,20 @@ public class TextPanelController extends MaeControllerI{
      * @param location the location of the start of the extent
      * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
      */
-    private void setFGColorAtLocation(Color color, int location, boolean underline) {
+    private void setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
+        // TODO: 2016-01-13 10:52:12EST continue from here, changing color is not wokring
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
         StyleConstants.setUnderline(attributeSet, underline);
+        StyleConstants.setItalic(attributeSet, italic);
         styleDoc.setCharacterAttributes(location, 1, attributeSet, false);
+    }
+
+    public void assignFGColorOver(int...locations) throws MaeDBException {
+        for (int location : locations) {
+            assignFGColorAt(location);
+        }
     }
 
     public void assignFGColorOver(List<Integer> locations) throws MaeDBException {
@@ -298,12 +315,14 @@ public class TextPanelController extends MaeControllerI{
         boolean plural = false;
         Color c = Color.black; // default color is black
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
+        Set<TagType> activeLinks = getMainController().getActiveLinkTags();
 
         // exclude unactivated elements
-        for (TagType type : getDriver().getTagsByTypesAt(location).keySet()) {
+        MappedSet<TagType, ExtentTag> allTags = getDriver().getTagsByTypesAt(location);
+        for (TagType type : allTags.keySet()) {
             if (activeTags.contains(type)) {
                 if (!singular) {
-                    c = mainController.getHighlightColor(type);
+                    c = getMainController().getFGColor(type);
                     singular = true;
                 } else {
                     plural = true;
@@ -312,7 +331,9 @@ public class TextPanelController extends MaeControllerI{
 
             }
         }
-        setFGColorAtLocation(c, location, plural);
+        // TODO: 2016-01-14 20:16:49EST find a way to properly set italic
+        boolean argument = false;
+        setFGColorAtLocation(c, location, plural, argument);
     }
 
     /**
@@ -322,13 +343,17 @@ public class TextPanelController extends MaeControllerI{
      * @param painter - highlighter OBJ with color
      */
     public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
+        if (spans.length == 0) {
+            return;
+        }
         Highlighter hl = getView().getHighlighter();
-        for (int anchor : spans) {
-            try {
+        try {
+            for (int anchor : spans) {
                 hl.addHighlight(anchor, anchor, painter);
-            } catch (BadLocationException e) {
-                throw catchViewException("failed to fetch text region: ", e);
             }
+            getView().getDocumentPane().scrollRectToVisible(getView().getDocumentPane().modelToView(spans[0]));
+        } catch (BadLocationException e) {
+            throw catchViewException("failed to fetch text region: ", e);
         }
     }
 
@@ -347,9 +372,8 @@ public class TextPanelController extends MaeControllerI{
 
         @Override
         public void caretUpdate(CaretEvent e) {
-            Highlighter hl = getView().getHighlighter();
-            hl.removeAllHighlights();
-            logger.info(String.format("caret updated from %d to %d", e.getMark(), e.getDot()));
+//            Highlighter hl = getView().getHighlighter();
+//            hl.removeAllHighlights();
 
             int start = Math.min(e.getDot(), e.getMark());
             int end = Math.max(e.getDot(), e.getMark()) + 1; // because dot and mark are inclusive
@@ -362,10 +386,16 @@ public class TextPanelController extends MaeControllerI{
                 }
                 addSelection(new int[]{start, end});
             } else {
-                // in arg sel mode, allow users to select arguments with single clicks
-                // TODO: 1/4/2016 need a test to make sure this is safe
-                if (getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
-                    addSelection(new int[]{start, end});
+                switch (getMainController().getMode()) {
+                    case MaeMainController.MODE_NORMAL:
+                        clearSelection();
+                        break;
+                    case MaeMainController.MODE_ARG_SEL:
+                        // in arg sel mode, allow users to select arguments with single clicks
+                        // TODO: 1/4/2016 need a test to make sure this is safe
+                        addSelection(new int[]{start, end});
+                        break;
+
                 }
             }
             try {

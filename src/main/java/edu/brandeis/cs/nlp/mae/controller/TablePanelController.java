@@ -129,7 +129,7 @@ public class TablePanelController extends MaeControllerI {
             String name = type.getName();
             TablePanelView.TogglingTabTitle title;
             if (type.isExtent()) {
-                title = new TablePanelView.TogglingTabTitle(type, getMainController().getHighlightColor(type));
+                title = new TablePanelView.TogglingTabTitle(type, getMainController().getFGColor(type));
             } else {
                 title = new TablePanelView.TogglingTabTitle(type);
             }
