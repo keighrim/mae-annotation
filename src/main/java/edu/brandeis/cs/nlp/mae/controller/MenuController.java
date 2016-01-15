@@ -64,11 +64,12 @@ public class MenuController extends MaeControllerI {
     @Override
     void reset() {
 
-        // TODO: 2016-01-10 22:37:23EST continue here, why menubar is not being reset?
         menubar.removeAll();
 
         fileMenu = createFileMenu();
         menubar.add(fileMenu);
+
+        view.updateUI();
 
     }
 
