@@ -65,6 +65,14 @@ public class DialogController {
         return JOptionPane.showConfirmDialog(getParent(), warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
     }
 
+    public void showError(Exception e) {
+        // TODO: 1/1/2016 maybe can implement "send error log to dev" button
+        String errorTitle = e.getClass().getName();
+        String errorMessage = e.getMessage();
+        JOptionPane.showMessageDialog(getParent(), errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
+
+    }
+
     public void showError(String errorMessage) {
         // TODO: 1/1/2016 maybe can implement "send error log to dev" button
         JOptionPane.showMessageDialog(getParent(), errorMessage, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);

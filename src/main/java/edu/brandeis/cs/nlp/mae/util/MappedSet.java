@@ -36,16 +36,37 @@ package edu.brandeis.cs.nlp.mae.util;
  *
  */
 
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
-public class MappedSet<K,V> extends MappedCollection<K, V> {
+public class MappedSet<K,V> implements MappedCollection<K, V> {
 
-    private TreeMap<K,TreeSet<V>> hash;
+    private TreeMap<K,Set<V>> map;
 
     public MappedSet(){
-        hash = new TreeMap<>();
+        map = new TreeMap<>();
+    }
+
+    public MappedSet(HashMap<K, Collection<V>> map) {
+        for (K key : map.keySet()) {
+            this.map.put(key, new TreeSet<>(map.get(key)));
+        }
+
+    }
+
+    @Override
+    public boolean isSizeOne() {
+        Set<K> keys  = map.keySet();
+        return keys.size() == 1 && map.get(keys.iterator().next()).size() == 1;
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return map.keySet();
+    }
+
+    @Override
+    public ArrayList<K> keyList() {
+        return new ArrayList<>(keySet());
     }
 
     /**
@@ -57,12 +78,67 @@ public class MappedSet<K,V> extends MappedCollection<K, V> {
      * @param value value being added to key's array
      */
     public void putItem (K key, V value) {
-        if (super.containsKey(key)) {
+        if (containsKey(key)) {
             getAsList(key).add(value);
         } else {
             TreeSet<V> newtree = new TreeSet<>();
             newtree.add(value);
-            hash.put(key, newtree);
+            map.put(key, newtree);
         }
     }
+
+    @Override
+    public void putCollection(K key, Collection<V> collection) {
+        if (map.containsKey(key)) {
+            get(key).addAll(collection);
+        } else {
+            map.put(key, new TreeSet<>(collection));
+        }
+
+    }
+
+    @Override
+    public void merge(MappedCollection<K, V> newHash) {
+        for (K key : newHash.keySet()) {
+            putCollection(key, newHash.get(key));
+        }
+
+    }
+
+    @Override
+    public Collection<V> get(K key) {
+        try {
+            return map.get(key);
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public ArrayList<V> getAsList(K key) {
+        return new ArrayList<>(get(key));
+    }
+
+    @Override
+    public Collection<V> remove(K key) {
+        return map.remove(key);
+    }
+
+    @Override
+    public int size() {
+        return(map.size());
+    }
+
+    @Override
+    public void clear() {
+        map = new TreeMap<>();
+
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return(map.containsKey(key));
+    }
 }
+
+

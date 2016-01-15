@@ -74,8 +74,6 @@ public class TagType implements IModel, Comparable<TagType> {
         // next two setters should be called in order (setting non-consuming makes the type to be extent)
         this.setNonConsuming(false);
         this.setLink(isLink);
-        // TODO 151209 color is not responsible for this model class, it's an UI component
-//        this.setColor(Colors.getNextColor());
 
     }
 
@@ -185,7 +183,14 @@ public class TagType implements IModel, Comparable<TagType> {
     }
 
     public String toString() {
-        return String.format("%s - att: %s, arg: %s", getName(), getAttributeTypesAsString(), getArgumentTypesAsString());
+        String s = getName();
+        if (getAttributeTypes() != null && getAttributeTypes().size() > 0) {
+            s += " - " + getAttributeTypesAsString();
+        }
+        if (getArgumentTypes() != null && getArgumentTypes().size() > 0) {
+            s += " - " + getArgumentTypesAsString();
+        }
+        return s;
     }
 
     @Override

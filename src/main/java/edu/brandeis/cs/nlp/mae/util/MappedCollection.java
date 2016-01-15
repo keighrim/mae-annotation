@@ -36,87 +36,34 @@ package edu.brandeis.cs.nlp.mae.util;
  *
  */
 
+
 import java.util.*;
 
-public abstract class MappedCollection<K,V>{
+public interface MappedCollection<K,V>{
 
-    // TODO: 1/2/2016 consider using treeset, so that when query all tagtypes at a certain locatoin, we can get tagtypes sorted, which conveniently get consistent colors through contiguous locations
-    protected TreeMap<K, Collection<V>> hash;
+    public boolean isSizeOne();
 
-    public MappedCollection(){
-        hash = new TreeMap<>();
-    }
+    public Set<K> keySet();
 
-    public MappedCollection(HashMap<K, Collection<V>> hash){
-        for (K key : hash.keySet()) {
-            this.hash.put(key, hash.get(key));
-        }
-    }
+    public ArrayList<K> keyList();
 
-    /**
-     * returns true if their's only one key and one item associated with that key
-     */
-    public boolean isSizeOne() {
-        Set<K> keys  = hash.keySet();
-        return keys.size() == 1 && hash.get(keys.iterator().next()).size() == 1;
-    }
+    public void putItem(K key, V value);
 
-    public Set<K> keySet(){
-        return hash.keySet();
-    }
+    public void putCollection(K key, Collection<V> collection);
 
-    public ArrayList<K> keyList(){
-        return new ArrayList<>(keySet());
-    }
+    public void merge(MappedCollection<K,V> newHash);
 
-    public abstract void putItem(K key, V value);
+    public Collection<V> get(K key);
 
-    public void putCollection(K key, Collection<V> collection){
-        if (hash.containsKey(key)) {
-            get(key).addAll(collection);
-        } else {
-            hash.put(key, collection);
-        }
+    public ArrayList<V> getAsList(K key);
 
-    }
+    public Collection<V> remove(K key);
 
-    /**
-     * Add all key-value pairs of a new HashCollection to this object
-     * @param newHash - target HashCollection
-     */
-    public void merge(MappedCollection<K,V> newHash){
-        for (K key : newHash.keySet()) {
-            putCollection(key, newHash.get(key));
-        }
-    }
+    public int size();
 
-    public Collection<V> get(K key) {
-        try {
-            return hash.get(key);
-        } catch (NullPointerException e) {
-            return null;
-        }
-    }
+    public void clear();
 
-    public ArrayList<V> getAsList(K key){
-        return new ArrayList<>(get(key));
-    }
-
-    public Collection<V> remove(K key){
-        return hash.remove(key);
-    }
-
-    public int size(){
-        return(hash.size());
-    }
-
-    public void clear() {
-        hash = new TreeMap<>();
-    }
-
-    public boolean containsKey(K key){
-        return(hash.containsKey(key));
-    }
+    public boolean containsKey(K key);
 
 }
 

@@ -42,10 +42,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by krim on 12/30/2015.
@@ -188,7 +186,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void showError(Exception e) {
-        getDialogs().showError(e.getMessage());
+        getDialogs().showError(e);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
@@ -624,5 +622,8 @@ public class MaeMainController extends JPanel {
         }
     }
 
+    public void updateStatusBar() {
+        getStatusBar().update();
+    }
 }
 

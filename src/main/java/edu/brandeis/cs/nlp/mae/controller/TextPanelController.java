@@ -30,6 +30,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TextPanelView;
 
@@ -96,12 +97,11 @@ public class TextPanelController extends MaeControllerI{
 
     protected void setSelection(int[] spans) {
         selected = spans;
-        getMainController().updateStatusBar();
     }
 
     public void clearSelection() {
         selectionHistory.clear();
-        setSelection(null);
+        setSelection(new int[0]);
     }
 
     public void addSelection(int[] contiguousSpan) {
@@ -250,14 +250,8 @@ public class TextPanelController extends MaeControllerI{
         return text;
     }
 
-    public void assignFGColorOver(int...locations) throws MaeDBException {
-        for (int location : locations) {
-            assignFGColorAt(location);
-        }
-    }
-
     public void removeAllBGColors() {
-        getView().getDocumentPane().getHighlighter().removeAllHighlights();
+        getView().getHighlighter().removeAllHighlights();
 
     }
 
@@ -328,7 +322,7 @@ public class TextPanelController extends MaeControllerI{
      * @param painter - highlighter OBJ with color
      */
     public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
-        Highlighter hl = getView().getHighligher();
+        Highlighter hl = getView().getHighlighter();
         for (int anchor : spans) {
             try {
                 hl.addHighlight(anchor, anchor, painter);
@@ -353,8 +347,9 @@ public class TextPanelController extends MaeControllerI{
 
         @Override
         public void caretUpdate(CaretEvent e) {
-            Highlighter hl = getView().getDocumentPane().getHighlighter();
+            Highlighter hl = getView().getHighlighter();
             hl.removeAllHighlights();
+            logger.info(String.format("caret updated from %d to %d", e.getMark(), e.getDot()));
 
             int start = Math.min(e.getDot(), e.getMark());
             int end = Math.max(e.getDot(), e.getMark()) + 1; // because dot and mark are inclusive

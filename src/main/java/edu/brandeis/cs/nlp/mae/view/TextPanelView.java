@@ -99,16 +99,6 @@ public class TextPanelView extends JPanel {
         selectTab(getTabs().getTabCount() - 1);
     }
 
-    /**
-     * Add a text panel, then make it working document
-     * @param documentTitle
-     * @param document
-     */
-    public void addDocument(String documentTitle, String document) {
-        addTextTab(documentTitle, document);
-        setDocumentOpen(true);
-    }
-
     public JScrollPane createDocumentArea(StyledDocument document) {
 
         JTextPane documentArea = new JTextPane(new DefaultStyledDocument());
@@ -117,7 +107,6 @@ public class TextPanelView extends JPanel {
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
         documentArea.setStyledDocument(document);
-        documentArea.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
         scrollableDocument.setRowHeaderView(header);
@@ -135,7 +124,7 @@ public class TextPanelView extends JPanel {
         return (DefaultStyledDocument) getDocumentPane().getDocument();
     }
 
-    public Highlighter getHighligher() {
+    public Highlighter getHighlighter() {
         return getDocumentPane().getHighlighter();
     }
 
