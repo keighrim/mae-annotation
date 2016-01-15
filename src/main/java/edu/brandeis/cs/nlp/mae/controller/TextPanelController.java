@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
+import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
@@ -285,7 +286,6 @@ public class TextPanelController extends MaeControllerI{
      * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
      */
     private void setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
-        // TODO: 2016-01-13 10:52:12EST continue from here, changing color is not wokring
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
@@ -313,6 +313,7 @@ public class TextPanelController extends MaeControllerI{
     private void assignFGColorAt(int location) throws MaeDBException {
         boolean singular = false;
         boolean plural = false;
+        boolean argument = false;
         Color c = Color.black; // default color is black
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
         Set<TagType> activeLinks = getMainController().getActiveLinkTags();
@@ -330,9 +331,15 @@ public class TextPanelController extends MaeControllerI{
                 }
 
             }
+            for (ExtentTag tag : allTags.get(type)) {
+                for (LinkTag linker : getDriver().getLinksHasArgumentTag(tag)) {
+                    if (activeLinks.contains(linker.getTagtype())) {
+                        argument = true;
+                        break;
+                    }
+                }
+            }
         }
-        // TODO: 2016-01-14 20:16:49EST find a way to properly set italic
-        boolean argument = false;
         setFGColorAtLocation(c, location, plural, argument);
     }
 
