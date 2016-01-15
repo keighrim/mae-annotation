@@ -24,7 +24,6 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
@@ -32,10 +31,12 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 /**
+ * Listener for the File menu; determines what action to take for loading/saving
+ * documents.
  */
-public class LoadTask extends MenuActionI {
+public class OpenFile extends MenuActionI {
 
-    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public OpenFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
@@ -45,7 +46,7 @@ public class LoadTask extends MenuActionI {
             try {
                 File file = getMainController().selectSingleFile();
                 if (file != null) {
-                    getMainController().newTask(MaeStrings.ANN_DB_FILE, file);
+                    getMainController().newAnnotation(file);
                 }
 
             } catch (Exception e) {

@@ -54,18 +54,20 @@ public class MenuController extends MaeControllerI {
 
     public MenuController(MaeMainController mainController) {
         super(mainController);
-        view = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        view = new JPanel(new BorderLayout());
         menubar = new JMenuBar();
         reset();
-        view.add(menubar);
+        view.add(menubar, BorderLayout.CENTER);
 
     }
 
     @Override
     void reset() {
 
-        fileMenu = createFileMenu();
+        // TODO: 2016-01-10 22:37:23EST continue here, why menubar is not being reset?
+        menubar.removeAll();
 
+        fileMenu = createFileMenu();
         menubar.add(fileMenu);
 
     }
@@ -77,28 +79,28 @@ public class MenuController extends MaeControllerI {
 
     private JMenu createFileMenu() {
         MaeActionI loadTaskAction = new LoadTask(MENU_FILE_ITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
-//        MaeActionI openFileAction = new OpenFile(MENU_FILE_ITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
+        MaeActionI openFileAction = new OpenFile(MENU_FILE_ITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
 //        MaeActionI saveXMLAction = new SaveXML(MENU_FILE_ITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
 //        MaeActionI saveRTFAction = new SaveRTF(MENU_FILE_ITEM_SAVERTF, null, ksSAVERTF, null, getMainController());
 //        MaeActionI closeFileAction = new LoadTask(MENU_FILE_ITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
-        // TODO: 2016-01-10 16:45:38EST load gold standard
+        // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard
 
         JMenu menu = new JMenu(MENU_FILE);
 
         JMenuItem loadTask = new JMenuItem(loadTaskAction);
-//        JMenuItem openFile = new JMenuItem(openFileAction);
+        JMenuItem openFile = new JMenuItem(openFileAction);
 //        JMenuItem saveXML = new JMenuItem(saveXMLAction);
 //        JMenuItem saveRTF = new JMenuItem(saveRTFAction);
 //        JMenuItem closeFile = new JMenuItem(closeFileAction);
         boolean taskLoaded = getMainController().isTaskLoaded();
-        boolean fileLoaded = getMainController().isAnnotationOn();
-//        openFile.setEnabled(taskLoaded);
+        boolean fileLoaded = getMainController().isDocumentOpen();
+        openFile.setEnabled(taskLoaded);
 //        saveXML.setEnabled(fileLoaded);
 //        saveRTF.setEnabled(fileLoaded);
 //        closeFile.setEnabled(fileLoaded);
 
         menu.add(loadTask);
-//        menu.add(openFile);
+        menu.add(openFile);
         menu.addSeparator();
 //        menu.add(saveXML);
 //        menu.add(saveRTF);
