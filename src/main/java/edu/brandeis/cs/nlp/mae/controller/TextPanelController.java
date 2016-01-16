@@ -356,11 +356,11 @@ public class TextPanelController extends MaeControllerI{
         Highlighter hl = getView().getHighlighter();
         try {
             for (int anchor : spans) {
-                hl.addHighlight(anchor, anchor, painter);
+                hl.addHighlight(anchor, anchor+1, painter);
             }
             getView().getDocumentPane().scrollRectToVisible(getView().getDocumentPane().modelToView(spans[0]));
         } catch (BadLocationException e) {
-            throw catchViewException("failed to fetch text region: ", e);
+            throw catchViewException("failed to fetch a text region: ", e);
         }
     }
 
@@ -406,6 +406,7 @@ public class TextPanelController extends MaeControllerI{
                 }
             }
             try {
+                removeAllBGColors();
                 addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
             } catch (MaeControlException ignored) {
                 // possible MaeException chained from BadLocationException is ignored

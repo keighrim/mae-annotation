@@ -470,7 +470,7 @@ public class MaeMainController extends JPanel {
         getTextPanel().removeAllBGColors();
     }
 
-    public void highlightTagSpans(ExtentTag eTag, Highlighter.HighlightPainter painter) {
+    public void addBGColorOverTagSpans(ExtentTag eTag, Highlighter.HighlightPainter painter) {
         try {
             getTextPanel().addBGColorOver(eTag.getSpansAsArray(), painter);
         } catch (Exception e) {
@@ -480,6 +480,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void propagateSelectionFromTextPanel() {
+        getTablePanel().clearTableSelections();
         try {
             List<ExtentTag> releventTags = getDriver().getTagsIn(getSelectedTextSpans());
             for (ExtentTag tag : releventTags) {
@@ -495,10 +496,10 @@ public class MaeMainController extends JPanel {
         try {
             Tag tag = getDriver().getTagByTid(tid);
             if (tag.getTagtype().isExtent()) {
-                highlightTagSpans((ExtentTag) tag, ColorHandler.getVividHighliter());
+                addBGColorOverTagSpans((ExtentTag) tag, ColorHandler.getVividHighliter());
             } else {
                 for (ExtentTag argTag : ((LinkTag) tag).getArgumentTags()) {
-                    highlightTagSpans(argTag, ColorHandler.getVividHighliter());
+                    addBGColorOverTagSpans(argTag, ColorHandler.getVividHighliter());
                 }
             }
 

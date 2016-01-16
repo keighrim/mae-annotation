@@ -76,7 +76,7 @@ public class ColorHandler {
     }
 
     public static Highlighter.HighlightPainter getVividHighliter() {
-        return new DefaultHighlighter.DefaultHighlightPainter(new Color(90, 150, 30));
+        return new DefaultHighlighter.DefaultHighlightPainter(new Color(90, 220, 30));
     }
 
     public static Highlighter.HighlightPainter getCustomHighliter(Color color) {
