@@ -379,8 +379,6 @@ public class TextPanelController extends MaeControllerI{
 
         @Override
         public void caretUpdate(CaretEvent e) {
-//            Highlighter hl = getView().getHighlighter();
-//            hl.removeAllHighlights();
 
             int start = Math.min(e.getDot(), e.getMark());
             int end = Math.max(e.getDot(), e.getMark()) + 1; // because dot and mark are inclusive

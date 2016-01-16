@@ -106,6 +106,7 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
+        documentArea.setFont(new Font("monospaced", Font.PLAIN, 14));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
