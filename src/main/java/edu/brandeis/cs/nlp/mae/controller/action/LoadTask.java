@@ -43,7 +43,7 @@ public class LoadTask extends MenuActionI {
     public void actionPerformed(ActionEvent event) {
         if (getMainController().showUnsavedChangeWarning()) {
             try {
-                File file = getMainController().selectSingleFile();
+                File file = getMainController().selectSingleFile("");
                 if (file != null) {
                     getMainController().newTask(MaeStrings.ANN_DB_FILE, file);
                 }

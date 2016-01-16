@@ -366,8 +366,8 @@ public class MaeMainController extends JPanel {
         return getTextPanel().getSelected();
     }
 
-    public File selectSingleFile() {
-        return getDialogs().showFileChooseDialogAndSelect();
+    public File selectSingleFile(String defaultName) {
+        return getDialogs().showFileChooseDialogAndSelect(defaultName);
         // TODO: 1/1/2016 4MF implement multiple files
     }
 
