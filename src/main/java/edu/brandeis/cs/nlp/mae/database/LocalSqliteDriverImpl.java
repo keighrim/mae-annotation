@@ -652,19 +652,26 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             Attribute oldAtt = attQuery.where().eq(DBSchema.TAB_ATT_FCOL_ETAG, tag).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
             if (oldAtt != null) {
+                logger.debug(String.format("an old attribute \"%s\" is deleted from \"%s\"", oldAtt.toString(), tag.toString()));
                 attDao.delete(oldAtt);
             }
-            Attribute att = new Attribute(tag, attType, attValue);
-            attDao.create(att);
-            if (tag.getTagtype().isExtent()) {
-                eTagDao.update((ExtentTag) tag);
+            if (attValue.length() > 0) {
+
+                Attribute att = new Attribute(tag, attType, attValue);
+                attDao.create(att);
+                if (tag.getTagtype().isExtent()) {
+                    eTagDao.update((ExtentTag) tag);
+                } else {
+                    lTagDao.update((LinkTag) tag);
+                }
+                resetQueryBuilders();
+                logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
+                setAnnotationChanged(true);
+                return att;
             } else {
-                lTagDao.update((LinkTag) tag);
+                logger.debug("no new value is provided. leaving the attribute deleted");
+                return null;
             }
-            resetQueryBuilders();
-            logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
-            setAnnotationChanged(true);
-            return att;
         } catch (SQLException e) {
             throw catchSQLException(e);
         } catch (MaeModelException e) {
