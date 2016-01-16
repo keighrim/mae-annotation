@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
 import javax.swing.*;
@@ -40,7 +41,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
-import java.util.List;
 
 /**
  * Created by krim on 12/31/2015.
@@ -183,10 +183,10 @@ public class TablePanelController extends MaeControllerI {
 
         if (insertAt == tableModel.getRowCount()) {
             tableModel.addRow(newRowData);
-            logger.info(String.format("inserting a new row, %s, to %s table", newRowData.toString(), tableModel.getAssociatedTagTypeName()));
+            logger.info(String.format("inserting a new row, %s, to %s table", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName()));
         } else if (insertAt < tableModel.getRowCount()) {
             tableModel.updateRow(insertAt, newRowData);
-            logger.info(String.format("updating a row, %s, to %s table at %d", newRowData.toString(), tableModel.getAssociatedTagTypeName(), insertAt));
+            logger.info(String.format("updating a row, %s, to %s table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
         } else {
             // TODO: 2016-01-08 19:50:19EST this is for error checking, make sure this works as intended
             throw (new MaeControlException("cannot add a row!"));
@@ -352,6 +352,7 @@ public class TablePanelController extends MaeControllerI {
 
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
+        table.setAutoCreateColumnsFromModel( false );
         return table;
     }
 
@@ -373,14 +374,18 @@ public class TablePanelController extends MaeControllerI {
         for (AttributeType attType : attributes) {
             logger.info(String.format("adding '%s' attribute column to '%s' tag table.", attType.getName(), type.getName()));
             model.addColumn(attType.getName());
+            TableColumn column = new TableColumn(table.getColumnCount());
             if (attType.isFiniteValueset()) {
-                TableColumn column = table.getColumnModel().getColumn(model.getColumnCount() - 1);
                 JComboBox valueset = makeValidValuesComboBox(attType);
                 column.setCellEditor(new DefaultCellEditor(valueset));
             } else if (attType.isIdRef()) {
                 // TODO: 2016-01-07 22:25:00EST add idref here
                 // maybe adding a button to pop up to select an argument?
+                column.setCellEditor(new DefaultCellEditor(new JTextField()));
+            } else {
+                column.setCellEditor(new DefaultCellEditor(new JTextField()));
             }
+            table.addColumn(column);
         }
     }
 
@@ -449,6 +454,36 @@ public class TablePanelController extends MaeControllerI {
                     String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
                     String colName = getColumnName(event.getColumn());
                     String value = (String) getValueAt(event.getFirstRow(), event.getColumn());
+                    if (colName.equals(MaeStrings.SPANS_COL_NAME)) {
+                        // TODO: 2016-01-15 22:41:23EST  validate spans string: below works, but very messy
+                        try {
+                            SpanHandler.convertStringToArray(value);
+                        } catch (Exception e) {
+                            TagTableModel model = (TagTableModel) event.getSource();
+                            try {
+                                String oldSpans = ((ExtentTag) getDriver().getTagByTid(tid)).getSpansAsString();
+                                model.setValueAt(oldSpans, event.getFirstRow(), SPANS_COL);
+
+                            } catch (MaeDBException e1) {
+                                e1.printStackTrace();
+                            }
+//                            model.editCellAt(-1, -1);
+                            // TODO: 2016-01-15 22:27:26EST add more educational message embedded in a proper exception
+                            getMainController().showError("The value for tag spans is not well-formed: ");
+
+
+                        }
+                    }
+                    // TODO: 2016-01-15 22:41:50EST update TEXT_COL according to changes in SPANS_COL 
+//                    if (colName.equals(MaeStrings.SPANS_COL_NAME)) {
+//                        try {
+//                            int[] newSpans = SpanHandler.convertStringToArray(value);
+//                            String newText = getMainController().getTextPanel().getTextIn(newSpans, false);
+//                            ((JTable) event.getSource()).setValueAt(newText, event.getFirstRow(), TEXT_COL);
+//                        } catch (MaeControlException e) {
+//                            getMainController().showError(e);
+//                        }
+//                    }
                     getMainController().updateTagFromTableUpdate(tid, colName, value);
                     break;
             }
@@ -456,7 +491,7 @@ public class TablePanelController extends MaeControllerI {
 
         @Override
         public boolean isCellEditable(int row, int col) {
-            return (col != ID_COL) && (col != SRC_COL);
+            return (col != ID_COL) && (col != SRC_COL) && (col != TEXT_COL);
         }
 
     }
@@ -521,11 +556,7 @@ public class TablePanelController extends MaeControllerI {
 
                 if (tabIndex == 0) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
-                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
-//                        setActiveExtentTags(new HashSet<>(getDriver().getAllTagTypes()));
-
                         logger.info(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
-
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
                             TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
@@ -533,13 +564,7 @@ public class TablePanelController extends MaeControllerI {
                                 tabTitle.setHighlighted(true);
                             }
                         }
-                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
-                        // make sure that's right, however it will less efficient if different tags are overlapping much
-//                        getMainController().assignAllTextColors();
                     } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
-//                        setActiveExtentTags(Collections.<TagType>emptySet());
-
                         logger.info(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
@@ -548,8 +573,6 @@ public class TablePanelController extends MaeControllerI {
                                 tabTitle.setHighlighted(false);
                             }
                         }
-                        // TODO: 2016-01-12 19:03:05EST at a glance, it seems iterating and turning on/off each tab will to assignment
-//                        getMainController().unassignAllTextColors();
                     }
                 } else {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
