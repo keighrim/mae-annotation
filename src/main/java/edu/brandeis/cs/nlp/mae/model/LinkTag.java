@@ -156,8 +156,9 @@ public class LinkTag extends Tag implements IModel {
     public String toXmlString() {
         // TODO 151229 maybe re-implement this (and one in ExtentTag) using DOM in the future for robustness?
         String tagTypeName = getTagTypeName();
+        String idAtt = String.format("id=\"%s\"", tid);
         String attributes = getAttributesXmlString();
-        return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, attributes}, " "));
+        return String.format("<%s />", StringUtils.join(new String[]{tagTypeName, idAtt, attributes}, " "));
     }
 
     @Override
