@@ -107,7 +107,10 @@ public class AttributeType extends TagProperty implements IModel {
 
     @Override
     public boolean equals(Object attributeType) {
-        return attributeType instanceof AttributeType && getName().equals(((AttributeType) attributeType).getName());
+        return attributeType instanceof AttributeType
+                && getName().equals(((AttributeType) attributeType).getName())
+                && getTagType().equals(((AttributeType) attributeType).getTagType())
+        ;
 
     }
 

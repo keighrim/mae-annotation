@@ -531,18 +531,26 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public AttributeType getAttributeTypeByName(String name) throws MaeDBException {
+    public AttributeType getAttributeTypeOfTagTypeByName(TagType type, String name) throws MaeDBException {
         try {
-            return attTypeDao.queryForEq(DBSchema.TAB_AT_COL_NAME, name).get(0);
+            AttributeType result
+                    = attTypeQuery.where().eq(DBSchema.TAB_AT_FCOL_TT, type).
+                    and().eq(DBSchema.TAB_AT_COL_NAME, name).queryForFirst();
+            resetQueryBuilders();
+            return  result;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
     }
 
     @Override
-    public ArgumentType getArgumentTypeByName(String name) throws MaeDBException {
+    public ArgumentType getArgumentTypeOfTagTypeByName(TagType type, String name) throws MaeDBException {
         try {
-            return argTypeDao.queryForEq(DBSchema.TAB_ART_COL_NAME, name).get(0);
+            ArgumentType result
+                    = argTypeQuery.where().eq(DBSchema.TAB_ART_FCOL_TT, type).
+                    and().eq(DBSchema.TAB_ART_COL_NAME, name).queryForFirst();
+            resetQueryBuilders();
+            return  result;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }

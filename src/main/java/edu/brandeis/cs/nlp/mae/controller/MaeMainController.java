@@ -564,7 +564,7 @@ public class MaeMainController extends JPanel {
             for (String attName : insertedRow.keySet()) {
                 String attValue = insertedRow.get(attName);
                 if (attValue != null && attValue.length() > 0) {
-                    AttributeType attType = getDriver().getAttributeTypeByName(attName);
+                    AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tagType, attName);
                     getDriver().addOrUpdateAttribute(newTag, attType, attValue);
                 }
             }
@@ -594,14 +594,14 @@ public class MaeMainController extends JPanel {
                 getDriver().updateTagText((ExtentTag) tag, value);
             } else if (colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
                 String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
-                ArgumentType argType = getDriver().getArgumentTypeByName(argTypeName);
+                ArgumentType argType = getDriver().getArgumentTypeOfTagTypeByName(tag.getTagtype(), argTypeName);
                 LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
                 ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
                 getDriver().addOrUpdateArgument(linker, argType, arg);
             } else if (colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
                 // do nothing, will be automatically updated when argId is updated
             } else {
-                AttributeType attType = getDriver().getAttributeTypeByName(colName);
+                AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tag.getTagtype(), colName);
                 getDriver().addOrUpdateAttribute(tag, attType, value);
             }
             showSavedStatus();

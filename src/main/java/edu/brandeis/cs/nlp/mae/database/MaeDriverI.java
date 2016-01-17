@@ -147,7 +147,7 @@ public interface MaeDriverI {
     // att types
     AttributeType createAttributeType(TagType linktag, String from) throws MaeDBException;
 
-    AttributeType getAttributeTypeByName(String name) throws MaeDBException;
+    AttributeType getAttributeTypeOfTagTypeByName(TagType type, String name) throws MaeDBException;
 
     List<AttributeType> getAttributeTypesOfTagType(TagType type) throws MaeDBException;
 
@@ -167,7 +167,7 @@ public interface MaeDriverI {
     // arg types
     ArgumentType createArgumentType(TagType linktag, String from) throws MaeDBException;
 
-    ArgumentType getArgumentTypeByName(String name) throws MaeDBException;
+    ArgumentType getArgumentTypeOfTagTypeByName(TagType type, String name) throws MaeDBException;
 
     List<ArgumentType> getArgumentTypesOfLinkTagType(TagType link) throws MaeDBException;
 
