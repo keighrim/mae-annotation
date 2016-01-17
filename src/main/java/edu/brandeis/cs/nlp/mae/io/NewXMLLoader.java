@@ -57,11 +57,11 @@ public class NewXMLLoader {
 
     public void read(File file) throws MaeIOXMLException, MaeDBException {
         try {
-            logger.info("reading annotations from XML file: " + file.getName());
-            driver.setAnnotationFileName(file.getName());
+            logger.info("reading annotations from XML file: " + file.getAbsolutePath());
+            driver.setAnnotationFileName(file.getAbsolutePath());
             this.read(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            String message = "file not found: " + file.getName();
+            String message = "file not found: " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIOXMLException(message, e);
         }

@@ -68,11 +68,11 @@ public class NewDTDLoader {
 
     public void read(File file) throws MaeIODTDException, MaeDBException {
         try {
-            logger.info("reading annotation scheme from: " + file.getName());
-            driver.setTaskFileName(file.getName());
+            logger.info("reading annotation scheme from: " + file.getAbsolutePath());
+            driver.setTaskFileName(file.getAbsolutePath());
             this.read(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            String message = "file not found: " + file.getName();
+            String message = "file not found: " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIODTDException(message, e);
         }
