@@ -197,4 +197,39 @@ public class LocalSqliteDriverImplTest {
 
     }
 
+    @Test
+    public void canOnlyDropTagTables() throws Exception {
+        ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
+
+        AttributeType proper = driver.createAttributeType(noun, "proper");
+        driver.addOrUpdateAttribute(nTag, proper, "true");
+
+        LinkTag link = driver.createLinkTag("A01", semanticRole);
+        driver.addOrUpdateArgument(link, agent, nTag);
+        driver.addOrUpdateArgument(link, pred, vTag);
+
+        assertTrue(
+                "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),
+                nTag.getAttributes().size() == 1
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("true")
+        );
+
+        LinkTag retrievedTag = driver.getAllLinkTagsOfType(semanticRole).get(0);
+        assertEquals(
+                "Expected 2 arguments associated with the link, found: " + retrievedTag.getArguments().size(),
+                2, retrievedTag.getArguments().size());
+
+        driver.emptyAnnotations();
+
+        List<ExtentTag> nouns = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        List<ExtentTag> verbs = (List<ExtentTag>) driver.getAllTagsOfType(verb);
+        List<LinkTag> roles = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);
+        assertTrue(
+                "Expected all tags are wiped out, found tags: " + (nouns.size() + verbs.size() + roles.size()),
+                nouns.size() + verbs.size() + roles.size() == 0);
+        // cannot continue test on atts/args, because of lack of methods in driver to get atts/args without referencing tag
+
+    }
 }

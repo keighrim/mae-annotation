@@ -726,6 +726,22 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     }
 
+    @Override
+    public void emptyAnnotations() throws MaeDBException {
+        try {
+            for (ExtentTag tag : eTagDao.queryForAll()) {
+                eTagDao.delete(tag);
+            }
+            for (LinkTag tag : lTagDao.queryForAll()) {
+                lTagDao.delete(tag);
+            }
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+        idHandler = new IdHandler();
+
+    }
+
     /**
      * Shut down data source connection and delete all table from DB.
      */
