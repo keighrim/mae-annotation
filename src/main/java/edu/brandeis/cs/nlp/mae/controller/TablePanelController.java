@@ -361,9 +361,16 @@ public class TablePanelController extends MaeControllerI {
         List<ArgumentType> arguments = new ArrayList<>(type.getArgumentTypes());
         for (ArgumentType argType : arguments) {
             logger.info(String.format("adding columns for '%s' argument to '%s' link tag table.", argType.getName(), type.getName()));
-            // TODO: 2016-01-07 22:21:08EST this column should be id_ref
+
             model.addColumn(argType.getName() + "ID");
+            TableColumn column = new TableColumn(table.getColumnCount());
+            // TODO: 2016-01-07 22:21:08EST this column should be id_ref
+            column.setCellEditor(new DefaultCellEditor(new JTextField()));
+            table.addColumn(column);
+
             model.addColumn(argType.getName() + "Text");
+            column = new TableColumn(table.getColumnCount());
+            table.addColumn(column);
             model.addArgumentTextColumn(model.getColumnCount() - 1);
         }
     }
@@ -376,6 +383,7 @@ public class TablePanelController extends MaeControllerI {
             model.addColumn(attType.getName());
             TableColumn column = new TableColumn(table.getColumnCount());
             if (attType.isFiniteValueset()) {
+                logger.info(String.format("... and it has predefined value set: %s", attType.getValueset()));
                 JComboBox valueset = makeValidValuesComboBox(attType);
                 column.setCellEditor(new DefaultCellEditor(valueset));
             } else if (attType.isIdRef()) {
