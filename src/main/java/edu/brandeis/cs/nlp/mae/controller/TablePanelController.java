@@ -200,7 +200,7 @@ public class TablePanelController extends MaeControllerI {
             String colName = tableModel.getColumnName(i);
             switch (colName) {
                 case MaeStrings.SRC_COL_NAME:
-                    newRow[i] = getDriver().getAnnotationFileName();
+                    newRow[i] = getDriver().getAnnotationFileBaseName();
                     break;
                 case MaeStrings.ID_COL_NAME:
                     newRow[i] = tag.getId();
@@ -225,7 +225,7 @@ public class TablePanelController extends MaeControllerI {
     }
 
     private String[] convertTagIntoSimplifiedRow(ExtentTag tag) throws MaeDBException {
-        return new String[]{getDriver().getAnnotationFileName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
+        return new String[]{getDriver().getAnnotationFileBaseName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
     }
 
     public void selectTagFromTable(Tag tag) throws MaeDBException {

@@ -79,17 +79,22 @@ public class DialogController {
 
     }
 
-    public File showFileChooseDialogAndSelect(String defaultName) {
+    public File showFileChooseDialogAndSelect(String defaultName, boolean saveFile) {
         if (defaultName.length() > 0) {
             fileChooser.setSelectedFile(new File(defaultName));
         }
         // TODO: 1/1/2016 implement multi selection for multi file support
 
-        if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
-            return fileChooser.getSelectedFile();
+        if (saveFile) {
+            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                return fileChooser.getSelectedFile();
+            }
+        } else {
+            if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                return fileChooser.getSelectedFile();
+            }
         }
         return null;
-
     }
 
     public void showAboutDialog() {

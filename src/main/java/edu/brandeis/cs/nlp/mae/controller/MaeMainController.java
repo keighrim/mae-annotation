@@ -215,6 +215,14 @@ public class MaeMainController extends JPanel {
         return getDriver().isAnnotationChanged();
     }
 
+    public void showSavedStatus() {
+        try {
+            getTextPanel().updateTabTitles();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
     public void annotationIsChanged() {
         getDriver().setAnnotationChanged(true);
     }
@@ -269,6 +277,10 @@ public class MaeMainController extends JPanel {
 
     public MaeDriverI getDriver() {
         return currentDriver;
+    }
+
+    public int getDrivers() {
+        return drivers.size();
     }
 
     public MaeDriverI getDriverAt(int i) {
@@ -327,9 +339,9 @@ public class MaeMainController extends JPanel {
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
             // TODO: 2016-01-17 12:39:34EST 4MF, resetting should not be done
-            if (fromNewTask) {
+//            if (fromNewTask) {
                 resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
-            }
+//            }
             currentDriver = new LocalSqliteDriverImpl(dbFile);
             drivers.add(currentDriver);
             getDriver().readTask(taskFile);
@@ -353,7 +365,7 @@ public class MaeMainController extends JPanel {
         try {
             setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             getDriver().readAnnotation(annotationFile);
-            getTextPanel().addDocument(annotationFile.getName(), getDriver().getPrimaryText());
+            getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
 
             getTablePanel().insertAllTags();
             getMenu().reset();
@@ -375,8 +387,8 @@ public class MaeMainController extends JPanel {
         return getTextPanel().getSelected();
     }
 
-    public File selectSingleFile(String defautName) {
-        return getDialogs().showFileChooseDialogAndSelect(defautName);
+    public File selectSingleFile(String defautName, boolean saveFile) {
+        return getDialogs().showFileChooseDialogAndSelect(defautName, saveFile);
         // TODO: 1/1/2016 4MF implement multiple files
     }
 
@@ -435,6 +447,7 @@ public class MaeMainController extends JPanel {
                 showError(e);
             }
         }
+        drivers.clear();
     }
 
     public List<ExtentTag> getExtentTagsInSelectedSpans() {
@@ -555,6 +568,7 @@ public class MaeMainController extends JPanel {
                     getDriver().addOrUpdateAttribute(newTag, attType, attValue);
                 }
             }
+            showSavedStatus();
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -564,6 +578,7 @@ public class MaeMainController extends JPanel {
     public void deleteTagFromTableDeletion(String tid) {
         try {
             getDriver().deleteTag(getDriver().getTagByTid(tid));
+            showSavedStatus();
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -589,6 +604,7 @@ public class MaeMainController extends JPanel {
                 AttributeType attType = getDriver().getAttributeTypeByName(colName);
                 getDriver().addOrUpdateAttribute(tag, attType, value);
             }
+            showSavedStatus();
         } catch (MaeDBException e) {
             showError(e);
         }

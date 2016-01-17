@@ -166,9 +166,9 @@ public class TextPanelController extends MaeControllerI{
                 suffix = MaeStrings.UNSAVED_SUFFIX;
                 boldness = Font.BOLD;
             }
-            tabs.setTitleAt(i, driver.getAnnotationFileName() + suffix);
             Component title = tabs.getComponentAt(i);
             title.setFont(title.getFont().deriveFont(boldness));
+            tabs.setTitleAt(i, driver.getAnnotationFileBaseName() + suffix);
 
         }
     }

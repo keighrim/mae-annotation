@@ -187,6 +187,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
+    public String getAnnotationFileBaseName() throws MaeDBException {
+        String[] pathTokens = getAnnotationFileName().split("[\\|/]");
+        return pathTokens[pathTokens.length - 1];
+    }
+
+    @Override
     public void setAnnotationFileName(String fileName) throws MaeDBException {
         try {
             this.workingTask.setAnnotationFileName(fileName);

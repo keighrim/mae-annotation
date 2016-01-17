@@ -44,7 +44,7 @@ public class OpenFile extends MenuActionI {
     public void actionPerformed(ActionEvent event) {
         if (getMainController().showUnsavedChangeWarning()) {
             try {
-                File file = getMainController().selectSingleFile("");
+                File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
                     getMainController().newAnnotation(file);
                 }

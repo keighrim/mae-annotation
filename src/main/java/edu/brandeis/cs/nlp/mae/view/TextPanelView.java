@@ -97,6 +97,8 @@ public class TextPanelView extends JPanel {
         // always open a new tab at the end, and switch to the new tab
         getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText)));
         selectTab(getTabs().getTabCount() - 1);
+        Component title = getTabs().getComponentAt(getTabs().getTabCount() - 1);
+        title.setFont(title.getFont().deriveFont(Font.PLAIN));
     }
 
     public JScrollPane createDocumentArea(StyledDocument document) {

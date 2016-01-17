@@ -59,15 +59,16 @@ public class SaveXML extends MenuActionI {
     public void actionPerformed(ActionEvent event) {
         try {
             String xmlName = getXMLFileName();
-            File file = getMainController().selectSingleFile(xmlName);
+            File file = getMainController().selectSingleFile(xmlName, true);
             if (file != null) {
                 getMainController().getDriver().setAnnotationChanged(false);
-                getMainController().getDriver().setAnnotationFileName(file.getName());
+                getMainController().getDriver().setAnnotationFileName(file.getAbsolutePath());
                 OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
                 fw.write(generateXMLString());
                 fw.close();
             }
 
+            getMainController().showSavedStatus();
         } catch (Exception e) {
             getMainController().showError(e);
         }

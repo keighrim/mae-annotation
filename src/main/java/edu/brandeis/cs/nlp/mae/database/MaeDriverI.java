@@ -64,6 +64,8 @@ public interface MaeDriverI {
 
     String getAnnotationFileName() throws MaeDBException;
 
+    String getAnnotationFileBaseName() throws MaeDBException;
+
     void setAnnotationFileName(String fileName) throws MaeDBException;
 
     String getPrimaryText() throws MaeDBException;
