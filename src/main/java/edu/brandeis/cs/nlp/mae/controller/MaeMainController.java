@@ -42,8 +42,10 @@ import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krim on 12/30/2015.
@@ -121,7 +123,7 @@ public class MaeMainController extends JPanel {
                     String taskFileName = getDriver().getTaskFileName();
                     File taskFile = new File(taskFileName);
                     destroyCurrentDriver();
-                    newTask(MaeStrings.ANN_DB_FILE, taskFile);
+                    setupScheme(MaeStrings.ANN_DB_FILE, taskFile, false);
                     getDriver().readTask(taskFile);
                 }
                 getDriver().readAnnotation(annotationFile);
@@ -320,19 +322,26 @@ public class MaeMainController extends JPanel {
         mode = MODE_NORMAL;
     }
 
-    public void newTask(String dbFile, File taskFile) {
+    public void setupScheme(String dbFile, File taskFile, boolean fromNewTask) {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
-            resetDrivers();
+            // TODO: 2016-01-17 12:39:34EST 4MF, resetting should not be done
+            if (fromNewTask) {
+                resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
+            }
             currentDriver = new LocalSqliteDriverImpl(dbFile);
             drivers.add(currentDriver);
             getDriver().readTask(taskFile);
             textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
-            sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
-            getMenu().reset();
-            getStatusBar().reset();
-            getTextPanel().reset();
+            if (fromNewTask) {
+                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
+                getMenu().reset();
+                getStatusBar().reset();
+                getTextPanel().reset();
+                getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, taskFile));
+
+            }
             getTablePanel().reset();
             getTablePanel().makeAllTables();
         } catch (Exception e) {
@@ -342,9 +351,9 @@ public class MaeMainController extends JPanel {
 
     public void newAnnotation(File annotationFile) {
         try {
-            // TODO: 1/4/2016 resetting is limiting multi file support, to support multi files, need a driver init here
+            setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             getDriver().readAnnotation(annotationFile);
-            getTextPanel().addDocument(getDriver().getAnnotationFileName(), getDriver().getPrimaryText());
+            getTextPanel().addDocument(annotationFile.getName(), getDriver().getPrimaryText());
 
             getTablePanel().insertAllTags();
             getMenu().reset();

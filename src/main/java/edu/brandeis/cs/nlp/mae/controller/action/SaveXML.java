@@ -43,8 +43,9 @@ import java.io.OutputStreamWriter;
  */
 public class SaveXML extends MenuActionI {
 
-    private static String xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<!DOCTYPE root_element SYSTEM \"%s\">\n<%s>\n";
-    // TODO 151227 think of a way to load from "public" DTD
+    private static String xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n\n<%s>\n";
+    // tried embed dtd source in the xml, but that fails XML parser to successfully parse
+    // <!DOCTYPE root_element SYSTEM "DTD_filename">\
     // <!DOCTYPE root_element PUBLIC "DTD_name" "DTD_location">
     // see https://xmlwriter.net/xml_guide/doctype_declaration.shtml
     private static String xmlText = "<TEXT><![CDATA[%s]]></TEXT>\n<TAGS>\n";
