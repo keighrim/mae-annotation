@@ -42,10 +42,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by krim on 12/30/2015.
@@ -140,6 +138,34 @@ public class MaeMainController extends JPanel {
         mainFrame.pack();
         mainFrame.setSize(900, 700);
         mainFrame.setVisible(true);
+
+        if (args.length > 0) {
+            boolean argCmd = false;
+            List<String> argsList = new ArrayList<>();
+            String taskFilename = null;
+            String docFilename = null;
+            for (String arg : args) {
+                argsList.add(arg);
+            }
+            if (argsList.contains("--task")) {
+                taskFilename = argsList.get(argsList.indexOf("--task") + 1);
+                argCmd = true;
+                if (argsList.contains("--doc")) {
+                    docFilename = argsList.get(argsList.indexOf("--doc") + 1);
+
+                }
+            }
+            if (!argCmd) {
+                System.out.println("TODO: show some help text");
+            }
+
+            if (taskFilename != null) {
+                main.setupScheme(MaeStrings.ANN_DB_FILE, new File(taskFilename), true);
+                if (docFilename != null) {
+                    main.newAnnotation(new File(docFilename));
+                }
+            }
+        }
     }
 
     private void setWindowFrame(JFrame mainFrame) {
@@ -345,13 +371,14 @@ public class MaeMainController extends JPanel {
             currentDriver = new LocalSqliteDriverImpl(dbFile);
             drivers.add(currentDriver);
             getDriver().readTask(taskFile);
-            textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+            logger.info(String.format("task \"%s\" is loaded, has %d extent tags and %d link tags", getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
+            resetColors();
             if (fromNewTask) {
-                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
                 getMenu().reset();
                 getStatusBar().reset();
                 getTextPanel().reset();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, taskFile));
+                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
 
             }
             getTablePanel().reset();
@@ -417,6 +444,11 @@ public class MaeMainController extends JPanel {
     }
 
     public void updateTitle() {
+    }
+
+    void resetColors() throws MaeDBException {
+        textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+        tagsForColor.clear();
     }
 
     private void resetControllers() {
