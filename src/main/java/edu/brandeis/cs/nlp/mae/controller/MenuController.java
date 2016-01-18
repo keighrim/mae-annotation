@@ -95,10 +95,10 @@ public class MenuController extends MaeControllerI {
             String tid = (String) table.getModel().getValueAt(selectedRow, TablePanelController.ID_COL);
             Tag tag = getDriver().getTagByTid(tid);
 
-            RemoveTableRows removeTableRows = new RemoveTableRows(String.format(MaeStrings.MENU_TBPOP_REMOVE_ROW, tid), null, ksDELETE, null, getMainController());
-            removeTableRows.setTable(table);
-
-            contextMenu.add(removeTableRows);
+            MaeActionI deleteTagAction = new DeleteTag(MaeStrings.DELETE_TAG_SINGLE + tid, null, ksDELETE, null, getMainController());
+            JMenuItem deleteTag = new JMenuItem(deleteTagAction);
+            deleteTag.setActionCommand(tid);
+            contextMenu.add(deleteTag);
 
             if (tag.getTagtype().isExtent()) {
                 // TODO: 2016-01-17 20:40:03EST set-as-argument menu, etc

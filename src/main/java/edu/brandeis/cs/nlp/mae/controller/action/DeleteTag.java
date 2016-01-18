@@ -24,10 +24,9 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.controller.MenuController;
-import edu.brandeis.cs.nlp.mae.controller.TablePanelController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
@@ -37,33 +36,28 @@ import java.awt.event.ActionEvent;
  * Called when the user selects the option to delete the highlighted rows from
  * the table in view.  Rows are removed both from the database and the table.
  */
-public class RemoveTableRows extends MenuActionI {
+public class DeleteTag extends MenuActionI {
 
-    JTable table;
-
-    public RemoveTableRows(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public DeleteTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
-    }
-
-    public void setTable(JTable table) {
-        this.table = table;
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showBatchDeletionWarning()) {
-            for (int row : table.getSelectedRows()) {
-                String tid = (String) table.getModel().getValueAt(row, TablePanelController.ID_COL);
-                Tag tag = null;
-                try {
-                    tag = getMainController().getDriver().getTagByTid(tid);
-                } catch (MaeDBException e) {
-                    getMainController().showError(e);
-                }
-                getMainController().removeTag(tag);
-            }
+        String[] tids = event.getActionCommand().split(MaeStrings.SEP);
+        for (String tid : tids) {
+            deleteTag(tid);
+        }
+    }
 
+    void deleteTag(String tid) {
+        try {
+            Tag tag = getMainController().getDriver().getTagByTid(tid);
+            getMainController().removeTag(tag);
+        } catch (MaeException e) {
+            catchException(e);
         }
     }
 }
+
 

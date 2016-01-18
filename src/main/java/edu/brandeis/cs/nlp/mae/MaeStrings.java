@@ -38,11 +38,7 @@ import java.util.Properties;
  */
 public class MaeStrings {
     
-    /*
-    External information
-     */
-
-
+    /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
     public final static String VERSION = "v1.0-snapshot";
@@ -55,9 +51,7 @@ public class MaeStrings {
     public final static String TEST_DB_FILE = "test.db";
     public final static String TEST_DB_URL = DB_DRIVER + TEST_DB_FILE;
 
-    /*
-    Internal data structures and actionEvents
-     */
+    /* Internal data structures and actionEvents */
     public final static String COMBO_DELIMITER = " - ";
     public final static String SPANDELIMITER = "~";
     public final static String SPANSEPARATOR = ",";
@@ -85,9 +79,7 @@ public class MaeStrings {
     public final static String ARG_TEXTCOL_SUF = "Text";
 
 
-    /*
-    Status bar messages
-     */
+    /* Status bar messages */
     public static final String WAIT_MESSAGE = "Processing...";
     public final static String SB_NODTD = "No DTD loaded.";
     public final static String SB_NOFILE = "No file loaded.";
@@ -105,9 +97,7 @@ public class MaeStrings {
     public final static String SB_MARGS_NOTAG = SB_MARGS_MODE_PREFIX + SB_NOTAG;
 
 
-    /*
-    menus
-    */
+    /* menus */
     public final static String MENU_FILE = "File";
     public final static String MENU_FILE_ITEM_LOADTASK = "New Task Definition";
     public final static String MENU_FILE_ITEM_OPENFILE = "Open Document";
@@ -120,23 +110,19 @@ public class MaeStrings {
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
 
-    public final static String MENU_TBPOP = "";
-    public final static String MENU_TBPOP_REMOVE_ROW = "Remove %s";
-    public final static String MENU_TBPOP_REMOVE_ROWS = "Remove %s rows";
-    public final static String MENU_TXPOP = "";
+    /* action commands */
+    public final static String DELETE_TAG_SINGLE = "Remove ";
+    public final static String DELETE_TAG_PLURAL = "Remove %s tags: %s";
+    public final static String DELETE_TAG_SUBMENU = "";
 
-    /*
-    general messages
-     */
+    /* general messages */
     public final static String NO_TASK_IND = "No DTD";
     public final static String NO_FILE_IND = "No File";
     public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
     public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or a XML document with stand-alone annotations.";
     public static final String UNSAVED_SUFFIX = " *";
 
-    /*
-    popup messages
-     */
+    /* popup messages */
     public static final String WARN_POPUP_TITLE = "Attention, Please";
     public static final String ERROR_POPUP_TITLE = "Aagh";
 
