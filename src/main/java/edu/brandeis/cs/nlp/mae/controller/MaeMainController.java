@@ -215,7 +215,7 @@ public class MaeMainController extends JPanel {
         return getDriver().isAnnotationChanged();
     }
 
-    public void showSavedStatus() {
+    public void updateSavedStatusInTextPanel() {
         try {
             getTextPanel().updateTabTitles();
         } catch (MaeDBException e) {
@@ -530,8 +530,13 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public JPopupMenu createTableContextMenu() {
-        // TODO: 1/4/2016 write this
+    public JPopupMenu createTableContextMenu(JTable table) {
+        try {
+            logger.info("creating context menu from table panel");
+            return getMenu().createTableContextMenu(table);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
         return null;
     }
 
@@ -540,8 +545,16 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
+    public void removeTag(Tag tag) {
+        try {
+            getTablePanel().removeTagFromTable(tag);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
 
+    public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
+        logger.info(String.format("inserting DB row based on table insertion: (%s) %s", tagType.getName(), insertedRow.toString()));
         try {
             Tag newTag;
             if (tagType.isExtent()) {
@@ -568,7 +581,7 @@ public class MaeMainController extends JPanel {
                     getDriver().addOrUpdateAttribute(newTag, attType, attValue);
                 }
             }
-            showSavedStatus();
+            updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -576,15 +589,17 @@ public class MaeMainController extends JPanel {
     }
 
     public void deleteTagFromTableDeletion(String tid) {
+        logger.info(String.format("removing DB row based on table deletion: \"%s\"", tid));
         try {
             getDriver().deleteTag(getDriver().getTagByTid(tid));
-            showSavedStatus();
+            updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {
             showError(e);
         }
     }
 
     public void updateTagFromTableUpdate(String tid, String colName, String value) {
+        logger.info(String.format("modifying DB based on table update: setting \"%s\" of %s to \"%s\"", colName, tid, value));
         try {
             Tag tag = getDriver().getTagByTid(tid);
 
@@ -604,7 +619,7 @@ public class MaeMainController extends JPanel {
                 AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tag.getTagtype(), colName);
                 getDriver().addOrUpdateAttribute(tag, attType, value);
             }
-            showSavedStatus();
+            updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {
             showError(e);
         }

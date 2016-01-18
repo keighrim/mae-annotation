@@ -183,10 +183,10 @@ public class TablePanelController extends MaeControllerI {
 
         if (insertAt == tableModel.getRowCount()) {
             tableModel.addRow(newRowData);
-            logger.info(String.format("inserting a new row, %s, to %s table", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName()));
+            logger.info(String.format("inserting a new row, %s, to \"%s\" table, now has %d rows", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
         } else if (insertAt < tableModel.getRowCount()) {
             tableModel.updateRow(insertAt, newRowData);
-            logger.info(String.format("updating a row, %s, to %s table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
+            logger.info(String.format("updating a row, %s, to \"%s\" table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
         } else {
             // TODO: 2016-01-08 19:50:19EST this is for error checking, make sure this works as intended
             throw (new MaeControlException("cannot add a row!"));
@@ -250,13 +250,18 @@ public class TablePanelController extends MaeControllerI {
 
     public void removeTagFromTable(Tag tag) throws MaeDBException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
-        tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
+        logger.info(String.format("removing a row, %s from \"%s\" table, current has %d rows", tag.toString(), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
         if (tag.getTagtype().isExtent()) {
+            logger.info(String.format("however, first, removing the mirrored row from all tags table, %s", tag.toString()));
             removeTagFromAllTagsTable(tag.getId());
+            logger.info(String.format("next, removing link tags associated to %s", tag.toString()));
             for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
                 removeTagFromTable(link);
             }
+            logger.info("finally, removing the original extent tag");
         }
+        tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
+        getMainController().deleteTagFromTableDeletion(tag.getTid());
 
     }
 
@@ -319,7 +324,6 @@ public class TablePanelController extends MaeControllerI {
         tabOrder.add(dummyForAllTagTab);
         tableMap.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
 
-        table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
         return new JScrollPane(table);
     }
 
@@ -335,8 +339,6 @@ public class TablePanelController extends MaeControllerI {
         }
         addAttributeColumns(type, table);
 
-        // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn olny when not adjudicating
-        table.getColumnModel().removeColumn(table.getColumn(MaeStrings.SRC_COL_NAME));
         return new JScrollPane(table);
     }
 
@@ -353,6 +355,10 @@ public class TablePanelController extends MaeControllerI {
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel( false );
+
+        // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn olny when not adjudicating
+        table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
+
         return table;
     }
 
@@ -442,7 +448,9 @@ public class TablePanelController extends MaeControllerI {
 
         @Override
         public void tableChanged(TableModelEvent event) {
-            if (event.getFirstRow() == -1 || event.getColumn() == -1) {
+            logger.info(String.format("\"%s\" table changed: %d at %d, %d (INS=1, UPD=0, DEL=-1)", getAssociatedTagTypeName(), event.getType(), event.getFirstRow(), event.getColumn()));
+
+            if (event.getFirstRow() == -1 && event.getColumn() == -1) {
                 // ignore changes happened out of table (when initially setting up tables)
                 return;
             }
@@ -456,7 +464,8 @@ public class TablePanelController extends MaeControllerI {
                     getMainController().createTagFromTableInsertion(tagType, insertedRow);
                     break;
                 case TableModelEvent.DELETE:
-                    getMainController().deleteTagFromTableDeletion((String) getValueAt(event.getFirstRow(), ID_COL));
+                    // since we cannot recover what's already deleted, propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
+                    // getMainController().deleteTagFromTableDeletion((String) getValueAt(event.getFirstRow(), ID_COL));
                     break;
                 case TableModelEvent.UPDATE:
                     String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
@@ -638,11 +647,23 @@ public class TablePanelController extends MaeControllerI {
     }
 
     private class TablePanelMouseListener extends MouseAdapter {
+        // note that mousePressed() and mouseReleased() are both required for os-independence
+
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                createAndShowContextMenu(e);
+            }
+        }
 
         @Override
         public void mouseReleased(MouseEvent e) {
+
             if (e.isPopupTrigger()) {
-                getMainController().createTableContextMenu().show(e.getComponent(), e.getX(), e.getY());
+
+                createAndShowContextMenu(e);
+
             } else if (e.getClickCount() == 2) {
                 // TODO: 2016-01-08 16:29:13EST test if this getSource() will get the right one
                 JTable table = (JTable) e.getSource();
@@ -650,6 +671,19 @@ public class TablePanelController extends MaeControllerI {
                 String tid = (String) tableModel.getValueAt(table.getSelectedRow(), ID_COL);
                 getMainController().propagateSelectionFromTablePanel(tid);
             }
+        }
+
+        void createAndShowContextMenu(MouseEvent e) {
+            // get tab and count selected rows
+            JTable table = (JTable) e.getSource();
+
+            int clickedRow = table.rowAtPoint(e.getPoint());
+            // switch selection to clicked row only if one or zero row is selected before
+            if (table.getSelectedRowCount() <= 1) {
+                table.setRowSelectionInterval(clickedRow, clickedRow);
+            }
+
+            getMainController().createTableContextMenu(table).show(e.getComponent(), e.getX(), e.getY());
         }
 
     }

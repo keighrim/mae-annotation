@@ -25,14 +25,18 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
-import edu.brandeis.cs.nlp.mae.controller.menu.MaeActionI;
-
-import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
-import static edu.brandeis.cs.nlp.mae.MaeHotKeys.*;
+import edu.brandeis.cs.nlp.mae.controller.action.MaeActionI;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
+
 import java.awt.*;
+
+import static edu.brandeis.cs.nlp.mae.MaeHotKeys.*;
+import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
 
 /**
  * Created by krim on 1/2/2016.
@@ -78,6 +82,34 @@ public class MenuController extends MaeControllerI {
 
     }
 
+    public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
+
+        int selected = table.getSelectedRowCount();
+
+        String rowS = selected == 1 ? "row" : "rows";
+
+        JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
+
+        if (selected == 1) {
+            int selectedRow = table.getSelectedRow();
+            String tid = (String) table.getModel().getValueAt(selectedRow, TablePanelController.ID_COL);
+            Tag tag = getDriver().getTagByTid(tid);
+
+            RemoveTableRows removeTableRows = new RemoveTableRows(String.format(MaeStrings.MENU_TBPOP_REMOVE_ROW, tid), null, ksDELETE, null, getMainController());
+            removeTableRows.setTable(table);
+
+            contextMenu.add(removeTableRows);
+
+            if (tag.getTagtype().isExtent()) {
+                // TODO: 2016-01-17 20:40:03EST set-as-argument menu, etc
+            }
+        } else {
+            // TODO: 2016-01-17 20:40:14EST multiple lines selected
+        }
+        return contextMenu;
+
+    }
+
     private JMenu createFileMenu() {
         MaeActionI loadTaskAction = new LoadTask(MENU_FILE_ITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
         MaeActionI openFileAction = new OpenFile(MENU_FILE_ITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
@@ -110,5 +142,6 @@ public class MenuController extends MaeControllerI {
         logger.info("file menu is created: " + menu.getItemCount());
         return menu;
     }
+
 
 }

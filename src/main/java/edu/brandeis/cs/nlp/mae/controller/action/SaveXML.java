@@ -68,7 +68,7 @@ public class SaveXML extends MenuActionI {
                 fw.close();
             }
 
-            getMainController().showSavedStatus();
+            getMainController().updateSavedStatusInTextPanel();
         } catch (Exception e) {
             getMainController().showError(e);
         }

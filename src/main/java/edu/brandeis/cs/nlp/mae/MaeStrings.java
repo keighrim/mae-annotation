@@ -120,6 +120,10 @@ public class MaeStrings {
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
 
+    public final static String MENU_TBPOP = "";
+    public final static String MENU_TBPOP_REMOVE_ROW = "Remove %s";
+    public final static String MENU_TBPOP_REMOVE_ROWS = "Remove %s rows";
+    public final static String MENU_TXPOP = "";
 
     /*
     general messages
