@@ -261,7 +261,7 @@ public class TablePanelController extends MaeControllerI {
             logger.info("finally, removing the original extent tag");
         }
         tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
-        getMainController().deleteTagFromTableDeletion(tag.getTid());
+        getMainController().deleteTagFromTableDeletion(tag);
 
     }
 
@@ -416,11 +416,15 @@ public class TablePanelController extends MaeControllerI {
      * AnnotationTableModel creates a TableModel that user can't mess with id and source
      * // TODO: 2016-01-07 22:04:15EST 4MAII split annTableModel and adjTableModel, then SRC_COL will not be needed here
      */
-    private class TagTableModel extends DefaultTableModel implements TableModelListener {
-        TagType tagType;
+    public class TagTableModel extends DefaultTableModel implements TableModelListener {
+        private TagType tagType;
 
         public TagTableModel(TagType tagType) {
             this.tagType = tagType;
+        }
+
+        public TagType getAssociatedTagType() {
+            return tagType;
         }
 
         public String getAssociatedTagTypeName() {

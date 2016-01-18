@@ -25,14 +25,16 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
 import edu.brandeis.cs.nlp.mae.controller.action.MaeActionI;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.Tag;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.awt.*;
 
 import static edu.brandeis.cs.nlp.mae.MaeHotKeys.*;
@@ -49,8 +51,6 @@ public class MenuController extends MaeControllerI {
     JMenu helpMenu;
     JMenu modeMenu;
     JMenu preferenceMenu;
-    JMenu textContextMenu;
-    JMenu tableContextMenu;
 
 
     // and this view for top main menu
@@ -87,33 +87,79 @@ public class MenuController extends MaeControllerI {
         int selected = table.getSelectedRowCount();
 
         String rowS = selected == 1 ? "row" : "rows";
-
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
+        TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
 
         if (selected == 1) {
-            int selectedRow = table.getSelectedRow();
-            String tid = (String) table.getModel().getValueAt(selectedRow, TablePanelController.ID_COL);
-            Tag tag = getDriver().getTagByTid(tid);
-
-            MaeActionI deleteTagAction = new DeleteTag(MaeStrings.DELETE_TAG_SINGLE + tid, null, ksDELETE, null, getMainController());
-            JMenuItem deleteTag = new JMenuItem(deleteTagAction);
-            deleteTag.setActionCommand(tid);
-            contextMenu.add(deleteTag);
-
-            if (tag.getTagtype().isExtent()) {
-                // TODO: 2016-01-17 20:40:03EST set-as-argument menu, etc
-            }
+            contextMenu.add(createSingleDeleteMenu(table.getSelectedRow(), model));
         } else {
-            // TODO: 2016-01-17 20:40:14EST multiple lines selected
+            contextMenu.add(createPluralDeleteMenu(table.getSelectedRows(), model));
+        }
+
+        if (model.getAssociatedTagType().isExtent()) {
+//             TODO: 2016-01-17 20:40:03EST set-as-argument menu, etc
+//            contextMenu.add(createSingleArgumentSetMenu(table, model));
         }
         return contextMenu;
 
     }
 
+    private JMenuItem createSingleDeleteMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
+        String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
+        Tag tag = getDriver().getTagByTid(tid);
+        return createDeleteMenuItem(tag, ksDELETE);
+    }
+
+    private JMenuItem createDeleteMenuItem(Tag tag, KeyStroke hotKey) {
+        MaeActionI deleteTagAction = new DeleteTag(MENUITEM_DELETE_TAG_SINGLE + tag.toString(), null, hotKey, null, getMainController());
+        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        deleteTagItem.setActionCommand(tag.getId());
+        return deleteTagItem;
+    }
+
+
+    private JMenu createPluralDeleteMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
+
+        JMenu deleteMenu = new JMenu(MENU_TBPOP_ITEM_DELETE);
+        deleteMenu.setMnemonic(cmnDELETE);
+
+        List<Tag> tags = new LinkedList<>();
+        for (int row : selectedRows) {
+            tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
+        }
+
+        deleteMenu.add(createDeleteAllMenuItem(tags, ksN0));
+
+        // this will assign hotkey
+        int i = 0;
+        for (Tag tag : tags) {
+            if (i < 9) {
+                deleteMenu.add(createDeleteMenuItem(tag, noneNums[i]));
+                i++;
+            } else {
+                deleteMenu.add(createDeleteMenuItem(tag, null));
+            }
+        }
+
+        return deleteMenu;
+    }
+
+    private JMenuItem createDeleteAllMenuItem(List<Tag> tags, KeyStroke hotKey) {
+        List<String> tids = new LinkedList<>();
+        for (Tag tag : tags) {
+            tids.add(tag.getId());
+        }
+        MaeActionI deleteTagAction = new DeleteTag(String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tids.toString()), null, hotKey, null, getMainController());
+        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        deleteTagItem.setActionCommand(StringUtils.join(tids, SEP));
+        return deleteTagItem;
+    }
+
+
     private JMenu createFileMenu() {
-        MaeActionI loadTaskAction = new LoadTask(MENU_FILE_ITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
-        MaeActionI openFileAction = new OpenFile(MENU_FILE_ITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
-        MaeActionI saveXMLAction = new SaveXML(MENU_FILE_ITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
+        MaeActionI loadTaskAction = new LoadTask(MENUITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
+        MaeActionI openFileAction = new OpenFile(MENUITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
+        MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
 //        MaeActionI saveRTFAction = new SaveRTF(MENU_FILE_ITEM_SAVERTF, null, ksSAVERTF, null, getMainController());
 //        MaeActionI closeFileAction = new LoadTask(MENU_FILE_ITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
         // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard

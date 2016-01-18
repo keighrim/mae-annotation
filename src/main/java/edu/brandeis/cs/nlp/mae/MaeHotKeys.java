@@ -170,6 +170,7 @@ public class MaeHotKeys {
     public final static KeyStroke ksND
             = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
     public final static KeyStroke ksDELETE = ksND;
+    public final static int cmnDELETE = KeyEvent.VK_D;
 
     public final static KeyStroke ksNE
             = KeyStroke.getKeyStroke(KeyEvent.VK_E, 0);

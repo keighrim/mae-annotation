@@ -588,10 +588,13 @@ public class MaeMainController extends JPanel {
 
     }
 
-    public void deleteTagFromTableDeletion(String tid) {
-        logger.info(String.format("removing DB row based on table deletion: \"%s\"", tid));
+    public void deleteTagFromTableDeletion(Tag tag) {
+        logger.info(String.format("removing DB row based on table deletion: \"%s\"", tag.getId()));
         try {
-            getDriver().deleteTag(getDriver().getTagByTid(tid));
+            getDriver().deleteTag(tag);
+            if (tag.getTagtype().isExtent()) {
+                getTextPanel().assignFGColorOver(((ExtentTag) tag).getSpansAsArray());
+            }
             updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {
             showError(e);

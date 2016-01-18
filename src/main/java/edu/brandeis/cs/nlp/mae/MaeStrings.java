@@ -99,9 +99,9 @@ public class MaeStrings {
 
     /* menus */
     public final static String MENU_FILE = "File";
-    public final static String MENU_FILE_ITEM_LOADTASK = "New Task Definition";
-    public final static String MENU_FILE_ITEM_OPENFILE = "Open Document";
-    public final static String MENU_FILE_ITEM_SAVEXML = "Save Annotation As XML";
+    public final static String MENUITEM_LOADTASK = "New Task Definition";
+    public final static String MENUITEM_OPENFILE = "Open Document";
+    public final static String MENUITEM_SAVEXML = "Save Annotation As XML";
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
     public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
@@ -109,11 +109,9 @@ public class MaeStrings {
     public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
-
-    /* action commands */
-    public final static String DELETE_TAG_SINGLE = "Remove ";
-    public final static String DELETE_TAG_PLURAL = "Remove %s tags: %s";
-    public final static String DELETE_TAG_SUBMENU = "";
+    public final static String MENU_TBPOP_ITEM_DELETE = "Delete";
+    public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete ";
+    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s";
 
     /* general messages */
     public final static String NO_TASK_IND = "No DTD";
