@@ -115,6 +115,7 @@ public class TablePanelController extends MaeControllerI {
             throw new MaeControlException("Cannot make tables without a task definition!");
         }
         List<TagType> types = getDriver().getAllTagTypes();
+        logger.info(String.format("start creating tables for %d tag types", types.size()));
 
         if (types.size() > 20) {
             getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -333,6 +334,7 @@ public class TablePanelController extends MaeControllerI {
         JTable table = makeTagTableFromEmptyModel(model, type.isExtent());
         tabOrder.add(type);
         tableMap.put(type.getName(), table);
+        logger.info("successfully created a table for: " + type.getName());
 
         if (type.isLink()) {
             addArgumentColumns(type, table);
@@ -354,7 +356,7 @@ public class TablePanelController extends MaeControllerI {
 
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
-        table.setAutoCreateColumnsFromModel( false );
+        table.setAutoCreateColumnsFromModel(false);
 
         // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn olny when not adjudicating
         table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
@@ -369,7 +371,7 @@ public class TablePanelController extends MaeControllerI {
             logger.info(String.format("adding columns for '%s' argument to '%s' link tag table.", argType.getName(), type.getName()));
 
             model.addColumn(argType.getName() + "ID");
-            TableColumn column = new TableColumn(table.getColumnCount());
+            TableColumn column = new TableColumn(model.getColumnCount()-1);
             // TODO: 2016-01-07 22:21:08EST this column should be id_ref
             column.setCellEditor(new DefaultCellEditor(new JTextField()));
             table.addColumn(column);
@@ -387,7 +389,7 @@ public class TablePanelController extends MaeControllerI {
         for (AttributeType attType : attributes) {
             logger.info(String.format("adding '%s' attribute column to '%s' tag table.", attType.getName(), type.getName()));
             model.addColumn(attType.getName());
-            TableColumn column = new TableColumn(table.getColumnCount());
+            TableColumn column = new TableColumn(model.getColumnCount()-1);
             if (attType.isFiniteValueset()) {
                 logger.info(String.format("... and it has predefined value set: %s", attType.getValueset()));
                 JComboBox valueset = makeValidValuesComboBox(attType);
@@ -460,12 +462,14 @@ public class TablePanelController extends MaeControllerI {
             }
             switch (event.getType()) {
                 case TableModelEvent.INSERT:
+                    /*
                     Map<String, String> insertedRow = new HashMap<>();
                     int row = event.getFirstRow();
                     for (int col = 0; col < getColumnCount(); col++) {
                         insertedRow.put(getColumnName(col), (String) getValueAt(row, col));
                     }
                     getMainController().createTagFromTableInsertion(tagType, insertedRow);
+                    */
                     break;
                 case TableModelEvent.DELETE:
                     // since we cannot recover what's already deleted, propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
