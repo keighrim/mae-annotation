@@ -366,7 +366,7 @@ public class MaeMainController extends JPanel {
         try {
             // TODO: 2016-01-17 12:39:34EST 4MF, resetting should not be done
 //            if (fromNewTask) {
-                resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
+            resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
 //            }
             currentDriver = new LocalSqliteDriverImpl(dbFile);
             drivers.add(currentDriver);
@@ -607,6 +607,7 @@ public class MaeMainController extends JPanel {
         try {
             String tid = getDriver().getNextId(tagType);
             ExtentTag tag = getDriver().createExtentTag(tid, tagType, null, null);
+            populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
             assignTextColorsOver(tag.getSpansAsList());
         } catch (MaeException e) {
@@ -618,23 +619,35 @@ public class MaeMainController extends JPanel {
     public void createTagFromTextSelection(TagType tagType) {
         logger.info(String.format("creating DB row from text selection: (%s) \"%s\"", tagType.getName(), getSelectedText()));
         try {
+            Tag tag;
             String tid = getDriver().getNextId(tagType);
             if (tagType.isExtent()) {
-                ExtentTag tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
-                getTablePanel().insertTagIntoTable(tag);
-                assignTextColorsOver(tag.getSpansAsList());
+                tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             } else {
-                LinkTag tag = getDriver().createLinkTag(tid, tagType);
-                getTablePanel().insertTagIntoTable(tag);
-                for (ExtentTag arg : tag.getArgumentTags()) {
-                    assignTextColorsOver(arg.getSpansAsList());
-                }
-
+                tag = getDriver().createLinkTag(tid, tagType);
+                // TODO: 2016-01-20 16:55:31EST  do we need this? creating a link from text will always end up in an empty link
+//                for (ExtentTag arg : tag.getArgumentTags()) {
+//                    assignTextColorsOver(arg.getSpansAsList());
+//                }
+            }
+            populateDefaultAttributes(tag);
+            getTablePanel().insertTagIntoTable(tag);
+            if (tagType.isExtent()) {
+                assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
             }
         } catch (MaeException e) {
             showError(e);
         }
 
+    }
+
+    void populateDefaultAttributes(Tag tag) throws MaeDBException {
+        for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
+            String defaultValue = attType.getDefaultValue();
+            if (defaultValue != null && defaultValue.length() > 0) {
+                getDriver().addOrUpdateAttribute(tag, attType, defaultValue);
+            }
+        }
     }
 
     public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
