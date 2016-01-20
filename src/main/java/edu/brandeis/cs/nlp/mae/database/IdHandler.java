@@ -72,18 +72,22 @@ public class IdHandler {
     public String getNextID(TagType type) {
 
         TreeSet<Integer> existingIds = tracker.get(type);
+        if (existingIds == null) {
+            return type.getPrefix() + startFrom;
+        }
+
         if (existingIds.last() + 1 == existingIds.size() + startFrom) {
             return type.getPrefix() + (existingIds.last() + 1);
         }
 
         Iterator<Integer> iter = existingIds.iterator();
         // legacy id numbering starts from 0
-        // checking id from 0 every time would be extremely inefficient
+        // checking id from 0 every time would be extremely inefficient, maybe reverse way is better?
         int prev = startFrom;
 
         while (iter.hasNext()) {
             int next = iter.next();
-            if (next > prev + 1) {
+            if (next >= prev + 1) {
                 break;
             } else {
                 prev++;
