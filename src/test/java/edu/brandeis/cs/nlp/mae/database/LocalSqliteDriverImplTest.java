@@ -85,6 +85,30 @@ public class LocalSqliteDriverImplTest {
     }
 
     @Test
+    public void canCreateTag() throws Exception {
+        ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
+        List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        assertEquals(
+                "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
+                1, retrievedTags.size());
+
+        ExtentTag retrievedTag = retrievedTags.get(0);
+        assertEquals(
+                "Expected Obj and Rel share the same ID, found: " + retrievedTag.getTid(),
+                tag.getTid(), retrievedTag.getTid()
+        );
+        assertEquals(
+                "Expected Obj and Rel share the same text, found: " + retrievedTag.getText(),
+                tag.getText(), retrievedTag.getText()
+        );
+        assertEquals(
+                "Expected Obj and Rel share the same span, found: " + retrievedTag.getSpansAsString(),
+                tag.getSpansAsString(), retrievedTag.getSpansAsString()
+        );
+
+    }
+
+    @Test
     public void canDeleteTag() throws Exception {
         ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
         List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);

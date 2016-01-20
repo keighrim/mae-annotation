@@ -28,6 +28,7 @@ import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.ExtentTagDao;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.apache.commons.lang3.StringUtils;
@@ -98,8 +99,13 @@ public class ExtentTag extends Tag implements IModel {
         return spans;
     }
 
-    public List<CharIndex> getSpansAsList() {
-        return new ArrayList<>(this.getSpans());
+    public List<Integer> getSpansAsList() {
+        List<Integer> spans = new ArrayList<>();
+        for (CharIndex anchor : getSpans()) {
+            spans.add(anchor.getLocation());
+        }
+        return spans;
+
     }
 
     public int[] getSpansAsArray() {
@@ -108,7 +114,6 @@ public class ExtentTag extends Tag implements IModel {
         for (CharIndex ci : getSpans()) {
             spans[i++] = ci.getLocation();
         }
-//        Arrays.sort(spans);
         return spans;
     }
 
@@ -120,8 +125,7 @@ public class ExtentTag extends Tag implements IModel {
         if (isConsuming()) {
             return text;
         } else {
-            // TODO: 1/3/2016 encapsulate this string
-            return "";
+            return MaeStrings.NC_TEXT;
         }
     }
 

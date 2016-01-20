@@ -24,11 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae;
 
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-
-import java.io.IOException;
 import java.util.Calendar;
-import java.util.Properties;
 
 /**
  * Contains string resources for MAE main
@@ -57,6 +53,7 @@ public class MaeStrings {
     public final static String SPANSEPARATOR = ",";
     public final static int NC_START = -1;
     public final static int NC_END = -1;
+    public final static String NC_TEXT = "";
     public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
             MaeStrings.NC_START, MaeStrings.SPANDELIMITER, MaeStrings.NC_END);
 
