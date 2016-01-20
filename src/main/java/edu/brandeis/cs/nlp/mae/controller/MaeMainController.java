@@ -625,7 +625,11 @@ public class MaeMainController extends JPanel {
         try {
             getDriver().deleteTag(tag);
             if (tag.getTagtype().isExtent()) {
-                getTextPanel().assignFGColorOver(((ExtentTag) tag).getSpansAsArray());
+                assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
+            } else {
+                for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                    assignTextColorsOver(arg.getSpansAsList());
+                }
             }
             updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {
