@@ -28,7 +28,9 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
 import edu.brandeis.cs.nlp.mae.controller.action.MaeActionI;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
+import edu.brandeis.cs.nlp.mae.model.TagType;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
@@ -82,9 +84,46 @@ public class MenuController extends MaeControllerI {
 
     }
 
+    public JPopupMenu createTextContextMenu() throws MaeDBException {
+
+        JPopupMenu contextMenu = new JPopupMenu("selected text: " + getMainController().getSelectedText());
+
+        getMainController().getSelectedText();
+
+        contextMenu.add(createMakeTagMenu());
+
+        List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
+
+        return contextMenu;
+
+    }
+
+    JMenu createMakeTagMenu() throws MaeDBException {
+        JMenu makeTagMenu = new JMenu("Create an Extent tag with selected text");
+        int i = 0;
+        for (TagType type : getDriver().getExtentTagTypes()) {
+            JMenuItem makeTagItem;
+            String makeTagItemLabel;
+            MaeActionI makeTagAction;
+            if (i < 10) {
+                makeTagItemLabel = String.format("(%d) %s", i+1, type.getName());
+                makeTagAction = new MakeTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
+                i++;
+            } else {
+                makeTagItemLabel = String.format("    %s", type.getName());
+                makeTagAction = new MakeTag(makeTagItemLabel, null, null, null, getMainController());
+            }
+            makeTagItem = new JMenuItem(makeTagAction);
+            makeTagItem.setActionCommand(type.getName());
+            makeTagMenu.add(makeTagItem);
+        }
+        return makeTagMenu;
+    }
+
+
     public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
 
-        int selected = table.getSelectedRowCount();
+       int selected = table.getSelectedRowCount();
 
         String rowS = selected == 1 ? "row" : "rows";
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));

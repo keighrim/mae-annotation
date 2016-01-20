@@ -80,7 +80,6 @@ public class TextPanelController extends MaeControllerI{
             selectionHistory.clear();
             if (getMainController().isDocumentOpen()) {
                 clearColoring();
-                addListeners();
                 assignAllFGColors();
             }
         }
@@ -331,6 +330,7 @@ public class TextPanelController extends MaeControllerI{
                 }
 
             }
+            // then, italicize where any link is associated
             for (ExtentTag tag : allTags.get(type)) {
                 for (LinkTag linker : getDriver().getLinksHasArgumentTag(tag)) {
                     if (activeLinks.contains(linker.getTagtype())) {
@@ -367,10 +367,22 @@ public class TextPanelController extends MaeControllerI{
     private class TextPanelMouseListener extends MouseAdapter {
 
         @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                createAndShowContextMenu(e);
+            }
+        }
+
+        @Override
         public void mouseReleased(MouseEvent e) {
             if (e.isPopupTrigger()) {
-                getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
+                createAndShowContextMenu(e);
             }
+        }
+
+        void createAndShowContextMenu(MouseEvent e) {
+                getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
+
         }
 
     }

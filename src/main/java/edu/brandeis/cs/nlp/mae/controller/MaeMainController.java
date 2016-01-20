@@ -410,6 +410,15 @@ public class MaeMainController extends JPanel {
         currentDriver = drivers.get(tabId);
     }
 
+    public String getSelectedText() {
+        try {
+            return getTextPanel().getSelectedText();
+        } catch (MaeControlException e) {
+            showError(e);
+        }
+        return null;
+    }
+
     public int[] getSelectedTextSpans() {
         return getTextPanel().getSelected();
     }
@@ -573,7 +582,12 @@ public class MaeMainController extends JPanel {
     }
 
     public JPopupMenu createTextContextMenu() {
-        // TODO: 1/4/2016 write this
+        try {
+            logger.info("creating context menu from text panel");
+            return getMenu().createTextContextMenu();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
         return null;
     }
 
@@ -583,6 +597,28 @@ public class MaeMainController extends JPanel {
         } catch (MaeDBException e) {
             showError(e);
         }
+    }
+
+    public void createTagFromTextSelection(TagType tagType) {
+        logger.info(String.format("creating DB row from text selection: (%s) \"%s\"", tagType.getName(), getSelectedText()));
+        try {
+            String tid = getDriver().getNextId(tagType);
+            if (tagType.isExtent()) {
+                ExtentTag tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
+                getTablePanel().insertTagIntoTable(tag);
+                assignTextColorsOver(tag.getSpansAsList());
+            } else {
+                LinkTag tag = getDriver().createLinkTag(tid, tagType);
+                getTablePanel().insertTagIntoTable(tag);
+                for (ExtentTag arg : tag.getArgumentTags()) {
+                    assignTextColorsOver(arg.getSpansAsList());
+                }
+
+            }
+        } catch (MaeException e) {
+            showError(e);
+        }
+
     }
 
     public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
