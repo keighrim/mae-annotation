@@ -69,9 +69,11 @@ public class ExtentTag extends Tag implements IModel {
 
     public List<CharIndex> setSpans(int...locations) {
         List<CharIndex> indices = new LinkedList<>();
-        for (int location : locations) {
-            indices.add(new CharIndex(location, this));
+        if (locations != null) {
+            for (int location : locations) {
+                indices.add(new CharIndex(location, this));
 
+            }
         }
         // cannot call DAO inside ETag class, so we return list to save these afterwards
         return indices;

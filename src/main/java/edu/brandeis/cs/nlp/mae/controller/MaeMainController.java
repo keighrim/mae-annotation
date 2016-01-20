@@ -599,6 +599,22 @@ public class MaeMainController extends JPanel {
         }
     }
 
+    public void createNCTag(TagType tagType) {
+        logger.info(String.format("creating DB row for a NC extent tag: (%s)", tagType.getName()));
+        if (tagType.isLink()) {
+            showError("Link tag cannot be non-consuming!");
+        }
+        try {
+            String tid = getDriver().getNextId(tagType);
+            ExtentTag tag = getDriver().createExtentTag(tid, tagType, null, null);
+            getTablePanel().insertTagIntoTable(tag);
+            assignTextColorsOver(tag.getSpansAsList());
+        } catch (MaeException e) {
+            showError(e);
+        }
+
+    }
+
     public void createTagFromTextSelection(TagType tagType) {
         logger.info(String.format("creating DB row from text selection: (%s) \"%s\"", tagType.getName(), getSelectedText()));
         try {

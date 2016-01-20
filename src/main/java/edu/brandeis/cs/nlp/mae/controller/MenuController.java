@@ -86,11 +86,12 @@ public class MenuController extends MaeControllerI {
 
     public JPopupMenu createTextContextMenu() throws MaeDBException {
 
-        JPopupMenu contextMenu = new JPopupMenu("selected text: " + getMainController().getSelectedText());
+        JPopupMenu contextMenu = new JPopupMenu();
 
-        getMainController().getSelectedText();
-
-        contextMenu.add(createMakeTagMenu());
+        if (getMainController().getSelectedTextSpans().length > 0) {
+            contextMenu.add(createMakeTagMenu(false));
+        }
+        contextMenu.add(createMakeTagMenu(true));
 
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
 
@@ -98,20 +99,39 @@ public class MenuController extends MaeControllerI {
 
     }
 
-    JMenu createMakeTagMenu() throws MaeDBException {
+    JMenu createMakeTagMenu(boolean nc) throws MaeDBException {
         JMenu makeTagMenu = new JMenu("Create an Extent tag with selected text");
         int i = 0;
-        for (TagType type : getDriver().getExtentTagTypes()) {
+        List<TagType> types = getDriver().getExtentTagTypes();
+
+        if (nc) {
+            makeTagMenu = new JMenu("Create an NC Extent tag with no text associated");
+            List<TagType> ncTypes = new ArrayList<>();
+            for (TagType type : types) {
+                if (type.isNonConsuming()) ncTypes.add(type);
+            }
+            types = ncTypes;
+        }
+
+        for (TagType type : types) {
             JMenuItem makeTagItem;
             String makeTagItemLabel;
             MaeActionI makeTagAction;
             if (i < 10) {
                 makeTagItemLabel = String.format("(%d) %s", i+1, type.getName());
-                makeTagAction = new MakeTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
+                if (nc) {
+                    makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
+                } else {
+                    makeTagAction = new MakeTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
+                }
                 i++;
             } else {
                 makeTagItemLabel = String.format("    %s", type.getName());
-                makeTagAction = new MakeTag(makeTagItemLabel, null, null, null, getMainController());
+                if (nc) {
+                    makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, null, getMainController());
+                } else {
+                    makeTagAction = new MakeTag(makeTagItemLabel, null, null, null, getMainController());
+                }
             }
             makeTagItem = new JMenuItem(makeTagAction);
             makeTagItem.setActionCommand(type.getName());
@@ -123,7 +143,6 @@ public class MenuController extends MaeControllerI {
 
     public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
 
-       int selected = table.getSelectedRowCount();
 
         String rowS = selected == 1 ? "row" : "rows";
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
