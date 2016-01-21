@@ -31,7 +31,6 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 
@@ -90,15 +89,26 @@ public class MenuController extends MaeControllerI {
 
     public JPopupMenu createTextContextMenu() throws MaeDBException {
 
+        List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
 
-        if (getMainController().getSelectedTextSpans().length > 0) {
+        if (getMainController().isTextSelected()) {
             contextMenu.add(createMakeTagMenu(ETAG));
         }
         contextMenu.add(createMakeTagMenu(NCTAG));
         contextMenu.add(createMakeTagMenu(LTAG));
+        switch (tags.size()) {
+            case 0:
+                break;
+            case 1:
+                contextMenu.addSeparator();
+                contextMenu.add(createSingleDeleteMenu(tags.get(0)));
+                break;
+            default:
+                contextMenu.addSeparator();
+                contextMenu.add(createPluralDeleteMenu(tags));
 
-        List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
+        }
 
         return contextMenu;
 
@@ -128,22 +138,17 @@ public class MenuController extends MaeControllerI {
         return makeTagMenu;
     }
 
-    private MaeActionI getMakeTagAction(int category, String makeTagItemLabel, Integer mnemonic) {
-        MaeActionI makeTagAction;
+    private MaeActionI getMakeTagAction(int category, String makeTagItemLabel, int mnemonic) {
         switch (category) {
             case ETAG:
-                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-                break;
+                return new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
             case NCTAG:
-                makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-                break;
+                return new MakeNCTag(makeTagItemLabel, null, null, mnemonic, getMainController());
             case LTAG:
-                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-                break;
+                return new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
             default:
-                makeTagAction = null;
+                return null;
         }
-        return makeTagAction;
     }
 
     private String getMakeTagMenuLabel(int category) {
@@ -187,8 +192,60 @@ public class MenuController extends MaeControllerI {
         return getDriver().getLinkTagTypes();
     }
 
+    JMenuItem createSingleDeleteMenu(Tag tag) throws MaeDBException {
+        return createDeleteMenuItem(tag, String.format(MENUITEM_DELETE_TAG_SINGLE, tag.toString()), cmnDELETE);
+    }
+
+    JMenu createPluralDeleteMenu(List<? extends Tag> tags) throws MaeDBException {
+        JMenu deleteMenu = new JMenu(MENU_TBPOP_ITEM_DELETE);
+        deleteMenu.setMnemonic(cmnDELETE);
+        deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tags.toString()), n0));
+
+        // this will assign hotkey
+        int i = 0;
+        String label;
+        Integer mnemonic;
+        for (Tag tag : tags) {
+            String labelWithoutMnemonic = String.format(MENUITEM_DELETE_TAG_SINGLE, tag.toString());
+            if (i < 9) {
+                label = String.format("(%d) %s", i + 1, labelWithoutMnemonic);
+                mnemonic = numKeys[i++];
+            } else {
+                label = String.format("    %s", labelWithoutMnemonic);
+                mnemonic = null;
+            }
+            deleteMenu.add(createDeleteMenuItem(tag, label, mnemonic));
+        }
+
+        return deleteMenu;
+    }
+
+    private JMenuItem createDeleteMenuItem(Tag tag, String label, int mnemonic) {
+        MaeActionI deleteTagAction = getDeleteTagAction(label, mnemonic);
+        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        deleteTagItem.setActionCommand(tag.getId());
+        return deleteTagItem;
+    }
+
+    private JMenuItem createWholeDeleteMenuItem(List<? extends Tag> tags, String label, int mnemonic) {
+        String tids = "";
+        for (Tag tag : tags) {
+            tids += tag.getId() + SEP;
+        }
+        MaeActionI deleteTagAction = new DeleteTag(label, null, null, mnemonic, getMainController());
+        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        deleteTagItem.setActionCommand(tids);
+        return deleteTagItem;
+    }
+
+    private MaeActionI getDeleteTagAction(String deleteTagLabel, int mnemonic) {
+        return new DeleteTag(deleteTagLabel, null, null, mnemonic, getMainController());
+
+    }
+
     public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
 
+        int selected = table.getSelectedRowCount();
 
         String rowS = selected == 1 ? "row" : "rows";
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
@@ -211,54 +268,16 @@ public class MenuController extends MaeControllerI {
     private JMenuItem createSingleDeleteMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
-        return createDeleteMenuItem(tag, ksDELETE);
+        return createSingleDeleteMenu(tag);
     }
-
-    private JMenuItem createDeleteMenuItem(Tag tag, KeyStroke hotKey) {
-        MaeActionI deleteTagAction = new DeleteTag(MENUITEM_DELETE_TAG_SINGLE + tag.toString(), null, hotKey, null, getMainController());
-        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
-        deleteTagItem.setActionCommand(tag.getId());
-        return deleteTagItem;
-    }
-
 
     private JMenu createPluralDeleteMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
-
-        JMenu deleteMenu = new JMenu(MENU_TBPOP_ITEM_DELETE);
-        deleteMenu.setMnemonic(cmnDELETE);
-
         List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
             tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
         }
-
-        deleteMenu.add(createDeleteAllMenuItem(tags, ksN0));
-
-        // this will assign hotkey
-        int i = 0;
-        for (Tag tag : tags) {
-            if (i < 9) {
-                deleteMenu.add(createDeleteMenuItem(tag, noneNums[i]));
-                i++;
-            } else {
-                deleteMenu.add(createDeleteMenuItem(tag, null));
-            }
-        }
-
-        return deleteMenu;
+        return createPluralDeleteMenu(tags);
     }
-
-    private JMenuItem createDeleteAllMenuItem(List<Tag> tags, KeyStroke hotKey) {
-        List<String> tids = new LinkedList<>();
-        for (Tag tag : tags) {
-            tids.add(tag.getId());
-        }
-        MaeActionI deleteTagAction = new DeleteTag(String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tids.toString()), null, hotKey, null, getMainController());
-        JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
-        deleteTagItem.setActionCommand(StringUtils.join(tids, SEP));
-        return deleteTagItem;
-    }
-
 
     private JMenu createFileMenu() {
         MaeActionI loadTaskAction = new LoadTask(MENUITEM_LOADTASK, null, ksLOADTASK, null, getMainController());

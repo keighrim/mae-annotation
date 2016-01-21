@@ -107,7 +107,7 @@ public class MaeStrings {
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
     public final static String MENU_TBPOP_ITEM_DELETE = "Delete";
-    public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete ";
+    public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s";
     public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s";
 
     /* general messages */

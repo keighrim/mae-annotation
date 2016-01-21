@@ -44,9 +44,11 @@ public class DeleteTag extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        String[] tids = event.getActionCommand().split(MaeStrings.SEP);
-        for (String tid : tids) {
-            deleteTag(tid);
+        if (getMainController().showBatchDeletionWarning()) {
+            String[] tids = event.getActionCommand().split(MaeStrings.SEP);
+            for (String tid : tids) {
+                deleteTag(tid);
+            }
         }
     }
 
