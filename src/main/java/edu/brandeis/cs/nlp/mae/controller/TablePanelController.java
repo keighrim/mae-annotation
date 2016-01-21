@@ -377,7 +377,7 @@ public class TablePanelController extends MaeControllerI {
             table.addColumn(column);
 
             model.addColumn(argType.getName() + "Text");
-            column = new TableColumn(table.getColumnCount());
+            column = new TableColumn(model.getColumnCount()-1);
             table.addColumn(column);
             model.addArgumentTextColumn(model.getColumnCount() - 1);
         }

@@ -193,7 +193,11 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public String getSelectedText() throws MaeControlException {
-        return getTextIn(selected, true).replace("\n", " ");
+        if (selected.length > 0) {
+            return getTextIn(selected, true).replace("\n", " ");
+        } else {
+            return "NO-TEXT-SELECTED";
+        }
     }
 
     public List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {

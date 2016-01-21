@@ -35,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.awt.*;
@@ -47,6 +48,9 @@ import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
  */
 public class MenuController extends MaeControllerI {
 
+    static final int ETAG = 0;
+    static final int NCTAG = 1;
+    static final int LTAG = 2;
     // this controller is responsible for all these menus
     JMenu fileMenu;
     JMenu displayMenu;
@@ -89,9 +93,10 @@ public class MenuController extends MaeControllerI {
         JPopupMenu contextMenu = new JPopupMenu();
 
         if (getMainController().getSelectedTextSpans().length > 0) {
-            contextMenu.add(createMakeTagMenu(false));
+            contextMenu.add(createMakeTagMenu(ETAG));
         }
-        contextMenu.add(createMakeTagMenu(true));
+        contextMenu.add(createMakeTagMenu(NCTAG));
+        contextMenu.add(createMakeTagMenu(LTAG));
 
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
 
@@ -99,47 +104,88 @@ public class MenuController extends MaeControllerI {
 
     }
 
-    JMenu createMakeTagMenu(boolean nc) throws MaeDBException {
-        JMenu makeTagMenu = new JMenu("Create an Extent tag with selected text");
+    JMenu createMakeTagMenu(int category) throws MaeDBException {
+        JMenu makeTagMenu = new JMenu(getMakeTagMenuLabel(category));
+        List<TagType> types = getTagTypes(category);
+
         int i = 0;
-        List<TagType> types = getDriver().getExtentTagTypes();
-
-        if (nc) {
-            makeTagMenu = new JMenu("Create an NC Extent tag with no text associated");
-            List<TagType> ncTypes = new ArrayList<>();
-            for (TagType type : types) {
-                if (type.isNonConsuming()) ncTypes.add(type);
-            }
-            types = ncTypes;
-        }
-
         for (TagType type : types) {
-            JMenuItem makeTagItem;
             String makeTagItemLabel;
-            MaeActionI makeTagAction;
+            Integer mnemonic;
             if (i < 10) {
-                makeTagItemLabel = String.format("(%d) %s", i+1, type.getName());
-                if (nc) {
-                    makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
-                } else {
-                    makeTagAction = new MakeTag(makeTagItemLabel, null, null, numKeys[i], getMainController());
-                }
-                i++;
+                makeTagItemLabel = String.format("(%d) %s", i + 1, type.getName());
+                mnemonic = numKeys[i++];
             } else {
                 makeTagItemLabel = String.format("    %s", type.getName());
-                if (nc) {
-                    makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, null, getMainController());
-                } else {
-                    makeTagAction = new MakeTag(makeTagItemLabel, null, null, null, getMainController());
-                }
+                mnemonic = null;
             }
-            makeTagItem = new JMenuItem(makeTagAction);
+
+            MaeActionI makeTagAction = getMakeTagAction(category, makeTagItemLabel, mnemonic);
+            JMenuItem makeTagItem = new JMenuItem(makeTagAction);
             makeTagItem.setActionCommand(type.getName());
             makeTagMenu.add(makeTagItem);
         }
         return makeTagMenu;
     }
 
+    private MaeActionI getMakeTagAction(int category, String makeTagItemLabel, Integer mnemonic) {
+        MaeActionI makeTagAction;
+        switch (category) {
+            case ETAG:
+                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+                break;
+            case NCTAG:
+                makeTagAction = new MakeNCTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+                break;
+            case LTAG:
+                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+                break;
+            default:
+                makeTagAction = null;
+        }
+        return makeTagAction;
+    }
+
+    private String getMakeTagMenuLabel(int category) {
+        switch (category) {
+            case ETAG:
+                return "Create an Extent tag with selected text";
+            case NCTAG:
+                return "Create an NC Extent tag with no text associated";
+            case LTAG:
+                return "Create an Link tag with no arguments associated";
+        }
+        return null;
+    }
+
+    private List<TagType> getTagTypes(int category) throws MaeDBException {
+        switch (category) {
+            case ETAG:
+                return getETagTypes();
+            case NCTAG:
+                return getNCTagTypes();
+            case LTAG:
+                return getLTagTypes();
+        }
+        return null;
+    }
+
+    private List<TagType> getETagTypes() throws MaeDBException {
+        return getDriver().getExtentTagTypes();
+    }
+
+    private List<TagType> getNCTagTypes() throws MaeDBException {
+        List<TagType> ncTypes = new ArrayList<>();
+
+        for (TagType type : getDriver().getExtentTagTypes()) {
+            if (type.isNonConsuming()) ncTypes.add(type);
+        }
+        return ncTypes;
+    }
+
+    private List<TagType> getLTagTypes() throws MaeDBException {
+        return getDriver().getLinkTagTypes();
+    }
 
     public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
 
