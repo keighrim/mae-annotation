@@ -44,8 +44,10 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by krim on 12/31/2015.
@@ -219,7 +221,11 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
-        return getTextIn(SpanHandler.convertArrayToPairs(spans), trimWhitespaces);
+        if (spans != null && spans.length > 0) {
+            return getTextIn(SpanHandler.convertArrayToPairs(spans), trimWhitespaces);
+        }
+        return null;
+
     }
 
     /**

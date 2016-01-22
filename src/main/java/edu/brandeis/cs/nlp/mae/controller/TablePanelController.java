@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
@@ -452,6 +453,21 @@ public class TablePanelController extends MaeControllerI {
 
         }
 
+        public int searchForColumnByColName(String colName) {
+            for (int col = 0; col < getColumnCount(); col++) {
+                if (getColumnName(col).equals(colName)) {
+                    return col;
+                }
+            }
+            return -1;
+
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return (col != ID_COL) && (col != SRC_COL) && (col != TEXT_COL);
+        }
+
         @Override
         public void tableChanged(TableModelEvent event) {
             logger.info(String.format("\"%s\" table changed: %d at %d, %d (INS=1, UPD=0, DEL=-1)", getAssociatedTagTypeName(), event.getType(), event.getFirstRow(), event.getColumn()));
@@ -460,65 +476,79 @@ public class TablePanelController extends MaeControllerI {
                 // ignore changes happened out of table (when initially setting up tables)
                 return;
             }
-            switch (event.getType()) {
-                case TableModelEvent.INSERT:
-                    /*
-                    Map<String, String> insertedRow = new HashMap<>();
-                    int row = event.getFirstRow();
-                    for (int col = 0; col < getColumnCount(); col++) {
-                        insertedRow.put(getColumnName(col), (String) getValueAt(row, col));
+            if (event.getType() == TableModelEvent.UPDATE) {
+                // INSERT: listen to insertion is unnecessary, since adding a new tag never happens through table
+                // DELETE: since we cannot recover what's already deleted anyway,
+                // propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
+                String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
+                String colName = getColumnName(event.getColumn());
+                String value = (String) getValueAt(event.getFirstRow(), event.getColumn());
+                boolean updated = getMainController().updateDBFromTableUpdate(tid, colName, value);
+                if (!updated) {
+                    revertChange(event.getFirstRow(), event.getColumn());
+                } else if (event.getColumn() == SPANS_COL) {
+                    try {
+                        // update adjacent text column
+                        String newText = updateTextColumnFromSpasChange(event.getFirstRow(), value);
+                        updateAllTagsTableRow(tid, value, newText);
+                        updateAssociatedLinkTagRows(tid, newText);
+                    } catch (MaeException ignored) {
+                        // this spanstring is already validated within getMain().updateDB() method
                     }
-                    getMainController().createTagFromTableInsertion(tagType, insertedRow);
-                    */
-                    break;
-                case TableModelEvent.DELETE:
-                    // since we cannot recover what's already deleted, propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
-                    // getMainController().deleteTagFromTableDeletion((String) getValueAt(event.getFirstRow(), ID_COL));
-                    break;
-                case TableModelEvent.UPDATE:
-                    String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
-                    String colName = getColumnName(event.getColumn());
-                    String value = (String) getValueAt(event.getFirstRow(), event.getColumn());
-                    if (colName.equals(MaeStrings.SPANS_COL_NAME)) {
-                        // TODO: 2016-01-15 22:41:23EST  validate spans string: below works, but very messy
-                        try {
-                            SpanHandler.convertStringToArray(value);
-                        } catch (Exception e) {
-                            TagTableModel model = (TagTableModel) event.getSource();
-                            try {
-                                String oldSpans = ((ExtentTag) getDriver().getTagByTid(tid)).getSpansAsString();
-                                model.setValueAt(oldSpans, event.getFirstRow(), SPANS_COL);
+                }
 
-                            } catch (MaeDBException e1) {
-                                e1.printStackTrace();
-                            }
-//                            model.editCellAt(-1, -1);
-                            // TODO: 2016-01-15 22:27:26EST add more educational message embedded in a proper exception
-                            getMainController().showError("The value for tag spans is not well-formed: ");
-
-
-                        }
-                    }
-                    // TODO: 2016-01-15 22:41:50EST update TEXT_COL according to changes in SPANS_COL 
-//                    if (colName.equals(MaeStrings.SPANS_COL_NAME)) {
-//                        try {
-//                            int[] newSpans = SpanHandler.convertStringToArray(value);
-//                            String newText = getMainController().getTextPanel().getTextIn(newSpans, false);
-//                            ((JTable) event.getSource()).setValueAt(newText, event.getFirstRow(), TEXT_COL);
-//                        } catch (MaeControlException e) {
-//                            getMainController().showError(e);
-//                        }
-//                    }
-                    getMainController().updateTagFromTableUpdate(tid, colName, value);
-                    break;
             }
         }
 
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return (col != ID_COL) && (col != SRC_COL) && (col != TEXT_COL);
+        String updateTextColumnFromSpasChange(int rowToUpdate, String value) throws MaeException {
+            int[] newSpans = SpanHandler.convertStringToArray(value);
+            String newText = getMainController().getTextIn(newSpans);
+            setValueAt(newText, rowToUpdate, TEXT_COL);
+            return newText;
         }
 
+        void updateAllTagsTableRow(String tid, String newSpans, String newText) {
+            JTable allTagsTable = tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME);
+            int rowAtAllTable = ((TagTableModel) allTagsTable.getModel()).searchForRowByTid(tid);
+            allTagsTable.getModel().setValueAt(newSpans, rowAtAllTable, SPANS_COL);
+            allTagsTable.getModel().setValueAt(newText, rowAtAllTable, TEXT_COL);
+        }
+
+        void updateAssociatedLinkTagRows(String tid, String newText) throws MaeDBException {
+            // update text column of link tags associated
+            ExtentTag argTag = (ExtentTag) getDriver().getTagByTid(tid);
+            Set<LinkTag> linkers = getDriver().getLinksHasArgumentTag(argTag);
+            for (LinkTag linker : linkers) {
+                TagTableModel model = (TagTableModel) tableMap.get(linker.getTagtype().getName()).getModel();
+                int row = model.searchForRowByTid(linker.getId());
+                Map<String, String> argNameToTid = linker.getArgumentTidsWithNames();
+                for (String argName : argNameToTid.keySet()) {
+                    if (argNameToTid.get(argName).equals(tid)) {
+                        String colName = argName + MaeStrings.ARG_TEXTCOL_SUF;
+                        int col = model.searchForColumnByColName(colName);
+                            model.setValueAt(newText, row, col);
+                    }
+                }
+            }
+        }
+
+        void revertChange(int row, int col) {
+            // ID_COL and TEXT_COL are not editable at the first place: except for SPANS_COL, everything else are attribute columns
+            String tid = (String) getValueAt(row, ID_COL);
+            try {
+                ExtentTag tag = (ExtentTag) getDriver().getTagByTid(tid);
+                String oldVal;
+                if (col == SPANS_COL) {
+                    oldVal = tag.getSpansAsString();
+                } else {
+                    String attType = getColumnName(col);
+                    oldVal = tag.getAttributesWithNames().get(attType);
+                }
+                setValueAt(oldVal, row, col);
+            } catch (MaeDBException e) {
+                getMainController().showError(e);
+            }
+        }
     }
 
     public class LinkTagTableModel extends TagTableModel {

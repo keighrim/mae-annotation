@@ -188,12 +188,16 @@ public class SpanHandler {
         // split each span
         String[] pairs = spansString.split(MaeStrings.SPANSEPARATOR);
         for (String pair : pairs) {
-            int start = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[0]);
-            int end = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[1]);
-            if (start >= end) {
-                throw new MaeException("start of each span should be smaller than its paired end");
+            try {
+                int start = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[0]);
+                int end = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[1]);
+                if (start >= end) {
+                    throw new MaeException("SpanString ill-formed: start of each span should be smaller than its paired end");
+                }
+                spansArrays.add(range(start, end));
+            } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
+                throw new MaeException("SpanString ill-formed: make sure using proper delimiters; \"~\" and \",\" (no space)");
             }
-            spansArrays.add(range(start, end));
         }
 
         logger.debug("=== Conversion finished ===");

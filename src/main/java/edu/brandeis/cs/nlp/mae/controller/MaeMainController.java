@@ -42,8 +42,10 @@ import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by krim on 12/30/2015.
@@ -410,6 +412,15 @@ public class MaeMainController extends JPanel {
         currentDriver = drivers.get(tabId);
     }
 
+    public String getTextIn(int...locations) {
+        try {
+            return getTextPanel().getTextIn(locations, false);
+        } catch (MaeControlException e) {
+            showError(e);
+        }
+        return null;
+    }
+
     public String getSelectedText() {
         try {
             return getTextPanel().getSelectedText();
@@ -702,31 +713,35 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void updateTagFromTableUpdate(String tid, String colName, String value) {
+    public boolean updateDBFromTableUpdate(String tid, String colName, String value) {
         logger.info(String.format("modifying DB based on table update: setting \"%s\" of %s to \"%s\"", colName, tid, value));
+        boolean succeed = false;
         try {
             Tag tag = getDriver().getTagByTid(tid);
-
             if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.SPANS_COL_NAME)) {
-                getDriver().updateTagSpans((ExtentTag) tag, SpanHandler.convertStringToArray(value));
+                succeed = getDriver().updateTagSpans((ExtentTag) tag, SpanHandler.convertStringToArray(value));
             } else if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.TEXT_COL_NAME)) {
-                getDriver().updateTagText((ExtentTag) tag, value);
+                succeed = getDriver().updateTagText((ExtentTag) tag, value);
             } else if (colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
                 String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
                 ArgumentType argType = getDriver().getArgumentTypeOfTagTypeByName(tag.getTagtype(), argTypeName);
                 LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
                 ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
-                getDriver().addOrUpdateArgument(linker, argType, arg);
+                succeed = (getDriver().addOrUpdateArgument(linker, argType, arg) != null);
             } else if (colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
                 // do nothing, will be automatically updated when argId is updated
+                return true;
             } else {
                 AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tag.getTagtype(), colName);
-                getDriver().addOrUpdateAttribute(tag, attType, value);
+                succeed = (getDriver().addOrUpdateAttribute(tag, attType, value) != null);
             }
-            updateSavedStatusInTextPanel();
         } catch (MaeException e) {
             showError(e);
         }
+        if (succeed) {
+            updateSavedStatusInTextPanel();
+        }
+        return succeed;
     }
 
     public void updateStatusBar() {
