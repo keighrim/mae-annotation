@@ -699,21 +699,25 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
-        logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument.getId(), linker.getId(), linker.getTagTypeName()));
         try {
-            Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
-            if (oldArg != null) {
-                argDao.delete(oldArg);
+            logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument.getId(), linker.getId(), linker.getTagTypeName()));
+            try {
+                Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
+                if (oldArg != null) {
+                    argDao.delete(oldArg);
+                }
+                Argument arg = new Argument(linker, argType, argument);
+                argDao.create(arg);
+                lTagDao.update(linker);
+                resetQueryBuilders();
+                logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
+                setAnnotationChanged(true);
+                return arg;
+            } catch (SQLException e) {
+                throw catchSQLException(e);
             }
-            Argument arg = new Argument(linker, argType, argument);
-            argDao.create(arg);
-            lTagDao.update(linker);
-            resetQueryBuilders();
-            logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
-            setAnnotationChanged(true);
-            return arg;
-        } catch (SQLException e) {
-            throw catchSQLException(e);
+        } catch (NullPointerException ex) {
+            throw new MaeDBException("no such a tag is in DB");
         }
     }
 
