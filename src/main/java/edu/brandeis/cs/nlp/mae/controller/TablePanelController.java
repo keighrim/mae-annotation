@@ -481,22 +481,37 @@ public class TablePanelController extends MaeControllerI {
                 // DELETE: since we cannot recover what's already deleted anyway,
                 // propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
                 String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
+                List<Integer> oldSpans = Collections.emptyList();
+                try {
+                    oldSpans = getDriver().getAnchorsByTid(tid);
+                } catch (MaeDBException e) {
+                    getMainController().showError(e);
+                }
                 String colName = getColumnName(event.getColumn());
                 String value = (String) getValueAt(event.getFirstRow(), event.getColumn());
                 boolean updated = getMainController().updateDBFromTableUpdate(tid, colName, value);
                 if (!updated) {
                     revertChange(event.getFirstRow(), event.getColumn());
-                } else if (event.getColumn() == SPANS_COL) {
-                    try {
-                        // update adjacent text column
-                        String newText = updateTextColumnFromSpasChange(event.getFirstRow(), value);
-                        updateAllTagsTableRow(tid, value, newText);
-                        updateAssociatedLinkTagRows(tid, newText);
-                    } catch (MaeException ignored) {
-                        // this spanstring is already validated within getMain().updateDB() method
-                    }
+                } else {
+                    propagateChange(event, tid, value, oldSpans);
                 }
 
+            }
+        }
+
+        void propagateChange(TableModelEvent event, String tid, String newValue, List<Integer> oldSpans) {
+            if (event.getColumn() == SPANS_COL) {
+                try {
+                    // update adjacent text column
+                    String newText = updateTextColumnFromSpasChange(event.getFirstRow(), newValue);
+                    updateAllTagsTableRow(tid, newValue, newText);
+                    updateAssociatedLinkTagRows(tid, newText);
+                    getMainController().assignTextColorsOver(oldSpans);
+                    List<Integer> newSpans = SpanHandler.convertIntegerarrayToIntegerlist(SpanHandler.convertStringToArray(newValue));
+                    getMainController().assignTextColorsOver(newSpans);
+                } catch (MaeException ignored) {
+                    // this spanstring is already validated within getMain().updateDB() method
+                }
             }
         }
 
@@ -526,7 +541,7 @@ public class TablePanelController extends MaeControllerI {
                     if (argNameToTid.get(argName).equals(tid)) {
                         String colName = argName + MaeStrings.ARG_TEXTCOL_SUF;
                         int col = model.searchForColumnByColName(colName);
-                            model.setValueAt(newText, row, col);
+                        model.setValueAt(newText, row, col);
                     }
                 }
             }
@@ -570,6 +585,42 @@ public class TablePanelController extends MaeControllerI {
             return col != ID_COL && col != SRC_COL && !argumentTextColumns.contains(col);
         }
 
+        @Override
+        void propagateChange(TableModelEvent event, String tid, String newValue, List<Integer> oldSpans) {
+            if (argumentTextColumns.contains(event.getColumn() + 1)) {
+                try {
+                    // update adjacent text column
+                    ExtentTag newArg = (ExtentTag) getDriver().getTagByTid(newValue);
+                    String newText = newArg.getText();
+                    setValueAt(newText, event.getFirstRow(), event.getColumn() + 1);
+                    getMainController().assignTextColorsOver(oldSpans);
+                    getMainController().assignTextColorsOver(newArg.getSpansAsList());
+
+                } catch (MaeException ignored) {
+                    // new argument tag is already validated within getMain().updateDB() method
+                }
+            }
+        }
+
+        @Override
+        void revertChange(int row, int col) {
+            String tid = (String) getValueAt(row, ID_COL);
+            try {
+                LinkTag tag = (LinkTag) getDriver().getTagByTid(tid);
+                String oldVal;
+                if (argumentTextColumns.contains(col + 1)) {
+                    String argType = getColumnName(col);
+                    argType = argType.substring(0, argType.length() - MaeStrings.ARG_IDCOL_SUF.length());
+                    oldVal = tag.getArgumentTidsWithNames().get(argType);
+                } else {
+                    String attType = getColumnName(col);
+                    oldVal = tag.getAttributesWithNames().get(attType);
+                }
+                setValueAt(oldVal, row, col);
+            } catch (MaeDBException e) {
+                getMainController().showError(e);
+            }
+        }
     }
 
     /**

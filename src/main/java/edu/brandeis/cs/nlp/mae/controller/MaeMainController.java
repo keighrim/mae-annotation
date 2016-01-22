@@ -706,13 +706,17 @@ public class MaeMainController extends JPanel {
                 succeed = getDriver().updateTagSpans((ExtentTag) tag, SpanHandler.convertStringToArray(value));
             } else if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.TEXT_COL_NAME)) {
                 succeed = getDriver().updateTagText((ExtentTag) tag, value);
-            } else if (colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
+            } else if (tag.getTagtype().isLink() && colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
                 String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
                 ArgumentType argType = getDriver().getArgumentTypeOfTagTypeByName(tag.getTagtype(), argTypeName);
                 LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
                 ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
+                if (arg == null) {
+                    showError("No such a tag stored in DB: " + value);
+                    return false;
+                }
                 succeed = (getDriver().addOrUpdateArgument(linker, argType, arg) != null);
-            } else if (colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
+            } else if (tag.getTagtype().isLink() && colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
                 // do nothing, will be automatically updated when argId is updated
                 return true;
             } else {
