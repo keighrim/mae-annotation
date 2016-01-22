@@ -679,7 +679,7 @@ public class MaeMainController extends JPanel {
                 }
             }
             updateSavedStatusInTextPanel();
-        } catch (MaeDBException e) {
+        } catch (MaeException e) {
             showError(e);
         }
 
@@ -724,7 +724,7 @@ public class MaeMainController extends JPanel {
                 getDriver().addOrUpdateAttribute(tag, attType, value);
             }
             updateSavedStatusInTextPanel();
-        } catch (MaeDBException e) {
+        } catch (MaeException e) {
             showError(e);
         }
     }

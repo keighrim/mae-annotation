@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
@@ -147,7 +148,12 @@ public class NewXMLLoader {
 
         int[] spans;
         if (nodeAttributes.getNamedItem("spans") != null) {
-            spans = SpanHandler.convertStringToArray(nodeAttributes.getNamedItem("spans").getNodeValue());
+            try {
+                spans = SpanHandler.convertStringToArray(nodeAttributes.getNamedItem("spans").getNodeValue());
+            } catch (MaeException e) {
+                String message = "spans string is ill-formed";
+                throw new MaeIOXMLException(message, e);
+            }
             nodeAttributes.removeNamedItem("spans");
         } else {
             try {

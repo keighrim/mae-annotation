@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.util;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,7 +177,7 @@ public class SpanHandler {
 
     }
 
-    public static int[] convertStringToArray(String spansString) {
+    public static int[] convertStringToArray(String spansString) throws MaeException {
         logger.debug(String.format("=== String %s -> Array ===", spansString));
 
         if (spansString == null || spansString.equals("") || spansString.equals(MaeStrings.NCSPAN_PLACEHOLDER)) {
@@ -189,6 +190,9 @@ public class SpanHandler {
         for (String pair : pairs) {
             int start = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[0]);
             int end = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[1]);
+            if (start >= end) {
+                throw new MaeException("start of each span should be smaller than its paired end");
+            }
             spansArrays.add(range(start, end));
         }
 
