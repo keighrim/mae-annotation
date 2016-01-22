@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.database;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -104,6 +105,30 @@ public class LocalSqliteDriverImplTest {
         assertEquals(
                 "Expected Obj and Rel share the same span, found: " + retrievedTag.getSpansAsString(),
                 tag.getSpansAsString(), retrievedTag.getSpansAsString()
+        );
+
+    }
+
+    @Test
+    public void canUpdateTag() throws Exception {
+        int[] span = new int[]{5,6,7,8,9};
+        ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", span);
+        assertEquals(
+                "Expected the span is set accurately, found: " + tag.getSpansAsString(),
+                SpanHandler.convertArrayToString(span), tag.getSpansAsString()
+        );
+
+        int[] newSpan = new int[]{5,6,7,8,9,13,14,15,16};
+        driver.updateTagSpans(tag, newSpan);
+        assertEquals(
+                "Expected the span is updated, found: " + tag.getSpansAsString(),
+                SpanHandler.convertArrayToString(newSpan), tag.getSpansAsString()
+        );
+
+        driver.updateTagText(tag, "JANE");
+        assertEquals(
+                "Expected the text is updated, found: " + tag.getText(),
+                "JANE", tag.getText()
         );
 
     }

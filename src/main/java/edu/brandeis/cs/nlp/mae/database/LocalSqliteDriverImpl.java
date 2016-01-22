@@ -29,6 +29,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
@@ -195,6 +196,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAnnotationFileName(String fileName) throws MaeDBException {
         try {
+            // TODO: 2016-01-21 21:22:25EST test this actually updates file name
             this.workingTask.setAnnotationFileName(fileName);
             taskDao.update(workingTask);
         } catch (SQLException e) {
@@ -717,27 +719,40 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public boolean updateTagSpans(ExtentTag tag, int[] spans) throws MaeDBException {
-        tag.setSpans(spans);
         try {
+            List<CharIndex> olds = charIndexQuery.where().eq(DBSchema.TAB_CI_FCOL_ETAG, tag).query();
+            charIndexDao.delete(olds);
+            for (CharIndex anchor : tag.setSpans(spans)) {
+                charIndexDao.create(anchor);
+            }
+            resetQueryBuilders();
             if (eTagDao.update(tag) == 1) {
                 setAnnotationChanged(true);
+                resetQueryBuilders();
+                return true;
             }
-            return true;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+        return false;
 
     }
 
     @Override
     public boolean updateTagText(ExtentTag tag, String text) throws MaeDBException {
-        tag.setText(text);
         try {
-            if (eTagDao.update(tag) == 1) setAnnotationChanged(true);
-            return true;
+            UpdateBuilder<ExtentTag, String> updateBuilder = eTagDao.updateBuilder();
+            updateBuilder.where().eq(DBSchema.TAB_TAG_COL_TID, tag.getId());
+            updateBuilder.updateColumnValue(DBSchema.TAB_ETAG_COL_TEXT,  text);
+            if (updateBuilder.update() == 1) {
+                setAnnotationChanged(true);
+                eTagDao.refresh(tag);
+                return true;
+            }
         } catch (SQLException e) {
-            throw catchSQLException(e);
+            e.printStackTrace();
         }
+        return false;
 
     }
 
