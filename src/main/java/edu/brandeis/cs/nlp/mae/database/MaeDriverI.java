@@ -88,6 +88,8 @@ public interface MaeDriverI {
 
     List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException;
 
+    List<Integer> getAnchorsByTid(String tid) throws MaeDBException;
+
     // tag types
     TagType createTagType(String name, String prefix, boolean isLink) throws MaeDBException;
 

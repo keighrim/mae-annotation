@@ -370,11 +370,18 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         return linker.getArgumentTags();
     }
 
-    public int[] getSpansByTid(String tid) throws MaeDBException{
-        try {
-            return eTagDao.queryForId(tid).getSpansAsArray();
-        } catch (SQLException e) {
-            throw catchSQLException(e);
+    @Override
+    public List<Integer> getAnchorsByTid(String tid) throws MaeDBException {
+        Tag tag = getTagByTid(tid);
+        if (tag.getTagtype().isExtent()) {
+            return ((ExtentTag) tag).getSpansAsList();
+        } else {
+
+            Set<Integer> argSpans = new TreeSet<>();
+            for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                argSpans.addAll(arg.getSpansAsList());
+            }
+            return new ArrayList<>(argSpans);
         }
     }
 
