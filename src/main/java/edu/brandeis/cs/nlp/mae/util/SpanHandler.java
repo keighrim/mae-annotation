@@ -205,6 +205,22 @@ public class SpanHandler {
 
     }
 
+    public static int[] convertIntegerlistToIntegerarray(List<Integer> list) {
+        int[] array = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
+    public static List<Integer> convertIntegerarrayToIntegerlist(int[] array) {
+        List<Integer> list = new LinkedList<>();
+        for (int i : array) {
+            list.add(i);
+        }
+        return list;
+    }
+
     public static int[] range(int inclusiveStart, int exclusiveEnd) {
         int[] range = new int[exclusiveEnd - inclusiveStart];
         for (int i = inclusiveStart; i < exclusiveEnd; i++) {
