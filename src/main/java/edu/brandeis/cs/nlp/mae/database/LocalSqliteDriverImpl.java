@@ -644,6 +644,10 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
             lTagDao.create(link);
+            boolean added = idHandler.addId(tagType, tid);
+            if (!added) {
+                throw new MaeDBException("tag id is already in DB!: " + tid);
+            }
             logger.debug("a new link tag is created: " + tid);
             setAnnotationChanged(true);
             return link;
