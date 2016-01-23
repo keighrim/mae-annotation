@@ -172,6 +172,13 @@ public class TablePanelController extends MaeControllerI {
         return (TablePanelView.TogglingTabTitle) getView().getTabs().getTabComponentAt(tabIndex);
     }
 
+    public void insertValueIntoCell(Tag tag, String colName, String value) {
+        TagTableModel model = (TagTableModel) tableMap.get(tag.getTagtype().getName()).getModel();
+        int row = model.searchForRowByTid(tag.getTid());
+        int col = model.searchForColumnByColName(colName);
+        model.setValueAt(value, row, col);
+    }
+
     public void insertTagIntoTable(Tag tag) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());

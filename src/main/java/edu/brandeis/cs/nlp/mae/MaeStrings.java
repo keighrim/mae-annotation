@@ -106,9 +106,12 @@ public class MaeStrings {
     public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;
-    public final static String MENU_TBPOP_ITEM_DELETE = "Delete";
-    public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s";
-    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s";
+    public final static String MENU_TBPOP_ITEM_DELETE = "Delete ...";
+    public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s"; // tid
+    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s"; // numbers, list of tids
+    public final static String MENU_TBPOP_ITEM_SETARG = "Set ...";
+    public final static String MENUITEM_SETARG_SINGLE = "Set %s as an argument of a link tag"; // tid
+    public final static String MENUITEM_SETARG_PLURAL = "Set one as an argument of a link tag";
 
     /* general messages */
     public final static String NO_TASK_IND = "No DTD";

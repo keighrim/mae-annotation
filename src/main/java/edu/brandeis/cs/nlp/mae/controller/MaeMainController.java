@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
@@ -482,7 +481,6 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
 
-
     }
 
     private void resetAll() {
@@ -620,10 +618,7 @@ public class MaeMainController extends JPanel {
                 tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             } else {
                 tag = getDriver().createLinkTag(tid, tagType);
-                // TODO: 2016-01-20 16:55:31EST  do we need this? creating a link from text will always end up in an empty link
-//                for (ExtentTag arg : tag.getArgumentTags()) {
-//                    assignTextColorsOver(arg.getSpansAsList());
-//                }
+                // creating a link from text popup will always end up in an empty link, no need to populate or repaint its arguments
             }
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
@@ -730,6 +725,10 @@ public class MaeMainController extends JPanel {
             updateSavedStatusInTextPanel();
         }
         return succeed;
+    }
+
+    public void surgicallyUpdateCell(Tag tag, String colName, String value) {
+        getTablePanel().insertValueIntoCell(tag, colName, value);
     }
 
     public void updateStatusBar() {

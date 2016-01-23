@@ -162,10 +162,15 @@ public class MaeHotKeys {
     public final static KeyStroke ksNZ
             = KeyStroke.getKeyStroke(KeyEvent.VK_Z, 0);
     public final static KeyStroke ksUNDO = ksNZ;
-    
+
     public final static KeyStroke ksNS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0);
-    public final static KeyStroke ksSTARTOVER = ksNS;
+    public final static KeyStroke ksSETARG = ksNS;
+    public final static int cmnSETARG = KeyEvent.VK_S;
+
+    public final static KeyStroke ksNO
+            = KeyStroke.getKeyStroke(KeyEvent.VK_O, 0);
+    public final static KeyStroke ksSTARTOVER = ksNO;
     
     public final static KeyStroke ksND
             = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
