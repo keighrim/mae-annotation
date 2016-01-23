@@ -37,13 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -544,7 +544,20 @@ public class MaeMainController extends JPanel {
         return getTextPanel().isTextSelected();
     }
 
-    public void removeAllHighlights() {
+    public void addBGColorOver(List<Integer> spans, Highlighter.HighlightPainter painter) {
+        addBGColorOver(SpanHandler.convertIntegerlistToIntegerarray(spans), painter);
+
+    }
+
+    public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) {
+        try {
+            getTextPanel().addBGColorOver(spans, painter);
+        } catch (MaeControlException e) {
+            showError(e);
+        }
+    }
+
+    public void removeAllBGColors() {
         getTextPanel().removeAllBGColors();
     }
 
@@ -561,10 +574,9 @@ public class MaeMainController extends JPanel {
         }
     }
     public void propagateSelectionFromTablePanel(String tid) {
-        removeAllHighlights();
+        removeAllBGColors();
         try {
-            int[] spans = SpanHandler.convertIntegerlistToIntegerarray(getDriver().getAnchorsByTid(tid));
-            getTextPanel().addBGColorOver(spans, ColorHandler.getVividHighliter());
+            addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
         } catch (Exception e) {
             showError(e);
         }

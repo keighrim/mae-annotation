@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
@@ -516,6 +517,8 @@ public class TablePanelController extends MaeControllerI {
                     getMainController().assignTextColorsOver(oldSpans);
                     List<Integer> newSpans = SpanHandler.convertIntegerarrayToIntegerlist(SpanHandler.convertStringToArray(newValue));
                     getMainController().assignTextColorsOver(newSpans);
+                    getMainController().removeAllBGColors();
+                    getMainController().addBGColorOver(newSpans, ColorHandler.getVividHighliter());
                 } catch (MaeException ignored) {
                     // this spanstring is already validated within getMain().updateDB() method
                 }
@@ -761,7 +764,6 @@ public class TablePanelController extends MaeControllerI {
                 createAndShowContextMenu(e);
 
             } else if (e.getClickCount() == 2) {
-                // TODO: 2016-01-08 16:29:13EST test if this getSource() will get the right one
                 JTable table = (JTable) e.getSource();
                 TableModel tableModel = table.getModel();
                 String tid = (String) tableModel.getValueAt(table.getSelectedRow(), ID_COL);
