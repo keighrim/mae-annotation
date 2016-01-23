@@ -598,33 +598,28 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void createNCTag(TagType tagType) {
-        logger.info(String.format("creating DB row for a NC extent tag: (%s)", tagType.getName()));
-        if (tagType.isLink()) {
-            showError("Link tag cannot be non-consuming!");
-        }
-        try {
-            String tid = getDriver().getNextId(tagType);
-            ExtentTag tag = getDriver().createExtentTag(tid, tagType, null, null);
-            populateDefaultAttributes(tag);
-            getTablePanel().insertTagIntoTable(tag);
-            assignTextColorsOver(tag.getSpansAsList());
-        } catch (MaeException e) {
-            showError(e);
-        }
-
-    }
-
     public void createTagFromTextSelection(TagType tagType) {
-        logger.info(String.format("creating DB row from text selection: (%s) \"%s\"", tagType.getName(), getSelectedText()));
+
+        boolean nc = getSelectedTextSpans() == null || getSelectedTextSpans().length == 0;
+        String message;
+        if (tagType.isLink()) {
+            message = String.format("creating DB row for am yet-empty Link tag: (%s)", tagType.getName());
+        } else if (nc) {
+            message = String.format("creating DB row for a NC extent tag: (%s)", tagType.getName());
+        } else {
+            message = String.format("creating DB row from text selection: (%s) \"%s\"", tagType.getName(), getSelectedText());
+        }
+        logger.info(message);
         try {
             Tag tag;
             String tid = getDriver().getNextId(tagType);
-            if (tagType.isExtent()) {
-                tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
-            } else {
+            if (tagType.isLink()) {
                 tag = getDriver().createLinkTag(tid, tagType);
                 // creating a link from text popup will always end up in an empty link, no need to populate or repaint its arguments
+            } else if (nc) {
+                tag = getDriver().createExtentTag(tid, tagType, null, null);
+            } else {
+                tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             }
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
@@ -644,41 +639,6 @@ public class MaeMainController extends JPanel {
                 getDriver().addOrUpdateAttribute(tag, attType, defaultValue);
             }
         }
-    }
-
-    public void createTagFromTableInsertion(TagType tagType, Map<String, String> insertedRow) {
-        logger.info(String.format("inserting DB row based on table insertion: (%s) %s", tagType.getName(), insertedRow.toString()));
-        try {
-            Tag newTag;
-            if (tagType.isExtent()) {
-                newTag = getDriver().createExtentTag(
-                        insertedRow.remove(MaeStrings.ID_COL_NAME),
-                        tagType,
-                        insertedRow.remove(MaeStrings.SPANS_COL_NAME),
-                        SpanHandler.convertStringToArray(insertedRow.remove(MaeStrings.TEXT_COL_NAME)));
-            } else {
-                newTag = getDriver().createLinkTag(insertedRow.remove(MaeStrings.ID_COL_NAME), tagType);
-                for (ArgumentType argType : tagType.getArgumentTypes()) {
-                    String argIdColName = argType.getName() + MaeStrings.ARG_IDCOL_SUF;
-                    String argTextColName = argType.getName() + MaeStrings.ARG_TEXTCOL_SUF;
-                    String argumentTid = insertedRow.remove(argIdColName);
-                    if (argumentTid.length() > 0 && insertedRow.remove(argTextColName).length() > 0) {
-                        getDriver().addOrUpdateArgument((LinkTag) newTag, argType, (ExtentTag) getDriver().getTagByTid(argumentTid));
-                    }
-                }
-            }
-            for (String attName : insertedRow.keySet()) {
-                String attValue = insertedRow.get(attName);
-                if (attValue != null && attValue.length() > 0) {
-                    AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tagType, attName);
-                    getDriver().addOrUpdateAttribute(newTag, attType, attValue);
-                }
-            }
-            updateSavedStatusInTextPanel();
-        } catch (MaeException e) {
-            showError(e);
-        }
-
     }
 
     public void deleteTagFromTableDeletion(Tag tag) {

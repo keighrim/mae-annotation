@@ -113,25 +113,12 @@ public class ContextMenuController extends MaeControllerI {
                 mnemonic = null;
             }
 
-            MaeActionI makeTagAction = getMakeTagAction(category, makeTagItemLabel, mnemonic);
+            MaeActionI makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
             JMenuItem makeTagItem = new JMenuItem(makeTagAction);
             makeTagItem.setActionCommand(type.getName());
             makeTagMenu.add(makeTagItem);
         }
         return makeTagMenu;
-    }
-
-    private MaeActionI getMakeTagAction(int category, String makeTagItemLabel, int mnemonic) {
-        switch (category) {
-            case ETAG:
-                return new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-            case NCTAG:
-                return new MakeNCTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-            case LTAG:
-                return new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-            default:
-                return null;
-        }
     }
 
     private String getMakeTagMenuLabel(int category) {
