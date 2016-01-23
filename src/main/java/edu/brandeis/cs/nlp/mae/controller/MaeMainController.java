@@ -65,8 +65,9 @@ public class MaeMainController extends JPanel {
     private TextPanelController textPanel;  // 1/5/2016 drafted
     private TablePanelController tablePanel; // 1/8/2016 drafted
 
-    // TODO: 2016-01-09 18:09:29EST all of actions and menuitems, including contextmenus
+    // TODO: 2016-01-09 18:09:29EST all of actions and menuitems
     private MenuController menu;
+    private ContextMenuController contextMenu;
 
     // TODO: 2016-01-09 18:10:19EST add linkCreation popup view
     private DialogController dialogs;
@@ -102,6 +103,7 @@ public class MaeMainController extends JPanel {
         // these components are not attached to mainFrame, but will be called when necessary
         try {
             menu = new MenuController(this);
+            contextMenu = new ContextMenuController(this);
             textPanel = new TextPanelController(this);
             tablePanel = new TablePanelController(this);
             statusBar = new StatusBarController(this);
@@ -180,6 +182,10 @@ public class MaeMainController extends JPanel {
 
     public MenuController getMenu() {
         return menu;
+    }
+
+    public ContextMenuController getContextMenu() {
+        return contextMenu;
     }
 
     public DialogController getDialogs() {
@@ -567,7 +573,7 @@ public class MaeMainController extends JPanel {
     public JPopupMenu createTableContextMenu(JTable table) {
         try {
             logger.info("creating context menu from table panel");
-            return getMenu().createTableContextMenu(table);
+            return getContextMenu().createTableContextMenu(table);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -577,7 +583,7 @@ public class MaeMainController extends JPanel {
     public JPopupMenu createTextContextMenu() {
         try {
             logger.info("creating context menu from text panel");
-            return getMenu().createTextContextMenu();
+            return getContextMenu().createTextContextMenu();
         } catch (MaeDBException e) {
             showError(e);
         }
