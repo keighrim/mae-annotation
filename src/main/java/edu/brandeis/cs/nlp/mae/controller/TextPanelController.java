@@ -117,12 +117,26 @@ public class TextPanelController extends MaeControllerI{
 
     public void addSelection(int[] contiguousSpan) {
         selectionHistory.add(0, contiguousSpan);
+        for (int[] s : selectionHistory) {
+        }
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
     }
 
-    public void undoSelection() {
-        selectionHistory.remove(0);
+    public int[] getLatestSelection() {
+        return selectionHistory.get(0);
+    }
+
+    public int[] leavingLatestSelection() {
+        int[] latest = getLatestSelection();
+        clearSelection();
+        addSelection(latest);
+        return SpanHandler.range(latest[0], latest[1]);
+    }
+
+    public int[] undoSelection() {
+        int[] undoed = selectionHistory.remove(0);
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
+        return undoed;
     }
 
     public void addDocument(String documentTitle, String documentText) {
@@ -353,12 +367,6 @@ public class TextPanelController extends MaeControllerI{
         setFGColorAtLocation(c, location, plural, argument);
     }
 
-    /**
-     * Highlight given spans with given highlighter and painter(color)
-     *
-     * @param spans   - desired text spans to be highlighted
-     * @param painter - highlighter OBJ with color
-     */
     public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
         if (spans.length == 0) {
             return;

@@ -356,15 +356,33 @@ public class MaeMainController extends JPanel {
         getStatusBar().setText(MaeStrings.WAIT_MESSAGE);
     }
 
-    /**
-     * Sets MAE mode to Normal
-     */
-    public void returnToNormalMode(boolean statusBarAlert) {
+    public void switchToArgSelMode() {
 
-        if (mode != MODE_NORMAL && statusBarAlert) {
+        if (mode != MODE_NORMAL) {
+            sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
+        }
+        mode = MODE_ARG_SEL;
+        getMenu().reset();
+    }
+
+    public void switchToMSpanMode() {
+
+        if (mode != MODE_MULTI_SPAN) {
+            sendTemporaryNotification(MaeStrings.SB_MSPAN_MODE_NOTI, 3000);
+        }
+        mode = MODE_MULTI_SPAN;
+        getMenu().reset();
+    }
+
+    public void switchToNormalMode() {
+
+        if (mode != MODE_NORMAL) {
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
         }
+        removeAllBGColors();
+        addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
         mode = MODE_NORMAL;
+        getMenu().reset();
     }
 
     public void setupScheme(String dbFile, File taskFile, boolean fromNewTask) {
@@ -482,7 +500,7 @@ public class MaeMainController extends JPanel {
             getTextPanel().reset();
             getTablePanel().reset();
             getStatusBar().reset();
-            returnToNormalMode(false);
+            switchToNormalMode();
         } catch (MaeException e) {
             showError(e);
         }
@@ -637,6 +655,9 @@ public class MaeMainController extends JPanel {
             getTablePanel().insertTagIntoTable(tag);
             if (tagType.isExtent()) {
                 assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
+            }
+            if (normalModeOnCreation()) {
+                switchToNormalMode();
             }
         } catch (MaeException e) {
             showError(e);

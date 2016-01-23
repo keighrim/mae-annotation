@@ -84,14 +84,16 @@ public class MaeStrings {
     public final static String SB_NOTEXT = "No Text Selected";
     public final static String SB_TAG= " %d Tags Selected: %s";
     public final static String SB_NOTAG = "No Tags Selected";
+    public final static String SB_MSPAN_MODE_NOTI = "Now in discontiguous span selection mode! Click anywhere to continue.";
+    public final static String SB_ARGSEL_MODE_NOTI = "Now in arguments selection mode! Click anywhere to continue.";
     public final static String SB_NORM_MODE_NOTI = "Now in normal mode! Click anywhere to continue.";
     public final static String SB_NEWTASK = "New task is successfully loaded! Click anywhere to continue.";
     public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
-    public final static String SB_MSPAN_TEXT = SB_MSPAN_MODE_PREFIX + SB_TEXT;
-    public final static String SB_MSPAN_NOTEXT = SB_MSPAN_MODE_PREFIX + SB_NOTEXT;
+    public final static String SB_MSPAN_TEXT = SB_TEXT;
+    public final static String SB_MSPAN_NOTEXT = SB_NOTEXT;
     public final static String SB_MARGS_MODE_PREFIX = "[Arguments select] ";
-    public final static String SB_MARGS_TAG = SB_MARGS_MODE_PREFIX + SB_TAG;
-    public final static String SB_MARGS_NOTAG = SB_MARGS_MODE_PREFIX + SB_NOTAG;
+    public final static String SB_MARGS_TAG = SB_TAG;
+    public final static String SB_MARGS_NOTAG = SB_NOTAG;
 
 
     /* menus */
@@ -103,6 +105,9 @@ public class MaeStrings {
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
     public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
     public final static String MENU_MODE = "Mode";
+    public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
+    public final static String MENUITEM_ARGSEL_MODE = "Switch to argument selection mode";
+    public final static String MENUITEM_NORMAL_MODE = "Return to normal mode";
     public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
     public final static String MENU_NOTEXT = SB_NOTEXT;

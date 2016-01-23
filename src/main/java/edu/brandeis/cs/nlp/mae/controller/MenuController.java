@@ -25,10 +25,8 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.controller.action.LoadTask;
-import edu.brandeis.cs.nlp.mae.controller.action.MaeActionI;
-import edu.brandeis.cs.nlp.mae.controller.action.OpenFile;
-import edu.brandeis.cs.nlp.mae.controller.action.SaveXML;
+import edu.brandeis.cs.nlp.mae.MaeMain;
+import edu.brandeis.cs.nlp.mae.controller.action.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -67,7 +65,10 @@ public class MenuController extends MaeControllerI {
         menubar.removeAll();
 
         fileMenu = createFileMenu();
+        modeMenu = createModeMenu();
+
         menubar.add(fileMenu);
+        menubar.add(modeMenu);
 
         view.updateUI();
 
@@ -87,6 +88,7 @@ public class MenuController extends MaeControllerI {
         // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard
 
         JMenu menu = new JMenu(MENU_FILE);
+        menu.setMnemonic(MENU_FILE.charAt(0));
 
         JMenuItem loadTask = new JMenuItem(loadTaskAction);
         JMenuItem openFile = new JMenuItem(openFileAction);
@@ -108,6 +110,39 @@ public class MenuController extends MaeControllerI {
         menu.addSeparator();
 //        menu.add(closeFile);
         logger.info("file menu is created: " + menu.getItemCount());
+        return menu;
+    }
+
+    private JMenu createModeMenu() {
+        MaeActionI multiSpanModeAction = new ModeSwitch(MENUITEM_MSPAN_MODE, null, ksMSPANMODE, null, getMainController());
+        MaeActionI argSelModeAction = new ModeSwitch(MENUITEM_ARGSEL_MODE, null, ksARGSMODE, null, getMainController());
+        MaeActionI normalModeAction = new ModeSwitch(MENUITEM_NORMAL_MODE, null, ksNORMALMODE, null, getMainController());
+
+        JMenu menu = new JMenu(MENU_MODE);
+        menu.setMnemonic(MENU_MODE.charAt(0));
+
+        JMenuItem multiSpanMode = new JMenuItem(multiSpanModeAction);
+        multiSpanMode.setActionCommand(Integer.toString(MaeMainController.MODE_MULTI_SPAN));
+        JMenuItem argSelMode = new JMenuItem(argSelModeAction);
+        argSelMode.setActionCommand(Integer.toString(MaeMainController.MODE_ARG_SEL));
+        JMenuItem normalMode = new JMenuItem(normalModeAction);
+        normalMode.setActionCommand(Integer.toString(MaeMainController.MODE_NORMAL));
+        switch (getMainController().getMode()) {
+            case MaeMainController.MODE_NORMAL:
+                normalMode.setEnabled(false);
+                break;
+            case MaeMainController.MODE_MULTI_SPAN:
+                multiSpanMode.setEnabled(false);
+                break;
+            case MaeMainController.MODE_ARG_SEL:
+                argSelMode.setEnabled(false);
+                break;
+        }
+
+        menu.add(multiSpanMode);
+        menu.add(argSelMode);
+        menu.add(normalMode);
+        logger.info("mode menu is created: " + menu.getItemCount());
         return menu;
     }
 
