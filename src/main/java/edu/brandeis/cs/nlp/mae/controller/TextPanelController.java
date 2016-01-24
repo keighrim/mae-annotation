@@ -114,8 +114,22 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public void addSelection(int[] contiguousSpan) {
-        selectionHistory.add(0, contiguousSpan);
-        for (int[] s : selectionHistory) {
+        try {
+            boolean duplicate = false;
+            for (int[] prevSelected : selectionHistory) {
+                if (Arrays.equals(contiguousSpan, prevSelected)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) {
+                if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL ||
+                        getMainController().getDriver().getTagsIn(SpanHandler.range(contiguousSpan[0], contiguousSpan[1])).size() > 0) {
+                    selectionHistory.add(0, contiguousSpan);
+                }
+            }
+        } catch (MaeDBException e) {
+            e.printStackTrace();
         }
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
     }
@@ -140,9 +154,13 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public int[] undoSelection() {
-        int[] undoed = selectionHistory.remove(0);
-        setSelection(SpanHandler.convertPairsToArray(selectionHistory));
-        return undoed;
+        if (selectionHistory.size() > 0) {
+            int[] undoed = selectionHistory.remove(0);
+            setSelection(SpanHandler.convertPairsToArray(selectionHistory));
+            return SpanHandler.range(undoed[0], undoed[1]);
+        } else {
+            return null;
+        }
     }
 
     public void addDocument(String documentTitle, String documentText) {
@@ -439,8 +457,6 @@ public class TextPanelController extends MaeControllerI{
                         clearSelection();
                         break;
                     case MaeMainController.MODE_ARG_SEL:
-                        // in arg sel mode, allow users to select arguments with single clicks
-                        // TODO: 1/4/2016 need a test to make sure this is safe
                         addSelection(new int[]{start, end});
                         break;
 

@@ -104,16 +104,26 @@ public class ContextMenuController extends MaeControllerI {
         }
         if (getMainController().getMode() != MaeMainController.MODE_NORMAL) {
             contextMenu.addSeparator();
-//            contextMenu.add(createUndoSelectionMenu());
-//            contextMenu.add(createStartOverMenu());
+            // this will not work unless figure out how to prevent right click from firing caret update
+            contextMenu.add(createUndoLastSelectionMenu());
+            contextMenu.add(createStartOverMenu());
         }
 
         return contextMenu;
 
     }
 
+    private JMenuItem createUndoLastSelectionMenu() {
+        return new JMenuItem(new UndoLastSelection(MENUITEM_UNDOSELECTION, null, ksUNDO, cmnUNDO, getMainController()));
+    }
+
+    private JMenuItem createStartOverMenu() {
+        return new JMenuItem(new ResetSelection(MENUITEM_STARTOVER, null, null, cmnSTARTOVER, getMainController()));
+    }
+
     JMenu createMakeTagMenu(int category) throws MaeDBException {
         JMenu makeTagMenu = new JMenu(getMakeTagMenuLabel(category));
+        makeTagMenu.setMnemonic(getMenuMnemonic(category));
         List<TagType> types = getTagTypes(category);
 
         int typeCount = 0;
@@ -123,6 +133,17 @@ public class ContextMenuController extends MaeControllerI {
             makeTagMenu.add(makeTagItem);
         }
         return makeTagMenu;
+    }
+
+    private int getMenuMnemonic(int category) {
+        switch (category) {
+            case NCTAG:
+                return cmnCREATENC;
+            case EMPTY_LTAG:
+                return cmnCREATELINK;
+            default:
+                return cmnCREATE;
+        }
     }
 
     private MaeActionI getMakeTagAction(int category, int mnemonicNum, TagType type) {

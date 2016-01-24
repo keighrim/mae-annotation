@@ -466,6 +466,30 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
+    public void undoLastSelection() {
+        String notification;
+        int[] unselected = getTextPanel().undoSelection();
+        if (unselected != null) {
+            removeAllBGColors();
+            addBGColorOver(getSelectedTextSpans(), ColorHandler.getDefaultHighlighter());
+            addBGColorOver(unselected, ColorHandler.getFadingHighlighter());
+            notification = String.format(
+                    "Removed '%s' from selection! Click anywhere to continue."
+                    , getTextIn(unselected));
+        } else {
+            notification = "Nothing to undo! Click anywhere to continue.";
+        }
+
+        sendTemporaryNotification(notification, 3000);
+
+    }
+
+    public void resetSelection() {
+        getTextPanel().clearSelection();
+        removeAllBGColors();
+        sendTemporaryNotification("Clear!, Click anywhere to continue", 3000);
+    }
+
     public File selectSingleFile(String defautName, boolean saveFile) {
         return getDialogs().showFileChooseDialogAndSelect(defautName, saveFile);
         // TODO: 1/1/2016 4MF implement multiple files

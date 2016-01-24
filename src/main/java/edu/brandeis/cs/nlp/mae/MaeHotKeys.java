@@ -159,19 +159,43 @@ public class MaeHotKeys {
             ksN1, ksN2, ksN3, ksN4, ksN5, ksN6, ksN7, ksN8, ksN9, ksN0 };
 
     // context menu keys
-    public final static KeyStroke ksNZ
-            = KeyStroke.getKeyStroke(KeyEvent.VK_Z, 0);
-    public final static KeyStroke ksUNDO = ksNZ;
+
+    public final static KeyStroke ksCZ
+            = KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksUNDO = ksCZ;
+    public final static int cmnUNDO = KeyEvent.VK_U;
+
+
+    public final static KeyStroke ksNW
+            = KeyStroke.getKeyStroke(KeyEvent.VK_W, 0);
+    public final static KeyStroke ksSTARTOVER = ksNW;
+    public final static int cmnSTARTOVER = KeyEvent.VK_W;
 
     public final static KeyStroke ksNS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0);
     public final static KeyStroke ksSETARG = ksNS;
     public final static int cmnSETARG = KeyEvent.VK_S;
 
-    public final static KeyStroke ksNO
-            = KeyStroke.getKeyStroke(KeyEvent.VK_O, 0);
-    public final static KeyStroke ksSTARTOVER = ksNO;
-    
+//    public final static KeyStroke ksNO
+//            = KeyStroke.getKeyStroke(KeyEvent.VK_O, 0);
+//    public final static KeyStroke ksSTARTOVER = ksNO;
+
+    public final static KeyStroke ksNC
+            = KeyStroke.getKeyStroke(KeyEvent.VK_C, 0);
+    public final static KeyStroke ksCREATE = ksNC;
+    public final static int cmnCREATE = KeyEvent.VK_C;
+
+    public final static KeyStroke ksNN
+            = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
+    public final static KeyStroke ksCREATENC = ksNN;
+    public final static int cmnCREATENC = KeyEvent.VK_N;
+
+    public final static KeyStroke ksNL
+            = KeyStroke.getKeyStroke(KeyEvent.VK_L, 0);
+    public final static KeyStroke ksCREATELINK = ksNL;
+    public final static int cmnCREATELINK = KeyEvent.VK_L;
+
     public final static KeyStroke ksND
             = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
     public final static KeyStroke ksDELETE = ksND;
