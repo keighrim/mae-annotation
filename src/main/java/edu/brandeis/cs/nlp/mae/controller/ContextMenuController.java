@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
@@ -48,6 +49,7 @@ public class ContextMenuController extends MaeControllerI {
     static final int NCTAG = 1;
     static final int EMPTY_LTAG = 2;
     static final int LTAG = 3;
+    static final int LTAG_FROM_TABLE = 4;
     static final int DELETE_MENU = 0;
     static final int SETARG_MENU = 1;
 
@@ -114,40 +116,45 @@ public class ContextMenuController extends MaeControllerI {
         JMenu makeTagMenu = new JMenu(getMakeTagMenuLabel(category));
         List<TagType> types = getTagTypes(category);
 
-        int i = 0;
+        int typeCount = 0;
         for (TagType type : types) {
-            String makeTagItemLabel;
-            Integer mnemonic;
-            if (i < 10) {
-                makeTagItemLabel = String.format("(%d) %s", i + 1, type.getName());
-                mnemonic = numKeys[i++];
-            } else {
-                makeTagItemLabel = String.format("    %s", type.getName());
-                mnemonic = null;
-            }
-            MaeActionI makeTagAction;
-            if (category == LTAG) {
-                makeTagAction = new MakeLink(makeTagItemLabel, null, null, mnemonic, getMainController());
-            } else {
-                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
-            }
-            JMenuItem makeTagItem = new JMenuItem(makeTagAction);
+            JMenuItem makeTagItem = new JMenuItem(getMakeTagAction(category, typeCount++, type));
             makeTagItem.setActionCommand(type.getName());
             makeTagMenu.add(makeTagItem);
         }
         return makeTagMenu;
     }
 
+    private MaeActionI getMakeTagAction(int category, int mnemonicNum, TagType type) {
+        String makeTagItemLabel;
+        Integer mnemonic;
+        if (mnemonicNum < 10) {
+            makeTagItemLabel = String.format("(%d) %s", mnemonicNum + 1, type.getName());
+            mnemonic = numKeys[mnemonicNum];
+        } else {
+            makeTagItemLabel = String.format("    %s", type.getName());
+            mnemonic = null;
+        }
+        switch (category) {
+            case LTAG:
+                return new MakeLink(makeTagItemLabel, null, null, mnemonic, getMainController());
+            case LTAG_FROM_TABLE:
+                return new MakeLinkFromTable(makeTagItemLabel, null, null, mnemonic, getMainController());
+            default:
+                return new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+        }
+    }
+
     private String getMakeTagMenuLabel(int category) {
         switch (category) {
             case ETAG:
-                return "Create an Extent tag with selected text";
+                return MENUITEM_CREATE_ETAG;
             case NCTAG:
-                return "Create an NC Extent tag with no text associated";
+                return MENUITEM_CREATE_NCTAG;
             case EMPTY_LTAG:
-                return "Create an Link tag with no arguments associated";
+                return MENUITEM_CREATE_LTAG_EMPTY;
             case LTAG:
-                return "Create an Link tag with selected arguments";
+                return MENUITEM_CREATE_LTAG_FROM_SEL;
         }
         return null;
     }
@@ -172,7 +179,7 @@ public class ContextMenuController extends MaeControllerI {
     }
 
     JMenu createPluralDeleteMenu(List<? extends Tag> tags) throws MaeDBException {
-        JMenu deleteMenu = new JMenu(MENU_TBPOP_ITEM_DELETE);
+        JMenu deleteMenu = new JMenu(MENU_DELETE_TAG);
         deleteMenu.setMnemonic(cmnDELETE);
         deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tags.toString()), n0));
 
@@ -223,7 +230,7 @@ public class ContextMenuController extends MaeControllerI {
     }
 
     JMenu createPluralSetArgMenu(List<? extends Tag> tags) throws MaeDBException {
-        JMenu setArgMenu = new JMenu(MENU_TBPOP_ITEM_SETARG);
+        JMenu setArgMenu = new JMenu(MENU_SETARG);
         setArgMenu.setMnemonic(cmnSETARG);
         createMenuItemsWithNumberMnemonics(tags, MENUITEM_SETARG_SINGLE, setArgMenu, 10, SETARG_MENU);
         return setArgMenu;
@@ -266,6 +273,9 @@ public class ContextMenuController extends MaeControllerI {
             contextMenu.add(createSingleSetArgMenu(table.getSelectedRow(), model));
         } else {
             contextMenu.add(createPluralDeleteMenu(table.getSelectedRows(), model));
+            if (model.getAssociatedTagType().isExtent()) {
+                contextMenu.add(createMakeLinkFromTableMenu(table.getSelectedRows(), model));
+            }
         }
 
         if (model.getAssociatedTagType().isExtent()) {
@@ -287,6 +297,22 @@ public class ContextMenuController extends MaeControllerI {
             tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
         }
         return createPluralDeleteMenu(tags);
+    }
+
+    JMenu createMakeLinkFromTableMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
+        JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
+        String tids = MaeStrings.SEP;
+        for (int row : selectedRows) {
+            tids += (String) model.getValueAt(row, TablePanelController.ID_COL) + MaeStrings.SEP;
+        }
+        int typeCount = 0;
+        for (TagType linkType : getTagTypes(LTAG)) {
+            JMenuItem makeLinkFromTableItem = new JMenuItem(getMakeTagAction(LTAG_FROM_TABLE, typeCount, linkType));
+            makeLinkFromTableItem.setActionCommand(linkType.getName() + tids);
+            makeLinkFromTableMenu.add(makeLinkFromTableItem);
+        }
+        return makeLinkFromTableMenu;
+
     }
 
     private JMenuItem createSingleSetArgMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {

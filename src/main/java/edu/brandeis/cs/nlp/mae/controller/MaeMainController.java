@@ -358,7 +358,7 @@ public class MaeMainController extends JPanel {
 
     public void switchToArgSelMode() {
 
-        if (mode != MODE_NORMAL) {
+        if (mode != MODE_ARG_SEL) {
             mode = MODE_ARG_SEL;
             sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
             getMenu().reset();

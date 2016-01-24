@@ -25,21 +25,19 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 
-import edu.brandeis.cs.nlp.mae.controller.deprecated.*;
-import edu.brandeis.cs.nlp.mae.util.ColorHandler;
-import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.deprecated.*;
 import edu.brandeis.cs.nlp.mae.database.AnnotationTask;
 import edu.brandeis.cs.nlp.mae.database.MakeTagListener;
 import edu.brandeis.cs.nlp.mae.database.RemoveExtentTagListener;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.controller.deprecated.FileMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.deprecated.FontSizeMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.deprecated.HelpMenuListener;
-import edu.brandeis.cs.nlp.mae.controller.deprecated.ModeMenuListener;
+import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
-import edu.brandeis.cs.nlp.mae.view.*;
+import edu.brandeis.cs.nlp.mae.view.AllTableModel;
+import edu.brandeis.cs.nlp.mae.view.MaeTableModel;
+import edu.brandeis.cs.nlp.mae.view.TabTitle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1900,7 +1898,7 @@ public class MaeMainUI extends JPanel {
     private JMenu createTagMenu(String menuTitle, boolean mainMenu) {
         JMenu menu = new JMenu(menuTitle);
         if (!isTextSelected) {
-            JMenuItem noText = new JMenuItem(MaeStrings.MENU_NOTEXT);
+            JMenuItem noText = new JMenuItem(MaeStrings.MENUITEM_NOTEXT);
             noText.setEnabled(false);
             menu.add(noText);
             return menu;

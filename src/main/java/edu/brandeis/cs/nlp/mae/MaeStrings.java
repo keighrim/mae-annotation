@@ -110,13 +110,16 @@ public class MaeStrings {
     public final static String MENUITEM_NORMAL_MODE = "Return to normal mode";
     public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
-    public final static String MENU_NOTEXT = SB_NOTEXT;
-    public final static String MENU_TBPOP_ITEM_DELETE = "Delete ...";
+    public final static String MENUITEM_NOTEXT = SB_NOTEXT;
+    public final static String MENU_DELETE_TAG = "Delete ...";
     public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s"; // tid
     public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s"; // numbers, list of tids
-    public final static String MENU_TBPOP_ITEM_SETARG = "Set ...";
+    public final static String MENU_SETARG = "Set ...";
     public final static String MENUITEM_SETARG_SINGLE = "Set %s as an argument of a link tag"; // tid
-    public final static String MENUITEM_SETARG_PLURAL = "Set one as an argument of a link tag";
+    public final static String MENUITEM_CREATE_ETAG = "Create an Extent tag with selected text";
+    public final static String MENUITEM_CREATE_NCTAG = "Create an NC Extent tag with no text associated";
+    public final static String MENUITEM_CREATE_LTAG_EMPTY = "Create an Link tag with no arguments associated";
+    public final static String MENUITEM_CREATE_LTAG_FROM_SEL = "Create an Link tag with selected arguments ...";
 
     /* general messages */
     public final static String NO_TASK_IND = "No DTD";
