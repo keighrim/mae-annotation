@@ -46,7 +46,8 @@ public class ContextMenuController extends MaeControllerI {
 
     static final int ETAG = 0;
     static final int NCTAG = 1;
-    static final int LTAG = 2;
+    static final int EMPTY_LTAG = 2;
+    static final int LTAG = 3;
     static final int DELETE_MENU = 0;
     static final int SETARG_MENU = 1;
 
@@ -67,17 +68,24 @@ public class ContextMenuController extends MaeControllerI {
 
     }
 
+    // TODO: 2016-01-23 16:20:59EST continue from here, add more menu items that's mode specific
     public JPopupMenu createTextContextMenu() throws MaeDBException {
 
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
 
         // TODO: 2016-01-23 01:38:46EST add more mode specific items as go on
-        if (getMainController().isTextSelected() && getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
-            contextMenu.add(createMakeTagMenu(ETAG));
+        if (getMainController().isTextSelected()) {
+            if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
+                contextMenu.add(createMakeTagMenu(ETAG));
+            } else if (getMainController().getSelectedArguments() != null
+                    && getMainController().getSelectedArguments().size() > 0) {
+                contextMenu.add(createMakeTagMenu(LTAG));
+            }
+            contextMenu.addSeparator();
         }
         contextMenu.add(createMakeTagMenu(NCTAG));
-        contextMenu.add(createMakeTagMenu(LTAG));
+        contextMenu.add(createMakeTagMenu(EMPTY_LTAG));
         switch (tags.size()) {
             case 0:
                 break;
@@ -91,6 +99,11 @@ public class ContextMenuController extends MaeControllerI {
                 contextMenu.add(createPluralDeleteMenu(tags));
                 contextMenu.add(createPluralSetArgMenu(tags));
 
+        }
+        if (getMainController().getMode() != MaeMainController.MODE_NORMAL) {
+            contextMenu.addSeparator();
+//            contextMenu.add(createUndoSelectionMenu());
+//            contextMenu.add(createStartOverMenu());
         }
 
         return contextMenu;
@@ -112,8 +125,12 @@ public class ContextMenuController extends MaeControllerI {
                 makeTagItemLabel = String.format("    %s", type.getName());
                 mnemonic = null;
             }
-
-            MaeActionI makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+            MaeActionI makeTagAction;
+            if (category == LTAG) {
+                makeTagAction = new MakeLink(makeTagItemLabel, null, null, mnemonic, getMainController());
+            } else {
+                makeTagAction = new MakeTag(makeTagItemLabel, null, null, mnemonic, getMainController());
+            }
             JMenuItem makeTagItem = new JMenuItem(makeTagAction);
             makeTagItem.setActionCommand(type.getName());
             makeTagMenu.add(makeTagItem);
@@ -127,8 +144,10 @@ public class ContextMenuController extends MaeControllerI {
                 return "Create an Extent tag with selected text";
             case NCTAG:
                 return "Create an NC Extent tag with no text associated";
-            case LTAG:
+            case EMPTY_LTAG:
                 return "Create an Link tag with no arguments associated";
+            case LTAG:
+                return "Create an Link tag with selected arguments";
         }
         return null;
     }
@@ -143,10 +162,9 @@ public class ContextMenuController extends MaeControllerI {
                     if (type.isNonConsuming()) ncTypes.add(type);
                 }
                 return ncTypes;
-            case LTAG:
+            default:
                 return getDriver().getLinkTagTypes();
         }
-        return null;
     }
 
     JMenuItem createSingleDeleteMenu(Tag tag) throws MaeDBException {

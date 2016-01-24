@@ -44,10 +44,8 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by krim on 12/31/2015.
@@ -123,11 +121,19 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public int[] getLatestSelection() {
-        return selectionHistory.get(0);
+        if (selectionHistory.size() > 0) {
+            return selectionHistory.get(0);
+        } else {
+            return null;
+        }
+
     }
 
     public int[] leavingLatestSelection() {
         int[] latest = getLatestSelection();
+        if (latest == null) {
+            return new int[0];
+        }
         clearSelection();
         addSelection(latest);
         return SpanHandler.range(latest[0], latest[1]);
@@ -217,7 +223,7 @@ public class TextPanelController extends MaeControllerI{
     }
 
     public List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
-        List<ExtentTag> argsInOrder = new LinkedList<>();
+        LinkedList<ExtentTag> argsInOrder = new LinkedList<>();
         List<ExtentTag> surplusArgs = new LinkedList<>();
 
         for (int[] span : selectionHistory) {
@@ -225,8 +231,15 @@ public class TextPanelController extends MaeControllerI{
             // if tags of the same type was found from different selection,
             // they will be aggregated in front of the argInOrder list.
             List<ExtentTag> tagsIn = getDriver().getTagsIn(span);
-            argsInOrder.add(tagsIn.remove(0));
-            surplusArgs.addAll(tagsIn);
+            if (tagsIn != null) {
+                tagsIn.removeAll(argsInOrder);
+                tagsIn.removeAll(surplusArgs);
+                if (tagsIn.size() > 0) {
+                    // add to first since we are looping backward through selection history
+                    argsInOrder.addFirst(tagsIn.remove(0));
+                    surplusArgs.addAll(tagsIn);
+                }
+            }
         }
 
         argsInOrder.addAll(surplusArgs);
@@ -399,7 +412,7 @@ public class TextPanelController extends MaeControllerI{
         }
 
         void createAndShowContextMenu(MouseEvent e) {
-                getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
+            getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
 
         }
 

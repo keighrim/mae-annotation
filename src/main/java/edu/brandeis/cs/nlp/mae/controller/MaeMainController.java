@@ -359,30 +359,30 @@ public class MaeMainController extends JPanel {
     public void switchToArgSelMode() {
 
         if (mode != MODE_NORMAL) {
+            mode = MODE_ARG_SEL;
             sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
+            getMenu().reset();
         }
-        mode = MODE_ARG_SEL;
-        getMenu().reset();
     }
 
     public void switchToMSpanMode() {
 
         if (mode != MODE_MULTI_SPAN) {
+            mode = MODE_MULTI_SPAN;
             sendTemporaryNotification(MaeStrings.SB_MSPAN_MODE_NOTI, 3000);
+            getMenu().reset();
         }
-        mode = MODE_MULTI_SPAN;
-        getMenu().reset();
     }
 
     public void switchToNormalMode() {
 
         if (mode != MODE_NORMAL) {
+            mode = MODE_NORMAL;
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+            removeAllBGColors();
+            addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
+            getMenu().reset();
         }
-        removeAllBGColors();
-        addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
-        mode = MODE_NORMAL;
-        getMenu().reset();
     }
 
     public void setupScheme(String dbFile, File taskFile, boolean fromNewTask) {
@@ -455,6 +455,15 @@ public class MaeMainController extends JPanel {
 
     public int[] getSelectedTextSpans() {
         return getTextPanel().getSelected();
+    }
+
+    public List<ExtentTag> getSelectedArguments() {
+        try {
+            return getTextPanel().getSelectedArgumentsInOrder();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return null;
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
@@ -582,7 +591,7 @@ public class MaeMainController extends JPanel {
     public void propagateSelectionFromTextPanel() {
         getTablePanel().clearTableSelections();
         try {
-            List<ExtentTag> releventTags = getDriver().getTagsIn(getSelectedTextSpans());
+            List<ExtentTag> releventTags = getExtentTagsInSelectedSpans();
             for (ExtentTag tag : releventTags) {
                 getTablePanel().selectTagFromTable(tag);
             }
@@ -628,7 +637,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void createTagFromTextSelection(TagType tagType) {
+    public Tag createTagFromTextContextMenu(TagType tagType) {
 
         boolean nc = getSelectedTextSpans() == null || getSelectedTextSpans().length == 0;
         String message;
@@ -659,10 +668,11 @@ public class MaeMainController extends JPanel {
             if (normalModeOnCreation()) {
                 switchToNormalMode();
             }
+            return tag;
         } catch (MaeException e) {
             showError(e);
         }
-
+        return  null;
     }
 
     void populateDefaultAttributes(Tag tag) throws MaeDBException {

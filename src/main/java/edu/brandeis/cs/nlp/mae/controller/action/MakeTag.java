@@ -25,9 +25,7 @@
 package edu.brandeis.cs.nlp.mae.controller.action;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.controller.TablePanelController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -45,7 +43,7 @@ public class MakeTag extends MenuActionI {
     @Override
     public void actionPerformed(ActionEvent event) {
         try {
-            getMainController().createTagFromTextSelection(getMainController().getDriver().getTagTypeByName(event.getActionCommand()));
+            getMainController().createTagFromTextContextMenu(getMainController().getDriver().getTagTypeByName(event.getActionCommand()));
         } catch (MaeDBException e) {
             catchException(e);
         }
