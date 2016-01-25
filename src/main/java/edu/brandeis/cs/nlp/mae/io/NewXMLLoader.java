@@ -58,9 +58,16 @@ public class NewXMLLoader {
 
     public void read(File file) throws MaeIOXMLException, MaeDBException {
         try {
-            logger.info("reading annotations from XML file: " + file.getAbsolutePath());
-            driver.setAnnotationFileName(file.getAbsolutePath());
-            this.read(new FileInputStream(file));
+            try {
+                logger.info("reading annotations from XML file: " + file.getAbsolutePath());
+                driver.setAnnotationFileName(file.getAbsolutePath());
+                this.read(new FileInputStream(file));
+            } catch (SAXException e) {
+                logger.debug("file is not a XML, reading as the primary text: " + file.getAbsolutePath());
+                Scanner scanner = new Scanner(file);
+                driver.setPrimaryText(scanner.useDelimiter("\\A").next());
+                scanner.close(); // Put this call in a finally block
+            }
         } catch (FileNotFoundException e) {
             String message = "file not found: " + file.getAbsolutePath();
             logger.error(message);
@@ -68,13 +75,13 @@ public class NewXMLLoader {
         }
     }
 
-    public void read(String string) throws MaeIOXMLException, MaeDBException {
+    public void read(String string) throws MaeIOXMLException, MaeDBException, SAXException {
         logger.info("reading annotations from plain JAVA string");
         this.read(IOUtils.toInputStream(string));
 
     }
 
-    public void read(InputStream stream) throws MaeIOXMLException, MaeDBException {
+    public void read(InputStream stream) throws MaeIOXMLException, MaeDBException, SAXException {
         try {
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
@@ -98,8 +105,7 @@ public class NewXMLLoader {
                 logger.error(message);
                 throw new MaeIOXMLException(message);
             }
-
-        } catch (ParserConfigurationException | SAXException e) {
+        } catch (ParserConfigurationException e) {
             String message = "failed to create SAX-parser/DOM-builder";
             logger.error(message);
             throw new MaeIOXMLException(message, e);
@@ -112,6 +118,10 @@ public class NewXMLLoader {
 
     private void readAnnotations(Node tagsNode) throws MaeDBException, MaeIOXMLException {
         logger.debug("reading annotations... at " + tagsNode.getUserData("lineNum"));
+        Map<String, TagType> tagTypeMap = new HashMap<>();
+        for (TagType type : driver.getAllTagTypes()) {
+            tagTypeMap.put(type.getName(), type);
+        }
         List<Node> linkTags = new LinkedList<>();
         NodeList annotations = tagsNode.getChildNodes();
         for (int i = 0; i < annotations.getLength(); i++) {
@@ -120,11 +130,11 @@ public class NewXMLLoader {
                 continue;
             }
 
-            TagType tagType = driver.getTagTypeByName(annotation.getNodeName());
+            TagType tagType = tagTypeMap.get(annotation.getNodeName());
             if (tagType.isLink()) {
                 linkTags.add(annotation);
             } else {
-                readExtentTag(annotation);
+                readExtentTag(annotation, tagType);
             }
         }
         for (Node linkTag : linkTags) {
@@ -132,15 +142,12 @@ public class NewXMLLoader {
         }
     }
 
-    private void readExtentTag(Node tagNode) throws MaeDBException, MaeIOXMLException {
-        TagType tagType = driver.getTagTypeByName(tagNode.getNodeName());
+    private void readExtentTag(Node tagNode, TagType tagType) throws MaeDBException, MaeIOXMLException {
         Map<String, AttributeType> possibleAttTypeMap = getAttributeTypeMap(tagType);
-
         NamedNodeMap nodeAttributes = tagNode.getAttributes();
-
         String tid = nodeAttributes.getNamedItem("id").getNodeValue();
         if (tid == null) {
-            String message = "annotation must have id attribute at " + tagNode.getUserData("lineNum");
+            String message = "annotation must have id attribute, found at " + tagNode.getUserData("lineNum");
             logger.error(message);
             throw new MaeIOXMLException(message);
         }
@@ -176,9 +183,6 @@ public class NewXMLLoader {
 
         addAllAttributes(possibleAttTypeMap, nodeAttributes, newTag);
 
-        if (nodeAttributes.getLength() > 0) {
-            warnTrailingAttributes(tagNode, nodeAttributes);
-        }
     }
 
     private void readLinkTag(Node tagNode) throws MaeDBException {
@@ -196,9 +200,6 @@ public class NewXMLLoader {
         addAllAttributes(possibleAttTypeMap, nodeAttributes, newTag);
         addAllArguments(possibleArgTypeMap, nodeAttributes, newTag);
 
-        if (nodeAttributes.getLength() > 0) {
-            warnTrailingAttributes(tagNode, nodeAttributes);
-        }
     }
 
     private void addAllArguments(Map<String, ArgumentType> argTypeMap, NamedNodeMap nodeAttributes, LinkTag tag) throws MaeDBException {
@@ -222,15 +223,7 @@ public class NewXMLLoader {
                 if (attValue.length() > 0) {
                     driver.addOrUpdateAttribute(tag, attTypeMap.get(attName), attValue);
                 }
-                nodeAttributes.removeNamedItem(attName);
             }
-        }
-    }
-
-    private void warnTrailingAttributes(Node tagNode, NamedNodeMap nodeAttributes) {
-        for (int i = 0; i < nodeAttributes.getLength(); i++) {
-            String attName = nodeAttributes.item(i).getNodeName();
-            logger.warn(String.format("undefined attribute found from \"%s\": %s at %s", tagNode.getNodeName(), attName, tagNode.getUserData("lineNum")));
         }
     }
 

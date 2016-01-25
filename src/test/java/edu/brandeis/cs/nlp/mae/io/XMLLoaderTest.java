@@ -34,6 +34,7 @@ import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.net.URL;
@@ -100,14 +101,14 @@ public class XMLLoaderTest {
     }
 
     @Test(expected = MaeIOXMLException.class)
-    public void canValidateEmptyText() throws MaeIOXMLException, MaeDBException {
+    public void canValidateEmptyText() throws MaeIOXMLException, MaeDBException, SAXException {
         String sample = SAMPLE_HEADER + SAMPLE_END;
         xmlLoader.read(sample);
 
     }
 
     @Test
-    public void canAddPrimaryText() throws MaeIOXMLException, MaeDBException {
+    public void canAddPrimaryText() throws MaeIOXMLException, MaeDBException, SAXException {
         String sample = SAMPLE_HEADER + SAMPLE_TEXT + SAMPLE_END;
         xmlLoader.read(sample);
 
@@ -119,14 +120,14 @@ public class XMLLoaderTest {
     }
 
     @Test(expected = MaeIOXMLException.class)
-    public void canValidateSpansAttribute() throws MaeIOXMLException, MaeDBException {
+    public void canValidateSpansAttribute() throws MaeIOXMLException, MaeDBException, SAXException {
         String sample = SAMPLE_HEADER + SAMPLE_TEXT + SAMPLE_TAGS_START + SAMPLE_TAG_N0 + SAMPLE_TAG_N4 + SAMPLE_TAGS_END + SAMPLE_END;
         xmlLoader.read(sample);
 
     }
 
     @Test
-    public void canAddExtentTagsAndAttributes() throws MaeIOXMLException, MaeDBException {
+    public void canAddExtentTagsAndAttributes() throws MaeIOXMLException, MaeDBException, SAXException {
         String sample = SAMPLE_HEADER + SAMPLE_TEXT + SAMPLE_TAGS_START + SAMPLE_TAG_N0 + SAMPLE_TAG_N1 + SAMPLE_TAG_N2 + SAMPLE_TAG_V0 + SAMPLE_TAGS_END + SAMPLE_END;
         xmlLoader.read(sample);
 
@@ -175,7 +176,7 @@ public class XMLLoaderTest {
     }
 
     @Test
-    public void canAddLinkTagsAndArguments() throws MaeIOXMLException, MaeDBException {
+    public void canAddLinkTagsAndArguments() throws MaeIOXMLException, MaeDBException, SAXException {
         String sample = SAMPLE_HEADER + SAMPLE_TEXT +
                 SAMPLE_TAGS_START +
                 SAMPLE_TAG_N0 + SAMPLE_TAG_N1 + SAMPLE_TAG_N2 +

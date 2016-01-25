@@ -602,7 +602,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
                 charIndexDao.create(ci);
             }
             eTagDao.create(tag);
-            eTagDao.update(tag);
+            eTagDao.update(tag); //only after update(), all properties are saved
             boolean added = idHandler.addId(tagType, tid);
             if (!added) {
                 throw new MaeDBException("tag id is already in DB!: " + tid);
