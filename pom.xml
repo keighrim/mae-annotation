@@ -111,7 +111,7 @@
                             <!--Define a directory to copy all dependencies in-->
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>edu.brandeis.cs.nlp.mae.MaeMain</mainClass>
+                            <mainClass>edu.brandeis.cs.nlp.mae.controller.MaeMainController</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
