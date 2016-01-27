@@ -40,7 +40,7 @@ import java.util.*;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_ETAG, daoClass = ExtentTagDao.class)
-public class ExtentTag extends Tag implements IModel {
+public class ExtentTag extends Tag implements ModelI {
 
     @DatabaseField(columnName = DBSchema.TAB_ETAG_COL_TEXT)
     private String text;

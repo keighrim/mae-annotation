@@ -39,7 +39,7 @@ import java.util.*;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_LTAG, daoClass = LinkTagDao.class)
-public class LinkTag extends Tag implements IModel {
+public class LinkTag extends Tag implements ModelI {
 
     @ForeignCollectionField(eager = true)
     protected ForeignCollection<Attribute> attributes;

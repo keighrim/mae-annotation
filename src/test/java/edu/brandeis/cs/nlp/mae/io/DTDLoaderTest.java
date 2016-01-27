@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class DTDLoaderTest {
 
     private LocalSqliteDriverImpl driver;
-    private NewDTDLoader dtdLoader;
+    private DTDLoader dtdLoader;
 
     @After
     public void tearDown() throws Exception {
@@ -58,7 +58,7 @@ public class DTDLoaderTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
-        dtdLoader = new NewDTDLoader(driver);
+        dtdLoader = new DTDLoader(driver);
 
     }
 

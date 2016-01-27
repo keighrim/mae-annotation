@@ -29,7 +29,7 @@ import com.j256.ormlite.field.DatabaseField;
 /**
  * Created by krim on 12/26/2015.
  */
-public class TagProperty implements IModel {
+public class TagProperty implements ModelI {
 
     @DatabaseField(generatedId = true, columnName = DBSchema.TAB_AT_COL_ID)
     private int id;

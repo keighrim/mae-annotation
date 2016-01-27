@@ -49,7 +49,7 @@ public class MaeMainView extends JFrame {
         top.add(statusBarView, BorderLayout.SOUTH);
 
         JSplitPane main = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
-        main.setDividerLocation(250);
+        main.setDividerLocation(350);
 
         root.add(menuBarView, BorderLayout.NORTH);
         root.add(main, BorderLayout.CENTER);

@@ -25,7 +25,6 @@
 package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.MaeMain;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
 
 import javax.swing.*;

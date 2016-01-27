@@ -45,15 +45,15 @@ import java.util.*;
 /**
  * Created by krim on 12/27/2015.
  */
-public class NewXMLLoader {
+public class XMLLoader {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(NewXMLLoader.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(XMLLoader.class.getName());
 
     private MaeDriverI driver;
     private Map<TagType, Map<String, AttributeType>> attTypeMap;
 
-    public NewXMLLoader(MaeDriverI driver) {
+    public XMLLoader(MaeDriverI driver) {
         this.attTypeMap = new HashMap<>();
         this.driver = driver;
     }

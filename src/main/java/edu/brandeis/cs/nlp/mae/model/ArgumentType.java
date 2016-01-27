@@ -33,7 +33,7 @@ import com.j256.ormlite.table.DatabaseTable;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_ART)
-public class ArgumentType extends TagProperty implements IModel {
+public class ArgumentType extends TagProperty implements ModelI {
 
     @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;

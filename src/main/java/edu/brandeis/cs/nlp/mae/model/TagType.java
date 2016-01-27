@@ -38,7 +38,7 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_TT)
-public class TagType implements IModel, Comparable<TagType> {
+public class TagType implements ModelI, Comparable<TagType> {
 
     @DatabaseField(id = true, columnName = DBSchema.TAB_TT_COL_NAME)
     private String name;

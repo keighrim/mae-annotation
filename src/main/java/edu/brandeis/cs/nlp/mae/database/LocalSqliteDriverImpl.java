@@ -34,8 +34,8 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
-import edu.brandeis.cs.nlp.mae.io.NewDTDLoader;
-import edu.brandeis.cs.nlp.mae.io.NewXMLLoader;
+import edu.brandeis.cs.nlp.mae.io.DTDLoader;
+import edu.brandeis.cs.nlp.mae.io.XMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -161,7 +161,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public void readTask(File file) throws MaeIODTDException, MaeDBException, FileNotFoundException {
-        NewDTDLoader dtdl = new NewDTDLoader(this);
+        DTDLoader dtdl = new DTDLoader(this);
         dropAllTables(cs);
         createAllTables(cs);
         dtdl.read(file);
@@ -170,7 +170,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public void readAnnotation(File file) throws FileNotFoundException, MaeIOXMLException, MaeDBException {
-        NewXMLLoader xmll = new NewXMLLoader(this);
+        XMLLoader xmll = new XMLLoader(this);
         xmll.read(file);
         setAnnotationChanged(false);
 

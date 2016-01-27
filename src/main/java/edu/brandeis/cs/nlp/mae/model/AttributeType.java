@@ -40,7 +40,7 @@ import java.util.List;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_AT)
-public class AttributeType extends TagProperty implements IModel {
+public class AttributeType extends TagProperty implements ModelI {
 
     @DatabaseField(columnName = DBSchema.TAB_AT_COL_VALUESET)
     private String valueset;

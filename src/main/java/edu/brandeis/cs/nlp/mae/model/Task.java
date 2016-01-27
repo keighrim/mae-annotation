@@ -32,7 +32,7 @@ import com.j256.ormlite.table.DatabaseTable;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_TASK)
-public class Task implements IModel {
+public class Task implements ModelI {
 
     @DatabaseField(id = true, columnName = DBSchema.TAB_TASK_COL_NAME)
     private String name;

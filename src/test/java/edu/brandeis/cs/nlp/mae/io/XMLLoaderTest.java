@@ -52,8 +52,8 @@ import static org.junit.Assert.assertEquals;
 public class XMLLoaderTest {
 
     private LocalSqliteDriverImpl driver;
-    private NewDTDLoader dtdLoader;
-    private NewXMLLoader xmlLoader;
+    private DTDLoader dtdLoader;
+    private XMLLoader xmlLoader;
     final private String SAMPLE_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
             "<NounVerbTask>\n";
     final private String SAMPLE_END = "</NounVerbTask>\n";
@@ -87,10 +87,10 @@ public class XMLLoaderTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
-        dtdLoader = new NewDTDLoader(driver);
+        dtdLoader = new DTDLoader(driver);
         readDTDfile();
 
-        xmlLoader = new NewXMLLoader(driver);
+        xmlLoader = new XMLLoader(driver);
 
     }
 

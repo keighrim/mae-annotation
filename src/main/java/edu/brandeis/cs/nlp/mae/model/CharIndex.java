@@ -32,7 +32,7 @@ import com.j256.ormlite.table.DatabaseTable;
  */
 
 @DatabaseTable(tableName = DBSchema.TAB_CI)
-public class CharIndex implements IModel {
+public class CharIndex implements ModelI {
 
     @DatabaseField(generatedId = true, columnName = DBSchema.TAB_CI_COL_ID)
     private int id;

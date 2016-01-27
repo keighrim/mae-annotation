@@ -24,263 +24,306 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
-import edu.brandeis.cs.nlp.mae.database.DTD;
-import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.model.ArgumentType;
+import edu.brandeis.cs.nlp.mae.model.AttributeType;
+import edu.brandeis.cs.nlp.mae.model.TagType;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Provides methods for loading a DTD file into a DTD class
- *
- * @author Amber Stubbs, Keigh Rim
- * @see DTD
+/*
+ * DTDLoader is ...
  */
-
 public class DTDLoader {
 
-    private DTD mDtd;
+    private static final Logger logger = LoggerFactory.getLogger(DTDLoader.class.getName());
 
-    public DTDLoader(File f) {
-        mDtd = new DTD();
+    private MaeDriverI driver;
+    private ArrayList<TagType> loadedTagTypes;
+    private HashMap<String, String> prefixes;
+
+    public DTDLoader(MaeDriverI driver) throws MaeIODTDException {
+        this.driver = driver;
+        this.prefixes = new HashMap<>();
+        this.loadedTagTypes = new ArrayList<>();
+    }
+
+    public void read(File file) throws MaeIODTDException, MaeDBException {
         try {
-            readFile(f);
+            logger.info("reading annotation scheme from: " + file.getAbsolutePath());
+            driver.setTaskFileName(file.getAbsolutePath());
+            this.read(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            System.err.println("no file found");
+            String message = "file not found: " + file.getAbsolutePath();
+            logger.error(message);
+            throw new MaeIODTDException(message, e);
         }
     }
 
-    public DTD getDTD() {
-        return mDtd;
-    }
+    public void read(String string) throws MaeIODTDException, MaeDBException {
+        logger.info("reading annotation scheme from plain JAVA string");
+        this.read(IOUtils.toInputStream(string));
 
-    private void readFile(File f) throws FileNotFoundException {
-        Scanner sc = new Scanner(f, "UTF-8");
+    }
+    public void read(InputStream stream) throws MaeIODTDException, MaeDBException {
+        Scanner sc = new Scanner(stream, "UTF-8");
+        int lineNum = 1;
         while (sc.hasNextLine()) {
             String next = sc.nextLine();
-            //first, get rid of comments
-            //this assumes that comments are on their own line(s)
-            //needs to be made more flexible
+            // getting rid of comments
             if (next.contains("<!--")) {
-                while (!next.contains("-->")) {
+                while (sc.hasNextLine() && !next.contains("-->")) {
                     next = sc.nextLine();
+                    lineNum++;
                 }
-                //this skips the lines with the comments
                 next = sc.nextLine();
             }
 
-            //then, get all information about a tag into one string
-            String tag = "";
+            //then, concatenate lines about a tag into one string
+            String element = "";
             if (next.contains("<")) {
-                tag = tag + next;
-                while (!next.contains(">")) {
+                element += next;
+                while (sc.hasNextLine() && !next.contains(">")) {
                     next = sc.nextLine();
-                    tag = tag + next;
+                    lineNum++;
+                    element += next;
                 }
             }
-            tag = tag.replaceAll("\\s+", " ");
-            tag = tag.replaceAll("[\u201C\u201D]", "\"");
-            tag = tag.replaceAll("[\u2018\u2019]", "'");
-            process(tag);
+            lineNum++;
+            // remove some problematic unicode characters before processing
+            element = normalizeLine(element);
+            process(element, lineNum);
+        }
+        validateLinkTagTypes();
+    }
+
+    private void validateLinkTagTypes() throws MaeDBException {
+        for (TagType linktag: driver.getLinkTagTypes()) {
+            if (linktag.getArgumentTypes().size() == 0) {
+                addDefaultArguments(linktag);
+            }
         }
     }
 
-    private void process(String tag) {
+    private void addDefaultArguments(TagType linktag) throws MaeDBException {
+        // default arguments are NOT req, but note that args are always IDref
+        driver.createArgumentType(linktag, "from");
+        driver.createArgumentType(linktag, "to");
 
-        if (tag.startsWith("<!ELEMENT")) {
-            createElement(tag);
+    }
+
+    public String normalizeLine(String line) {
+
+        return line.trim()
+                .replaceAll("\\s+", " ")
+                .replaceAll("[\u201C\u201D]", "\"")
+                .replaceAll("[\u2018\u2019]", "'");
+
+    }
+
+    private void process(String element, int lineNum) throws MaeIODTDException, MaeDBException {
+
+        if (element.startsWith("<!ELEMENT")) {
+            processTagType(element, lineNum);
         }
 
-        if (tag.startsWith("<!ATTLIST")) {
-            addAttribute(tag);
+        if (element.startsWith("<!ATTLIST")) {
+            processAttribute(element, lineNum);
         }
 
-        if (tag.startsWith("<!ENTITY")) {
-            addMeta(tag);
+        if (element.startsWith("<!ENTITY")) {
+            processMeta(element, lineNum);
         }
     }
 
-    /*
-    Create a new element in the DTD
-    */
-    private void createElement(String tag) {
-        String name = tag.split(" ")[1];
-        // PCDATA indicating this is an extend tag
-        if (tag.contains("#PCDATA")) {
-            String idString = getIDString(name);
-            ElemExtent e = new ElemExtent(name, idString);
-            mDtd.addElem(e);
-        }
-        // else, that is a link tag
-        else {
-            String idString = getIDString(name);
-            ElemLink e = new ElemLink(name, idString);
-            mDtd.addElem(e);
+    private void processTagType(String element, int lineNum) throws MaeIODTDException, MaeDBException {
+        Pattern tTypePattern = Pattern.compile( "<! *ELEMENT +(\\S+) +(\\bEMPTY\\b|\\( *(#\\bPCDATA\\b)\\s*\\)) *>" );
+        Matcher tTypeMatcher = tTypePattern.matcher(element);
+        if (tTypeMatcher.find()) {
+            String name = tTypeMatcher.group(1);
+            boolean isLink = tTypeMatcher.group(3) == null || !tTypeMatcher.group(3).equals("#PCDATA");
+            String prefix = generatePrefix(name);
+            logger.debug(String.format("adding a tag type: %s (%s)", name, prefix));
+            loadedTagTypes.add(driver.createTagType(name, prefix, isLink));
+        } else {
+            this.error(String.format("DTD seems to be ill-formed: %s at %d", element, lineNum));
         }
     }
 
-    private String getIDString(String name) {
-        ArrayList<String> ids = mDtd.getElementIDs();
-        String id = name.substring(0, 1);
-        boolean idOkay = false;
-        while (!idOkay) {
-            if (ids.contains(id)) {
-                if (id.length() >= name.length()) {
-                    id = id + "-";
+    private String generatePrefix(String fullname) throws MaeIODTDException {
+        int prefixLen = 1;
+        String prefix = fullname.substring(0, prefixLen);
+        while (prefixes.values().contains(prefix)) {
+            if (prefix.length() >= fullname.length()) {
+                String message = "duplicate TagType name found: " + fullname;
+                logger.error(message);
+                throw new MaeIODTDException(message);
+            }
+            prefixLen++;
+            prefix = fullname.substring(0, prefixLen);
+        }
+        prefixes.put(fullname, prefix);
+        return prefix;
+    }
+
+    private void processMeta(String element, int lineNum) throws MaeIODTDException, MaeDBException {
+        // currently it can only process "internal parsed entities" element of DTD
+        Pattern elementPattern = Pattern.compile("<!\\s*ENTITY +(.+) +\"(.+)\">");
+        Matcher elementMatcher = elementPattern.matcher(element);
+        boolean add;
+        add = elementMatcher.matches() && addMetadata(elementMatcher.group(1), elementMatcher.group(2));
+        if (!add) {
+            this.error(String.format("error while adding a metadata: %s at %d", element, lineNum));
+        }
+    }
+
+    private boolean addMetadata(String key, String value) throws MaeDBException {
+        boolean success;
+        switch (key) {
+            case "name":
+                driver.setTaskName(value);
+                logger.debug("adding DTD name: " + value);
+                success = true;
+                break;
+            default:
+                logger.debug("unresolved identifier: " + key);
+                success = false;
+        }
+        return success;
+    }
+
+    private void processAttribute(String element, int lineNum) throws MaeIODTDException, MaeDBException {
+        Pattern attPattern = Pattern.compile( "<! *ATTLIST +(\\S+) +(\\S+) +(\\( *.+ *\\)|\\bCDATA\\b|\\bID\\b|\\bIDREF\\b)? *(prefix=\"(.+)\")? *(#\\bREQUIRED\\b|#\\bIMPLIED\\b)? *(\"(.+)\")?" );
+        Matcher attMatcher = attPattern.matcher(element);
+
+        if (attMatcher.find()) {
+            String tagTypeName = attMatcher.group(1);
+            String attTypeName = attMatcher.group(2);
+            String valueset = attMatcher.group(3);
+            if (valueset == null) {
+                valueset = "CDATA";
+            }
+            String prefix = attMatcher.group(5);
+            boolean required = attMatcher.group(6) != null && attMatcher.group(6).equals("#REQUIRED");
+            String defaultValue = attMatcher.group(8);
+
+            TagType tagtype = isTagTypeLoaded(tagTypeName);
+            if (tagtype == null) {
+                this.error("tag type is not define for an attribute/argument: " + attTypeName);
+            } else if (attTypeName.matches("arg[0-9]+")) {
+                defineArgument(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
+            } else {
+                defineAttribute(lineNum, tagtype, attTypeName, valueset, prefix, required, defaultValue);
+            }
+        } else {
+            this.error(String.format("DTD seems to be ill-formed: \"%s\" at %d", element, lineNum));
+        }
+    }
+
+    private AttributeType defineAttribute(int lineNum, TagType tagType, String attTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
+        AttributeType type = null;
+        switch (valueset) {
+            case "ID":
+                if (!attTypeName.equals("id")) {
+                    this.error("value type \"ID\" should have name \"id\": " + lineNum);
+                } else if (prefix != null) {
+                    if (prefixes.values().contains(prefix)) {
+                        this.error(String.format("prefix \"%s\" is already being used", prefix));
+                    }
+                    logger.debug(String.format("setting a custom prefix to tag type \"%s\" : %s ",tagType.getName(), attTypeName));
+                    driver.setTagTypePrefix(tagType, prefix);
+                    prefixes.put(tagType.getName(), prefix);
+                }
+                break;
+            case "IDREF":
+                type = addAttributeType(tagType, attTypeName);
+                logger.debug("setting as id-referencing attribute: " + attTypeName);
+                driver.setAttributeTypeIDRef(type, true);
+            case "CDATA":
+                if ((attTypeName.equals("spans") || attTypeName.equals("start")) && !required) {
+                    logger.debug("setting as non-consuming: " + tagType.getName());
+                    driver.setTagTypeNonConsuming(tagType, true);
                 } else {
-                    id = name.substring(0, id.length() + 1);
+                    type = addAttributeType(tagType, attTypeName);
                 }
-            } else {
-                idOkay = true;
+                break;
+            default:
+                String[] validValues = valueset.replaceAll("(\\( *| *\\))", "").split(" \\| ");
+
+                if (validValues.length < 2) {
+                    this.error(String.format("the set of values should have two or more values: \"%s\" at %d", valueset, lineNum));
+                }
+                type = addAttributeType(tagType, attTypeName);
+                logger.debug(String.format("setting valid value set to \"%s\": %s", attTypeName, Arrays.toString(validValues)));
+                driver.setAttributeTypeValueSet(type, Arrays.asList(validValues));
+        }
+        if (type != null) {
+            if (defaultValue != null) {
+                if (type.getValuesetAsList().size() == 0 || type.getValuesetAsList().contains(defaultValue)) {
+                    logger.debug(String.format("setting default value to \"%s\": %s", attTypeName, defaultValue));
+                    driver.setAttributeTypeDefaultValue(type, defaultValue);
+                } else {
+                    this.error(String.format("Default value \"%s\" is not in the pre-defined value set %s: at %d", defaultValue, type.getValuesetAsList().toString(), lineNum));
+                }
+            }
+            if (required) {
+                logger.debug("setting to a required attribute: " + attTypeName);
+                driver.setAttributeTypeRequired(type, true);
             }
         }
-        return id;
+        return type;
     }
 
-    private void addMeta(String tag) {
-        if (tag.contains("name ")) {
-            String name = tag.split("name \"")[1];
-            name = name.split("\"")[0];
-            mDtd.setName(name);
-        }
+    private AttributeType addAttributeType(TagType tagType, String attTypeName) throws MaeDBException {
+        logger.debug(String.format("adding a new attribute type attached to \"%s\": %s", tagType.getName(), attTypeName));
+        return driver.createAttributeType(tagType, attTypeName);
     }
 
-    /**
-     * Add an attribute to an existing string
-     */
-    private void addAttribute(String tag) {
-        if (tag.contains("(")) {
-            addListAtt(tag);
+    private ArgumentType defineArgument(int lineNum, TagType tagType, String argTypeName, String valueset, String prefix, boolean required, String defaultValue) throws MaeIODTDException, MaeDBException {
+        ArgumentType type = null;
+        if (!tagType.isLink()) {
+            this.error(String.format("extent tag \"%s\" can't have an argument \"%s\" at %d", tagType.getName(), argTypeName, lineNum));
+        } else if (defaultValue != null) {
+            this.error("arguments cannot have a default value: " + lineNum);
+        } else if (prefix!=null && !valueset.equals("IDREF")) {
+            this.error("argument definition should be set to \"IDREF\": " + lineNum);
+        } else if (prefix!=null) {
+            type = driver.createArgumentType(tagType, prefix);
         } else {
-            addDataAtt(tag);
+            type = driver.createArgumentType(tagType, argTypeName);
         }
+        if (required && type != null) {
+            logger.debug("setting to a required argument: " + argTypeName);
+            driver.setArgumentTypeRequired(type, true);
+        }
+        return type;
     }
 
-    /**
-     * Create an attribute with a list of valid values
-     */
-    private void addListAtt(String tag) {
-        String elemName = tag.split(" ")[1];
-        String attName = tag.split(" ")[2];
-        Elem elem = mDtd.getElem(elemName);
-
-        if (elem != null) {
-            String listString = tag.split("\\(")[1];
-            listString = listString.split("\\)")[0];
-
-            ArrayList<String> validValues = new ArrayList<String>();
-            for (String value : listString.split("\\|")) {
-                validValues.add(value.trim());
+    private TagType isTagTypeLoaded(String name) throws MaeDBException {
+        for (TagType tagtype : loadedTagTypes) {
+            if (tagtype.getName().equals(name)) {
+                return driver.getTagTypeByName(name);
             }
-
-            Pattern defValPat = Pattern.compile("\"[\\w ]+\" *>");
-            Matcher matcher = defValPat.matcher(tag);
-            ArrayList<String> defVal = new ArrayList<String>();
-            String defaultValue = "";
-            while (matcher.find()) {
-                defVal.add(matcher.group());
-            }
-            if (defVal.size() > 1) {
-                System.err.println(String.format(
-                        "too many default values found in %s", tag));
-            } else if (defVal.size() == 1) {
-                defaultValue = defVal.get(0).split("\"")[1];
-                if (!validValues.contains(defaultValue)) {
-                    System.err.println(String.format(
-                            "default value %s not in attribute list of %s"
-                            , defaultValue, tag));
-                    defaultValue = "";
-                }
-            }
-            boolean req = tag.contains("#REQUIRED");
-            elem.addAttribute(new AttList(attName, req, validValues, defaultValue));
-        } else {
-            System.err.println(String.format(
-                    "%s not found. not a valid tag identifier?", elemName));
         }
+        return null;
     }
 
-    /**
-     * Creates an attribute that can have an arbitrary string data
-     */
-    private void addDataAtt(String tag) {
+    private void error(String message) throws MaeIODTDException {
+        logger.error(message);
+        throw new MaeIODTDException(message);
 
-        String elemName = tag.split(" ")[1];
-        String attName = tag.split(" ")[2];
-        boolean req = tag.contains("#REQUIRED");
-        if (mDtd.hasElem(elemName)) {
-            Elem elem = mDtd.getElem(elemName);
-
-            // krim: support for multi-span extents
-            // dropped "end" tag, kept "start" only
-            // keeping "start" is for legacy DTD support
-            // (instead of replacing it with the actually used name "spans")
-            if (attName.equalsIgnoreCase("start")
-                    || attName.equalsIgnoreCase("spans")) {
-                if (elem instanceof ElemExtent) {
-                    Attrib att = elem.getAttribute("spans");
-                    att.setRequired(req);
-                }
-            } else if (tag.contains(" ID ")) {
-                AttID att = (AttID) elem.getAttribute("id");
-                if (tag.contains("prefix")) {
-                    String prefix = tag.split("[\"]")[1];
-                    att.setPrefix(prefix);
-                }
-            } else {
-                // krim: for multi-link support
-                // first check if this att is for argument
-                Pattern argAttPat = Pattern.compile("^arg[0-9]+$");
-                Matcher matcher = argAttPat.matcher(attName);
-                if (matcher.find()) {
-                    // then check elem is a link tag
-                    if (elem instanceof ElemLink) {
-                        String argName;
-                        // name argument if a name is given
-                        if (tag.contains("prefix")) {
-                            argName = tag.split("\"")[1];
-                        }
-                        // otherwise, use argN format as a default name
-                        else {
-                            argName = matcher.group();
-                        }
-                        ((ElemLink) elem).addArgement(argName);
-                        // then adjust max args in dtd object
-                        if (mDtd.getMaxArgs() < ((ElemLink) elem).getArgNum()) {
-                            mDtd.setMaxArgs(((ElemLink) elem).getArgNum());
-                        }
-                    } else {
-                        System.err.println("No argument attrib allowed for an extend tag");
-                    }
-                }
-                // otherwise, add as a simple data attrib (original code)
-                else {
-                    Pattern defaultVal = Pattern.compile("\"[\\w ]+\" *>");
-                    matcher = defaultVal.matcher(tag);
-                    ArrayList<String> defVals = new ArrayList<String>();
-                    String defaultValue = "";
-                    while (matcher.find()) {
-                        defVals.add(matcher.group());
-                    }
-                    if (defVals.size() > 1) {
-                        System.err.println(String.format(
-                                "too many default values found in %s", tag));
-                    } else if (defVals.size() == 1) {
-                        defaultValue = defVals.get(0).split("\"")[1];
-                    }
-                    AttData att = (new AttData(attName, req, defaultValue));
-                    // added by krim: check for IDREF for UI improvement
-                    att.setIdRef(tag.contains("IDREF"));
-                    elem.addAttribute(att);
-                }
-            }
-        } else {
-            System.err.println(String.format(
-                    "element name %s is not found", elemName));
-        }
     }
 }

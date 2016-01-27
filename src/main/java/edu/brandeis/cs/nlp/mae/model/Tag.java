@@ -35,7 +35,7 @@ import java.util.*;
  * Created by krim on 11/19/15.
  */
 
-public abstract class Tag implements IModel, Comparable<Tag> {
+public abstract class Tag implements ModelI, Comparable<Tag> {
 
     @DatabaseField(id = true, columnName = DBSchema.TAB_TAG_COL_TID)
     protected String tid;
