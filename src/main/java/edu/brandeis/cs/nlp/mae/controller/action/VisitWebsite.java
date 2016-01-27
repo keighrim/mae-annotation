@@ -24,10 +24,8 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,20 +38,25 @@ import java.net.URISyntaxException;
  * Called when the user selects the option to delete the highlighted rows from
  * the table in view.  Rows are removed both from the database and the table.
  */
-public class About extends MenuActionI {
+public class VisitWebsite extends MenuActionI {
 
-    public About(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public VisitWebsite(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        JOptionPane.showMessageDialog(getMainController().getRootPane(),
-                MaeStrings.ABOUT_MESSAGE,
-                MaeStrings.ABOUT_TITLE,
-                JOptionPane.PLAIN_MESSAGE
-                );
+        if (Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().browse(
+                        new URI(MaeStrings.PROJECT_WEBPAGE));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (URISyntaxException ignored) {
+            }
+        }
     }
+
 }
 
 

@@ -96,7 +96,7 @@ public class MaeStrings {
     public final static String SB_MARGS_NOTAG = SB_NOTAG;
 
 
-    /* menus */
+    /* main menus */
     public final static String MENU_FILE = "File";
     public final static String MENUITEM_LOADTASK = "New Task Definition";
     public final static String MENUITEM_OPENFILE = "Open Document";
@@ -110,6 +110,10 @@ public class MaeStrings {
     public final static String MENUITEM_NORMAL_MODE = "Return to normal mode";
     public final static String MENU_DISPLAY = "Display";
     public final static String MENU_HELP = "Help";
+    public final static String MENUITEM_ABOUT = "About";
+    public final static String MENUITEM_WEB = "Project website";
+
+    /* popup model */
     public final static String MENUITEM_NOTEXT = SB_NOTEXT;
     public final static String MENUITEM_UNDOSELECTION = "Undo last selection";
     public final static String MENUITEM_STARTOVER = "Wipe all selections";
@@ -134,4 +138,16 @@ public class MaeStrings {
     public static final String WARN_POPUP_TITLE = "Attention, Please";
     public static final String ERROR_POPUP_TITLE = "This is embarrassing ...";
 
+    /* help messages */
+    public static final String ABOUT_TITLE = String.format("MAE %s", VERSION);
+    public static final String ABOUT_MESSAGE = String.format(
+            "<html>" +
+            "<h1>MAE: <br/> Multi-purpose Annotation Editor</h1>" +
+            "<h4>Version %s<h4>" +
+            "<p style='width: 400px;'>" +
+            "Developed in Lab for Linguistics and Computation,<br/> " +
+            "Brandeis University 2010-%s.<br/><br/>" +
+            "MAE is a free software.<br/> " +
+            "This distribution of MAE (the software and the source code) is covered under the GNU General Public License version 3."
+            , VERSION, CUR_YEAR);
 }

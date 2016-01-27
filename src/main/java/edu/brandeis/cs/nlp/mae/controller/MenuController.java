@@ -66,9 +66,11 @@ public class MenuController extends MaeControllerI {
 
         fileMenu = createFileMenu();
         modeMenu = createModeMenu();
+        helpMenu = createHelpMenu();
 
         menubar.add(fileMenu);
         menubar.add(modeMenu);
+        menubar.add(helpMenu);
 
         view.updateUI();
 
@@ -143,6 +145,22 @@ public class MenuController extends MaeControllerI {
         menu.add(argSelMode);
         menu.add(normalMode);
         logger.info("mode menu is created: " + menu.getItemCount());
+        return menu;
+    }
+
+    private JMenu createHelpMenu() {
+        MaeActionI aboutAction = new About(MENUITEM_ABOUT, null, ksABOUT, null, getMainController());
+        MaeActionI visitWebsiteAction = new VisitWebsite(MENUITEM_WEB, null, ksWEB, null, getMainController());
+
+        JMenu menu = new JMenu(MENU_HELP);
+        menu.setMnemonic(MENU_HELP.charAt(0));
+
+        JMenuItem about = new JMenuItem(aboutAction);
+        JMenuItem visitWebsite = new JMenuItem(visitWebsiteAction);
+
+        menu.add(about);
+        menu.add(visitWebsite);
+        logger.info("help menu is created: " + menu.getItemCount());
         return menu;
     }
 

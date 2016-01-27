@@ -276,8 +276,8 @@ public class MaeHotKeys {
     public final static KeyStroke ksADJUDMODE = ksC9;
 
     // help menu keys
-    public final static  KeyStroke ksABOUT = ksF10;
-    public final static  KeyStroke ksWEB = ksF1;
+    public final static  KeyStroke ksABOUT = ksF1;
+    public final static  KeyStroke ksWEB = ksF12;
     
     // switch between tabs
     public final static KeyStroke ksCTab
