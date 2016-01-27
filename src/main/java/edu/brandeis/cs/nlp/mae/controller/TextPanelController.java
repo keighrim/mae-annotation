@@ -50,14 +50,14 @@ import java.util.List;
 /**
  * Created by krim on 12/31/2015.
  */
-public class TextPanelController extends MaeControllerI{
+class TextPanelController extends MaeControllerI{
 
     TextPanelView view;
 
     private int[] selected;
     private List<int[]> selectionHistory;
 
-    public TextPanelController(MaeMainController mainController) throws MaeDBException {
+    TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
@@ -108,12 +108,12 @@ public class TextPanelController extends MaeControllerI{
         selected = spans;
     }
 
-    public void clearSelection() {
+    void clearSelection() {
         selectionHistory.clear();
         setSelection(new int[0]);
     }
 
-    public void addSelection(int[] contiguousSpan) {
+    void addSelection(int[] contiguousSpan) {
         try {
             boolean duplicate = false;
             for (int[] prevSelected : selectionHistory) {
@@ -134,7 +134,7 @@ public class TextPanelController extends MaeControllerI{
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
     }
 
-    public int[] getLatestSelection() {
+    int[] getLatestSelection() {
         if (selectionHistory.size() > 0) {
             return selectionHistory.get(0);
         } else {
@@ -143,7 +143,7 @@ public class TextPanelController extends MaeControllerI{
 
     }
 
-    public int[] leavingLatestSelection() {
+    int[] leavingLatestSelection() {
         int[] latest = getLatestSelection();
         if (latest == null) {
             return new int[0];
@@ -153,7 +153,7 @@ public class TextPanelController extends MaeControllerI{
         return SpanHandler.range(latest[0], latest[1]);
     }
 
-    public int[] undoSelection() {
+    int[] undoSelection() {
         if (selectionHistory.size() > 0) {
             int[] undoed = selectionHistory.remove(0);
             setSelection(SpanHandler.convertPairsToArray(selectionHistory));
@@ -163,7 +163,7 @@ public class TextPanelController extends MaeControllerI{
         }
     }
 
-    public void addDocument(String documentTitle, String documentText) {
+    void addDocument(String documentTitle, String documentText) {
         // adding a new document wll wipe any existing tabs, either guide or documents
         // TODO: 2016-01-11 20:47:48EST fix this 4MF
 //        if (!getView().isAnyDocumentOpen()) {
@@ -181,7 +181,7 @@ public class TextPanelController extends MaeControllerI{
         return getView().getDocument();
     }
 
-    public void closeDocument(int i) {
+    void closeDocument(int i) {
         // TODO: 1/4/2016 need tests if this works well with tab switch listener to properly change current tab as well
         getView().getTabs().remove(i);
     }
@@ -211,7 +211,7 @@ public class TextPanelController extends MaeControllerI{
     }
 
 
-    public void selectTab(int tabId) {
+    void selectTab(int tabId) {
         // TODO: 1/4/2016 finish this for multi file support
         getView().selectTab(tabId);
         getMainController().switchAnnotationTab(tabId);
@@ -220,7 +220,7 @@ public class TextPanelController extends MaeControllerI{
     /**
      * add asterisk to windows title when file is changed
      */
-    public void updateTabTitles() throws MaeDBException {
+    void updateTabTitles() throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
@@ -237,27 +237,27 @@ public class TextPanelController extends MaeControllerI{
         }
     }
 
-    public int getSelectedTabIndex() {
+    int getSelectedTabIndex() {
         return getView().getTabs().getSelectedIndex();
     }
 
-    public Boolean isTextSelected() {
+    Boolean isTextSelected() {
         return this.selected.length > 0;
     }
 
-    public int[] getSelected() {
+    int[] getSelected() {
         return selected;
     }
 
-    public List<int[]> getSelectedAsPairs() {
+    List<int[]> getSelectedAsPairs() {
         return SpanHandler.convertArrayToPairs(selected);
     }
 
-    public String getPrimaryText() {
+    String getPrimaryText() {
         return getView().getDocumentPane().getText();
     }
 
-    public String getSelectedText() throws MaeControlException {
+    String getSelectedText() throws MaeControlException {
         if (selected.length > 0) {
             return getTextIn(selected, true).replace("\n", " ");
         } else {
@@ -265,7 +265,7 @@ public class TextPanelController extends MaeControllerI{
         }
     }
 
-    public List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
+    List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
         LinkedList<ExtentTag> argsInOrder = new LinkedList<>();
         List<ExtentTag> surplusArgs = new LinkedList<>();
 
@@ -290,7 +290,7 @@ public class TextPanelController extends MaeControllerI{
 
     }
 
-    public String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
+    String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
         if (spans != null && spans.length > 0) {
             return getTextIn(SpanHandler.convertArrayToPairs(spans), trimWhitespaces);
         }
@@ -305,7 +305,7 @@ public class TextPanelController extends MaeControllerI{
      * @param spans text spans
      * @return the text of the tag spans
      */
-    public String getTextIn(List<int[]> spans, boolean trimWhitespaces) throws MaeControlException {
+    String getTextIn(List<int[]> spans, boolean trimWhitespaces) throws MaeControlException {
         String text = "";
         Iterator<int[]> iter = spans.iterator();
         while (iter.hasNext()) {
@@ -325,7 +325,7 @@ public class TextPanelController extends MaeControllerI{
      * @param end   end location of the text
      * @return the text
      */
-    public String getTextBetween(int start, int end, boolean trimWhitespaces) throws MaeControlException {
+    String getTextBetween(int start, int end, boolean trimWhitespaces) throws MaeControlException {
         DefaultStyledDocument document = getDocument();
         String text;
         try {
@@ -339,17 +339,17 @@ public class TextPanelController extends MaeControllerI{
         return text;
     }
 
-    public void removeAllBGColors() {
+    void removeAllBGColors() {
         getView().getHighlighter().removeAllHighlights();
 
     }
 
-    public void assignAllFGColors() throws MaeDBException {
+    void assignAllFGColors() throws MaeDBException {
         assignFGColorOver(getDriver().getAllAnchors());
 
     }
 
-    public void unassignAllFGColors() throws MaeDBException {
+    void unassignAllFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         for (Integer location : anchorLocations) {
             setFGColorAtLocation(Color.black, location, false, false);
@@ -373,13 +373,13 @@ public class TextPanelController extends MaeControllerI{
         styleDoc.setCharacterAttributes(location, 1, attributeSet, false);
     }
 
-    public void assignFGColorOver(int...locations) throws MaeDBException {
+    void assignFGColorOver(int...locations) throws MaeDBException {
         for (int location : locations) {
             assignFGColorAt(location);
         }
     }
 
-    public void assignFGColorOver(List<Integer> locations) throws MaeDBException {
+    void assignFGColorOver(List<Integer> locations) throws MaeDBException {
         for (Integer location : locations) {
             assignFGColorAt(location);
         }
@@ -423,7 +423,7 @@ public class TextPanelController extends MaeControllerI{
         setFGColorAtLocation(c, location, plural, argument);
     }
 
-    public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
+    void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
         if (spans.length == 0) {
             return;
         }

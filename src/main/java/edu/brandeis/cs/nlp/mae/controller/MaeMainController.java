@@ -627,6 +627,24 @@ public class MaeMainController extends JPanel {
 
     }
 
+    public void setAsArgumentFromDialog(String argumentTid) {
+        try {
+            getDialogs().setAsArgument(argumentTid);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+
+    }
+
+    public LinkTag createLinkFromDialog(TagType linkType, List<ExtentTag> candidates) {
+        try {
+            return getDialogs().createLink(linkType, candidates);
+        } catch (MaeDBException e) {
+            showError(e);
+            return null;
+        }
+    }
+
     public void propagateSelectionFromTextPanel() {
         getTablePanel().clearTableSelections();
         try {

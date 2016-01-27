@@ -40,13 +40,13 @@ import java.util.Timer;
 /**
  * Created by krim on 12/31/2015.
  */
-public class StatusBarController extends MaeControllerI {
+class StatusBarController extends MaeControllerI {
 
     protected static final Logger logger = LoggerFactory.getLogger(StatusBarController.class);
 
     private JLabel statusBarLabel;
 
-    public StatusBarController(MaeMainController mainController) {
+    StatusBarController(MaeMainController mainController) {
         super(mainController);
         view = new JPanel(new FlowLayout(FlowLayout.LEFT));
         view.setBorder(new BevelBorder(BevelBorder.LOWERED));
@@ -55,7 +55,7 @@ public class StatusBarController extends MaeControllerI {
         reset();
     }
 
-    public void update() {
+    void update() {
         reset();
     }
 
@@ -65,7 +65,7 @@ public class StatusBarController extends MaeControllerI {
 
     }
 
-    public void setText(String s) {
+    void setText(String s) {
         statusBarLabel.setText(getModePrefix() + s);
     }
 
@@ -80,7 +80,7 @@ public class StatusBarController extends MaeControllerI {
         }
     }
 
-    public void setEmptySelectionText() {
+    void setEmptySelectionText() {
         switch (getMainController().getMode()) {
             case MaeMainController.MODE_ARG_SEL:
                 setText(MaeStrings.SB_MARGS_NOTAG);
@@ -90,7 +90,7 @@ public class StatusBarController extends MaeControllerI {
         }
     }
 
-    public void delayedReset(long delayInMillisecond) {
+    void delayedReset(long delayInMillisecond) {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {

@@ -116,7 +116,7 @@ public class MaeStrings {
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";
 
-    /* popup model */
+    /* popup menus */
     public final static String MENUITEM_NOTEXT = SB_NOTEXT;
     public final static String MENUITEM_UNDOSELECTION = "Undo last selection";
     public final static String MENUITEM_STARTOVER = "Wipe all selections";
@@ -129,6 +129,11 @@ public class MaeStrings {
     public final static String MENUITEM_CREATE_NCTAG = "Create NC Extent Tag with no text associated";
     public final static String MENUITEM_CREATE_LTAG_EMPTY = "Create Link Tag with no arguments associated";
     public final static String MENUITEM_CREATE_LTAG_FROM_SEL = "Create Link tag with selected arguments";
+
+    /* for dialogs */
+    public final static String SETARG_SEL_TAGTYPE = "Select Link Type";
+    public final static String SETARG_SEL_ARGTYPE = "Select Argument Type";
+    public final static String SETARG_SEL_TAG = "Select Link Tag";
 
     /* general messages */
     public final static String NO_TASK_IND = "No DTD";

@@ -47,7 +47,7 @@ import java.util.*;
 /**
  * Created by krim on 12/31/2015.
  */
-public class TablePanelController extends MaeControllerI {
+class TablePanelController extends MaeControllerI {
 
     // column number of some fixed attributes
     public static final int SRC_COL = 0;
@@ -62,18 +62,18 @@ public class TablePanelController extends MaeControllerI {
     private List<TagType> tabOrder;
     private Map<String, JTable> tableMap;
 
-    public TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
+    TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
         super(mainController);
         dummyForAllTagTab = new TagType(MaeStrings.ALL_TABLE_TAB_BACK_NAME, MaeStrings.ALL_TABLE_TAB_PREFIX, false);
         view = new TablePanelView();
         reset();
 
     }
-    public Set<TagType> getActiveExtentTags() {
+    Set<TagType> getActiveExtentTags() {
         return activeExtentTags;
     }
 
-    public void setActiveExtentTags(Set<TagType> types) {
+    void setActiveExtentTags(Set<TagType> types) {
         getActiveExtentTags().clear();
         for (TagType type : types) {
             if (!type.isLink()) {
@@ -83,11 +83,11 @@ public class TablePanelController extends MaeControllerI {
     }
 
 
-    public Set<TagType> getActiveLinkTags() {
+    Set<TagType> getActiveLinkTags() {
         return activeLinkTags;
     }
 
-    public void setActiveLinkTags(Set<TagType> types) {
+    void setActiveLinkTags(Set<TagType> types) {
         getActiveLinkTags().clear();
         for (TagType type : types) {
             if (type.isLink()) {
@@ -112,7 +112,7 @@ public class TablePanelController extends MaeControllerI {
 
     }
 
-    public void makeAllTables() throws MaeDBException, MaeControlException {
+    void makeAllTables() throws MaeDBException, MaeControlException {
         if (!getMainController().isTaskLoaded()) {
             throw new MaeControlException("Cannot make tables without a task definition!");
         }
@@ -144,7 +144,7 @@ public class TablePanelController extends MaeControllerI {
         addToggleListeners();
     }
 
-    public void insertAllTags() throws MaeControlException, MaeDBException {
+    void insertAllTags() throws MaeControlException, MaeDBException {
         if (!getMainController().isTaskLoaded() || !getMainController().isDocumentOpen()) {
             throw new MaeControlException("Cannot populate tables without a document open!");
         }
@@ -165,22 +165,22 @@ public class TablePanelController extends MaeControllerI {
 
     }
 
-    public int getTabIndexOfTagType(TagType type) {
+    int getTabIndexOfTagType(TagType type) {
         return tabOrder.indexOf(type);
     }
 
-    public TablePanelView.TogglingTabTitle getTagTabTitle(int tabIndex) {
+    TablePanelView.TogglingTabTitle getTagTabTitle(int tabIndex) {
         return (TablePanelView.TogglingTabTitle) getView().getTabs().getTabComponentAt(tabIndex);
     }
 
-    public void insertValueIntoCell(Tag tag, String colName, String value) {
+    void insertValueIntoCell(Tag tag, String colName, String value) {
         TagTableModel model = (TagTableModel) tableMap.get(tag.getTagtype().getName()).getModel();
         int row = model.searchForRowByTid(tag.getTid());
         int col = model.searchForColumnByColName(colName);
         model.setValueAt(value, row, col);
     }
 
-    public void insertTagIntoTable(Tag tag) throws MaeDBException, MaeControlException {
+    void insertTagIntoTable(Tag tag) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
         insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
@@ -238,7 +238,7 @@ public class TablePanelController extends MaeControllerI {
         return new String[]{getDriver().getAnnotationFileBaseName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
     }
 
-    public void selectTagFromTable(Tag tag) throws MaeDBException {
+    void selectTagFromTable(Tag tag) throws MaeDBException {
         JTable table = tableMap.get(tag.getTagTypeName());
         TagTableModel tableModel = (TagTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
@@ -258,7 +258,7 @@ public class TablePanelController extends MaeControllerI {
         table.addRowSelectionInterval(viewIndex, viewIndex);
     }
 
-    public void removeTagFromTable(Tag tag) throws MaeDBException {
+    void removeTagFromTable(Tag tag) throws MaeDBException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         logger.info(String.format("removing a row, %s from \"%s\" table, current has %d rows", tag.toString(), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
         if (tag.getTagtype().isExtent()) {
@@ -280,7 +280,7 @@ public class TablePanelController extends MaeControllerI {
         tableModel.removeRow(tableModel.searchForRowByTid(tid));
     }
 
-    public void clearTableSelections() {
+    void clearTableSelections() {
         for (JTable table : tableMap.values()) {
             TagTableModel tableModel = (TagTableModel) table.getModel();
             if (tableModel.getRowCount() > 0) {
@@ -293,7 +293,7 @@ public class TablePanelController extends MaeControllerI {
     /**
      * This methods is not actually used, nut exists for documentation purpose. Will be removed later
      */
-    public void addListeners() throws MaeDBException {
+    void addListeners() throws MaeDBException {
         addToggleListeners();
         addMouseListeners();
         addTableModelListeners();
@@ -427,22 +427,22 @@ public class TablePanelController extends MaeControllerI {
      * AnnotationTableModel creates a TableModel that user can't mess with id and source
      * // TODO: 2016-01-07 22:04:15EST 4MAII split annTableModel and adjTableModel, then SRC_COL will not be needed here
      */
-    public class TagTableModel extends DefaultTableModel implements TableModelListener {
+    class TagTableModel extends DefaultTableModel implements TableModelListener {
         private TagType tagType;
 
-        public TagTableModel(TagType tagType) {
+        TagTableModel(TagType tagType) {
             this.tagType = tagType;
         }
 
-        public TagType getAssociatedTagType() {
+        TagType getAssociatedTagType() {
             return tagType;
         }
 
-        public String getAssociatedTagTypeName() {
+        String getAssociatedTagTypeName() {
             return tagType.getName();
         }
 
-        public void updateRow(int row, String[] rowData) throws MaeControlException {
+        void updateRow(int row, String[] rowData) throws MaeControlException {
             if (this.getColumnCount() != rowData.length) {
                 throw new MaeControlException("the data for a new row does not fit in the table.");
             }
@@ -451,7 +451,7 @@ public class TablePanelController extends MaeControllerI {
             }
         }
 
-        public int searchForRowByTid(String tid) {
+        int searchForRowByTid(String tid) {
             for (int row = 0; row < getRowCount(); row++) {
                 if (getValueAt(row, ID_COL).equals(tid)) {
                     return row;
@@ -461,7 +461,7 @@ public class TablePanelController extends MaeControllerI {
 
         }
 
-        public int searchForColumnByColName(String colName) {
+        int searchForColumnByColName(String colName) {
             for (int col = 0; col < getColumnCount(); col++) {
                 if (getColumnName(col).equals(colName)) {
                     return col;
@@ -576,17 +576,17 @@ public class TablePanelController extends MaeControllerI {
         }
     }
 
-    public class LinkTagTableModel extends TagTableModel {
+    class LinkTagTableModel extends TagTableModel {
 
         private Set<Integer> argumentTextColumns;
 
-        public LinkTagTableModel(TagType tagType) {
+        LinkTagTableModel(TagType tagType) {
             super(tagType);
             argumentTextColumns = new HashSet<>();
 
         }
 
-        public void addArgumentTextColumn(int col) {
+        void addArgumentTextColumn(int col) {
             argumentTextColumns.add(col);
         }
 
@@ -639,7 +639,7 @@ public class TablePanelController extends MaeControllerI {
      */
     private class UneditableTableModel extends TagTableModel {
 
-        public UneditableTableModel(TagType tagType) {
+        UneditableTableModel(TagType tagType) {
             super(tagType);
         }
 
@@ -654,13 +654,13 @@ public class TablePanelController extends MaeControllerI {
         private TagType tagType;
         private int tabIndex;
 
-        public HighlightToggleListener(TagType tagType, int tabIndex) {
+        HighlightToggleListener(TagType tagType, int tabIndex) {
             this.tagType = tagType;
             this.tabIndex = tabIndex;
 
         }
 
-        public TagType getTagType() {
+        TagType getTagType() {
             return this.tagType;
         }
 

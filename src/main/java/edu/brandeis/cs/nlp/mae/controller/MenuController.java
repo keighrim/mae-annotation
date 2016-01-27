@@ -37,7 +37,7 @@ import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
 /**
  * Created by krim on 1/2/2016.
  */
-public class MenuController extends MaeControllerI {
+class MenuController extends MaeControllerI {
 
     // this controller is responsible for all these menus
     JMenu fileMenu;
@@ -50,7 +50,7 @@ public class MenuController extends MaeControllerI {
     // and this view for top main menu
     private JMenuBar menubar;
 
-    public MenuController(MaeMainController mainController) {
+    MenuController(MaeMainController mainController) {
         super(mainController);
         view = new JPanel(new BorderLayout());
         menubar = new JMenuBar();

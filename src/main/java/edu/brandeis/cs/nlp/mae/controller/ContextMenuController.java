@@ -43,7 +43,7 @@ import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
 /**
  * Created by krim on 1/2/2016.
  */
-public class ContextMenuController extends MaeControllerI {
+class ContextMenuController extends MaeControllerI {
 
     static final int ETAG = 0;
     static final int NCTAG = 1;
@@ -53,7 +53,7 @@ public class ContextMenuController extends MaeControllerI {
     static final int DELETE_MENU = 0;
     static final int SETARG_MENU = 1;
 
-    public ContextMenuController(MaeMainController mainController) {
+    ContextMenuController(MaeMainController mainController) {
         super(mainController);
 
     }
@@ -71,7 +71,7 @@ public class ContextMenuController extends MaeControllerI {
     }
 
     // TODO: 2016-01-23 16:20:59EST continue from here, add more menu items that's mode specific
-    public JPopupMenu createTextContextMenu() throws MaeDBException {
+    JPopupMenu createTextContextMenu() throws MaeDBException {
 
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
@@ -281,7 +281,7 @@ public class ContextMenuController extends MaeControllerI {
         }
     }
 
-    public JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
+    JPopupMenu createTableContextMenu(JTable table) throws MaeDBException {
 
         int selected = table.getSelectedRowCount();
 
@@ -324,7 +324,7 @@ public class ContextMenuController extends MaeControllerI {
         JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
         String tids = MaeStrings.SEP;
         for (int row : selectedRows) {
-            tids += (String) model.getValueAt(row, TablePanelController.ID_COL) + MaeStrings.SEP;
+            tids += model.getValueAt(row, TablePanelController.ID_COL) + MaeStrings.SEP;
         }
         int typeCount = 0;
         for (TagType linkType : getTagTypes(LTAG)) {

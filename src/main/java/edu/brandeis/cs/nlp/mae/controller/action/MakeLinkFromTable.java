@@ -39,7 +39,7 @@ import java.util.List;
  * Created by krim on 1/23/2016.
  */
 public class MakeLinkFromTable extends MakeLink {
-    public MakeLinkFromTable(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+     public MakeLinkFromTable(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
@@ -61,7 +61,7 @@ public class MakeLinkFromTable extends MakeLink {
             for (String tid : tids) {
                 tags.add((ExtentTag) getMainController().getDriver().getTagByTid(tid));
             }
-            createLinkAfterDialog(linkType, tags);
+            getMainController().createLinkFromDialog(linkType, tags);
         } catch (MaeException e) {
             catchException(e);
         }
