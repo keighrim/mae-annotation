@@ -612,6 +612,21 @@ public class MaeMainController extends JPanel {
         getTextPanel().removeAllBGColors();
     }
 
+    public void increaseTextFontSize() {
+        getTextPanel().increaseFontSize();
+
+    }
+
+    public void decreaseTextFontSize() {
+        getTextPanel().decreaseFontSize();
+
+    }
+
+    public void resetFontSize() {
+        getTextPanel().resetFontSize();
+
+    }
+
     public void propagateSelectionFromTextPanel() {
         getTablePanel().clearTableSelections();
         try {

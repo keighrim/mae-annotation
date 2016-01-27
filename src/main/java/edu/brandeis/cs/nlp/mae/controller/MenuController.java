@@ -66,10 +66,12 @@ public class MenuController extends MaeControllerI {
 
         fileMenu = createFileMenu();
         modeMenu = createModeMenu();
+        displayMenu = createDisplayMenu();
         helpMenu = createHelpMenu();
 
         menubar.add(fileMenu);
         menubar.add(modeMenu);
+        menubar.add(displayMenu);
         menubar.add(helpMenu);
 
         view.updateUI();
@@ -85,7 +87,6 @@ public class MenuController extends MaeControllerI {
         MaeActionI loadTaskAction = new LoadTask(MENUITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
         MaeActionI openFileAction = new OpenFile(MENUITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
         MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
-//        MaeActionI saveRTFAction = new SaveRTF(MENU_FILE_ITEM_SAVERTF, null, ksSAVERTF, null, getMainController());
 //        MaeActionI closeFileAction = new LoadTask(MENU_FILE_ITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
         // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard
 
@@ -95,20 +96,17 @@ public class MenuController extends MaeControllerI {
         JMenuItem loadTask = new JMenuItem(loadTaskAction);
         JMenuItem openFile = new JMenuItem(openFileAction);
         JMenuItem saveXML = new JMenuItem(saveXMLAction);
-//        JMenuItem saveRTF = new JMenuItem(saveRTFAction);
 //        JMenuItem closeFile = new JMenuItem(closeFileAction);
         boolean taskLoaded = getMainController().isTaskLoaded();
         boolean fileLoaded = getMainController().isDocumentOpen();
         openFile.setEnabled(taskLoaded);
         saveXML.setEnabled(fileLoaded);
-//        saveRTF.setEnabled(fileLoaded);
 //        closeFile.setEnabled(fileLoaded);
 
         menu.add(loadTask);
         menu.add(openFile);
         menu.addSeparator();
         menu.add(saveXML);
-//        menu.add(saveRTF);
         menu.addSeparator();
 //        menu.add(closeFile);
         logger.info("file menu is created: " + menu.getItemCount());
@@ -164,5 +162,26 @@ public class MenuController extends MaeControllerI {
         return menu;
     }
 
+    private JMenu createDisplayMenu() {
+        MaeActionI increaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
+        MaeActionI decreaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
+        MaeActionI resetFontSizeAction = new ChangeFontsize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
+
+        JMenu menu = new JMenu(MENU_DISPLAY);
+        menu.setMnemonic(MENU_DISPLAY.charAt(0));
+
+        JMenuItem increaseFontSize = new JMenuItem(increaseFontSizeAction);
+        increaseFontSize.setActionCommand("+");
+        JMenuItem decreaseFontSize = new JMenuItem(decreaseFontSizeAction);
+        decreaseFontSize.setActionCommand("-");
+        JMenuItem resetFontSize = new JMenuItem(resetFontSizeAction);
+        resetFontSize.setActionCommand("0");
+
+        menu.add(increaseFontSize);
+        menu.add(decreaseFontSize);
+        menu.add(resetFontSize);
+        logger.info("display menu is created: " + menu.getItemCount());
+        return menu;
+    }
 
 }

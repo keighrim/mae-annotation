@@ -252,16 +252,14 @@ public class MaeHotKeys {
     public final static KeyStroke ksCMinus
             = KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke ksFONTSMALL = ksCMinus;
+    public final static KeyStroke ksZOOMOUT = ksCMinus;
     
     public final static KeyStroke ksCEquals
             = KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, 
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke ksFONTBIG = ksCEquals;
-    
-    public final static KeyStroke ksCPlus
-            = KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 
-            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksZOOMIN = ksCEquals;
+
+    public final static KeyStroke ksRESETZOOM = ksC0;
 
     // TODO: 2016-01-10 16:36:05EST for side panel support
     public final static KeyStroke SIDEPANEL = ksF9;

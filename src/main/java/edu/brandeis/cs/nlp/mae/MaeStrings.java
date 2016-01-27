@@ -109,6 +109,9 @@ public class MaeStrings {
     public final static String MENUITEM_ARGSEL_MODE = "Switch to argument selection mode";
     public final static String MENUITEM_NORMAL_MODE = "Return to normal mode";
     public final static String MENU_DISPLAY = "Display";
+    public final static String MENUITEM_ZOOMIN = "Increase font size";
+    public final static String MENUITEM_ZOOMOUT = "Decrease font size";
+    public final static String MENUITEM_RESET_ZOOM = "Reset font size";
     public final static String MENU_HELP = "Help";
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";

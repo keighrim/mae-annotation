@@ -44,6 +44,8 @@ import java.util.HashMap;
  */
 public class TextPanelView extends JPanel {
 
+    public static final int DEFAULT_FONT_SIZE = 14;
+    public static final int VERYLARGE_FONT_SIZE = 36;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
@@ -108,7 +110,7 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
-        documentArea.setFont(new Font("monospaced", Font.PLAIN, 14));
+        documentArea.setFont(new Font("monospaced", Font.PLAIN, DEFAULT_FONT_SIZE));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
@@ -125,6 +127,14 @@ public class TextPanelView extends JPanel {
 
     public DefaultStyledDocument getDocument() {
         return (DefaultStyledDocument) getDocumentPane().getDocument();
+    }
+
+    public Font getTextFont() {
+        return getDocumentPane().getFont();
+    }
+
+    public void setTextFont(Font font) {
+        getDocumentPane().setFont(font);
     }
 
     public Highlighter getHighlighter() {

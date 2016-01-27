@@ -1835,9 +1835,9 @@ public class MaeMainUI extends JPanel {
     private JMenu createDisplayMenu(String menuTitle) {
         JMenu menu = new JMenu(menuTitle);
         FontSizeMenuListener fsmListener = new FontSizeMenuListener(this);
-        JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.ksFONTBIG,
+        JMenuItem increaseFont = createMenuItem("Font Size ++", MaeHotKeys.ksZOOMIN,
                 "Font++", fsmListener);
-        JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.ksFONTSMALL,
+        JMenuItem decreaseFont = createMenuItem("Font Size --", MaeHotKeys.ksZOOMOUT,
                 "Font--", fsmListener);
         menu.add(increaseFont);
         menu.add(decreaseFont);

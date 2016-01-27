@@ -186,6 +186,31 @@ public class TextPanelController extends MaeControllerI{
         getView().getTabs().remove(i);
     }
 
+    void resetFontSize() {
+        getView().setTextFont(new Font("monospaced", Font.PLAIN, TextPanelView.DEFAULT_FONT_SIZE));
+
+    }
+
+    void increaseFontSize() {
+        Font original = getView().getTextFont();
+        Font increased = new Font(original.getName(), original.getStyle(), original.getSize() + 1);
+        getView().setTextFont(increased);
+
+    }
+
+    void decreaseFontSize() {
+        Font original = getView().getTextFont();
+        Font decreased = new Font(original.getName(), original.getStyle(), original.getSize() - 1);
+        getView().setTextFont(decreased);
+
+    }
+
+    void veryLargeFonts() {
+        getView().setTextFont(new Font("monospaced", Font.PLAIN, TextPanelView.VERYLARGE_FONT_SIZE));
+
+    }
+
+
     public void selectTab(int tabId) {
         // TODO: 1/4/2016 finish this for multi file support
         getView().selectTab(tabId);
