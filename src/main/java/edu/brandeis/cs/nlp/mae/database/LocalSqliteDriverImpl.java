@@ -675,7 +675,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Attribute addOrUpdateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
+    public void deleteAttribute(Tag tag, AttributeType attType) throws MaeDBException {
+        updateAttribute(tag, attType, null);
+    }
+
+    @Override
+    public Attribute updateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
         logger.debug(String.format("adding an attribute '%s: %s' to tag %s (%s)", attType.getName(), attValue, tag.getId(), tag.getTagTypeName()));
         try {
             Attribute oldAtt = attQuery.where().eq(DBSchema.TAB_ATT_FCOL_ETAG, tag).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
@@ -683,23 +688,56 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
                 logger.debug(String.format("an old attribute \"%s\" is deleted from \"%s\"", oldAtt.toString(), tag.toString()));
                 attDao.delete(oldAtt);
             }
-            if (attValue.length() > 0) {
-
-                Attribute att = new Attribute(tag, attType, attValue);
-                attDao.create(att);
-                if (tag.getTagtype().isExtent()) {
-                    eTagDao.update((ExtentTag) tag);
-                } else {
-                    lTagDao.update((LinkTag) tag);
-                }
-                resetQueryBuilders();
-                logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
-                setAnnotationChanged(true);
-                return att;
+            if (attValue != null && attValue.length() > 0) {
+                return addAttribute(tag, attType, attValue);
             } else {
                 logger.debug("no new value is provided. leaving the attribute deleted");
                 return null;
             }
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+
+    }
+
+    public Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
+        try {
+            Attribute att = new Attribute(tag, attType, attValue);
+            attDao.create(att);
+            refreshTag(tag);
+            resetQueryBuilders();
+            logger.debug(String.format("an attribute \"%s\" is attached to \"%s\"", att.toString(), tag.toString()));
+            setAnnotationChanged(true);
+            return att;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeModelException e) {
+            throw new MaeDBException("failed to add an attribute: " + e.getMessage(), e);
+        }
+    }
+
+    void refreshTag(Tag tag) throws SQLException {
+        if (tag.getTagtype().isExtent()) {
+            eTagDao.update((ExtentTag) tag);
+        } else {
+            lTagDao.update((LinkTag) tag);
+        }
+    }
+
+    @Override
+    public Set<Attribute> addAttributes(Tag tag, Map<AttributeType, String> attributes) throws MaeDBException {
+        Set<Attribute> created = new HashSet<>();
+        try {
+            for (AttributeType attType : attributes.keySet()) {
+                Attribute att = new Attribute(tag, attType, attributes.get(attType));
+                attDao.create(att);
+                created.add(att);
+            }
+            refreshTag(tag);
+            resetQueryBuilders();
+            logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", created.toString(), tag.toString()));
+            setAnnotationChanged(true);
+            return created;
         } catch (SQLException e) {
             throw catchSQLException(e);
         } catch (MaeModelException e) {

@@ -51,8 +51,10 @@ public class NewXMLLoader {
     private static final Logger logger = LoggerFactory.getLogger(NewXMLLoader.class.getName());
 
     private MaeDriverI driver;
+    private Map<TagType, Map<String, AttributeType>> attTypeMap;
 
     public NewXMLLoader(MaeDriverI driver) {
+        this.attTypeMap = new HashMap<>();
         this.driver = driver;
     }
 
@@ -217,12 +219,23 @@ public class NewXMLLoader {
     }
 
     private void addAllAttributes(Map<String, AttributeType> attTypeMap, NamedNodeMap nodeAttributes, Tag tag) throws MaeDBException {
+        Map<AttributeType, String> attributes = new HashMap<>();
+        int attributesCount = 0;
         for (String attName : attTypeMap.keySet()) {
             if (nodeAttributes.getNamedItem(attName) != null) {
                 String attValue = nodeAttributes.getNamedItem(attName).getNodeValue();
                 if (attValue.length() > 0) {
-                    driver.addOrUpdateAttribute(tag, attTypeMap.get(attName), attValue);
+//                    driver.addAttribute(tag, attTypeMap.get(attName), attValue);
+                    attributes.put(attTypeMap.get(attName), attValue);
+                    attributesCount++;
                 }
+            }
+        }
+        Set<Attribute> newAttrbutes = driver.addAttributes(tag, attributes);
+        if (newAttrbutes.size() != attributesCount) {
+            logger.info(String.format("asked for %d attributes to be added, %d were actually added: reverting changes", attributesCount, newAttrbutes.size()));
+            for (Attribute att : newAttrbutes) {
+                driver.deleteAttribute(tag, att.getAttributeType());
             }
         }
     }
@@ -237,11 +250,15 @@ public class NewXMLLoader {
     }
 
     private Map<String, AttributeType> getAttributeTypeMap(TagType tagType) throws MaeDBException {
+        if (attTypeMap.containsKey(tagType)) {
+            return attTypeMap.get(tagType);
+        }
         List<AttributeType> possibleAttTypes = driver.getAttributeTypesOfTagType(tagType);
         Map<String, AttributeType> possibleAttTypeMap = new HashMap<>();
         for (AttributeType type : possibleAttTypes) {
             possibleAttTypeMap.put(type.getName(), type);
         }
+        attTypeMap.put(tagType, possibleAttTypeMap);
         return possibleAttTypeMap;
     }
 

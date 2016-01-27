@@ -703,7 +703,7 @@ public class MaeMainController extends JPanel {
         for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
             String defaultValue = attType.getDefaultValue();
             if (defaultValue != null && defaultValue.length() > 0) {
-                getDriver().addOrUpdateAttribute(tag, attType, defaultValue);
+                getDriver().addAttribute(tag, attType, defaultValue);
             }
         }
     }
@@ -749,7 +749,7 @@ public class MaeMainController extends JPanel {
                 return true;
             } else {
                 AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tag.getTagtype(), colName);
-                succeed = (getDriver().addOrUpdateAttribute(tag, attType, value) != null);
+                succeed = (getDriver().updateAttribute(tag, attType, value) != null);
             }
         } catch (MaeException e) {
             showError(e);

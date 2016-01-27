@@ -193,7 +193,7 @@ public class LocalSqliteDriverImplTest {
     public void canUpdateAttribute() throws Exception {
         ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
         AttributeType proper = driver.createAttributeType(noun, "proper");
-        driver.addOrUpdateAttribute(nTag, proper, "true");
+        driver.addAttribute(nTag, proper, "true");
 
         assertTrue(
                 "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),
@@ -202,7 +202,7 @@ public class LocalSqliteDriverImplTest {
                         && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("true")
         );
 
-        driver.addOrUpdateAttribute(nTag, proper, "false");
+        driver.updateAttribute(nTag, proper, "false");
 
         assertTrue(
                 "Expected an attribute is updated, found: " + nTag.getAttributesWithNames().toString(),
@@ -252,7 +252,7 @@ public class LocalSqliteDriverImplTest {
         ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         AttributeType proper = driver.createAttributeType(noun, "proper");
-        driver.addOrUpdateAttribute(nTag, proper, "true");
+        driver.addAttribute(nTag, proper, "true");
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
         driver.addOrUpdateArgument(link, agent, nTag);

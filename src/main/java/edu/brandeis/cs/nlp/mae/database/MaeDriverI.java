@@ -162,7 +162,13 @@ public interface MaeDriverI {
     void setAttributeTypeRequired(AttributeType type, boolean b) throws MaeDBException;
 
     // atts
-    Attribute addOrUpdateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException;
+    Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException;
+
+    Set<Attribute> addAttributes(Tag tag, Map<AttributeType, String> attributes) throws MaeDBException;
+
+    Attribute updateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException;
+
+    void deleteAttribute(Tag tag, AttributeType attType) throws MaeDBException;
 
     Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException;
 
