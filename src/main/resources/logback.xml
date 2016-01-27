@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
 <!--
   ~ MAE - Multi-purpose Annotation Environment
   ~
@@ -23,20 +24,31 @@
   ~ @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
   -->
 
-<NounVerbTask>
-<TEXT><![CDATA[
-Mrs Miller wants the entire house repainted.
-]]>
-</TEXT>
-<TAGS>
-<NOUN id="N0" spans="1~11" text="Mrs Miller" type="other" comment="default value" />
-<NOUN id="N1" spans="29~34" text="house" type="other" comment="default value" />
-<NOUN id="N2" spans="-1~-1" text="" type="other" comment="default value" />
-<VERB id="V0" spans="12~17" text="wants" tense="" aspect="perfect progressive" />
-<ADJ_ADV id="A0" spans="35~44" text="repainted" type="" />
-<ADJ_ADV id="A1" spans="22~28" text="entire" type="" />
-<ACTION id="AC1" fromID="N2" fromText="" toID="A0" toText="repainted" relationship="performs" />
-<DESCRIPTION id="D1" type="" arg0ID="N1" arg0Text="house" arg1ID="A1" arg1Text="entire" arg2ID="A0" arg2Text="repainted" arg3ID="" arg3Text="" arg4ID="" arg4Text="" relationship="described_by" />
-<ARGUMENTS id="AR0" agentID="N0" agentText="Mrs Miller" patientID="N1" patientText="house" themeID="A0" themeText="repainted" predicateID="V0" predicateText="wants" has_gap="no" />
-</TAGS>
-</NounVerbTask>
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>
+                %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                @%d{HH:mm:ss.SSS} [%-5level] %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+        <target>System.err</target>
+    </appender>
+
+    <logger name="com.j256.ormlite" level="warn"/>
+
+    <root level="info">
+        <appender-ref ref="STDERR" />
+    </root>
+</configuration>
+
