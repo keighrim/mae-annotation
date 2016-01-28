@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller.action;
@@ -43,7 +43,7 @@ public class MakeTag extends MenuActionI {
     @Override
     public void actionPerformed(ActionEvent event) {
         try {
-            getMainController().createTagFromTextContextMenu(getMainController().getDriver().getTagTypeByName(event.getActionCommand()));
+            getMainController().createTagFromMenu(getMainController().getDriver().getTagTypeByName(event.getActionCommand()));
         } catch (MaeDBException e) {
             catchException(e);
         }
