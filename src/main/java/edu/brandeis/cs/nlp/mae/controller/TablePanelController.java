@@ -262,6 +262,7 @@ class TablePanelController extends MaeControllerI {
         UneditableTableModel tableModel = (UneditableTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tid));
         table.addRowSelectionInterval(viewIndex, viewIndex);
+        table.scrollRectToVisible(table.getCellRect(viewIndex, 0, true));
     }
 
     void removeTagFromTable(Tag tag) throws MaeDBException {
