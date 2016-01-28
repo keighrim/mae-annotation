@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller;
@@ -36,13 +36,13 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -138,7 +138,7 @@ class DialogController {
                 JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             Map<ArgumentType, ExtentTag> arguments = options.getSelectedArguments();
-            LinkTag linker = (LinkTag) getMainController().createTagFromTextContextMenu(linkType);
+            LinkTag linker = (LinkTag) getMainController().createTagFromMenu(linkType);
             for (ArgumentType argType : arguments.keySet()) {
                 String argTypeName = argType.getName();
                 String argTid = arguments.get(argType).getTid();

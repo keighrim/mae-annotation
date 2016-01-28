@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller;
@@ -238,11 +238,17 @@ class TablePanelController extends MaeControllerI {
         return new String[]{getDriver().getAnnotationFileBaseName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
     }
 
+    void selectTabOf(TagType type) {
+        getView().getTabs().setSelectedIndex(tabOrder.indexOf(type));
+    }
+
     void selectTagFromTable(Tag tag) throws MaeDBException {
         JTable table = tableMap.get(tag.getTagTypeName());
+        table.clearSelection();
         TagTableModel tableModel = (TagTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
         table.addRowSelectionInterval(viewIndex, viewIndex);
+        table.scrollRectToVisible(table.getCellRect(viewIndex, 0, true));
         if (tag.getTagtype().isExtent()) {
             selectTagFromAllTagsTable(tag.getId());
             for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
