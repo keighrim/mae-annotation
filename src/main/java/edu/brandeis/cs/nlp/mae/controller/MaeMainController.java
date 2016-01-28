@@ -67,7 +67,6 @@ public class MaeMainController extends JPanel {
 
     // TODO: 2016-01-09 18:09:29EST all of actions and menuitems
     private MenuController menu;
-    private ContextMenuController contextMenu;
 
     // TODO: 2016-01-09 18:10:19EST add linkCreation popup view
     private DialogController dialogs;
@@ -103,7 +102,6 @@ public class MaeMainController extends JPanel {
         // these components are not attached to mainFrame, but will be called when necessary
         try {
             menu = new MenuController(this);
-            contextMenu = new ContextMenuController(this);
             textPanel = new TextPanelController(this);
             tablePanel = new TablePanelController(this);
             statusBar = new StatusBarController(this);
@@ -182,10 +180,6 @@ public class MaeMainController extends JPanel {
 
     public MenuController getMenu() {
         return menu;
-    }
-
-    public ContextMenuController getContextMenu() {
-        return contextMenu;
     }
 
     public DialogController getDialogs() {
@@ -361,7 +355,7 @@ public class MaeMainController extends JPanel {
         if (mode != MODE_ARG_SEL) {
             mode = MODE_ARG_SEL;
             sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
-            getMenu().reset();
+            getMenu().resetModeMenu();
         }
     }
 
@@ -370,7 +364,7 @@ public class MaeMainController extends JPanel {
         if (mode != MODE_MULTI_SPAN) {
             mode = MODE_MULTI_SPAN;
             sendTemporaryNotification(MaeStrings.SB_MSPAN_MODE_NOTI, 3000);
-            getMenu().reset();
+            getMenu().resetModeMenu();
         }
     }
 
@@ -381,7 +375,7 @@ public class MaeMainController extends JPanel {
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
             removeAllBGColors();
             addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
-            getMenu().reset();
+            getMenu().resetModeMenu();
         }
     }
 
@@ -399,7 +393,7 @@ public class MaeMainController extends JPanel {
             logger.info(String.format("task \"%s\" is loaded, has %d extent tags and %d link tags", getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
             resetColors();
             if (fromNewTask) {
-                getMenu().reset();
+                getMenu().resetFileMenu();
                 getStatusBar().reset();
                 getTextPanel().reset();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, taskFile));
@@ -420,7 +414,9 @@ public class MaeMainController extends JPanel {
             getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
 
             getTablePanel().insertAllTags();
-            getMenu().reset();
+            getMenu().resetFileMenu();
+            getMenu().resetTagsMenu();
+            getMenu().resetModeMenu();
             getTextPanel().reset();
             getStatusBar().reset();
         } catch (Exception e) {
@@ -669,7 +665,7 @@ public class MaeMainController extends JPanel {
     public JPopupMenu createTableContextMenu(JTable table) {
         try {
             logger.info("creating context menu from table panel");
-            return getContextMenu().createTableContextMenu(table);
+            return getMenu().createTableContextMenu(table);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -679,7 +675,7 @@ public class MaeMainController extends JPanel {
     public JPopupMenu createTextContextMenu() {
         try {
             logger.info("creating context menu from text panel");
-            return getContextMenu().createTextContextMenu();
+            return getMenu().createTextContextMenu();
         } catch (MaeDBException e) {
             showError(e);
         }
