@@ -61,20 +61,11 @@ public class MaeMainController extends JPanel {
     private JFrame mainFrame;
 
 
-    private StatusBarController statusBar; // 1/1/2016 drafted
-    private TextPanelController textPanel;  // 1/5/2016 drafted
-    private TablePanelController tablePanel; // 1/8/2016 drafted
-
-    // TODO: 2016-01-09 18:09:29EST all of actions and menuitems
+    private StatusBarController statusBar;
+    private TextPanelController textPanel;
+    private TablePanelController tablePanel;
     private MenuController menu;
-
-    // TODO: 2016-01-09 18:10:19EST add linkCreation popup view
     private DialogController dialogs;
-
-    // TODO: 1/4/2016 create etag, create ltag, add argument, ...
-//    private LinkCreationController linkCreator;
-
-    // some booleans for user preference
 
     // booleans for user preferences
     private boolean normalModeOnCreation = true; // on by default
@@ -92,14 +83,10 @@ public class MaeMainController extends JPanel {
 
         drivers = new ArrayList<>();
 
-        //used to keep track of what color goes with what tag
-        // keep track of which tag type is highlighted in text pane
-
         mode = MODE_NORMAL;
         tagsForColor = new ArrayList<>();
         documentTabColors = new ColorHandler(6); // by default, 6 colors allowed to distinguish documents
 
-        // these components are not attached to mainFrame, but will be called when necessary
         try {
             menu = new MenuController(this);
             textPanel = new TextPanelController(this);
@@ -108,27 +95,6 @@ public class MaeMainController extends JPanel {
             dialogs = new DialogController(this);
         } catch (MaeException e) {
             showError(e);
-        }
-
-//        linkCreator = new LinkCreationController(this);
-    }
-
-    public void addDocument(File annotationFile) {
-        if (getDriver().isTaskLoaded()) {
-            try {
-                if (getDriver().isAnnotationLoaded()) {
-                    // TODO: 1/3/2016 fix here for multi file annotation in the future
-                    // TODO: 1/3/2016 maybe we need a method driver.resetAnnotation() to purge out all annotations(tags and atts), but keep task structure
-                    String taskFileName = getDriver().getTaskFileName();
-                    File taskFile = new File(taskFileName);
-                    destroyCurrentDriver();
-                    setupScheme(MaeStrings.ANN_DB_FILE, taskFile, false);
-                    getDriver().readTask(taskFile);
-                }
-                getDriver().readAnnotation(annotationFile);
-            } catch (Exception e) {
-                showError(e);
-            }
         }
     }
 
@@ -169,6 +135,25 @@ public class MaeMainController extends JPanel {
         }
     }
 
+    public void addDocument(File annotationFile) {
+        if (getDriver().isTaskLoaded()) {
+            try {
+                if (getDriver().isAnnotationLoaded()) {
+                    // TODO: 1/3/2016 fix here for multi file annotation in the future
+                    // TODO: 1/3/2016 maybe we need a method driver.resetAnnotation() to purge out all annotations(tags and atts), but keep task structure
+                    String taskFileName = getDriver().getTaskFileName();
+                    File taskFile = new File(taskFileName);
+                    destroyCurrentDriver();
+                    setupScheme(MaeStrings.ANN_DB_FILE, taskFile, false);
+                    getDriver().readTask(taskFile);
+                }
+                getDriver().readAnnotation(annotationFile);
+            } catch (Exception e) {
+                showError(e);
+            }
+        }
+    }
+
     private void setWindowFrame(JFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
@@ -178,11 +163,11 @@ public class MaeMainController extends JPanel {
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 
-    public MenuController getMenu() {
+    private MenuController getMenu() {
         return menu;
     }
 
-    public DialogController getDialogs() {
+    private DialogController getDialogs() {
         return dialogs;
     }
 
@@ -250,10 +235,6 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void annotationIsChanged() {
-        getDriver().setAnnotationChanged(true);
-    }
-
     public boolean normalModeOnCreation() {
         return normalModeOnCreation;
     }
@@ -282,23 +263,15 @@ public class MaeMainController extends JPanel {
         this.mFilenameSuffix = mFilenameSuffix;
     }
 
-//    public LinkCreationController getLinkPopupFrame() {
-//        return null;
-//    }
-
-//    public void setLinkPopupFrame(LinkCreationController linkCreator) {
-//        this.linkCreator = linkCreator;
-//    }
-
-    public TablePanelController getTablePanel() {
+    private TablePanelController getTablePanel() {
         return tablePanel;
     }
 
-    public TextPanelController getTextPanel() {
+    private TextPanelController getTextPanel() {
         return textPanel;
     }
 
-    public StatusBarController getStatusBar() {
+    private StatusBarController getStatusBar() {
         return statusBar;
     }
 
@@ -334,7 +307,7 @@ public class MaeMainController extends JPanel {
 
     public void sendNotification(String message) {
         getStatusBar().setText(message);
-        logger.info(message);
+        logger.debug(message);
     }
 
     public void resetNotificationMessageIn(long millisecond) {
@@ -390,11 +363,11 @@ public class MaeMainController extends JPanel {
             currentDriver = new LocalSqliteDriverImpl(dbFile);
             drivers.add(currentDriver);
             getDriver().readTask(taskFile);
-            logger.info(String.format("task \"%s\" is loaded, has %d extent tags and %d link tags", getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
+            logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
+                    getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
             resetColors();
             if (fromNewTask) {
                 getMenu().resetFileMenu();
-                getStatusBar().reset();
                 getTextPanel().reset();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, taskFile));
                 sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
@@ -410,15 +383,17 @@ public class MaeMainController extends JPanel {
     public void newAnnotation(File annotationFile) {
         try {
             setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
+            sendWaitMessage();
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
-
             getTablePanel().insertAllTags();
+            logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
             getMenu().resetFileMenu();
             getMenu().resetTagsMenu();
             getMenu().resetModeMenu();
             getTextPanel().reset();
-            getStatusBar().reset();
+            sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
+//            getStatusBar().reset();
         } catch (Exception e) {
             showError(e);
         }
@@ -663,8 +638,8 @@ public class MaeMainController extends JPanel {
     }
 
     public JPopupMenu createTableContextMenu(JTable table) {
+        logger.debug("creating context menu from table panel");
         try {
-            logger.info("creating context menu from table panel");
             return getMenu().createTableContextMenu(table);
         } catch (MaeDBException e) {
             showError(e);
@@ -673,8 +648,8 @@ public class MaeMainController extends JPanel {
     }
 
     public JPopupMenu createTextContextMenu() {
+        logger.debug("creating context menu from text panel");
         try {
-            logger.info("creating context menu from text panel");
             return getMenu().createTextContextMenu();
         } catch (MaeDBException e) {
             showError(e);
@@ -707,7 +682,8 @@ public class MaeMainController extends JPanel {
             String tid = getDriver().getNextId(tagType);
             if (tagType.isLink()) {
                 tag = getDriver().createLinkTag(tid, tagType);
-                // creating a link from text popup will always end up in an empty link, no need to populate or repaint its arguments
+                // creating a link from text popup will always end up in an empty link,
+                // no need to populate or repaint its arguments
             } else if (nc) {
                 tag = getDriver().createExtentTag(tid, tagType, null, null);
             } else {
@@ -741,7 +717,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void deleteTagFromTableDeletion(Tag tag) {
-        logger.info(String.format("removing DB row based on table deletion: \"%s\"", tag.getId()));
+        logger.debug(String.format("removing DB row based on table deletion: \"%s\"", tag.getId()));
         try {
             getDriver().deleteTag(tag);
             if (tag.getTagtype().isExtent()) {
@@ -758,7 +734,7 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean updateDBFromTableUpdate(String tid, String colName, String value) {
-        logger.info(String.format("modifying DB based on table update: setting \"%s\" of %s to \"%s\"", colName, tid, value));
+        logger.debug(String.format("modifying DB based on table update: updating \"%s\" of %s to \"%s\"", colName, tid, value));
         boolean succeed = false;
         try {
             Tag tag = getDriver().getTagByTid(tid);
@@ -772,7 +748,7 @@ public class MaeMainController extends JPanel {
                 LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
                 ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
                 if (arg == null) {
-                    showError("No such a tag stored in DB: " + value);
+                    showError("Argument not found: " + value);
                     return false;
                 }
                 succeed = (getDriver().addOrUpdateArgument(linker, argType, arg) != null);
@@ -796,8 +772,5 @@ public class MaeMainController extends JPanel {
         getTablePanel().insertValueIntoCell(tag, colName, value);
     }
 
-    public void updateStatusBar() {
-        getStatusBar().update();
-    }
 }
 

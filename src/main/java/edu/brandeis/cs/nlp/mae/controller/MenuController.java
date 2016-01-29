@@ -190,7 +190,7 @@ class MenuController extends MaeControllerI {
         menu.add(saveXML);
         menu.addSeparator();
 //        menu.add(closeFile);
-        logger.info("file menu is created: " + menu.getItemCount());
+        logger.debug("file menu is created: " + menu.getItemCount());
         return menu;
     }
 
@@ -206,7 +206,7 @@ class MenuController extends MaeControllerI {
             documentNotOpen.setEnabled(false);
             menu.add(documentNotOpen);
         }
-        logger.info("tags menu is created: " + menu.getItemCount());
+        logger.debug("tags menu is created: " + menu.getItemCount());
         return menu;
 
     }
@@ -246,7 +246,7 @@ class MenuController extends MaeControllerI {
             documentNotOpen.setEnabled(false);
             menu.add(documentNotOpen);
         }
-        logger.info("mode menu is created: " + menu.getItemCount());
+        logger.debug("mode menu is created: " + menu.getItemCount());
         return menu;
     }
 
@@ -262,7 +262,7 @@ class MenuController extends MaeControllerI {
 
         menu.add(about);
         menu.add(visitWebsite);
-        logger.info("help menu is created: " + menu.getItemCount());
+        logger.debug("help menu is created: " + menu.getItemCount());
         return menu;
     }
 
@@ -284,7 +284,7 @@ class MenuController extends MaeControllerI {
         menu.add(increaseFontSize);
         menu.add(decreaseFontSize);
         menu.add(resetFontSize);
-        logger.info("display menu is created: " + menu.getItemCount());
+        logger.debug("display menu is created: " + menu.getItemCount());
         return menu;
     }
 

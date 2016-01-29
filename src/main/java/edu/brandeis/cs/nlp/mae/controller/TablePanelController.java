@@ -117,7 +117,7 @@ class TablePanelController extends MaeControllerI {
             throw new MaeControlException("Cannot make tables without a task definition!");
         }
         List<TagType> types = getDriver().getAllTagTypes();
-        logger.info(String.format("start creating tables for %d tag types", types.size()));
+        logger.debug(String.format("start creating tables for %d tag types", types.size()));
 
         if (types.size() > 20) {
             getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -193,10 +193,10 @@ class TablePanelController extends MaeControllerI {
 
         if (insertAt == tableModel.getRowCount()) {
             tableModel.addRow(newRowData);
-            logger.info(String.format("inserting a new row, %s, to \"%s\" table, now has %d rows", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
+            logger.debug(String.format("inserting a new row, %s, to \"%s\" table, now has %d rows", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
         } else if (insertAt < tableModel.getRowCount()) {
             tableModel.updateRow(insertAt, newRowData);
-            logger.info(String.format("updating a row, %s, to \"%s\" table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
+            logger.debug(String.format("updating a row, %s, to \"%s\" table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
         } else {
             // TODO: 2016-01-08 19:50:19EST this is for error checking, make sure this works as intended
             throw (new MaeControlException("cannot add a row!"));
@@ -266,15 +266,15 @@ class TablePanelController extends MaeControllerI {
 
     void removeTagFromTable(Tag tag) throws MaeDBException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
-        logger.info(String.format("removing a row, %s from \"%s\" table, current has %d rows", tag.toString(), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
+        logger.debug(String.format("removing a row, %s from \"%s\" table, current has %d rows", tag.toString(), tableModel.getAssociatedTagTypeName(), tableModel.getRowCount()));
         if (tag.getTagtype().isExtent()) {
-            logger.info(String.format("however, first, removing the mirrored row from all tags table, %s", tag.toString()));
+            logger.debug(String.format("however, first, removing the mirrored row from all tags table, %s", tag.toString()));
             removeTagFromAllTagsTable(tag.getId());
-            logger.info(String.format("next, removing link tags associated to %s", tag.toString()));
+            logger.debug(String.format("next, removing link tags associated to %s", tag.toString()));
             for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
                 removeTagFromTable(link);
             }
-            logger.info("finally, removing the original extent tag");
+            logger.debug("finally, removing the original extent tag");
         }
         tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
         getMainController().deleteTagFromTableDeletion(tag);
@@ -349,7 +349,7 @@ class TablePanelController extends MaeControllerI {
         JTable table = makeTagTableFromEmptyModel(model, type.isExtent());
         tabOrder.add(type);
         tableMap.put(type.getName(), table);
-        logger.info("successfully created a table for: " + type.getName());
+        logger.debug("successfully created a table for: " + type.getName());
 
         if (type.isLink()) {
             addArgumentColumns(type, table);
@@ -383,7 +383,7 @@ class TablePanelController extends MaeControllerI {
         LinkTagTableModel model = (LinkTagTableModel) table.getModel();
         List<ArgumentType> arguments = new ArrayList<>(type.getArgumentTypes());
         for (ArgumentType argType : arguments) {
-            logger.info(String.format("adding columns for '%s' argument to '%s' link tag table.", argType.getName(), type.getName()));
+            logger.debug(String.format("adding columns for '%s' argument to '%s' link tag table.", argType.getName(), type.getName()));
 
             model.addColumn(argType.getName() + "ID");
             TableColumn column = new TableColumn(model.getColumnCount()-1);
@@ -402,11 +402,11 @@ class TablePanelController extends MaeControllerI {
         List<AttributeType> attributes = new ArrayList<>(type.getAttributeTypes());
         TagTableModel model = (TagTableModel) table.getModel();
         for (AttributeType attType : attributes) {
-            logger.info(String.format("adding '%s' attribute column to '%s' tag table.", attType.getName(), type.getName()));
+            logger.debug(String.format("adding '%s' attribute column to '%s' tag table.", attType.getName(), type.getName()));
             model.addColumn(attType.getName());
             TableColumn column = new TableColumn(model.getColumnCount()-1);
             if (attType.isFiniteValueset()) {
-                logger.info(String.format("... and it has predefined value set: %s", attType.getValueset()));
+                logger.debug(String.format("... and it has predefined value set: %s", attType.getValueset()));
                 JComboBox valueset = makeValidValuesComboBox(attType);
                 column.setCellEditor(new DefaultCellEditor(valueset));
             } else if (attType.isIdRef()) {
@@ -484,7 +484,7 @@ class TablePanelController extends MaeControllerI {
 
         @Override
         public void tableChanged(TableModelEvent event) {
-            logger.info(String.format("\"%s\" table changed: %d at %d, %d (INS=1, UPD=0, DEL=-1)", getAssociatedTagTypeName(), event.getType(), event.getFirstRow(), event.getColumn()));
+            logger.debug(String.format("\"%s\" table changed: %d at %d, %d (INS=1, UPD=0, DEL=-1)", getAssociatedTagTypeName(), event.getType(), event.getFirstRow(), event.getColumn()));
 
             if (event.getFirstRow() == -1 && event.getColumn() == -1) {
                 // ignore changes happened out of table (when initially setting up tables)
@@ -678,7 +678,7 @@ class TablePanelController extends MaeControllerI {
 
                 if (tabIndex == 0) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
-                        logger.info(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+                        logger.debug(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
                             TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
@@ -687,7 +687,7 @@ class TablePanelController extends MaeControllerI {
                             }
                         }
                     } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        logger.info(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+                        logger.debug(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
                             TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
@@ -735,7 +735,7 @@ class TablePanelController extends MaeControllerI {
                 getActiveLinkTags().add(tagType);
             } else {
                 getActiveExtentTags().add(tagType);
-                logger.info(String.format("activated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
+                logger.debug(String.format("activated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
             }
         }
 
@@ -744,7 +744,7 @@ class TablePanelController extends MaeControllerI {
                 getActiveLinkTags().remove(tagType);
             } else {
                 getActiveExtentTags().remove(tagType);
-                logger.info(String.format("deactivated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
+                logger.debug(String.format("deactivated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
             }
 
         }

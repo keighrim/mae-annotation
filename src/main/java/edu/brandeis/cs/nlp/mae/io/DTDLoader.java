@@ -63,7 +63,7 @@ public class DTDLoader {
 
     public void read(File file) throws MaeIODTDException, MaeDBException {
         try {
-            logger.info("reading annotation scheme from: " + file.getAbsolutePath());
+            logger.debug("reading annotation scheme from: " + file.getAbsolutePath());
             driver.setTaskFileName(file.getAbsolutePath());
             this.read(new FileInputStream(file));
         } catch (FileNotFoundException e) {
@@ -74,7 +74,7 @@ public class DTDLoader {
     }
 
     public void read(String string) throws MaeIODTDException, MaeDBException {
-        logger.info("reading annotation scheme from plain JAVA string");
+        logger.debug("reading annotation scheme from plain JAVA string");
         this.read(IOUtils.toInputStream(string));
 
     }
