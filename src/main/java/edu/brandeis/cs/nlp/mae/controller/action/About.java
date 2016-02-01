@@ -18,23 +18,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * Called when the user selects the option to delete the highlighted rows from
@@ -48,11 +42,19 @@ public class About extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        JOptionPane.showMessageDialog(getMainController().getRootPane(),
+        Object[] options = {"Close", "Visit website"};
+        int choice = JOptionPane.showOptionDialog(getMainController().getRootPane(),
                 MaeStrings.ABOUT_MESSAGE,
                 MaeStrings.ABOUT_TITLE,
-                JOptionPane.PLAIN_MESSAGE
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]
                 );
+        if (choice == 1) {
+            VisitWebsite.visitWebsite();
+        }
     }
 }
 

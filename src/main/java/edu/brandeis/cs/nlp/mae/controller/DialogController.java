@@ -53,7 +53,6 @@ import java.util.Map;
 class DialogController {
     JFrame parent;
     MaeMainController mainController;
-    JFrame dialog;
     JFileChooser fileChooser;
 
     DialogController(MaeMainController mainController) {

@@ -158,6 +158,8 @@ public class MaeStrings {
             "Developed in Lab for Linguistics and Computation,<br/> " +
             "Brandeis University 2010-%s.<br/><br/>" +
             "MAE is a free software.<br/> " +
-            "This distribution of MAE (the software and the source code) is covered under the GNU General Public License version 3."
+            "This distribution of MAE (the software and the source code) is " +
+                    "covered under the GNU General Public License version 3. " +
+                    "Visit course website for user guide and components license."
             , VERSION, CUR_YEAR);
 }
