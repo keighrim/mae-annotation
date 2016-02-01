@@ -45,6 +45,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by krim on 12/30/2015.
@@ -691,8 +692,7 @@ public class MaeMainController extends JPanel {
             }
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
-            getTablePanel().selectTagFromTable(tag);
-            getTablePanel().selectTabOf(tagType);
+            selectTagAndTable(tag);
             updateSavedStatusInTextPanel();
             if (tagType.isExtent()) {
                 assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
@@ -705,6 +705,16 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
         return  null;
+    }
+
+    public void selectTagAndTable(Tag tag) {
+        try {
+            getTablePanel().selectTagFromTable(tag);
+            getTablePanel().selectTabOf(tag.getTagtype());
+            propagateSelectionFromTablePanel(tag.getId());
+        } catch (MaeDBException e) {
+            showError(e);
+        }
     }
 
     void populateDefaultAttributes(Tag tag) throws MaeDBException {
@@ -737,7 +747,7 @@ public class MaeMainController extends JPanel {
         logger.debug(String.format("modifying DB based on table update: updating \"%s\" of %s to \"%s\"", colName, tid, value));
         boolean succeed = false;
         try {
-            Tag tag = getDriver().getTagByTid(tid);
+            Tag tag = getTagByTid(tid);
             if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.SPANS_COL_NAME)) {
                 succeed = getDriver().updateTagSpans((ExtentTag) tag, SpanHandler.convertStringToArray(value));
             } else if (tag.getTagtype().isExtent() && colName.equals(MaeStrings.TEXT_COL_NAME)) {
@@ -745,8 +755,8 @@ public class MaeMainController extends JPanel {
             } else if (tag.getTagtype().isLink() && colName.endsWith(MaeStrings.ARG_IDCOL_SUF)) {
                 String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
                 ArgumentType argType = getDriver().getArgumentTypeOfTagTypeByName(tag.getTagtype(), argTypeName);
-                LinkTag linker = (LinkTag) getDriver().getTagByTid(tid);
-                ExtentTag arg = (ExtentTag) getDriver().getTagByTid(value);
+                LinkTag linker = (LinkTag) getTagByTid(tid);
+                ExtentTag arg = (ExtentTag) getTagByTid(value);
                 if (arg == null) {
                     showError("Argument not found: " + value);
                     return false;
@@ -770,6 +780,46 @@ public class MaeMainController extends JPanel {
 
     public void surgicallyUpdateCell(Tag tag, String colName, String value) {
         getTablePanel().insertValueIntoCell(tag, colName, value);
+    }
+
+    public Tag getTagByTid(String tid) {
+        try {
+            return getDriver().getTagByTid(tid);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return null;
+    }
+
+    public Set<Tag> checkCompleteness() {
+        logger.info("start checking");
+        try {
+            Set<Tag> incomplete = new TreeSet<>();
+            for (TagType type : getDriver().getAllTagTypes()) {
+                if (type.isExtent()) {
+                    for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
+                        if (!tag.isComplete()) {
+                            incomplete.add(tag);
+                        }
+                    }
+                } else {
+                    for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
+                        if (!tag.isComplete()) {
+                            incomplete.add(tag);
+                        }
+                    }
+                }
+            }
+            logger.info("checking ended");
+            return incomplete;
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return null;
+    }
+
+    public boolean showIncompleteTagsWarning() {
+        return getDialogs().showIncompleteTagsWarning(checkCompleteness());
     }
 
 }

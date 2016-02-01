@@ -530,14 +530,14 @@ class MenuController extends MaeControllerI {
 
     private JMenuItem createSingleDeleteMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
-        Tag tag = getDriver().getTagByTid(tid);
+        Tag tag = getMainController().getTagByTid(tid);
         return createSingleDeleteMenu(tag);
     }
 
     private JMenu createPluralDeleteMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
         java.util.List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
-            tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
+            tags.add(getMainController().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
         }
         return createPluralDeleteMenu(tags);
     }
@@ -560,7 +560,7 @@ class MenuController extends MaeControllerI {
 
     private JMenuItem createSingleSetArgMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
-        Tag tag = getDriver().getTagByTid(tid);
+        Tag tag = getMainController().getTagByTid(tid);
         return createSingleSetArgMenu((ExtentTag) tag);
     }
 

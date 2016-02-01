@@ -46,15 +46,11 @@ public class Argument implements ModelI {
     @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ART)
     private ArgumentType argumentType;
 
-    private boolean isComplete;
-
-
     public Argument() {
     }
 
     public Argument(ArgumentType argumentType) {
         this.setArgumentType(argumentType);
-        this.setComplete(false);
 
     }
 
@@ -62,7 +58,6 @@ public class Argument implements ModelI {
         this.linker = linker;
         this.argument = argument;
         this.argumentType = argumentType;
-        this.setComplete(true);
     }
 
     public String getId() {
@@ -75,9 +70,6 @@ public class Argument implements ModelI {
 
     public void setLinker(LinkTag linker) {
         this.linker = linker;
-        if (!this.isComplete && this.getArgument() != null) {
-            this.setComplete(true);
-        }
     }
 
     public String getArgumentText() {
@@ -94,9 +86,6 @@ public class Argument implements ModelI {
 
     public void setArgument(ExtentTag argument) {
         this.argument = argument;
-        if (!this.isComplete && this.getLinker() != null) {
-            this.setComplete(true);
-        }
     }
 
     public ArgumentType getArgumentType() {
@@ -108,11 +97,7 @@ public class Argument implements ModelI {
     }
 
     public boolean isComplete() {
-        return isComplete;
-    }
-
-    public void setComplete(boolean complete) {
-        isComplete = complete;
+        return getLinker() != null && getArgument() != null;
     }
 
     public String getName() {

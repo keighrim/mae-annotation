@@ -33,7 +33,10 @@ import edu.brandeis.cs.nlp.mae.database.ExtentTagDao;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by krim on 11/19/15.
@@ -88,9 +91,8 @@ public class ExtentTag extends Tag implements ModelI {
     }
 
     @Override
-    public boolean isComplete() {
-        checkRequiredAtts();
-        return isComplete;
+    public Set<String> getUnderspec() {
+        return checkRequiredAtts();
     }
 
     public boolean isConsuming() {

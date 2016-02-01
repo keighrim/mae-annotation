@@ -53,12 +53,8 @@ public class DeleteTag extends MenuActionI {
     }
 
     void deleteTag(String tid) {
-        try {
-            Tag tag = getMainController().getDriver().getTagByTid(tid);
-            getMainController().removeTag(tag);
-        } catch (MaeException e) {
-            catchException(e);
-        }
+        Tag tag = getMainController().getTagByTid(tid);
+        getMainController().removeTag(tag);
     }
 }
 

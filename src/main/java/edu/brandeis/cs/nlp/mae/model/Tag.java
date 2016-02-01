@@ -46,9 +46,6 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
     @DatabaseField(columnName = DBSchema.TAB_TAG_COL_FN)
     protected String filename;
 
-    // TODO 151212 make an option to force completeness checking or ignore
-    protected boolean isComplete;
-
     public Tag() {
 
     }
@@ -57,7 +54,6 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
         this.setTid(tid);
         this.setTagtype(tagType);
         this.setFilename(filename);
-        this.setComplete(false);
 
     }
 
@@ -106,28 +102,28 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
         this.filename = filename;
     }
 
-    protected void setComplete(boolean complete) {
-        isComplete = complete;
+    public boolean isComplete() {
+        return getUnderspec().size() == 0;
     }
 
-    public abstract boolean isComplete() throws SQLException;
+    public abstract Set<String> getUnderspec();
 
-    protected void checkRequiredAtts() {
-        setComplete(true);
-        ArrayList<String> curAttNames = new ArrayList<String>();
+    protected Set<String> checkRequiredAtts() {
+        Set<String> underspec = new TreeSet<>();
+        ArrayList<AttributeType> existingAtts = new ArrayList<>();
         for (Attribute att : getAttributes()) {
             // this for each loop always goes through all items,
             // making sure DAO connection is closed after iteration.
             if (att.getValue() != null && att.getValue().length() > 0) {
-                curAttNames.add(att.getName());
+                existingAtts.add(att.getAttributeType());
             }
         }
         for (AttributeType attType : getTagtype().getAttributeTypes()) {
-            if (attType.isRequired() && !curAttNames.contains(attType.getName())) {
-                setComplete(false);
-                break;
+            if (attType.isRequired() && !existingAtts.contains(attType)) {
+                underspec.add(attType.getName());
             }
         }
+        return underspec;
     }
 
     public abstract ForeignCollection<Attribute> getAttributes();

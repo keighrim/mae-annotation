@@ -24,14 +24,12 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
-import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import edu.brandeis.cs.nlp.mae.database.LinkTagDao;
 import org.apache.commons.lang3.StringUtils;
 
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -78,12 +76,10 @@ public class LinkTag extends Tag implements ModelI {
 
 
     @Override
-    public boolean isComplete() throws SQLException {
-        checkRequiredAtts();
-        if (isComplete) {
-            checkRequiredArgs();
-        }
-        return isComplete;
+    public Set<String> getUnderspec() {
+        Set<String> underpec = checkRequiredAtts();
+        underpec.addAll(checkRequiredArgs());
+        return underpec;
     }
 
     @Override
@@ -91,31 +87,21 @@ public class LinkTag extends Tag implements ModelI {
         return attributes;
     }
 
-    private void checkRequiredArgs() throws SQLException {
-        setComplete(true);
-        ArrayList<String> curArgNames = new ArrayList<>();
+    private Set<String> checkRequiredArgs() {
+        Set<String> underspec = new TreeSet<>();
+        ArrayList<ArgumentType> existingArgs = new ArrayList<>();
         for (Argument arg : getArguments()) {
-            // this for-each loop always goes through all items,
-            // making sure DAO connection is closed after iteration.
             if (arg.isComplete()) {
-                curArgNames.add(arg.getName());
+                existingArgs.add(arg.getArgumentType());
             }
         }
-        // however, next loop can be terminated in the middle of iteration.
-        // so we use an iterator to close the connection when it breaks
-        CloseableIterator<ArgumentType> iterArgType
-                = getTagtype().getArgumentTypes().closeableIterator();
-        try {
-            while (iterArgType.hasNext()) {
-                ArgumentType argType = iterArgType.next();
-                if (argType.isRequired() && !curArgNames.contains(argType.getName())) {
-                    setComplete(false);
-                    break;
-                }
+        for (ArgumentType argType : getTagtype().getArgumentTypes()) {
+            if (argType.isRequired() && !existingArgs.contains(argType)) {
+                underspec.add(argType.getName());
             }
-        } finally {
-            iterArgType.close();
         }
+        return underspec;
+
     }
 
     public Map<String, String> getArgumentTidsAndTextsWithNames() {

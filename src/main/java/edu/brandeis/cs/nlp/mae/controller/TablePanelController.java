@@ -547,7 +547,7 @@ class TablePanelController extends MaeControllerI {
 
         void updateAssociatedLinkTagRows(String tid, String newText) throws MaeDBException {
             // update text column of link tags associated
-            ExtentTag argTag = (ExtentTag) getDriver().getTagByTid(tid);
+            ExtentTag argTag = (ExtentTag) getMainController().getTagByTid(tid);
             Set<LinkTag> linkers = getDriver().getLinksHasArgumentTag(argTag);
             for (LinkTag linker : linkers) {
                 TagTableModel model = (TagTableModel) tableMap.get(linker.getTagtype().getName()).getModel();
@@ -566,19 +566,16 @@ class TablePanelController extends MaeControllerI {
         void revertChange(int row, int col) {
             // ID_COL and TEXT_COL are not editable at the first place: except for SPANS_COL, everything else are attribute columns
             String tid = (String) getValueAt(row, ID_COL);
-            try {
-                ExtentTag tag = (ExtentTag) getDriver().getTagByTid(tid);
-                String oldVal;
-                if (col == SPANS_COL) {
-                    oldVal = tag.getSpansAsString();
-                } else {
-                    String attType = getColumnName(col);
-                    oldVal = tag.getAttributesWithNames().get(attType);
-                }
-                setValueAt(oldVal, row, col);
-            } catch (MaeDBException e) {
-                getMainController().showError(e);
+            ExtentTag tag = (ExtentTag) getMainController().getTagByTid(tid);
+            String oldVal;
+            if (col == SPANS_COL) {
+                oldVal = tag.getSpansAsString();
+            } else {
+                String attType = getColumnName(col);
+                oldVal = tag.getAttributesWithNames().get(attType);
+                // TODO: 2016-02-01 17:48:48EST bug here, reverting goes into inf loop
             }
+            setValueAt(oldVal, row, col);
         }
     }
 
@@ -604,38 +601,30 @@ class TablePanelController extends MaeControllerI {
         @Override
         void propagateChange(TableModelEvent event, String tid, String newValue, List<Integer> oldSpans) {
             if (argumentTextColumns.contains(event.getColumn() + 1)) {
-                try {
-                    // update adjacent text column
-                    ExtentTag newArg = (ExtentTag) getDriver().getTagByTid(newValue);
-                    String newText = newArg.getText();
-                    setValueAt(newText, event.getFirstRow(), event.getColumn() + 1);
-                    getMainController().assignTextColorsOver(oldSpans);
-                    getMainController().assignTextColorsOver(newArg.getSpansAsList());
+                // update adjacent text column
+                ExtentTag newArg = (ExtentTag) getMainController().getTagByTid(newValue);
+                String newText = newArg.getText();
+                setValueAt(newText, event.getFirstRow(), event.getColumn() + 1);
+                getMainController().assignTextColorsOver(oldSpans);
+                getMainController().assignTextColorsOver(newArg.getSpansAsList());
 
-                } catch (MaeException ignored) {
-                    // new argument tag is already validated within getMain().updateDB() method
-                }
             }
         }
 
         @Override
         void revertChange(int row, int col) {
             String tid = (String) getValueAt(row, ID_COL);
-            try {
-                LinkTag tag = (LinkTag) getDriver().getTagByTid(tid);
-                String oldVal;
-                if (argumentTextColumns.contains(col + 1)) {
-                    String argType = getColumnName(col);
-                    argType = argType.substring(0, argType.length() - MaeStrings.ARG_IDCOL_SUF.length());
-                    oldVal = tag.getArgumentTidsWithNames().get(argType);
-                } else {
-                    String attType = getColumnName(col);
-                    oldVal = tag.getAttributesWithNames().get(attType);
-                }
-                setValueAt(oldVal, row, col);
-            } catch (MaeDBException e) {
-                getMainController().showError(e);
+            LinkTag tag = (LinkTag) getMainController().getTagByTid(tid);
+            String oldVal;
+            if (argumentTextColumns.contains(col + 1)) {
+                String argType = getColumnName(col);
+                argType = argType.substring(0, argType.length() - MaeStrings.ARG_IDCOL_SUF.length());
+                oldVal = tag.getArgumentTidsWithNames().get(argType);
+            } else {
+                String attType = getColumnName(col);
+                oldVal = tag.getAttributesWithNames().get(attType);
             }
+            setValueAt(oldVal, row, col);
         }
     }
 
