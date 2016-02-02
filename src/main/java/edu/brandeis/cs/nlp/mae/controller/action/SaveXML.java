@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller.action;
@@ -35,6 +35,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 /**
@@ -57,27 +58,34 @@ public class SaveXML extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        try {
-            String xmlName = getXMLFileName();
-            File file = getMainController().selectSingleFile(xmlName, true);
-            if (file != null) {
-                getMainController().getDriver().setAnnotationChanged(false);
-                getMainController().getDriver().setAnnotationFileName(file.getAbsolutePath());
-                OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-                fw.write(generateXMLString());
-                fw.close();
-            }
+        if (getMainController().showIncompleteTagsWarning()) {
+            try {
+                String xmlName = getXMLFileName();
+                File file = getMainController().selectSingleFile(xmlName, true);
+                if (file != null) {
+                    exportXML(file);
+                }
 
-            getMainController().updateSavedStatusInTextPanel();
-        } catch (Exception e) {
-            getMainController().showError(e);
+                getMainController().updateSavedStatusInTextPanel();
+            } catch (Exception e) {
+                getMainController().showError(e);
+            }
         }
 
     }
 
+    void exportXML(File file) throws MaeDBException, IOException {
+        getMainController().getDriver().setAnnotationChanged(false);
+        getMainController().getDriver().setAnnotationFileName(file.getAbsolutePath());
+        OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+        fw.write(generateXMLString());
+        fw.close();
+    }
+
     String generateXMLString() throws MaeDBException {
         MaeDriverI driver = getMainController().getDriver();
-        String head = String.format(xmlHeader, driver.getTaskFileName(), driver.getTaskName());
+//        String head = String.format(xmlHeader, driver.getTaskFileName(), driver.getTaskName());
+        String head = String.format(xmlHeader, driver.getTaskName());
         String text = String.format(xmlText, driver.getPrimaryText());
         String tail = String.format(xmlTail, driver.getTaskName());
         String tags = "";

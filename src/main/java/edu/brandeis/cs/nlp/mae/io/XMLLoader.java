@@ -61,11 +61,11 @@ public class XMLLoader {
     public void read(File file) throws MaeIOXMLException, MaeDBException {
         try {
             try {
-                logger.info("reading annotations from XML file: " + file.getAbsolutePath());
+                logger.info("reading annotations from file: " + file.getAbsolutePath());
                 driver.setAnnotationFileName(file.getAbsolutePath());
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
-                logger.debug("file is not a XML, reading as the primary text: " + file.getAbsolutePath());
+                logger.info("file is not a XML, reading as the primary text: " + file.getAbsolutePath());
                 Scanner scanner = new Scanner(file);
                 driver.setPrimaryText(scanner.useDelimiter("\\A").next());
                 scanner.close(); // Put this call in a finally block
@@ -78,7 +78,7 @@ public class XMLLoader {
     }
 
     public void read(String string) throws MaeIOXMLException, MaeDBException, SAXException {
-        logger.info("reading annotations from plain JAVA string");
+        logger.debug("reading annotations from plain JAVA string");
         this.read(IOUtils.toInputStream(string));
 
     }
@@ -233,7 +233,7 @@ public class XMLLoader {
         }
         Set<Attribute> newAttrbutes = driver.addAttributes(tag, attributes);
         if (newAttrbutes.size() != attributesCount) {
-            logger.info(String.format("asked for %d attributes to be added, %d were actually added: reverting changes", attributesCount, newAttrbutes.size()));
+            logger.error(String.format("asked for %d attributes to be added, %d were actually added: reverting changes", attributesCount, newAttrbutes.size()));
             for (Attribute att : newAttrbutes) {
                 driver.deleteAttribute(tag, att.getAttributeType());
             }

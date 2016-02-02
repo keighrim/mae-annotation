@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller.action;
@@ -46,6 +46,10 @@ public class VisitWebsite extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
+        visitWebsite();
+    }
+
+    static void visitWebsite() {
         if (Desktop.isDesktopSupported()) {
             try {
                 Desktop.getDesktop().browse(

@@ -59,7 +59,7 @@ public class MakeLinkFromTable extends MakeLink {
 
             List<ExtentTag> tags = new LinkedList<>();
             for (String tid : tids) {
-                tags.add((ExtentTag) getMainController().getDriver().getTagByTid(tid));
+                tags.add((ExtentTag) getMainController().getTagByTid(tid));
             }
             getMainController().createLinkFromDialog(linkType, tags);
         } catch (MaeException e) {

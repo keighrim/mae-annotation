@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae;
@@ -88,6 +88,7 @@ public class MaeStrings {
     public final static String SB_ARGSEL_MODE_NOTI = "Now in arguments selection mode! Click anywhere to continue.";
     public final static String SB_NORM_MODE_NOTI = "Now in normal mode! Click anywhere to continue.";
     public final static String SB_NEWTASK = "New task is successfully loaded! Click anywhere to continue.";
+    public final static String SB_FILEOPEN = "New document is successfully open! Click anywhere to continue.";
     public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
     public final static String SB_MSPAN_TEXT = SB_TEXT;
     public final static String SB_MSPAN_NOTEXT = SB_NOTEXT;
@@ -104,6 +105,7 @@ public class MaeStrings {
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
     public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
+    public final static String MENU_TAGS = "Tags";
     public final static String MENU_MODE = "Mode";
     public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
     public final static String MENUITEM_ARGSEL_MODE = "Switch to argument selection mode";
@@ -156,6 +158,8 @@ public class MaeStrings {
             "Developed in Lab for Linguistics and Computation,<br/> " +
             "Brandeis University 2010-%s.<br/><br/>" +
             "MAE is a free software.<br/> " +
-            "This distribution of MAE (the software and the source code) is covered under the GNU General Public License version 3."
+            "This distribution of MAE (the software and the source code) is " +
+                    "covered under the GNU General Public License version 3. " +
+                    "Visit course website for user guide and components license."
             , VERSION, CUR_YEAR);
 }

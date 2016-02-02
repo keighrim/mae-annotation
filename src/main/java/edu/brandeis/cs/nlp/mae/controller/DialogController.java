@@ -27,10 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.model.ArgumentType;
-import edu.brandeis.cs.nlp.mae.model.ExtentTag;
-import edu.brandeis.cs.nlp.mae.model.LinkTag;
-import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.model.*;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -40,10 +37,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * All popups and supplement sub windows are managed within this class
@@ -53,7 +48,6 @@ import java.util.Map;
 class DialogController {
     JFrame parent;
     MaeMainController mainController;
-    JFrame dialog;
     JFileChooser fileChooser;
 
     DialogController(MaeMainController mainController) {
@@ -113,6 +107,9 @@ class DialogController {
         return null;
     }
 
+    void warnMissingProperties() {
+
+    }
 
     void setAsArgument(String argumentTid) throws MaeDBException {
         SetArgumentOptionPanel options = new SetArgumentOptionPanel();
@@ -149,6 +146,50 @@ class DialogController {
         }
         return null;
     }
+
+    boolean showIncompleteTagsWarning(Set<Tag> incomplete) {
+        if (incomplete == null || incomplete.size() < 1) {
+            return true;
+        }
+        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete);
+        Object[] answers = {"Yes", "No", "See tag"};
+        int result = JOptionPane.showOptionDialog(getMainController().getRootPane(),
+                options, "Missing Something", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+                null, answers, answers[1] );
+        switch (result) {
+            case JOptionPane.YES_OPTION:
+                return true;
+            case JOptionPane.CANCEL_OPTION:
+                getMainController().selectTagAndTable(options.getSelectedTag());
+            default:
+                return false;
+        }
+    }
+
+    class IncompleteTagsWarningOptionPanel extends JPanel {
+        JList<String> incompleteTags;
+
+        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete) {
+            super(new BorderLayout());
+            setSize(100, 200);
+
+            String[] incompleteTagsDetail = new String[incomplete.size()];
+            int i = 0;
+            for (Tag tag : incomplete) {
+                incompleteTagsDetail[i++] = String.format("%s - missing: %s", tag.getId(), tag.getUnderspec());
+            }
+            incompleteTags = new JList<>(incompleteTagsDetail);
+
+            add(new JLabel(String.format("You have %d underspecified tags, are you sure to continue? ", incomplete.size())), BorderLayout.NORTH);
+            add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
+        }
+
+        public Tag getSelectedTag() {
+            String tid = incompleteTags.getSelectedValue().split(" - ")[0];
+            return getMainController().getTagByTid(tid);
+        }
+    }
+
 
     class SetArgumentOptionPanel extends JPanel {
 
