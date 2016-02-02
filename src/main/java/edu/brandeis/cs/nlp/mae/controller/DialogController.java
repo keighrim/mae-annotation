@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
+import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
@@ -33,9 +34,10 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.File;
 import java.util.*;
 import java.util.List;
@@ -107,13 +109,9 @@ class DialogController {
         return null;
     }
 
-    void warnMissingProperties() {
-
-    }
-
     void setAsArgument(String argumentTid) throws MaeDBException {
         SetArgumentOptionPanel options = new SetArgumentOptionPanel();
-        int result = JOptionPane.showConfirmDialog(getMainController().getRootPane(),
+        int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
                 options,
                 String.format("Setting %s an argument of", argumentTid),
                 JOptionPane.OK_CANCEL_OPTION,
@@ -128,7 +126,7 @@ class DialogController {
 
     LinkTag createLink(TagType linkType, List<ExtentTag> candidates) throws MaeDBException {
         CreateLinkOptionPanel options = new CreateLinkOptionPanel(linkType, candidates);
-        int result = JOptionPane.showConfirmDialog(getMainController().getRootPane(),
+        int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
                 options,
                 String.format("Create a new link: %s ", linkType.getName()),
                 JOptionPane.OK_CANCEL_OPTION,
@@ -152,41 +150,153 @@ class DialogController {
             return true;
         }
         IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete);
-        Object[] answers = {"Yes", "No", "See tag"};
-        int result = JOptionPane.showOptionDialog(getMainController().getRootPane(),
-                options, "Missing Something", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
-                null, answers, answers[1] );
-        switch (result) {
+        options.setVisible(true);
+        switch (options.getResponse()) {
             case JOptionPane.YES_OPTION:
+                options.dispose();
                 return true;
             case JOptionPane.CANCEL_OPTION:
                 getMainController().selectTagAndTable(options.getSelectedTag());
             default:
+                options.dispose();
                 return false;
         }
     }
 
-    class IncompleteTagsWarningOptionPanel extends JPanel {
+    class IncompleteTagsWarningOptionPanel extends JDialog {
         JList<String> incompleteTags;
+        int response;
 
         IncompleteTagsWarningOptionPanel(Set<Tag> incomplete) {
-            super(new BorderLayout());
+            super(getMainController().getMainWindow(), "Missing Something", true);
             setSize(100, 200);
 
+            final JButton yes = makeYesButton();
+            final JButton no = makeNoButton();
+            final JButton see = makeSeeButton();
+            see.setEnabled(false);
+
+
+            String[] incompleteTagsDetail = getMissingDetails(incomplete);
+            incompleteTags = new JList<>(incompleteTagsDetail);
+            addListenersToList(see);
+            JPanel buttons = new JPanel(new FlowLayout());
+            buttons.add(yes);
+            buttons.add(no);
+            buttons.add(see);
+
+            String tag = incomplete.size() == 1? "tag" : "tags";
+            add(new JLabel(String.format("" +
+                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Are you sure to continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
+                    BorderLayout.NORTH);
+            add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
+            add(buttons, BorderLayout.SOUTH);
+            setLocationRelativeTo(getMainController().getMainWindow());
+            pack();
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            this.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    super.windowClosing(e);
+                    response = JOptionPane.NO_OPTION;
+
+                }
+            });
+            KeyStroke stroke   = MaeHotKeys.ksESC;
+
+            getRootPane().registerKeyboardAction(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    no();
+                }
+            }, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+            getRootPane().setDefaultButton(yes);
+
+        }
+
+        private void yes() {
+            response = JOptionPane.YES_OPTION;
+            setVisible(false);
+        }
+
+        private void no() {
+            response = JOptionPane.NO_OPTION;
+            setVisible(false);
+        }
+        private void see() {
+            response = JOptionPane.CANCEL_OPTION;
+            setVisible(false);
+        }
+
+        private void addListenersToList(final JButton see) {
+            incompleteTags.addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    see.setEnabled(true);
+                }
+            });
+            incompleteTags.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    super.mouseClicked(e);
+                    if (e.getClickCount() == 2) {
+                        see();
+                    }
+                }
+            });
+            // this will not work anyways, because we give focus to yes button
+            incompleteTags.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    super.keyReleased(e);
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        see();
+                    }
+                }
+            });
+        }
+
+        private String[] getMissingDetails(Set<Tag> incomplete) {
             String[] incompleteTagsDetail = new String[incomplete.size()];
             int i = 0;
             for (Tag tag : incomplete) {
                 incompleteTagsDetail[i++] = String.format("%s - missing: %s", tag.getId(), tag.getUnderspec());
             }
-            incompleteTags = new JList<>(incompleteTagsDetail);
+            return incompleteTagsDetail;
+        }
 
-            add(new JLabel(String.format("You have %d underspecified tags, are you sure to continue? ", incomplete.size())), BorderLayout.NORTH);
-            add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
+        private JButton makeYesButton() {
+            return makeButton("Yes", MaeHotKeys.mnYES_BUTTON, JOptionPane.YES_OPTION);
+        }
+
+        private JButton makeNoButton() {
+            return makeButton("No", MaeHotKeys.mnNO_BUTTON, JOptionPane.NO_OPTION);
+        }
+
+        private JButton makeSeeButton() {
+            return makeButton("See", MaeHotKeys.mnSEE_BUTTON, JOptionPane.CANCEL_OPTION);
+        }
+
+        private JButton makeButton(String label, int mnemonic, final int responsevalue) {
+            final JButton button = new JButton(label);
+            button.setMnemonic(mnemonic);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    response = responsevalue;
+                    setVisible(false);
+                }
+            });
+            return button;
         }
 
         public Tag getSelectedTag() {
             String tid = incompleteTags.getSelectedValue().split(" - ")[0];
             return getMainController().getTagByTid(tid);
+        }
+
+        public int getResponse() {
+            return response;
         }
     }
 

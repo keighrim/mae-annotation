@@ -43,7 +43,7 @@ public class About extends MenuActionI {
     @Override
     public void actionPerformed(ActionEvent event) {
         Object[] options = {"Close", "Visit website"};
-        int choice = JOptionPane.showOptionDialog(getMainController().getRootPane(),
+        int choice = JOptionPane.showOptionDialog(getMainController().getMainWindow(),
                 MaeStrings.ABOUT_MESSAGE,
                 MaeStrings.ABOUT_TITLE,
                 JOptionPane.YES_NO_CANCEL_OPTION,
