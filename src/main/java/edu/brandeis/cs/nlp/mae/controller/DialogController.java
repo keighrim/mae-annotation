@@ -233,6 +233,7 @@ class DialogController {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     see.setEnabled(true);
+                    see.requestFocusInWindow();
                 }
             });
             incompleteTags.addMouseListener(new MouseAdapter() {
@@ -240,16 +241,6 @@ class DialogController {
                 public void mouseClicked(MouseEvent e) {
                     super.mouseClicked(e);
                     if (e.getClickCount() == 2) {
-                        see();
-                    }
-                }
-            });
-            // this will not work anyways, because we give focus to yes button
-            incompleteTags.addKeyListener(new KeyAdapter() {
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    super.keyReleased(e);
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         see();
                     }
                 }
