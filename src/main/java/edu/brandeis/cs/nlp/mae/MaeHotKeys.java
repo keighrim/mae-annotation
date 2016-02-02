@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae;
@@ -61,7 +61,9 @@ public class MaeHotKeys {
             = KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0);
     public final static KeyStroke ksF12
             = KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0);
-    
+    public static final KeyStroke ksESC =
+            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+
     // number keys
     public final static int n1 = KeyEvent.VK_1;
     public final static int n2 = KeyEvent.VK_2;
@@ -219,7 +221,10 @@ public class MaeHotKeys {
     public final static int mnHELPMENU = KeyEvent.VK_H;
     public final static int mnOK_BUTTON = KeyEvent.VK_O;
     public final static int mnCANCEL_BUTTON = KeyEvent.VK_C;
-    
+    public final static int mnYES_BUTTON = KeyEvent.VK_Y;
+    public final static int mnNO_BUTTON = KeyEvent.VK_N;
+    public final static int mnSEE_BUTTON = KeyEvent.VK_S;
+
     // file menu keys
     public final static KeyStroke ksCN
             = KeyStroke.getKeyStroke(KeyEvent.VK_N, 

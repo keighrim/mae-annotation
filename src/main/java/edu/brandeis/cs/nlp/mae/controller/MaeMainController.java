@@ -792,7 +792,6 @@ public class MaeMainController extends JPanel {
     }
 
     public Set<Tag> checkCompleteness() {
-        logger.info("start checking");
         try {
             Set<Tag> incomplete = new TreeSet<>();
             for (TagType type : getDriver().getAllTagTypes()) {
@@ -810,7 +809,6 @@ public class MaeMainController extends JPanel {
                     }
                 }
             }
-            logger.info("checking ended");
             return incomplete;
         } catch (MaeDBException e) {
             showError(e);
