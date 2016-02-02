@@ -200,7 +200,7 @@ class MenuController extends MaeControllerI {
 
         if (getMainController().isDocumentOpen()) {
             menu.add(createMakeTagMenu(CAT_NCTAG));
-            menu.add(createMakeTagMenu(CAT_LTAG));
+            menu.add(createMakeTagMenu(CAT_EMPTY_LTAG));
         } else {
             JMenuItem documentNotOpen = new JCheckBoxMenuItem("Open a document to manage tags");
             documentNotOpen.setEnabled(false);
@@ -305,7 +305,7 @@ class MenuController extends MaeControllerI {
             contextMenu.addSeparator();
         }
         contextMenu.add(createMakeTagMenu(CAT_NCTAG));
-        contextMenu.add(createMakeTagMenu(CAT_LTAG));
+        contextMenu.add(createMakeTagMenu(CAT_EMPTY_LTAG));
         switch (tags.size()) {
             case 0:
                 break;
@@ -530,14 +530,14 @@ class MenuController extends MaeControllerI {
 
     private JMenuItem createSingleDeleteMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
-        Tag tag = getMainController().getTagByTid(tid);
+        Tag tag = getDriver().getTagByTid(tid);
         return createSingleDeleteMenu(tag);
     }
 
     private JMenu createPluralDeleteMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
         java.util.List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
-            tags.add(getMainController().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
+            tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
         }
         return createPluralDeleteMenu(tags);
     }
@@ -560,7 +560,7 @@ class MenuController extends MaeControllerI {
 
     private JMenuItem createSingleSetArgMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
-        Tag tag = getMainController().getTagByTid(tid);
+        Tag tag = getDriver().getTagByTid(tid);
         return createSingleSetArgMenu((ExtentTag) tag);
     }
 
