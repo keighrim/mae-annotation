@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
@@ -52,6 +53,8 @@ import java.util.TreeSet;
  */
 public class MaeMainController extends JPanel {
 
+    public static final int DEFAULT_FONT_SIZE = 12;
+    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
     public static final int MODE_NORMAL = 0;
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
@@ -130,7 +133,7 @@ public class MaeMainController extends JPanel {
             if (taskFilename != null) {
                 main.setupScheme(MaeStrings.ANN_DB_FILE, new File(taskFilename), true);
                 if (docFilename != null) {
-                    main.newAnnotation(new File(docFilename));
+                    main.newDocument(new File(docFilename));
                 }
             }
         }
@@ -161,6 +164,18 @@ public class MaeMainController extends JPanel {
 
     private JFrame initUI() {
         logger.debug("initiating UI components.");
+
+        FontUIResource resource = new FontUIResource(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
+        java.util.Enumeration keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements())
+        {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource)
+            {
+                UIManager.put(key, resource);
+            }
+        }
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 
@@ -381,7 +396,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void newAnnotation(File annotationFile) {
+    public void newDocument(File annotationFile) {
         try {
             setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             sendWaitMessage();
@@ -398,6 +413,11 @@ public class MaeMainController extends JPanel {
         } catch (Exception e) {
             showError(e);
         }
+
+    }
+
+    public void addDocument() {
+        // TODO: 2016-02-04 12:54:30EST 4MF
 
     }
 

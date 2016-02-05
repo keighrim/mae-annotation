@@ -45,6 +45,7 @@ import java.util.HashMap;
 public class TextPanelView extends JPanel {
 
     public static final int DEFAULT_FONT_SIZE = 14;
+    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
     public static final int VERYLARGE_FONT_SIZE = 36;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
@@ -110,7 +111,8 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
-        documentArea.setFont(new Font("monospaced", Font.PLAIN, DEFAULT_FONT_SIZE));
+        // DejaVu Sans is virtually the only font that support widest range of unicode, including emojis
+        documentArea.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
