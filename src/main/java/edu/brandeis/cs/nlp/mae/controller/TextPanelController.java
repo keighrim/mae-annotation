@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -365,6 +366,7 @@ class TextPanelController extends MaeControllerI{
      * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
      */
     private void setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
+        // TODO: 2016-02-05 13:55:10EST 4unicode changing character att breaks unicode emojis, possible reason: changing a range over the lenth of 1 break code point (emojis are combination of two code point)
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);

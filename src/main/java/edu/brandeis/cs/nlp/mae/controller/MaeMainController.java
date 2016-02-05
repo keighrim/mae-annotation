@@ -130,7 +130,7 @@ public class MaeMainController extends JPanel {
             if (taskFilename != null) {
                 main.setupScheme(MaeStrings.ANN_DB_FILE, new File(taskFilename), true);
                 if (docFilename != null) {
-                    main.newAnnotation(new File(docFilename));
+                    main.newDocument(new File(docFilename));
                 }
             }
         }
@@ -381,7 +381,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void newAnnotation(File annotationFile) {
+    public void newDocument(File annotationFile) {
         try {
             setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             sendWaitMessage();
@@ -398,6 +398,11 @@ public class MaeMainController extends JPanel {
         } catch (Exception e) {
             showError(e);
         }
+
+    }
+
+    public void addDocument() {
+        // TODO: 2016-02-04 12:54:30EST 4MF
 
     }
 
