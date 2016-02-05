@@ -468,11 +468,11 @@ class TextPanelController extends MaeControllerI{
         @Override
         public void caretUpdate(CaretEvent e) {
 
-            int start = Math.min(e.getDot(), e.getMark());
-            int end = Math.max(e.getDot(), e.getMark()) + 1; // because dot and mark are inclusive
-
-            if (start != end - 1) {
+            if (e.getDot() != e.getMark()) {
                 // that is, mouse is dragged and text is selected
+
+                int start = Math.min(e.getDot(), e.getMark());
+                int end = Math.max(e.getDot(), e.getMark());
                 if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
                     // in normal mode, clear selection before adding a new selection
                     clearSelection();
@@ -484,7 +484,7 @@ class TextPanelController extends MaeControllerI{
                         clearSelection();
                         break;
                     case MaeMainController.MODE_ARG_SEL:
-                        addSelection(new int[]{start, end});
+                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
                         break;
 
                 }
