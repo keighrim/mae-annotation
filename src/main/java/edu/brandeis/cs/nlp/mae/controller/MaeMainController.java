@@ -403,8 +403,8 @@ public class MaeMainController extends JPanel {
             }
             logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
                     getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
-            resetColors();
             if (fromNewTask) {
+                resetColors();
                 getMenu().resetFileMenu();
                 getTextPanel().reset();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
