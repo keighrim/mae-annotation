@@ -140,25 +140,6 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void addDocument(File annotationFile) {
-        if (getDriver().isTaskLoaded()) {
-            try {
-                if (getDriver().isAnnotationLoaded()) {
-                    // TODO: 1/3/2016 fix here for multi file annotation in the future
-                    // TODO: 1/3/2016 maybe we need a method driver.resetAnnotation() to purge out all annotations(tags and atts), but keep task structure
-                    String taskFileName = getDriver().getTaskFileName();
-                    File taskFile = new File(taskFileName);
-                    destroyCurrentDriver();
-                    setupScheme(taskFile, false);
-                    getDriver().readTask(taskFile);
-                }
-                getDriver().readAnnotation(annotationFile);
-            } catch (Exception e) {
-                showError(e);
-            }
-        }
-    }
-
     private void setWindowFrame(JFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
@@ -307,8 +288,8 @@ public class MaeMainController extends JPanel {
         return currentDriver;
     }
 
-    public int getDrivers() {
-        return drivers.size();
+    public List<MaeDriverI> getDrivers() {
+        return drivers;
     }
 
     public MaeDriverI getDriverAt(int i) {
@@ -325,12 +306,6 @@ public class MaeMainController extends JPanel {
         } catch (MaeDBException e) {
             showError(e);
         }
-    }
-
-    public void destroyCurrentDriver() {
-        // TODO: 1/4/2016 finish this for multi file support
-//        destroyDriverAt(getTextPanel().getSelectedTabIndex());
-        currentDriver = null;
     }
 
     public void sendNotification(String message) {
@@ -406,48 +381,71 @@ public class MaeMainController extends JPanel {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
+            sendWaitMessage();
             String dbFilename = String.format("mae-%d", System.currentTimeMillis());
-            File dbFile = File.createTempFile(dbFilename, ".sqlite");
-            // TODO: 2016-01-17 12:39:34EST 4MF, resetting should not be done
-//            if (fromNewTask) {
-            resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
-//            }
+            File dbFile;
+            try {
+                dbFile = File.createTempFile(dbFilename, ".sqlite");
+            } catch (IOException e) {
+                showError("Could not generate DB file!", e);
+                return;
+            }
+            if (fromNewTask) {
+                wipeDrivers();
+            }
             currentDriver = new LocalSqliteDriverImpl(dbFile.getAbsolutePath());
             drivers.add(currentDriver);
-            getDriver().readTask(taskFile);
+            try {
+                getDriver().readTask(taskFile);
+            } catch (MaeIOException | IOException e) {
+                showError("Could not open task definition!", e);
+                return;
+            }
             logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
                     getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
             resetColors();
             if (fromNewTask) {
                 getMenu().resetFileMenu();
                 getTextPanel().reset();
-                getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, taskFile));
+                getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
                 sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
-
+                getTablePanel().reset();
+                getTablePanel().makeAllTables();
             }
-            getTablePanel().reset();
-            getTablePanel().makeAllTables();
-        } catch (IOException e) {
-            showError("Could not generate DB file: ");
-        } catch (Exception e) {
+        } catch (MaeDBException e) {
+            showError("Found an error in DB!", e);
+        } catch (MaeControlException e) {
+            showError("Failed to sort out tag tables!", e);
+        }
+    }
+
+    public void repopulateTables() {
+        getTablePanel().wipeAllTables();
+        try {
+            getTablePanel().insertAllTags();
+        } catch (MaeException e) {
             showError(e);
         }
     }
 
     public void addDocument(File annotationFile) {
         try {
-//            setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
+            boolean multiFile = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
             sendWaitMessage();
+            if (multiFile) {
+                setupScheme(new File(getDriver().getTaskFileName()), false);
+            }
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
-            getTablePanel().insertAllTags();
             logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-            getMenu().resetFileMenu();
-            getMenu().resetTagsMenu();
-            getMenu().resetModeMenu();
-            getTextPanel().reset();
+            if (!multiFile) {
+                getMenu().resetFileMenu();
+                getMenu().resetTagsMenu();
+                getMenu().resetModeMenu();
+                getTablePanel().insertAllTags();
+                getTextPanel().reset();
+            }
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
-//            getStatusBar().reset();
         } catch (Exception e) {
             showError(e);
         }
@@ -455,9 +453,21 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchAnnotationTab(int tabId) {
-        // TODO: 12/31/2015 4MF this is for multi file support
-//        textPanel.selectTab(tabId);
-        currentDriver = drivers.get(tabId);
+        try {
+            sendWaitMessage();
+            if (getDriver().isAnnotationLoaded()) {
+                getTablePanel().wipeAllTables();
+            }
+            currentDriver = drivers.get(tabId);
+            getTablePanel().insertAllTags();
+            getTextPanel().reset(); // repaint colors
+            logger.info(String.format("switched to document \"%s\", using DB file at \"%s\"",
+                    getDriver().getAnnotationFileBaseName(), getDriver().getDBSourceName()));
+            updateNotificationArea();
+        } catch (MaeException e) {
+            showError(e);
+        }
+
     }
 
     public String getTextIn(int...locations) {
@@ -567,11 +577,11 @@ public class MaeMainController extends JPanel {
 
     private void resetAll() {
 
-        resetDrivers();
+        wipeDrivers();
         resetControllers();
     }
 
-    private void resetDrivers() {
+    private void wipeDrivers() {
         for (MaeDriverI driver : drivers) {
             try {
                 driver.destroy();
@@ -609,11 +619,6 @@ public class MaeMainController extends JPanel {
 
     public ColorHandler getTextHighlighColors() {
         return textHighlighColors;
-    }
-
-    public void setDriver(int tabId) {
-        // TODO: 2016-01-08 23:51:59EST finish for multi file support
-        currentDriver = drivers.get(tabId);
     }
 
     public boolean isTextSelected() {

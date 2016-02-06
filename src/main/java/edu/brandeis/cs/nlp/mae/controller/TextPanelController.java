@@ -99,10 +99,6 @@ class TextPanelController extends MaeControllerI{
 
     @Override
     void addListeners() {
-        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
-        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
-        // TODO: 2016-01-11 20:50:41EST this listener is used 4MF
-//        getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
     }
 
     protected void setSelection(int[] spans) {
@@ -165,16 +161,16 @@ class TextPanelController extends MaeControllerI{
     }
 
     void addDocument(String documentTitle, String documentText) {
-        // adding a new document wll wipe any existing tabs, either guide or documents
-        // TODO: 2016-01-11 20:47:48EST fix this 4MF
-//        if (!getView().isAnyDocumentOpen()) {
-        getView().clearAllTabs();
-//        }
-        getView().addTextTab(documentTitle, documentText);
         if (!getView().isAnyDocumentOpen()) {
-            addListeners();
+            getView().clearAllTabs();
         }
-        getView().setDocumentOpen(true);
+        getView().addTextTab(documentTitle, documentText);
+        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
+        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+        if (!getView().isAnyDocumentOpen()) {
+            getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
+            getView().setDocumentOpen(true);
+        }
 
     }
 
@@ -512,7 +508,7 @@ class TextPanelController extends MaeControllerI{
     private class TextPanelTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            // TODO: 1/4/2016  finish this for multi file support
+            getMainController().switchAnnotationTab(((JTabbedPane) e.getSource()).getSelectedIndex());
 
         }
     }

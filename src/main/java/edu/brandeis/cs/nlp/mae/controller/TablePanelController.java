@@ -144,6 +144,25 @@ class TablePanelController extends MaeControllerI {
         addToggleListeners();
     }
 
+    void wipeAllTables() {
+        for (String tagTypeName : tableMap.keySet()) {
+            TagTableModel model = (TagTableModel) tableMap.get(tagTypeName).getModel();
+            if (!tagTypeName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
+                for (TableModelListener listener : model.getTableModelListeners()) {
+                    if (listener instanceof TagTableModel) {
+                        model.removeTableModelListener(listener);
+                    }
+                }
+
+            }
+            int stored = model.getRowCount();
+            for (int row = stored - 1; row >= 0; row--) {
+                model.removeRow(row);
+            }
+        }
+
+    }
+
     void insertAllTags() throws MaeControlException, MaeDBException {
         if (!getMainController().isTaskLoaded() || !getMainController().isDocumentOpen()) {
             throw new MaeControlException("Cannot populate tables without a document open!");

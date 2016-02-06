@@ -62,6 +62,8 @@ public interface MaeDriverI {
 
     void setTaskFileName(String fileName) throws MaeDBException;
 
+    String getDBSourceName();
+
     String getAnnotationFileName() throws MaeDBException;
 
     String getAnnotationFileBaseName() throws MaeDBException;

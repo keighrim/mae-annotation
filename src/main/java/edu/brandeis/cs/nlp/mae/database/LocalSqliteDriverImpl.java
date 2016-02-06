@@ -183,6 +183,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
+    public String getDBSourceName() {
+        return SQLITE_FILENAME;
+    }
+
+    @Override
     public String getAnnotationFileName() throws MaeDBException {
         return workingTask.getAnnotationFileName();
     }
