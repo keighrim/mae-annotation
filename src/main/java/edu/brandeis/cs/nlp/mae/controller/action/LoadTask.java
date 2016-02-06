@@ -45,7 +45,7 @@ public class LoadTask extends MenuActionI {
             try {
                 File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
-                    getMainController().setupScheme(MaeStrings.ANN_DB_FILE, file, true);
+                    getMainController().setupScheme(file, true);
                 }
 
             } catch (Exception e) {

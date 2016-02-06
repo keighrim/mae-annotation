@@ -41,6 +41,7 @@ import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class MaeMainController extends JPanel {
             }
 
             if (taskFilename != null) {
-                main.setupScheme(MaeStrings.ANN_DB_FILE, new File(taskFilename), true);
+                main.setupScheme(new File(taskFilename), true);
                 if (docFilename != null) {
                     main.newDocument(new File(docFilename));
                 }
@@ -148,7 +149,7 @@ public class MaeMainController extends JPanel {
                     String taskFileName = getDriver().getTaskFileName();
                     File taskFile = new File(taskFileName);
                     destroyCurrentDriver();
-                    setupScheme(MaeStrings.ANN_DB_FILE, taskFile, false);
+                    setupScheme(taskFile, false);
                     getDriver().readTask(taskFile);
                 }
                 getDriver().readAnnotation(annotationFile);
@@ -368,15 +369,17 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void setupScheme(String dbFile, File taskFile, boolean fromNewTask) {
+    public void setupScheme(File taskFile, boolean fromNewTask) {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
+            String dbFilename = String.format("mae-%d", System.currentTimeMillis());
+            File dbFile = File.createTempFile(dbFilename, ".sqlite");
             // TODO: 2016-01-17 12:39:34EST 4MF, resetting should not be done
 //            if (fromNewTask) {
             resetDrivers(); // one driver for one annotation instance, setting up a new task will wipe out all ongoing instances
 //            }
-            currentDriver = new LocalSqliteDriverImpl(dbFile);
+            currentDriver = new LocalSqliteDriverImpl(dbFile.getAbsolutePath());
             drivers.add(currentDriver);
             getDriver().readTask(taskFile);
             logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
@@ -391,6 +394,8 @@ public class MaeMainController extends JPanel {
             }
             getTablePanel().reset();
             getTablePanel().makeAllTables();
+        } catch (IOException e) {
+            showError("Could not generate DB file: ");
         } catch (Exception e) {
             showError(e);
         }
@@ -398,7 +403,7 @@ public class MaeMainController extends JPanel {
 
     public void newDocument(File annotationFile) {
         try {
-            setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
+//            setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             sendWaitMessage();
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
