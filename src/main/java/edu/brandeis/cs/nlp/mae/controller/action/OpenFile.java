@@ -46,7 +46,7 @@ public class OpenFile extends MenuActionI {
             try {
                 File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
-                    getMainController().newDocument(file);
+                    getMainController().addDocument(file);
                 }
 
             } catch (Exception e) {

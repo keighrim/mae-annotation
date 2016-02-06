@@ -696,7 +696,7 @@ class TablePanelController extends MaeControllerI {
                     getMainController().assignTextColorsOver(getRelevantAnchors());
 
                 }
-                getMainController().resetNotificationMessageIn(1000);
+                getMainController().updateNotificationAreaIn(1000);
 
             } catch (MaeDBException ex) {
                 // TODO: 2016-01-10 20:29:47EST make sure this is a safe way

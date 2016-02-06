@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -44,10 +45,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Timer;
 
 /**
  * Created by krim on 12/30/2015.
@@ -134,7 +134,7 @@ public class MaeMainController extends JPanel {
             if (taskFilename != null) {
                 main.setupScheme(new File(taskFilename), true);
                 if (docFilename != null) {
-                    main.newDocument(new File(docFilename));
+                    main.addDocument(new File(docFilename));
                 }
             }
         }
@@ -211,17 +211,28 @@ public class MaeMainController extends JPanel {
         return showWarning(warning);
     }
 
-    public void showError(String message) {
-        getDialogs().showError(message);
-        logger.error(message);
-    }
-
     public void showError(Exception e) {
         getDialogs().showError(e);
+        logException(e);
+    }
+
+    public void showError(String message, Exception e) {
+        getDialogs().showError(message, e);
+        logger.error(message);
+        logException(e);
+    }
+
+    void logException(Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         logger.error(sw.toString());
+    }
+
+
+    public void showError(String message) {
+        getDialogs().showError(message);
+        logger.error(message);
     }
 
     public boolean isTaskLoaded() {
@@ -324,20 +335,42 @@ public class MaeMainController extends JPanel {
 
     public void sendNotification(String message) {
         getStatusBar().setText(message);
+        mouseCursorToDefault();
         logger.debug(message);
     }
 
-    public void resetNotificationMessageIn(long millisecond) {
-        getStatusBar().delayedReset(millisecond);
+    public void updateNotificationAreaIn(long millisecond) {
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                updateNotificationArea();
+            }
+        }, millisecond);
+
+    }
+
+    void updateNotificationArea() {
+        getStatusBar().reset();
+        mouseCursorToDefault();
+
     }
 
     public void sendTemporaryNotification(String message, long periodMillisecond) {
         sendNotification(message);
-        resetNotificationMessageIn(periodMillisecond);
+        updateNotificationAreaIn(periodMillisecond);
     }
 
     public void sendWaitMessage() {
         getStatusBar().setText(MaeStrings.WAIT_MESSAGE);
+        mouseCursorToWait();
+    }
+
+    public void mouseCursorToDefault() {
+        getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+    }
+
+    public void mouseCursorToWait() {
+        getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
 
     public void switchToArgSelMode() {
@@ -401,7 +434,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void newDocument(File annotationFile) {
+    public void addDocument(File annotationFile) {
         try {
 //            setupScheme(MaeStrings.ANN_DB_FILE, new File(getDriver().getTaskFileName()), false);
             sendWaitMessage();
@@ -418,11 +451,6 @@ public class MaeMainController extends JPanel {
         } catch (Exception e) {
             showError(e);
         }
-
-    }
-
-    public void addDocument() {
-        // TODO: 2016-02-04 12:54:30EST 4MF
 
     }
 
@@ -529,7 +557,7 @@ public class MaeMainController extends JPanel {
             getMenu().reset();
             getTextPanel().reset();
             getTablePanel().reset();
-            getStatusBar().reset();
+            updateNotificationArea();
             switchToNormalMode();
         } catch (MaeException e) {
             showError(e);
@@ -649,7 +677,7 @@ public class MaeMainController extends JPanel {
             for (ExtentTag tag : releventTags) {
                 getTablePanel().selectTagFromTable(tag);
             }
-            getStatusBar().update();
+            updateNotificationArea();
         } catch (Exception e) {
             showError(e);
         }
