@@ -199,8 +199,18 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean showUnsavedChangeWarning() {
-        if (isDocumentOpen() && isAnnotationChanged()) {
-            String warning = "Warning! You will lose all your unsaved changes. \n Are you sure to continue?";
+        List<String> unsavedFiles = new LinkedList<>();
+        for (MaeDriverI driver : getDrivers()) {
+            if (driver.isAnnotationChanged()) {
+                try {
+                    unsavedFiles.add(driver.getAnnotationFileBaseName());
+                } catch (MaeDBException ignored) { // this won't happen
+                }
+            }
+        }
+        if (unsavedFiles.size() > 0) {
+            String warning = String.format("Warning! You have unsaved changes. \n%s\n Are you sure to continue?"
+                    , unsavedFiles.toString());
             return showWarning(warning);
         } else {
             return true;
@@ -480,6 +490,16 @@ public class MaeMainController extends JPanel {
     }
 
     public void addDocument(File annotationFile) {
+        for (MaeDriverI driver : getDrivers()) {
+            try {
+                if (annotationFile.getAbsolutePath().equals(driver.getAnnotationFileName())) {
+                    showError(String.format("%s \nis already open!", annotationFile.getName()));
+                    return;
+
+                }
+            } catch (MaeDBException ignored) {
+            }
+        }
         try {
             boolean multiFile = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
             sendWaitMessage();

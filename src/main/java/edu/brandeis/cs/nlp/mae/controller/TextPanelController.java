@@ -519,7 +519,9 @@ class TextPanelController extends MaeControllerI{
         public void actionPerformed(ActionEvent e) {
             TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
             getView().getTabs().setSelectedIndex(title.getTabIndex());
-            getMainController().closeCurrentDocument();
+            if (getMainController().showUnsavedChangeWarning()) {
+                getMainController().closeCurrentDocument();
+            }
 
         }
         TextPanelView.DocumentTabTitle getProperParent(Component component) {
