@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
-import java.util.Timer;
 
 /**
  * Created by krim on 12/31/2015.
@@ -52,11 +50,7 @@ class StatusBarController extends MaeControllerI {
         view.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBarLabel = new JLabel();
         view.add(statusBarLabel);
-        reset();
-    }
-
-    void update() {
-        reset();
+        refresh();
     }
 
     @Override
@@ -90,23 +84,13 @@ class StatusBarController extends MaeControllerI {
         }
     }
 
-    void delayedReset(long delayInMillisecond) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                reset();
-            }
-        }, delayInMillisecond);
-
-    }
-
-    @Override
-    void reset() {
+    void refresh() {
 
         if (!getMainController().isTaskLoaded()) {
             setText(MaeStrings.SB_NODTD);
         } else if (!getMainController().isDocumentOpen()) {
             setText(MaeStrings.SB_NOFILE);
+            getMainController().mouseCursorToDefault();
         } else {
             if (!getMainController().isTextSelected()) {
                 setEmptySelectionText();
@@ -125,6 +109,7 @@ class StatusBarController extends MaeControllerI {
                     setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), potentialArguments));
                     break;
             }
+            getMainController().mouseCursorToDefault();
         }
     }
 

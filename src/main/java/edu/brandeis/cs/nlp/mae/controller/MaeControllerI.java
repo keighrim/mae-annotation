@@ -61,7 +61,5 @@ public abstract class MaeControllerI {
         return new MaeControlException(message, e.getCause());
     }
 
-    abstract void reset() throws MaeException;
-
     abstract void addListeners() throws MaeException;
 }

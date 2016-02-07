@@ -85,9 +85,16 @@ class DialogController {
 
     }
 
-    void showError(String errorMessage) {
+    void showError(String message, Exception e) {
+        String errorTitle = e.getClass().getName();
+        String errorMessage = String.format("%s: %s", message, e.getMessage());
+        JOptionPane.showMessageDialog(getParent(), errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
+
+    }
+
+    void showError(String message) {
         // TODO: 1/1/2016 maybe can implement "send error log to dev" button
-        JOptionPane.showMessageDialog(getParent(), errorMessage, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(getParent(), message, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
 
     }
 
@@ -95,7 +102,6 @@ class DialogController {
         if (defaultName.length() > 0) {
             fileChooser.setSelectedFile(new File(defaultName));
         }
-        // TODO: 1/1/2016 implement multi selection for multi file support
 
         if (saveFile) {
             if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {

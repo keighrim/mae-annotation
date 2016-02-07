@@ -66,34 +66,24 @@ class TablePanelController extends MaeControllerI {
         super(mainController);
         dummyForAllTagTab = new TagType(MaeStrings.ALL_TABLE_TAB_BACK_NAME, MaeStrings.ALL_TABLE_TAB_PREFIX, false);
         view = new TablePanelView();
-        reset();
+        emptyTagTables();
 
     }
+
+
+    Set<TagType> getActiveTags() {
+        Set<TagType> types = new HashSet<>();
+        types.addAll(activeLinkTags);
+        types.addAll(activeExtentTags);
+        return types;
+    }
+
     Set<TagType> getActiveExtentTags() {
         return activeExtentTags;
     }
 
-    void setActiveExtentTags(Set<TagType> types) {
-        getActiveExtentTags().clear();
-        for (TagType type : types) {
-            if (!type.isLink()) {
-                getActiveExtentTags().add(type);
-            }
-        }
-    }
-
-
     Set<TagType> getActiveLinkTags() {
         return activeLinkTags;
-    }
-
-    void setActiveLinkTags(Set<TagType> types) {
-        getActiveLinkTags().clear();
-        for (TagType type : types) {
-            if (type.isLink()) {
-                getActiveLinkTags().add(type);
-            }
-        }
     }
 
     @Override
@@ -102,8 +92,7 @@ class TablePanelController extends MaeControllerI {
     }
 
 
-    @Override
-    void reset() {
+    void emptyTagTables() {
         getView().getTabs().removeAll();
         activeExtentTags = new HashSet<>();
         activeLinkTags = new HashSet<>();
@@ -116,6 +105,7 @@ class TablePanelController extends MaeControllerI {
         if (!getMainController().isTaskLoaded()) {
             throw new MaeControlException("Cannot make tables without a task definition!");
         }
+        emptyTagTables();
         List<TagType> types = getDriver().getAllTagTypes();
         logger.debug(String.format("start creating tables for %d tag types", types.size()));
 
@@ -142,6 +132,25 @@ class TablePanelController extends MaeControllerI {
         getActiveLinkTags().clear();
         getActiveExtentTags().clear();
         addToggleListeners();
+    }
+
+    void wipeAllTables() {
+        for (String tagTypeName : tableMap.keySet()) {
+            TagTableModel model = (TagTableModel) tableMap.get(tagTypeName).getModel();
+            if (!tagTypeName.equals(MaeStrings.ALL_TABLE_TAB_BACK_NAME)) {
+                for (TableModelListener listener : model.getTableModelListeners()) {
+                    if (listener instanceof TagTableModel) {
+                        model.removeTableModelListener(listener);
+                    }
+                }
+
+            }
+            int stored = model.getRowCount();
+            for (int row = stored - 1; row >= 0; row--) {
+                model.removeRow(row);
+            }
+        }
+
     }
 
     void insertAllTags() throws MaeControlException, MaeDBException {
@@ -198,7 +207,6 @@ class TablePanelController extends MaeControllerI {
             tableModel.updateRow(insertAt, newRowData);
             logger.debug(String.format("updating a row, %s, to \"%s\" table at %d", Arrays.toString(newRowData), tableModel.getAssociatedTagTypeName(), insertAt));
         } else {
-            // TODO: 2016-01-08 19:50:19EST this is for error checking, make sure this works as intended
             throw (new MaeControlException("cannot add a row!"));
         }
     }
@@ -374,7 +382,7 @@ class TablePanelController extends MaeControllerI {
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
 
-        // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn olny when not adjudicating
+        // TODO: 2016-01-12 17:32:17EST 4MAII remove source coloumn only when not adjudicating
         table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
 
         return table;
@@ -668,7 +676,7 @@ class TablePanelController extends MaeControllerI {
 
                 if (tabIndex == 0) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
-                        logger.debug(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+                        logger.debug(String.format("activated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().paintableTagTypes()));
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
                             TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
@@ -677,7 +685,7 @@ class TablePanelController extends MaeControllerI {
                             }
                         }
                     } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        logger.debug(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().colorableTagTypes()));
+                        logger.debug(String.format("deactivated FG colors of all %d/%d tags", getActiveExtentTags().size(), getMainController().paintableTagTypes()));
                         for (int tabIndex = 1; tabIndex < tabOrder.size();tabIndex++) {
                             // ignore 0th tab (all tags)
                             TablePanelView.TogglingTabTitle tabTitle = getTagTabTitle(tabIndex);
@@ -696,10 +704,9 @@ class TablePanelController extends MaeControllerI {
                     getMainController().assignTextColorsOver(getRelevantAnchors());
 
                 }
-                getMainController().resetNotificationMessageIn(1000);
+                getMainController().updateNotificationAreaIn(1000);
 
             } catch (MaeDBException ex) {
-                // TODO: 2016-01-10 20:29:47EST make sure this is a safe way
                 getMainController().showError(ex);
             }
 
@@ -712,7 +719,7 @@ class TablePanelController extends MaeControllerI {
 
         private void checkAllTab() throws MaeDBException {
             TablePanelView.TogglingTabTitle allTab = getTagTabTitle(0);
-            if (getActiveExtentTags().size() == getMainController().colorableTagTypes()) {
+            if (getActiveExtentTags().size() == getMainController().paintableTagTypes()) {
                 allTab.setHighlighted(true);
             }
             if (getActiveExtentTags().size() == 0) {
@@ -725,7 +732,7 @@ class TablePanelController extends MaeControllerI {
                 getActiveLinkTags().add(tagType);
             } else {
                 getActiveExtentTags().add(tagType);
-                logger.debug(String.format("activated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
+                logger.debug(String.format("activated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().paintableTagTypes()));
             }
         }
 
@@ -734,7 +741,7 @@ class TablePanelController extends MaeControllerI {
                 getActiveLinkTags().remove(tagType);
             } else {
                 getActiveExtentTags().remove(tagType);
-                logger.debug(String.format("deactivated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().colorableTagTypes()));
+                logger.debug(String.format("deactivated: %s, now %d/%d types are activated", tagType.getName(), activeExtentTags.size(), getMainController().paintableTagTypes()));
             }
 
         }

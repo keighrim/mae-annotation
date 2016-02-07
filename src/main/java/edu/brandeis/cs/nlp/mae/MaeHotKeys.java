@@ -246,7 +246,10 @@ public class MaeHotKeys {
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     public final static KeyStroke ksSAVERTF = ksCR;
 
-    public final static KeyStroke ksCLOSEFILE = ksF4;
+    public final static KeyStroke ksCW
+            = KeyStroke.getKeyStroke(KeyEvent.VK_W,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksCLOSEFILE = ksCW;
 
     public final static KeyStroke ksCS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 

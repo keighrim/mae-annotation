@@ -41,7 +41,7 @@ public class ResetSelection extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        getMainController().resetSelection();
+        getMainController().clearTextSelection();
     }
 }
 

@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.io;
@@ -88,6 +88,11 @@ public class XMLLoader {
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
             Node taskName = doc.getDocumentElement();
+            if (!taskName.getNodeName().equals(driver.getTaskName())) {
+                String message = "annotation file does not match to DTD!";
+                logger.error(message);
+                throw new MaeIOXMLException(message);
+            }
             NodeList taskNodes = taskName.getChildNodes();
             boolean textExists = false;
             for (int i = 0; i < taskNodes.getLength(); i++) {
