@@ -163,7 +163,6 @@ class MenuController extends MaeControllerI {
         MaeActionI openFileAction = new OpenFile(MENUITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
         MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
         MaeActionI closeFileAction = new CloseFile(MENUITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
-        // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard
 
         JMenu menu = new JMenu(MENU_FILE);
         menu.setMnemonic(MENU_FILE.charAt(0));
@@ -299,7 +298,7 @@ class MenuController extends MaeControllerI {
         java.util.List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
 
-        // TODO: 2016-01-23 01:38:46EST add more mode specific items as go on
+        // TODO: 2016-02-07 11:09:27EST add more items for adjudication
         if (getMainController().isTextSelected()) {
             if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
                 contextMenu.add(createMakeTagMenu(CAT_ETAG));

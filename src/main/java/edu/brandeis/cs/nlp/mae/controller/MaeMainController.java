@@ -324,6 +324,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void closeCurrentDocument() {
+        // TODO: 2016-02-07 11:08:47EST if current work is adjudication, return ro normal mode after closing
         closeDocumentAt(getCurrentDocumentTabIndex());
     }
 
@@ -490,16 +491,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void addDocument(File annotationFile) {
-        for (MaeDriverI driver : getDrivers()) {
-            try {
-                if (annotationFile.getAbsolutePath().equals(driver.getAnnotationFileName())) {
-                    showError(String.format("%s \nis already open!", annotationFile.getName()));
-                    return;
-
-                }
-            } catch (MaeDBException ignored) {
-            }
-        }
+        if (checkDuplicateDocs(annotationFile)) return;
         try {
             boolean multiFile = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
             sendWaitMessage();
@@ -516,11 +508,26 @@ public class MaeMainController extends JPanel {
                 getTablePanel().insertAllTags();
             }
             getTextPanel().assignAllFGColors();
+            showIncompleteTagsWarning(true);
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
         } catch (Exception e) {
             showError(e);
         }
 
+    }
+
+    boolean checkDuplicateDocs(File annotationFile) {
+        for (MaeDriverI driver : getDrivers()) {
+            try {
+                if (annotationFile.getAbsolutePath().equals(driver.getAnnotationFileName())) {
+                    showError(String.format("%s \nis already open!", annotationFile.getName()));
+                    return true;
+
+                }
+            } catch (MaeDBException ignored) {
+            }
+        }
+        return false;
     }
 
     public void switchAnnotationTab(int tabId) {
@@ -845,7 +852,7 @@ public class MaeMainController extends JPanel {
     void populateDefaultAttributes(Tag tag) throws MaeDBException {
         for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
             String defaultValue = attType.getDefaultValue();
-            if (defaultValue != null && defaultValue.length() > 0) {
+            if (defaultValue.length() > 0) {
                 getDriver().addAttribute(tag, attType, defaultValue);
             }
         }
@@ -892,7 +899,21 @@ public class MaeMainController extends JPanel {
                 return true;
             } else {
                 AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(tag.getTagtype(), colName);
-                succeed = (getDriver().updateAttribute(tag, attType, value) != null);
+                Attribute updated = getDriver().updateAttribute(tag, attType, value);
+                if (value != null && value.length() > 0) {
+                    succeed = updated != null;
+                } else if (!attType.isRequired()) {
+                    succeed = updated == null;
+                } else if (attType.getDefaultValue().length() > 0) {
+                    succeed = (getDriver().updateAttribute(tag, attType, attType.getDefaultValue()) != null);
+                } else {
+                    // This is a very dangerous DTD, since a required att has no def_value
+                    // However, user should be able to do that;
+                    // setting default value might mislead annotators
+                    // Thus, if this happens, just return true to leave the value empty
+                    // , which will later be checked by incompleteness check when saving
+                    return true;
+                }
             }
         } catch (MaeException e) {
             showError(e);
@@ -916,7 +937,7 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public Set<Tag> checkCompleteness() {
+    public Set<Tag> getIncompleteTags() {
         try {
             Set<Tag> incomplete = new TreeSet<>();
             for (TagType type : getDriver().getAllTagTypes()) {
@@ -941,8 +962,8 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public boolean showIncompleteTagsWarning() {
-        return getDialogs().showIncompleteTagsWarning(checkCompleteness());
+    public boolean showIncompleteTagsWarning(boolean simplyWarn) {
+        return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
     }
 
 }

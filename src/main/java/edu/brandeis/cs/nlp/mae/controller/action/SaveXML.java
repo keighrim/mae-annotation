@@ -58,7 +58,7 @@ public class SaveXML extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showIncompleteTagsWarning()) {
+        if (getMainController().showIncompleteTagsWarning(false)) {
             try {
                 String xmlName = getXMLFileName();
                 File file = getMainController().selectSingleFile(xmlName, true);

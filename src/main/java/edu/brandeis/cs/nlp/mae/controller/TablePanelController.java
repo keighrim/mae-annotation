@@ -459,7 +459,7 @@ class TablePanelController extends MaeControllerI {
 
         void updateRow(int row, String[] rowData) throws MaeControlException {
             if (this.getColumnCount() != rowData.length) {
-                throw new MaeControlException("the data for a new row does not fit in the table.");
+                throw new MaeControlException(String.format("the data for a new row does not fit to \"%s\" table.", getAssociatedTagTypeName()));
             }
             for (int col = 0; col < rowData.length; col++) {
                 setValueAt(rowData[col], row, col);
@@ -502,7 +502,8 @@ class TablePanelController extends MaeControllerI {
             if (event.getType() == TableModelEvent.UPDATE) {
                 // INSERT: listen to insertion is unnecessary, since adding a new tag never happens through table
                 // DELETE: since we cannot recover what's already deleted anyway,
-                // propagated deletion should be called right before the deletion of a row happens (not here, after deletion)
+                // propagated deletion should be called right before the deletion of a row happens
+                // that is, in DeleteTag action, not here, after deletion
                 String tid = (String) getValueAt(event.getFirstRow(), ID_COL);
                 List<Integer> oldSpans = Collections.emptyList();
                 try {
@@ -512,6 +513,7 @@ class TablePanelController extends MaeControllerI {
                 }
                 String colName = getColumnName(event.getColumn());
                 String value = (String) getValueAt(event.getFirstRow(), event.getColumn());
+                // this will return false if update fails
                 boolean updated = getMainController().updateDBFromTableUpdate(tid, colName, value);
                 if (!updated) {
                     revertChange(event.getFirstRow(), event.getColumn());
@@ -573,7 +575,8 @@ class TablePanelController extends MaeControllerI {
         }
 
         void revertChange(int row, int col) {
-            // ID_COL and TEXT_COL are not editable at the first place: except for SPANS_COL, everything else are attribute columns
+            // ID_COL and TEXT_COL are not editable at the first place
+            // and except for SPANS_COL, everything else are attribute columns
             String tid = (String) getValueAt(row, ID_COL);
             ExtentTag tag = (ExtentTag) getMainController().getTagByTid(tid);
             String oldVal;

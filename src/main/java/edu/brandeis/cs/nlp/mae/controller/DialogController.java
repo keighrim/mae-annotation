@@ -93,7 +93,6 @@ class DialogController {
     }
 
     void showError(String message) {
-        // TODO: 1/1/2016 maybe can implement "send error log to dev" button
         JOptionPane.showMessageDialog(getParent(), message, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
 
     }
@@ -151,11 +150,11 @@ class DialogController {
         return null;
     }
 
-    boolean showIncompleteTagsWarning(Set<Tag> incomplete) {
+    boolean showIncompleteTagsWarning(Set<Tag> incomplete, boolean simplyWarn) {
         if (incomplete == null || incomplete.size() < 1) {
             return true;
         }
-        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete);
+        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete, simplyWarn);
         options.setVisible(true);
         switch (options.getResponse()) {
             case JOptionPane.YES_OPTION:
@@ -193,7 +192,7 @@ class DialogController {
         JList<String> incompleteTags;
         int response;
 
-        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete) {
+        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete, boolean simplyWarn) {
             super(getMainController().getMainWindow(), "Missing Something", true);
             setSize(100, 200);
 
@@ -208,12 +207,12 @@ class DialogController {
             addListenersToList(see);
             JPanel buttons = new JPanel(new FlowLayout());
             buttons.add(yes);
-            buttons.add(no);
+            if (!simplyWarn) buttons.add(no);
             buttons.add(see);
 
             String tag = incomplete.size() == 1? "tag" : "tags";
-            add(new JLabel(String.format("" +
-                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Are you sure to continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
+            add(new JLabel(String.format(
+                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
                     BorderLayout.NORTH);
             add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
             add(buttons, BorderLayout.SOUTH);

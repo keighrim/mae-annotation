@@ -47,8 +47,6 @@ import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.*;
 
-// TODO 151225 split this big chunk of drivers into TagDriver.java, AttDriver.java, etc (names are subject to change)
-
 public class LocalSqliteDriverImpl implements MaeDriverI {
 
     // not static for multi file support: needs to instantiate many Drivers
@@ -489,7 +487,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     public List<? extends Tag> getAllTagsOfType(TagType type) throws MaeDBException {
-        // TODO 151215 split into two methods if necessary (each for link and etag)
         try {
             tagTypeDao.refresh(type);
             return new ArrayList<>(type.getTags());
@@ -690,6 +687,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
                 return addAttribute(tag, attType, attValue);
             } else {
                 logger.debug("no new value is provided. leaving the attribute deleted");
+                setAnnotationChanged(true);
                 return null;
             }
         } catch (SQLException e) {

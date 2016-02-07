@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <NounVerbTask>
-<TEXT><![CDATA[Mrs Miller wants the entire house repainted.]]></TEXT>
+<TEXT><![CDATA[
+Mrs Miller wants the entire house repainted.
+]]>
+</TEXT>
 <TAGS>
-<NOUN id="N0" spans="4~10" text="Miller" type="other" comment="default value" />
-<NOUN id="N1" spans="28~33" text="house" type="other" comment="default value" />
-<VERB id="V0" spans="11~16" text="wants" aspect="perfect progressive" />
-<ADJ_ADV id="A0" spans="21~27" text="entire"  />
+<NOUN id="N0" spans="5~11" text="Miller" comment="default value" type="other" />
+<NOUN id="N1" spans="29~34" text="house" comment="default value" type="other" />
+<VERB id="V0" spans="12~17" text="wants" aspect="perfect progressive" />
+<ADJ_ADV id="A0" spans="22~28" text="entire"  />
 </TAGS>
 </NounVerbTask>
