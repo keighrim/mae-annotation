@@ -109,6 +109,7 @@ public class MaeStrings {
     public final static String MENU_MODE = "Mode";
     public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
     public final static String MENUITEM_ARGSEL_MODE = "Switch to argument selection mode";
+    public final static String MENUITEM_ADJUD_MODE = "Start adjudication";
     public final static String MENUITEM_NORMAL_MODE = "Return to normal mode";
     public final static String MENU_DISPLAY = "Display";
     public final static String MENUITEM_ZOOMIN = "Increase font size";

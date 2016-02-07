@@ -232,14 +232,13 @@ class TextPanelController extends MaeControllerI{
     /**
      * add asterisk to windows title when file is changed
      */
-    void updateTabTitles() throws MaeDBException {
+    void updateTabTitles(boolean colorToo) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
             TextPanelView.DocumentTabTitle title = (TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(i);
             title.setChanged(driver.isAnnotationChanged());
-            // TODO: 2016-02-06 23:21:37EST 4MAII finish here
-            if (getMainController().getMode() == MaeMainController.MODE_ADJUD) {
+            if (colorToo) {
                 title.setLabelColor(getMainController().getDocumentColor(i));
             }
 

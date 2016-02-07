@@ -279,7 +279,10 @@ public class MaeHotKeys {
     public final static KeyStroke ksNORMALMODE = ksCE;
     public final static KeyStroke ksMSPANMODE = ksC1;
     public final static KeyStroke ksARGSMODE = ksC2;
-    public final static KeyStroke ksADJUDMODE = ksC9;
+    public final static KeyStroke ksCJ
+            = KeyStroke.getKeyStroke(KeyEvent.VK_J,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksADJUDMODE = ksCJ;
 
     // help menu keys
     public final static  KeyStroke ksABOUT = ksF1;

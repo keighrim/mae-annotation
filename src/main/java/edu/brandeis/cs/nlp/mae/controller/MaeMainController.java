@@ -91,7 +91,11 @@ public class MaeMainController extends JPanel {
 
         mode = MODE_NORMAL;
         tagsForColor = new ArrayList<>();
-        documentTabColors = new ColorHandler(6); // by default, 6 colors allowed to distinguish documents
+
+        // documentTabColors are used when adjudicating
+        // by default, 6 colors allowed to distinguish documents
+        // also, handler starts with black color, which will be used for GS file tab
+        documentTabColors = new ColorHandler(6, true);
 
         try {
             menu = new MenuController(this);
@@ -118,6 +122,7 @@ public class MaeMainController extends JPanel {
             List<String> argsList = new ArrayList<>();
             String taskFilename = null;
             String docFilename = null;
+            String docFilenames = null;
             for (String arg : args) {
                 argsList.add(arg);
             }
@@ -127,7 +132,12 @@ public class MaeMainController extends JPanel {
                 if (argsList.contains("--doc")) {
                     docFilename = argsList.get(argsList.indexOf("--doc") + 1);
 
+                } else if (argsList.contains("--docs")) {
+                    docFilenames = argsList.get(argsList.indexOf("--docs") + 1);
+
                 }
+            }
+            if (!argCmd) {
             }
             if (!argCmd) {
                 System.out.println("TODO: show some help text");
@@ -137,6 +147,16 @@ public class MaeMainController extends JPanel {
                 main.setupScheme(new File(taskFilename), true);
                 if (docFilename != null) {
                     main.addDocument(new File(docFilename));
+                } else if (docFilenames != null) {
+                    String[] filesToOpen = docFilenames.split(",");
+                    for (String fileName : filesToOpen) {
+                        main.addDocument(new File((fileName)));
+                        try {
+                            Thread.sleep(4000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
@@ -212,7 +232,6 @@ public class MaeMainController extends JPanel {
         logger.error(sw.toString());
     }
 
-
     public void showError(String message) {
         getDialogs().showError(message);
         logger.error(message);
@@ -234,13 +253,9 @@ public class MaeMainController extends JPanel {
         return isTaskLoaded() && getDriver().isAnnotationLoaded();
     }
 
-    public boolean isAnnotationChanged() {
-        return getDriver().isAnnotationChanged();
-    }
-
     public void updateSavedStatusInTextPanel() {
         try {
-            getTextPanel().updateTabTitles();
+            getTextPanel().updateTabTitles(getMode() == MODE_ADJUD);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -256,10 +271,6 @@ public class MaeMainController extends JPanel {
 
     public int getMode() {
         return mode;
-    }
-
-    public void setMode(int mode) {
-        this.mode = mode;
     }
 
     public JFrame getMainWindow() {
@@ -383,9 +394,41 @@ public class MaeMainController extends JPanel {
         }
     }
 
+    public void switchToAdjudMode() {
+        if (getDrivers().size() == 1) {
+            showError("Cannot start adjudication with a single annotation instance");
+            return;
+        }
+        if (mode != MODE_ADJUD) {
+            if (showUnsavedChangeWarning()) {
+                File goldstandard = getDialogs().showStartAdjudicationDialog();
+                if (goldstandard != null) { // that is, not cancelled
+                    mode = MODE_ADJUD;
+                    // TODO: 2016-02-07 01:05:58EST implement from here
+                    // * disable doc tab switch
+                    // * paint doc tab titles
+                    // * rebuild table
+                    //   * show source col
+                    //   * change double click listener
+                    // * rebuild mode menu
+                    //   * only return to normal is active
+                    //   * modify switchToNormalMode() for reverting all above changes
+
+                    removeAllBGColors();
+                    addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
+                    getMenu().resetModeMenu();
+                    sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+                }
+            }
+        }
+    }
+
     public void switchToNormalMode() {
 
-        if (mode != MODE_NORMAL) {
+        if (mode == MODE_ADJUD) {
+            // TODO: 2016-02-07 01:10:16EST revert all interface changes from adjud mode
+//        } else if (mode != MODE_NORMAL) {
+        } if (mode != MODE_NORMAL) {
             mode = MODE_NORMAL;
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
             removeAllBGColors();
@@ -690,6 +733,7 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
     }
+
     public void propagateSelectionFromTablePanel(String tid) {
         removeAllBGColors();
         try {

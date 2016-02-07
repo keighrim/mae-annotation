@@ -67,6 +67,12 @@ public class ColorHandler {
         }
     }
 
+    public ColorHandler(int size, boolean startWithBlack) {
+        this(size);
+        colors.add(0, Color.BLACK);
+
+    }
+
     public static Highlighter.HighlightPainter getDefaultHighlighter() {
         return DefaultHighlighter.DefaultPainter;
     }

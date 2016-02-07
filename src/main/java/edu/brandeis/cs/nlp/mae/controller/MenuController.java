@@ -212,17 +212,25 @@ class MenuController extends MaeControllerI {
         if (getMainController().isDocumentOpen()) {
             MaeActionI multiSpanModeAction = new ModeSwitch(MENUITEM_MSPAN_MODE, null, ksMSPANMODE, null, getMainController());
             MaeActionI argSelModeAction = new ModeSwitch(MENUITEM_ARGSEL_MODE, null, ksARGSMODE, null, getMainController());
+            MaeActionI adjudModeAction = new ModeSwitch(MENUITEM_ADJUD_MODE, null, ksADJUDMODE, null, getMainController());
             MaeActionI normalModeAction = new ModeSwitch(MENUITEM_NORMAL_MODE, null, ksNORMALMODE, null, getMainController());
 
             JMenuItem multiSpanMode = new JMenuItem(multiSpanModeAction);
             multiSpanMode.setActionCommand(Integer.toString(MaeMainController.MODE_MULTI_SPAN));
             JMenuItem argSelMode = new JMenuItem(argSelModeAction);
             argSelMode.setActionCommand(Integer.toString(MaeMainController.MODE_ARG_SEL));
+            JMenuItem adjudMode = new JMenuItem(adjudModeAction);
+            adjudMode.setActionCommand(Integer.toString(MaeMainController.MODE_ADJUD));
             JMenuItem normalMode = new JMenuItem(normalModeAction);
             normalMode.setActionCommand(Integer.toString(MaeMainController.MODE_NORMAL));
             switch (getMainController().getMode()) {
                 case MaeMainController.MODE_NORMAL:
                     normalMode.setEnabled(false);
+                    break;
+                case MaeMainController.MODE_ADJUD:
+                    multiSpanMode.setEnabled(false);
+                    argSelMode.setEnabled(false);
+                    adjudMode.setEnabled(false);
                     break;
                 case MaeMainController.MODE_MULTI_SPAN:
                     multiSpanMode.setEnabled(false);
@@ -234,6 +242,9 @@ class MenuController extends MaeControllerI {
 
             menu.add(multiSpanMode);
             menu.add(argSelMode);
+            menu.addSeparator();
+            menu.add(adjudMode);
+            menu.addSeparator();
             menu.add(normalMode);
         } else {
             JMenuItem documentNotOpen = new JCheckBoxMenuItem("Modes ");

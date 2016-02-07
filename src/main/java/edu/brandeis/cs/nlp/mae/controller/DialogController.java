@@ -169,6 +169,26 @@ class DialogController {
         }
     }
 
+    public File showStartAdjudicationDialog() {
+        Object[] options = {"Yes", "No, Load Gold Standard file", "Cancel"};
+        int response = JOptionPane.showOptionDialog(getParent(),
+                "Start adjudication with an empty Gold Standard file?",
+                "Start adjudication",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+        switch (response) {
+            case 0:
+                return showFileChooseDialogAndSelect("goldstandard.xml", true);
+            case 1:
+                return showFileChooseDialogAndSelect("goldstandard.xml", false);
+            default:
+                return null;
+        }
+    }
+
     class IncompleteTagsWarningOptionPanel extends JDialog {
         JList<String> incompleteTags;
         int response;
