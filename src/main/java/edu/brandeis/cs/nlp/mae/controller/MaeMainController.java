@@ -41,10 +41,7 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -264,11 +261,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void updateSavedStatusInTextPanel() {
-        try {
-            getTextPanel().updateTabTitles(getMode() == MODE_ADJUD);
-        } catch (MaeDBException e) {
-            showError(e);
-        }
+        getTextPanel().updateTabTitles(getMode() == MODE_ADJUD);
     }
 
     public boolean normalModeOnCreation() {
@@ -409,12 +402,22 @@ public class MaeMainController extends JPanel {
         if (getDrivers().size() == 1) {
             showError("Cannot start adjudication with a single annotation instance");
             return;
+        } else if (checkTextSharing().size() > 0) {
+            String message = String.format(
+                    "Adjudication requires annotations on the same text. \nFound different texts: %s", checkTextSharing().toString());
+            // TODO: 2016-02-07 16:12:20EST instead of show error, show warning to choose to close all irrelevant documents
+            showError(message);
+            return;
         }
         if (mode != MODE_ADJUD) {
             if (showUnsavedChangeWarning()) {
                 File goldstandard = getDialogs().showStartAdjudicationDialog();
                 if (goldstandard != null) { // that is, not cancelled
+                    // TODO: 2016-02-07 16:54:59EST implement read from an existing GS
                     mode = MODE_ADJUD;
+                    writeCurrentTextOnEmptyFile(goldstandard);
+                    addAdjudication(goldstandard);
+
                     // TODO: 2016-02-07 01:05:58EST implement from here
                     // * disable doc tab switch
                     // * paint doc tab titles
@@ -445,6 +448,22 @@ public class MaeMainController extends JPanel {
             removeAllBGColors();
             addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
             getMenu().resetModeMenu();
+        }
+    }
+
+    void writeCurrentTextOnEmptyFile(File file) {
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream output = new FileOutputStream(file);
+            output.write(getDriver().getPrimaryText().getBytes());
+            output.flush();
+            output.close();
+        } catch (IOException e) {
+            showError("Cannot create a new file!", e);
+        } catch (MaeDBException e) {
+            showError("Cannot read primary text!", e);
         }
     }
 
@@ -479,7 +498,7 @@ public class MaeMainController extends JPanel {
                 getMenu().resetFileMenu();
                 getTextPanel().noDocumentGuide();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
-                getTablePanel().makeAllTables();
+                getTablePanel().prepareAllTables();
                 storePaintedStates();
                 sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
             }
@@ -510,10 +529,41 @@ public class MaeMainController extends JPanel {
             getTextPanel().assignAllFGColors();
             showIncompleteTagsWarning(true);
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
-        } catch (Exception e) {
+        } catch (MaeException e) {
             showError(e);
+        } catch (FileNotFoundException e) {
+            showError("File not found!", e);
         }
 
+    }
+
+    public void addAdjudication(File goldstandard) {
+        try {
+            setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
+            getDriver().readAnnotation(goldstandard);
+            getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
+            getTablePanel().prepareAllTables();
+            logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+        } catch (MaeException e) {
+            showError(e);
+        } catch (FileNotFoundException e) {
+            showError("File not found!", e);
+        }
+    }
+
+    Set<String> checkTextSharing() {
+        Set<String> differs = new HashSet<>();
+        try {
+            String workingText = getDriver().getPrimaryText();
+            for (MaeDriverI driver : getDrivers()) {
+                if (!driver.getPrimaryText().equals(workingText)) {
+                    differs.add(driver.getAnnotationFileBaseName());
+                }
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return differs;
     }
 
     boolean checkDuplicateDocs(File annotationFile) {
@@ -531,23 +581,25 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchAnnotationTab(int tabId) {
-        try {
-            sendWaitMessage();
-            if (getDriver().isAnnotationLoaded()) {
-                getTablePanel().wipeAllTables();
-                getTextPanel().clearSelection();
-                getTextPanel().clearCaret();
+        if (getMode() != MODE_ADJUD) {
+            try {
+                sendWaitMessage();
+                if (getDriver().isAnnotationLoaded()) {
+                    getTablePanel().wipeAllTables();
+                    getTextPanel().clearSelection();
+                    getTextPanel().clearCaret();
+                    updateNotificationArea();
+                }
+                currentDriver = drivers.get(tabId);
+                getTablePanel().insertAllTags();
+                assignTextColorsOver(anchorsToRepaint());
+                storePaintedStates();
+                logger.info(String.format("switched to document \"%s\", using DB file at \"%s\"",
+                        getDriver().getAnnotationFileBaseName(), getDriver().getDBSourceName()));
                 updateNotificationArea();
+            } catch (MaeException e) {
+                showError(e);
             }
-            currentDriver = drivers.get(tabId);
-            getTablePanel().insertAllTags();
-            assignTextColorsOver(anchorsToRepaint());
-            storePaintedStates();
-            logger.info(String.format("switched to document \"%s\", using DB file at \"%s\"",
-                    getDriver().getAnnotationFileBaseName(), getDriver().getDBSourceName()));
-            updateNotificationArea();
-        } catch (MaeException e) {
-            showError(e);
         }
 
     }
@@ -643,7 +695,7 @@ public class MaeMainController extends JPanel {
         Set<TagType> currentlyActivated = getTablePanel().getActiveTags();
         for (TagType type : coloredTagsInLastDocument.keySet()) {
             if ((currentlyActivated.contains(type) && !coloredTagsInLastDocument.get(type))
-                || (!currentlyActivated.contains(type) && coloredTagsInLastDocument.get(type))) {
+                    || (!currentlyActivated.contains(type) && coloredTagsInLastDocument.get(type))) {
                 try {
                     toRepaint.addAll(getDriver().getAllAnchorsOfTagType(type, Collections.<TagType>emptyList()));
                 } catch (MaeDBException e) {
@@ -837,6 +889,12 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
         return  null;
+    }
+
+    public Tag copyTagToGoldStandard(Tag tag) {
+        // TODO: 2016-02-07 13:42:04EST NotImplemented
+        return null;
+
     }
 
     public void selectTagAndTable(Tag tag) {

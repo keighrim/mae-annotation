@@ -189,6 +189,23 @@ class TextPanelController extends MaeControllerI{
 
     }
 
+    void addAdjudicationTab(String goldTitle, String goldText) {
+        JTabbedPane tabs = getView().getTabs();
+        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
+        // TODO: 2016-02-07 16:31:49EST closing gold means return to normal mode
+        title.addCloseListener(new DocumentCloseListener());
+        getView().addAdjudicationTab(title, goldText);
+        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
+        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+        for (int i = 1; i < tabs.getTabCount(); i++) {
+            tabs.getTabComponentAt(i).setEnabled(false);
+            tabs.setEnabledAt(i, false);
+
+        }
+        updateTabTitles(true);
+
+    }
+
     private DefaultStyledDocument getDocument() {
         return getView().getDocument();
     }
@@ -232,7 +249,7 @@ class TextPanelController extends MaeControllerI{
     /**
      * add asterisk to windows title when file is changed
      */
-    void updateTabTitles(boolean colorToo) throws MaeDBException {
+    void updateTabTitles(boolean colorToo) {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
@@ -518,9 +535,11 @@ class TextPanelController extends MaeControllerI{
         @Override
         public void actionPerformed(ActionEvent e) {
             TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
-            getView().getTabs().setSelectedIndex(title.getTabIndex());
-            if (getMainController().showUnsavedChangeWarning()) {
-                getMainController().closeCurrentDocument();
+            if (title.isEnabled()) {
+                getView().getTabs().setSelectedIndex(title.getTabIndex());
+                if (getMainController().showUnsavedChangeWarning()) {
+                    getMainController().closeCurrentDocument();
+                }
             }
 
         }

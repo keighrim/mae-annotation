@@ -95,6 +95,12 @@ public class TextPanelView extends JPanel {
 
     }
 
+    public void addAdjudicationTab(DocumentTabTitle title, String text) {
+        getTabs().insertTab(title.getLabel(), null, createDocumentArea(stringToStyledDocument(text)), null, 0);
+        getTabs().setTabComponentAt(0, title);
+        selectTab(0);
+    }
+
     public void addTextTab(DocumentTabTitle title, String text) {
         // always open a new tab at the end, and switch to the new tab
         getTabs().addTab(title.getLabel(), createDocumentArea(stringToStyledDocument(text)));
@@ -186,7 +192,7 @@ public class TextPanelView extends JPanel {
                     Component component = e.getComponent();
                     if (component instanceof AbstractButton) {
                         AbstractButton button = (AbstractButton) component;
-                        button.setForeground(Color.RED);
+                        button.setForeground(isEnabled() ? Color.RED : Color.LIGHT_GRAY);
                     }
                 }
 
