@@ -114,12 +114,6 @@ class MenuController extends MaeControllerI {
     }
 
     @Override
-    void reset() throws MaeDBException {
-        // resetting menubar is done by resetting individual menu
-
-    }
-
-    @Override
     void addListeners() throws MaeException {
         // no listeners involved
 
@@ -168,7 +162,7 @@ class MenuController extends MaeControllerI {
         MaeActionI loadTaskAction = new LoadTask(MENUITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
         MaeActionI openFileAction = new OpenFile(MENUITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
         MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
-//        MaeActionI closeFileAction = new LoadTask(MENU_FILE_ITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
+        MaeActionI closeFileAction = new CloseFile(MENUITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
         // TODO: 2016-01-10 16:45:38EST add menu item to load gold standard
 
         JMenu menu = new JMenu(MENU_FILE);
@@ -177,19 +171,19 @@ class MenuController extends MaeControllerI {
         JMenuItem loadTask = new JMenuItem(loadTaskAction);
         JMenuItem openFile = new JMenuItem(openFileAction);
         JMenuItem saveXML = new JMenuItem(saveXMLAction);
-//        JMenuItem closeFile = new JMenuItem(closeFileAction);
+        JMenuItem closeFile = new JMenuItem(closeFileAction);
         boolean taskLoaded = getMainController().isTaskLoaded();
         boolean fileLoaded = getMainController().isDocumentOpen();
         openFile.setEnabled(taskLoaded);
         saveXML.setEnabled(fileLoaded);
-//        closeFile.setEnabled(fileLoaded);
+        closeFile.setEnabled(fileLoaded);
 
         menu.add(loadTask);
         menu.add(openFile);
         menu.addSeparator();
         menu.add(saveXML);
         menu.addSeparator();
-//        menu.add(closeFile);
+        menu.add(closeFile);
         logger.debug("file menu is created: " + menu.getItemCount());
         return menu;
     }

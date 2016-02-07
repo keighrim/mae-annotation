@@ -49,7 +49,6 @@ public class TablePanelView extends JPanel {
     }
 
     public void addTab(String titleText, JComponent titleComponent, JComponent tableComponent) {
-        // TODO: 2016-01-07 21:30:06EST add tooltip
         getTabs().addTab(titleText, tableComponent);
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, titleComponent);
     }

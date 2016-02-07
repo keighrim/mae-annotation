@@ -82,6 +82,7 @@ public class MaeMainController extends JPanel {
 
     private ColorHandler textHighlighColors;
     private List<TagType> tagsForColor;
+    private Map<TagType, Boolean> coloredTagsInLastDocument;
     private ColorHandler documentTabColors;
 
     public MaeMainController() {
@@ -98,6 +99,7 @@ public class MaeMainController extends JPanel {
             tablePanel = new TablePanelController(this);
             statusBar = new StatusBarController(this);
             dialogs = new DialogController(this);
+            coloredTagsInLastDocument = new HashMap<>();
         } catch (MaeException e) {
             showError(e);
         }
@@ -293,16 +295,31 @@ public class MaeMainController extends JPanel {
     }
 
     public MaeDriverI getDriverAt(int i) {
-        // TODO: 1/4/2016 finish this for multi file support
         return drivers.get(i);
     }
 
-    public void destroyDriverAt(int i) {
-        // TODO: 1/4/2016 finish this for multi file support
+    public int getCurrentDocumentTabIndex() {
+        return getTextPanel().getCurrentTab();
+    }
+
+    public void closeCurrentDocument() {
+        closeDocumentAt(getCurrentDocumentTabIndex());
+    }
+
+    public void closeDocumentAt(int i) {
+        int openDrivers = getDrivers().size();
+        if (i > openDrivers || openDrivers != getTextPanel().getOpenTabCount()) {
+            showError("drivers and documents do not match!");
+        }
         try {
-            getDriverAt(i).destroy();
-            drivers.remove(i);
-//            getTextPanel().closeDocument(i);
+            if (getDrivers().size() > 1) {
+                getDriverAt(i).destroy();
+                drivers.remove(i);
+                getTextPanel().closeDocumentTab(i);
+            } else {
+                File taskFile = new File(getDriver().getTaskFileName());
+                setupScheme(taskFile, true);
+            }
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -325,7 +342,7 @@ public class MaeMainController extends JPanel {
     }
 
     void updateNotificationArea() {
-        getStatusBar().reset();
+        getStatusBar().refresh();
         mouseCursorToDefault();
 
     }
@@ -404,27 +421,18 @@ public class MaeMainController extends JPanel {
             logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
                     getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
             if (fromNewTask) {
-                resetColors();
+                resetPaintableColors();
                 getMenu().resetFileMenu();
-                getTextPanel().reset();
+                getTextPanel().noDocumentGuide();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
-                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
-                getTablePanel().reset();
                 getTablePanel().makeAllTables();
+                storePaintedStates();
+                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
             }
         } catch (MaeDBException e) {
             showError("Found an error in DB!", e);
         } catch (MaeControlException e) {
             showError("Failed to sort out tag tables!", e);
-        }
-    }
-
-    public void repopulateTables() {
-        getTablePanel().wipeAllTables();
-        try {
-            getTablePanel().insertAllTags();
-        } catch (MaeException e) {
-            showError(e);
         }
     }
 
@@ -436,15 +444,15 @@ public class MaeMainController extends JPanel {
                 setupScheme(new File(getDriver().getTaskFileName()), false);
             }
             getDriver().readAnnotation(annotationFile);
-            getTextPanel().addDocument(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
+            getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
             logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
             if (!multiFile) {
                 getMenu().resetFileMenu();
                 getMenu().resetTagsMenu();
                 getMenu().resetModeMenu();
                 getTablePanel().insertAllTags();
-                getTextPanel().reset();
             }
+            getTextPanel().assignAllFGColors();
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
         } catch (Exception e) {
             showError(e);
@@ -457,10 +465,14 @@ public class MaeMainController extends JPanel {
             sendWaitMessage();
             if (getDriver().isAnnotationLoaded()) {
                 getTablePanel().wipeAllTables();
+                getTextPanel().clearSelection();
+                getTextPanel().clearCaret();
+                updateNotificationArea();
             }
             currentDriver = drivers.get(tabId);
             getTablePanel().insertAllTags();
-            getTextPanel().reset(); // repaint colors
+            assignTextColorsOver(anchorsToRepaint());
+            storePaintedStates();
             logger.info(String.format("switched to document \"%s\", using DB file at \"%s\"",
                     getDriver().getAnnotationFileBaseName(), getDriver().getDBSourceName()));
             updateNotificationArea();
@@ -519,15 +531,13 @@ public class MaeMainController extends JPanel {
 
     }
 
-    public void resetSelection() {
+    public void clearTextSelection() {
         getTextPanel().clearSelection();
-        removeAllBGColors();
         sendTemporaryNotification("Clear!, Click anywhere to continue", 3000);
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
         return getDialogs().showFileChooseDialogAndSelect(defautName, saveFile);
-        // TODO: 1/1/2016 4MF implement multiple files
     }
 
     public void assignTextColorsOver(List<Integer> anchors) {
@@ -538,47 +548,40 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void assignAllTextColors() {
-        try {
-            getTextPanel().assignAllFGColors();
-        } catch (MaeDBException e) {
-            showError(e);
-        }
-    }
-
-    public void unassignAllTextColors() {
-        try {
-            getTextPanel().unassignAllFGColors();
-        } catch (MaeDBException e) {
-            showError(e);
-        }
-    }
-
-    public void updateTitle() {
-    }
-
-    void resetColors() throws MaeDBException {
+    void resetPaintableColors() throws MaeDBException {
         textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
         tagsForColor.clear();
     }
 
-    private void resetControllers() {
+    void storePaintedStates() {
+        Set<TagType> activated = getTablePanel().getActiveTags();
         try {
-            getMenu().reset();
-            getTextPanel().reset();
-            getTablePanel().reset();
-            updateNotificationArea();
-            switchToNormalMode();
-        } catch (MaeException e) {
+            for (TagType type : getDriver().getAllTagTypes()) {
+                if (activated.contains(type)) {
+                    coloredTagsInLastDocument.put(type, Boolean.TRUE);
+                } else {
+                    coloredTagsInLastDocument.put(type, Boolean.FALSE);
+                }
+            }
+        } catch (MaeDBException e) {
             showError(e);
         }
-
     }
 
-    private void resetAll() {
-
-        wipeDrivers();
-        resetControllers();
+    List<Integer> anchorsToRepaint() {
+        Set<Integer> toRepaint = new HashSet<>();
+        Set<TagType> currentlyActivated = getTablePanel().getActiveTags();
+        for (TagType type : coloredTagsInLastDocument.keySet()) {
+            if ((currentlyActivated.contains(type) && !coloredTagsInLastDocument.get(type))
+                || (!currentlyActivated.contains(type) && coloredTagsInLastDocument.get(type))) {
+                try {
+                    toRepaint.addAll(getDriver().getAllAnchorsOfTagType(type, Collections.<TagType>emptyList()));
+                } catch (MaeDBException e) {
+                    showError(e);
+                }
+            }
+        }
+        return new ArrayList<>(toRepaint);
     }
 
     private void wipeDrivers() {
@@ -601,23 +604,23 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public JFileChooser getFileChooser() {
-        return getDialogs().getFileChooser();
+    public Color getDocumentColor(int documentTabIndex) {
+        return documentTabColors.getColor(documentTabIndex);
     }
 
     public Color getFGColor(TagType type) {
         if (!tagsForColor.contains(type)) {
             tagsForColor.add(type);
         }
-        return getTextHighlighColors().getColor(tagsForColor.indexOf(type));
+        return getTextHighlightColors().getColor(tagsForColor.indexOf(type));
 
     }
 
-    public int colorableTagTypes() {
+    public int paintableTagTypes() {
         return tagsForColor.size();
     }
 
-    public ColorHandler getTextHighlighColors() {
+    public ColorHandler getTextHighlightColors() {
         return textHighlighColors;
     }
 

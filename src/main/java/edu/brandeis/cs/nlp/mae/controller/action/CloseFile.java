@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller.action;
@@ -30,18 +30,21 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Listener for the File menu; determines what action to take for loading/saving
+ * documents.
  */
-public class ResetSelection extends MenuActionI {
+public class CloseFile extends MenuActionI {
 
-    public ResetSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public CloseFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        getMainController().clearTextSelection();
+    public void actionPerformed(ActionEvent event) {
+        if (getMainController().showUnsavedChangeWarning()) {
+            getMainController().closeCurrentDocument();
+        }
     }
+
 }
 

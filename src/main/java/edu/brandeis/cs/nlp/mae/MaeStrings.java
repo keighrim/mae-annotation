@@ -58,7 +58,7 @@ public class MaeStrings {
             MaeStrings.NC_START, MaeStrings.SPANDELIMITER, MaeStrings.NC_END);
 
     public final static String ATT_VALUESET_SEPARATOR = ":::";
-    // TODO 151209 are these two below safe?
+    // these two might be too much hard-coded
     public final static String SPANTEXTTRUNC = " ... ";
     public final static String LONGTEXTTRUNC = " … ";
     public final static String ADD_NC_COMMAND = "ADDNC:";
@@ -104,7 +104,7 @@ public class MaeStrings {
     public final static String MENUITEM_SAVEXML = "Save Annotation As XML";
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
-    public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
+    public final static String MENUITEM_CLOSEFILE = "Close Document";
     public final static String MENU_TAGS = "Tags";
     public final static String MENU_MODE = "Mode";
     public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
@@ -142,7 +142,7 @@ public class MaeStrings {
     public final static String NO_FILE_IND = "No File";
     public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
     public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or a XML document with stand-alone annotations.";
-    public static final String UNSAVED_SUFFIX = " *";
+    public static final String UNSAVED_INDICATOR = "*";
 
     /* popup messages */
     public static final String WARN_POPUP_TITLE = "Attention, Please";

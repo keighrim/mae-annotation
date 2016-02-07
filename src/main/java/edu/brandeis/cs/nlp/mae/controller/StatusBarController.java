@@ -50,7 +50,7 @@ class StatusBarController extends MaeControllerI {
         view.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBarLabel = new JLabel();
         view.add(statusBarLabel);
-        reset();
+        refresh();
     }
 
     @Override
@@ -84,8 +84,7 @@ class StatusBarController extends MaeControllerI {
         }
     }
 
-    @Override
-    void reset() {
+    void refresh() {
 
         if (!getMainController().isTaskLoaded()) {
             setText(MaeStrings.SB_NODTD);

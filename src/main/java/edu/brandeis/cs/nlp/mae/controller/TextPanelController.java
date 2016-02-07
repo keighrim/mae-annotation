@@ -27,7 +27,6 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -43,6 +42,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
@@ -63,28 +64,13 @@ class TextPanelController extends MaeControllerI{
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
         selected = new int[0];
-        reset();
+        noTaskGuide();
+//        reset();
     }
 
     @Override
     protected TextPanelView getView() {
         return view;
-    }
-
-    @Override
-    void reset() throws MaeDBException {
-        if (!getMainController().isTaskLoaded()) {
-            addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
-        } else if (!getMainController().isDocumentOpen()) {
-            addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
-        } else {
-            selectionHistory.clear();
-            if (getMainController().isDocumentOpen()) {
-                clearColoring();
-                assignAllFGColors();
-            }
-        }
-
     }
 
     private void clearColoring() throws MaeDBException {
@@ -93,12 +79,32 @@ class TextPanelController extends MaeControllerI{
     }
 
     private void addGuideTab(String guideTitle, String guideText) {
-        getView().clearAllTabs();
+        disableTabSwitchListener();
+        getView().initTabs();
         getView().addTextTab(guideTitle, guideText);
+    }
+
+    public void noTaskGuide() {
+        addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+    }
+
+    public void noDocumentGuide() {
+        addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
     }
 
     @Override
     void addListeners() {
+    }
+
+    void disableTabSwitchListener() {
+
+        JTabbedPane tabs = getView().getTabs();
+        for (ChangeListener listener : tabs.getChangeListeners()) {
+            if (listener instanceof TextPanelTabSwitchListener) {
+                tabs.removeChangeListener(listener);
+            }
+        }
+
     }
 
     protected void setSelection(int[] spans) {
@@ -108,6 +114,12 @@ class TextPanelController extends MaeControllerI{
     void clearSelection() {
         selectionHistory.clear();
         setSelection(new int[0]);
+        removeAllBGColors();
+    }
+
+    void clearCaret() {
+        getView().getDocumentPane().setCaretPosition(0);
+
     }
 
     void addSelection(int[] contiguousSpan) {
@@ -160,11 +172,14 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    void addDocument(String documentTitle, String documentText) {
+    void addDocumentTab(String documentTitle, String documentText) {
         if (!getView().isAnyDocumentOpen()) {
-            getView().clearAllTabs();
+            getView().initTabs();
         }
-        getView().addTextTab(documentTitle, documentText);
+        JTabbedPane tabs = getView().getTabs();
+        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
+        title.addCloseListener(new DocumentCloseListener());
+        getView().addTextTab(title, documentText);
         getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
         getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
         if (!getView().isAnyDocumentOpen()) {
@@ -178,8 +193,7 @@ class TextPanelController extends MaeControllerI{
         return getView().getDocument();
     }
 
-    void closeDocument(int i) {
-        // TODO: 1/4/2016 need tests if this works well with tab switch listener to properly change current tab as well
+    void closeDocumentTab(int i) {
         getView().getTabs().remove(i);
     }
 
@@ -207,11 +221,12 @@ class TextPanelController extends MaeControllerI{
 
     }
 
+    public int getCurrentTab() {
+        return getView().getTabs().getSelectedIndex();
+    }
 
-    void selectTab(int tabId) {
-        // TODO: 1/4/2016 finish this for multi file support
-        getView().selectTab(tabId);
-        getMainController().switchAnnotationTab(tabId);
+    public int getOpenTabCount() {
+        return getView().getTabs().getTabCount();
     }
 
     /**
@@ -221,15 +236,12 @@ class TextPanelController extends MaeControllerI{
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
-            String suffix = "";
-            int boldness = Font.PLAIN;
-            if (driver.isAnnotationChanged()) {
-                suffix = MaeStrings.UNSAVED_SUFFIX;
-                boldness = Font.BOLD;
+            TextPanelView.DocumentTabTitle title = (TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(i);
+            title.setChanged(driver.isAnnotationChanged());
+            // TODO: 2016-02-06 23:21:37EST 4MAII finish here
+            if (getMainController().getMode() == MaeMainController.MODE_ADJUD) {
+                title.setLabelColor(getMainController().getDocumentColor(i));
             }
-            Component title = tabs.getComponentAt(i);
-            title.setFont(title.getFont().deriveFont(boldness));
-            tabs.setTitleAt(i, driver.getAnnotationFileBaseName() + suffix);
 
         }
     }
@@ -363,7 +375,6 @@ class TextPanelController extends MaeControllerI{
      * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
      */
     private int setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
-        // TODO: 2016-02-05 13:55:10EST 4unicode changing character att breaks unicode emojis, possible reason: changing a range over the lenth of 1 break code point (emojis are combination of two code point)
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
@@ -496,12 +507,28 @@ class TextPanelController extends MaeControllerI{
                 }
             }
             try {
-                removeAllBGColors();
                 addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
             } catch (MaeControlException ignored) {
                 // possible MaeException chained from BadLocationException is ignored
             }
             getMainController().propagateSelectionFromTextPanel();
+        }
+    }
+
+    private class DocumentCloseListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
+            getView().getTabs().setSelectedIndex(title.getTabIndex());
+            getMainController().closeCurrentDocument();
+
+        }
+        TextPanelView.DocumentTabTitle getProperParent(Component component) {
+            if (component instanceof TextPanelView.DocumentTabTitle) {
+                return (TextPanelView.DocumentTabTitle) component;
+            } else {
+                return getProperParent(component.getParent());
+            }
         }
     }
 

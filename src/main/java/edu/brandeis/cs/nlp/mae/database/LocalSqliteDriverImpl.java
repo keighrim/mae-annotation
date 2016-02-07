@@ -201,7 +201,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAnnotationFileName(String fileName) throws MaeDBException {
         try {
-            // TODO: 2016-01-21 21:22:25EST test this actually updates file name
             this.workingTask.setAnnotationFileName(fileName);
             taskDao.update(workingTask);
         } catch (SQLException e) {
@@ -314,13 +313,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public List<Integer> getAllAnchors() throws MaeDBException{
-        // TODO: 1/3/2016  old implementation was getting location:Set<Tag> hashedset, now only returns locations and then querying associated tags is another responsibility
-        // ==> make sure this is not a dangerous decision
-        // TODO 151214 when making hghlights, implement getProperColor()
-        // to get the first turned-on TagType from a sorted List<TagType>, and also check that's the last (to make it bold)
-
         List<Integer> anchors = new ArrayList<>();
-
         try {
             for (CharIndex location : charIndexDao.queryForAll()) {
                 anchors.add(location.getLocation());

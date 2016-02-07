@@ -102,7 +102,6 @@ class DialogController {
         if (defaultName.length() > 0) {
             fileChooser.setSelectedFile(new File(defaultName));
         }
-        // TODO: 1/1/2016 implement multi selection for multi file support
 
         if (saveFile) {
             if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
