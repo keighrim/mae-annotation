@@ -53,6 +53,12 @@ public class TablePanelView extends JPanel {
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, titleComponent);
     }
 
+    public JTable getTable() {
+        JScrollPane sp = (JScrollPane) getTabs().getSelectedComponent();
+        JTable table = (JTable) sp.getViewport().getView();
+        return table;
+    }
+
     private void clear() {
 
         getTabs().removeAll();

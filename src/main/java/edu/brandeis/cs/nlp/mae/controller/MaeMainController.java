@@ -626,13 +626,37 @@ public class MaeMainController extends JPanel {
         return getTextPanel().getSelected();
     }
 
+    public List<ExtentTag> getExtentTagsInSelectedSpans() {
+        // will return sorted list of tags
+        try {
+            return getDriver().getTagsIn(getSelectedTextSpans());
+        } catch (Exception e) {
+            showError(e);
+            return new ArrayList<>();
+        }
+    }
+
     public List<ExtentTag> getSelectedArguments() {
+        // will return list of tags in selected order
         try {
             return getTextPanel().getSelectedArgumentsInOrder();
         } catch (MaeDBException e) {
             showError(e);
         }
         return null;
+    }
+
+    public List<ExtentTag> getExtentTagsInSelectedSpansFromALlDocuments() {
+        // will return sorted list of tags
+        List<ExtentTag> tags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                tags.addAll(driver.getTagsIn(getSelectedTextSpans()));
+            }
+        } catch (Exception e) {
+            showError(e);
+        }
+        return tags;
     }
 
     public void undoLastSelection() {
@@ -670,9 +694,13 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    void resetPaintableColors() throws MaeDBException {
-        textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
-        tagsForColor.clear();
+    void resetPaintableColors() {
+        try {
+            textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+            tagsForColor.clear();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
     }
 
     void storePaintedStates() {
@@ -715,15 +743,6 @@ public class MaeMainController extends JPanel {
             }
         }
         drivers.clear();
-    }
-
-    public List<ExtentTag> getExtentTagsInSelectedSpans() {
-        try {
-            return getDriver().getTagsIn(getSelectedTextSpans());
-        } catch (Exception e) {
-            showError(e);
-            return new ArrayList<>();
-        }
     }
 
     public Color getDocumentColor(int documentTabIndex) {
@@ -801,15 +820,54 @@ public class MaeMainController extends JPanel {
     }
 
     public void propagateSelectionFromTextPanel() {
-        getTablePanel().clearTableSelections();
-        try {
-            List<ExtentTag> releventTags = getExtentTagsInSelectedSpans();
-            for (ExtentTag tag : releventTags) {
-                getTablePanel().selectTagFromTable(tag);
+        if (getMode() == MODE_ADJUD) {
+            propagateToAdjudicationArea();
+        } else {
+            propagateToAnnotationArea();
+        }
+        updateNotificationArea();
+    }
+
+    void propagateToAdjudicationArea() {
+        getTablePanel().clearAdjudicationTable();
+        TagType currentType = getTablePanel().getCurrentTagType();
+        List<ExtentTag> selectedTags = getExtentTagsInSelectedSpansFromALlDocuments();
+        if (currentType.isExtent()) {
+            for (ExtentTag tag : selectedTags) {
+                if (tag.getTagtype().equals(currentType)) {
+                    try {
+                        getTablePanel().insertTagIntoAdjudicationTable(tag);
+                    } catch (MaeDBException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            updateNotificationArea();
-        } catch (Exception e) {
-            showError(e);
+        } else {
+            for (ExtentTag tag : selectedTags) {
+                try {
+                    Set<LinkTag> linkers = getDriver().getLinksHasArgumentTag(tag);
+                    for (LinkTag linker : linkers) {
+                        if (linker.getTagtype().equals(currentType)) {
+                            getTablePanel().insertTagIntoAdjudicationTable(linker);
+                        }
+                    }
+                } catch (MaeDBException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    void propagateToAnnotationArea() {
+        getTablePanel().clearTableSelections();
+        List<ExtentTag> releventTags = getExtentTagsInSelectedSpans();
+        for (ExtentTag tag : releventTags) {
+            try {
+                getTablePanel().selectTagFromTable(tag);
+            } catch (MaeDBException e) {
+                showError(e);
+            }
         }
     }
 
@@ -907,11 +965,15 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    void populateDefaultAttributes(Tag tag) throws MaeDBException {
+    void populateDefaultAttributes(Tag tag) {
         for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
             String defaultValue = attType.getDefaultValue();
             if (defaultValue.length() > 0) {
-                getDriver().addAttribute(tag, attType, defaultValue);
+                try {
+                    getDriver().addAttribute(tag, attType, defaultValue);
+                } catch (MaeDBException e) {
+                    showError(e);
+                }
             }
         }
     }

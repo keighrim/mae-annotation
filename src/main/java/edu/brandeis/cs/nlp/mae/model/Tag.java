@@ -135,7 +135,9 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
 
     @Override
     public boolean equals(Object tag) {
-        return tag instanceof Tag && getId().equals(((Tag) tag).getId());
+        return tag instanceof Tag
+                && getId().equals(((Tag) tag).getId())
+                && getFilename().equals(((Tag) tag).getFilename());
     }
 
     @Override

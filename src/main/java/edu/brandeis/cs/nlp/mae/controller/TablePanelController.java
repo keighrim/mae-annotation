@@ -95,6 +95,11 @@ class TablePanelController extends MaeControllerI {
     }
 
 
+    boolean isAdjudicating() {
+        return getMainController().getMode() == MaeMainController.MODE_ADJUD;
+
+    }
+
     void emptyTagTables() {
         getView().getTabs().removeAll();
         activeExtentTags = new HashSet<>();
@@ -113,7 +118,7 @@ class TablePanelController extends MaeControllerI {
         getActiveLinkTags().clear();
         getActiveExtentTags().clear();
 
-        if (getMainController().getMode() == MaeMainController.MODE_ADJUD) {
+        if (isAdjudicating()) {
             prepareAdjudicationTables();
         } else {
             prepareAnnotationTables();
@@ -225,9 +230,19 @@ class TablePanelController extends MaeControllerI {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
         insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
-        if (tag.getTagtype().isExtent()) {
+        if (tag.getTagtype().isExtent() && !isAdjudicating()) {
             insertTagToAllTagsTable(tag);
         }
+    }
+
+    void insertTagIntoAdjudicationTable(Tag tag) throws MaeDBException {
+        AdjudicationTableModelI tableModel = (AdjudicationTableModelI) getView().getTable().getModel();
+        tableModel.populateTable(tag);
+
+    }
+
+    void clearAdjudicationTable() {
+        ((AdjudicationTableModelI) getView().getTable().getModel()).clearTable();
     }
 
     private void insertRowData(TagTableModel tableModel, int insertAt, String[] newRowData) throws MaeControlException {
@@ -280,6 +295,10 @@ class TablePanelController extends MaeControllerI {
 
     void selectTabOf(TagType type) {
         getView().getTabs().setSelectedIndex(tabOrder.indexOf(type));
+    }
+
+    TagType getCurrentTagType() {
+        return tabOrder.get(getView().getTabs().getSelectedIndex());
     }
 
     void selectTagFromTable(Tag tag) throws MaeDBException {
@@ -403,7 +422,6 @@ class TablePanelController extends MaeControllerI {
     }
 
     private JTable createMinimumTable(TagTableModel model, boolean isExtent) {
-        boolean isAdjud = getMainController().getMode() == MaeMainController.MODE_ADJUD;
         model.addColumn(MaeStrings.SRC_COL_NAME);
         model.addColumn(MaeStrings.ID_COL_NAME);
 
@@ -414,7 +432,7 @@ class TablePanelController extends MaeControllerI {
         }
 
         JTable table;
-        if (!isAdjud) {
+        if (!isAdjudicating()) {
             table = new JTable(model);
         } else {
             final AdjudicationTableModelI adjudModel = (AdjudicationTableModelI) model;
@@ -431,7 +449,7 @@ class TablePanelController extends MaeControllerI {
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
 
-        if (!isAdjud) {
+        if (!isAdjudicating()) {
             table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
         }
 
@@ -716,7 +734,7 @@ class TablePanelController extends MaeControllerI {
 
         void clearTable();
 
-        void populateTable(Tag[] tags) throws MaeDBException;
+        void populateTable(Tag tag) throws MaeDBException;
 
     }
 
@@ -747,21 +765,19 @@ class TablePanelController extends MaeControllerI {
         @Override
         public void clearTable() {
             goldTagRows.clear();
-            for (int row = 0; row < getRowCount(); row++) {
+            for (int row = getRowCount() - 1; row >= 0; row--) {
                 removeRow(row);
             }
         }
 
         @Override
-        public void populateTable(Tag[] tags) throws MaeDBException {
+        public void populateTable(Tag tag) throws MaeDBException {
             String annotationFileName = getDriver().getAnnotationFileBaseName();
-            for (Tag tag : tags) {
-                if (!annotationFileName.equals(tag.getFilename())) {
-                    addRow(convertTagIntoRow(tag, this));
-                } else {
-                    addRow(convertTagIntoRow(tag, this));
-                    setRowAsGoldTag(getRowCount() - 1);
-                }
+            if (!annotationFileName.equals(tag.getFilename())) {
+                addRow(convertTagIntoRow(tag, this));
+            } else {
+                addRow(convertTagIntoRow(tag, this));
+                setRowAsGoldTag(getRowCount() - 1);
             }
         }
 
@@ -810,23 +826,21 @@ class TablePanelController extends MaeControllerI {
         @Override
         public void clearTable() {
             goldTagRows.clear();
-            for (int row = 0; row < getRowCount(); row++) {
+            for (int row = getRowCount() - 1; row >= 0; row--) {
                 removeRow(row);
 
             }
         }
 
         @Override
-        public void populateTable(Tag[] tags) throws MaeDBException {
+        public void populateTable(Tag tag) throws MaeDBException {
             String annotationFileName = getDriver().getAnnotationFileBaseName();
-            for (Tag tag : tags) {
-                if (annotationFileName.equals(tag.getFilename())) {
-                    addRow(convertTagIntoRow(tag, this));
-                    setRowAsGoldTag(getRowCount() - 1);
-                } else {
-                    addRow(convertTagIntoRow(tag, this));
+            if (annotationFileName.equals(tag.getFilename())) {
+                addRow(convertTagIntoRow(tag, this));
+                setRowAsGoldTag(getRowCount() - 1);
+            } else {
+                addRow(convertTagIntoRow(tag, this));
 
-                }
             }
         }
 

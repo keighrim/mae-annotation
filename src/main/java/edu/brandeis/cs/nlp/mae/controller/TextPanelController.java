@@ -506,8 +506,9 @@ class TextPanelController extends MaeControllerI{
 
                 int start = Math.min(e.getDot(), e.getMark());
                 int end = Math.max(e.getDot(), e.getMark());
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    // in normal mode, clear selection before adding a new selection
+                if (getMainController().getMode() == MaeMainController.MODE_NORMAL ||
+                        getMainController().getMode() == MaeMainController.MODE_ADJUD) {
+                    // in normal mode or in adjudication, clear selection before adding a new selection
                     clearSelection();
                 }
                 addSelection(new int[]{start, end});
@@ -517,6 +518,10 @@ class TextPanelController extends MaeControllerI{
                         clearSelection();
                         break;
                     case MaeMainController.MODE_ARG_SEL:
+                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
+                        break;
+                    case MaeMainController.MODE_ADJUD:
+                        clearSelection();
                         addSelection(new int[]{e.getDot(), e.getDot() + 1});
                         break;
 
