@@ -95,6 +95,8 @@ public class MaeStrings {
     public final static String SB_MARGS_MODE_PREFIX = "[Arguments select] ";
     public final static String SB_MARGS_TAG = SB_TAG;
     public final static String SB_MARGS_NOTAG = SB_NOTAG;
+    public final static String SB_ADJUD_PREFIX = "[ADJUDICATION] ";
+    public final static String SB_ADJUD_TAG = " %d %s Tags Selected.";
 
 
     /* main menus */

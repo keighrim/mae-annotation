@@ -81,6 +81,7 @@ public class MaeMainController extends JPanel {
     private List<TagType> tagsForColor;
     private Map<TagType, Boolean> coloredTagsInLastDocument;
     private ColorHandler documentTabColors;
+    private List<Tag> adjudicatingTags;
 
     public MaeMainController() {
 
@@ -88,6 +89,7 @@ public class MaeMainController extends JPanel {
 
         mode = MODE_NORMAL;
         tagsForColor = new ArrayList<>();
+        adjudicatingTags = new LinkedList<>();
 
         // documentTabColors are used when adjudicating
         // by default, 6 colors allowed to distinguish documents
@@ -828,8 +830,17 @@ public class MaeMainController extends JPanel {
         updateNotificationArea();
     }
 
+    TagType getAdjudicatingTagType() {
+        return getTablePanel().getCurrentTagType();
+    }
+
+    List<Tag> getAdjudicatingTags() {
+        return adjudicatingTags;
+    }
+
     void propagateToAdjudicationArea() {
         getTablePanel().clearAdjudicationTable();
+        adjudicatingTags.clear();
         TagType currentType = getTablePanel().getCurrentTagType();
         List<ExtentTag> selectedTags = getExtentTagsInSelectedSpansFromALlDocuments();
         if (currentType.isExtent()) {
@@ -837,6 +848,7 @@ public class MaeMainController extends JPanel {
                 if (tag.getTagtype().equals(currentType)) {
                     try {
                         getTablePanel().insertTagIntoAdjudicationTable(tag);
+                        adjudicatingTags.add(tag);
                     } catch (MaeDBException e) {
                         e.printStackTrace();
                     }
@@ -849,6 +861,7 @@ public class MaeMainController extends JPanel {
                     for (LinkTag linker : linkers) {
                         if (linker.getTagtype().equals(currentType)) {
                             getTablePanel().insertTagIntoAdjudicationTable(linker);
+                            adjudicatingTags.add(linker);
                         }
                     }
                 } catch (MaeDBException e) {

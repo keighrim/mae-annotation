@@ -26,6 +26,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,8 @@ class StatusBarController extends MaeControllerI {
                 return MaeStrings.SB_MSPAN_MODE_PREFIX;
             case MaeMainController.MODE_ARG_SEL:
                 return MaeStrings.SB_MARGS_MODE_PREFIX;
+            case MaeMainController.MODE_ADJUD:
+                return MaeStrings.SB_ADJUD_PREFIX;
             default:
                 return "";
         }
@@ -76,6 +79,7 @@ class StatusBarController extends MaeControllerI {
 
     void setEmptySelectionText() {
         switch (getMainController().getMode()) {
+            case MaeMainController.MODE_ADJUD:
             case MaeMainController.MODE_ARG_SEL:
                 setText(MaeStrings.SB_MARGS_NOTAG);
                 break;
@@ -108,6 +112,10 @@ class StatusBarController extends MaeControllerI {
                     List<ExtentTag> potentialArguments = getMainController().getSelectedArguments();
                     setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), potentialArguments));
                     break;
+                case MaeMainController.MODE_ADJUD:
+                    List<Tag> adjudicating = getMainController().getAdjudicatingTags();
+                    setText(String.format(MaeStrings.SB_ADJUD_TAG, adjudicating.size(), getMainController().getAdjudicatingTagType()));
+
             }
             getMainController().mouseCursorToDefault();
         }
