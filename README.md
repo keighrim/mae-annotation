@@ -18,22 +18,25 @@ MAE (Multi-purpose Annotation Environment) is an annotation tool originally crea
 
 Currently [Keigh Rim](https://github.com/keighrim) is in charge of the maintenance of the project since 2014, along with the companion adjudication tool [MAI](https://github.com/keighrim/mai-adjudication), which will soon be integrated into MAE.
 
-MAE allows users to define their own annotation tasks, annotate partial words - including discontigous text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
+MAE allows users to define their own annotation tasks, annotate partial words - including discontinuous text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
 Also MAI allows for easy adjudication of extent tags, link tags, and non-consuming tags from any XML standoff annotated documents. (for best results, the files output by MAE should be used).
 While it does not enforce strict rules for annotation schemes, it is very easy to set up and start running. Check out the wiki for the user guide with detailed instructions.
 
-## Requirements
+## How to use
+
+### Requirements
 
 Latest MAE requires Java 7 to run, and Maven to build. See wiki for more details.
 
-## Download and run
+For more robust Unicode support, MAE uses [DejaVu Sans](http://dejavu-fonts.org/wiki/Main_Page) font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also required to have DejaVu Sans font installed.
+
+### Download and run
 
 Download release package or executable `.jar` from from [releases](https://github.com/keighrim/mae-annotation/releases) page. After you have `mae-<VERSION>.jar` file, simply double click the file will run MAE. Be sure that you have a proper version of Java installed.
 
-## How to annotate
+### Annotation
 
 We are providing the user guide to MAE using project [Wiki](https://github.com/keighrim/mae-annotation/wiki).
-
 
 ## License
 MAE is a free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](http://www.gnu.org/licenses/gpl.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -48,10 +51,11 @@ Also, MAE is written using open source software below.
 * [ORMlite](http://ormlite.com/) ([open source license](http://ormlite.com/javadoc/ormlite-core/doc-files/ormlite_9.html#License)) 
 
 ## Change History
-All changes are ducumentd on [releases](https://github.com/keighrim/mae-annotation/releases) page.
+All changes are documented on [releases](https://github.com/keighrim/mae-annotation/releases) page.
 
 ### See also
 
 For learn more about natural language annotation, please refer to Amber Stubbs and James Pustejovsky's book [Natural Language Annotation for Machine Learning](http://shop.oreilly.com/product/0636920020578.do). (Please note that the book is written using MAE 0.9.6)
 
-You can also visit [old code base archive](https://code.google.com/p/mae-annotation/) hosted on Google Code.
+You can also visit Amber Stubb's [old code base archive](https://code.google.com/p/mae-annotation/) hosted on Google Code.
+
