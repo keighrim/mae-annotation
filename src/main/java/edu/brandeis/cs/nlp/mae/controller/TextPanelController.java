@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -187,7 +188,7 @@ class TextPanelController extends MaeControllerI{
     }
 
     void resetFontSize() {
-        getView().setTextFont(new Font("monospaced", Font.PLAIN, TextPanelView.DEFAULT_FONT_SIZE));
+        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.DEFAULT_FONT_SIZE));
 
     }
 
@@ -206,7 +207,7 @@ class TextPanelController extends MaeControllerI{
     }
 
     void veryLargeFonts() {
-        getView().setTextFont(new Font("monospaced", Font.PLAIN, TextPanelView.VERYLARGE_FONT_SIZE));
+        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.VERYLARGE_FONT_SIZE));
 
     }
 
@@ -351,8 +352,9 @@ class TextPanelController extends MaeControllerI{
 
     void unassignAllFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
-        for (Integer location : anchorLocations) {
-            setFGColorAtLocation(Color.black, location, false, false);
+        int anchorIndex = 0;
+        while (anchorIndex < anchorLocations.size()) {
+            anchorIndex += setFGColorAtLocation(Color.black, anchorLocations.get(anchorIndex), false, false);
         }
     }
 
@@ -364,24 +366,34 @@ class TextPanelController extends MaeControllerI{
      * @param location the location of the start of the extent
      * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
      */
-    private void setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
+    private int setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
+        // TODO: 2016-02-05 13:55:10EST 4unicode changing character att breaks unicode emojis, possible reason: changing a range over the lenth of 1 break code point (emojis are combination of two code point)
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
         StyleConstants.setUnderline(attributeSet, underline);
         StyleConstants.setItalic(attributeSet, italic);
-        styleDoc.setCharacterAttributes(location, 1, attributeSet, false);
+        int length = 0;
+        try {
+            length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
+        } catch (BadLocationException ignored) {
+        }
+        styleDoc.setCharacterAttributes(location, length, attributeSet, false);
+        return length;
     }
 
     void assignFGColorOver(int...locations) throws MaeDBException {
-        for (int location : locations) {
-            assignFGColorAt(location);
+
+        int locIndex = 0;
+        while (locIndex < locations.length) {
+            locIndex += assignFGColorAt(locations[locIndex]);
         }
     }
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
-        for (Integer location : locations) {
-            assignFGColorAt(location);
+        int locIndex = 0;
+        while (locIndex < locations.size()) {
+            locIndex += assignFGColorAt(locations.get(locIndex));
         }
     }
 
@@ -389,7 +401,7 @@ class TextPanelController extends MaeControllerI{
      * This method is for coloring/underlining text in the text window.  It detects
      * overlaps, and should be called every time a tag is added or removed.
      */
-    private void assignFGColorAt(int location) throws MaeDBException {
+    private int assignFGColorAt(int location) throws MaeDBException {
         boolean singular = false;
         boolean plural = false;
         boolean argument = false;
@@ -420,7 +432,7 @@ class TextPanelController extends MaeControllerI{
                 }
             }
         }
-        setFGColorAtLocation(c, location, plural, argument);
+        return setFGColorAtLocation(c, location, plural, argument);
     }
 
     void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
@@ -466,11 +478,11 @@ class TextPanelController extends MaeControllerI{
         @Override
         public void caretUpdate(CaretEvent e) {
 
-            int start = Math.min(e.getDot(), e.getMark());
-            int end = Math.max(e.getDot(), e.getMark()) + 1; // because dot and mark are inclusive
-
-            if (start != end - 1) {
+            if (e.getDot() != e.getMark()) {
                 // that is, mouse is dragged and text is selected
+
+                int start = Math.min(e.getDot(), e.getMark());
+                int end = Math.max(e.getDot(), e.getMark());
                 if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
                     // in normal mode, clear selection before adding a new selection
                     clearSelection();
@@ -482,7 +494,7 @@ class TextPanelController extends MaeControllerI{
                         clearSelection();
                         break;
                     case MaeMainController.MODE_ARG_SEL:
-                        addSelection(new int[]{start, end});
+                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
                         break;
 
                 }
