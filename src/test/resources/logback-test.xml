@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  ~ MAE - Multi-purpose Annotation Environment
+  ~
+  ~ Copyright Keigh Rim (krim@brandeis.edu)
+  ~ Department of Computer Science, Brandeis University
+  ~ Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+  ~
+  ~ MAE is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
+  ~
+  ~ For feedback, reporting bugs, use the project on Github
+  ~ @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
+  -->
+
+<configuration debug="true">
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>
+                %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                @%d{HH:mm:ss.SSS} [%-5level] %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+        <target>System.err</target>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                @%d{HH:mm:ss.SSS} [%-5level] %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="DB_OP_FILE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                @%d{HH:mm:ss.SSS} [%-5level] %logger{10} : %msg %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.j256.ormlite" level="debug"/>
+
+    <root level="debug">
+        <appender-ref ref="STDERR" />
+    </root>
+</configuration>
+
