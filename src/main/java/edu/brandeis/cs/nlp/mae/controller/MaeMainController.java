@@ -32,6 +32,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import org.slf4j.Logger;
@@ -41,6 +42,8 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -262,8 +265,16 @@ public class MaeMainController extends JPanel {
         return isTaskLoaded() && getDriver().isAnnotationLoaded();
     }
 
+    public boolean isAdjudicating() {
+        return getMode() == MODE_ADJUD;
+    }
+
     public void updateSavedStatusInTextPanel() {
-        getTextPanel().updateTabTitles(getMode() == MODE_ADJUD);
+        try {
+            getTextPanel().updateTabTitles(isAdjudicating());
+        } catch (MaeDBException e) {
+            showError(e);
+        }
     }
 
     public boolean normalModeOnCreation() {
@@ -411,7 +422,7 @@ public class MaeMainController extends JPanel {
             showError(message);
             return;
         }
-        if (mode != MODE_ADJUD) {
+        if (!isAdjudicating()) {
             if (showUnsavedChangeWarning()) {
                 File goldstandard = getDialogs().showStartAdjudicationDialog();
                 if (goldstandard != null) { // that is, not cancelled
@@ -421,10 +432,7 @@ public class MaeMainController extends JPanel {
                     addAdjudication(goldstandard);
 
                     // TODO: 2016-02-07 01:05:58EST implement from here
-                    // * disable doc tab switch
-                    // * paint doc tab titles
                     // * rebuild table
-                    //   * show source col
                     //   * change double click listener
                     // * rebuild mode menu
                     //   * only return to normal is active
@@ -441,7 +449,7 @@ public class MaeMainController extends JPanel {
 
     public void switchToNormalMode() {
 
-        if (mode == MODE_ADJUD) {
+        if (isAdjudicating()) {
             // TODO: 2016-02-07 01:10:16EST revert all interface changes from adjud mode
 //        } else if (mode != MODE_NORMAL) {
         } if (mode != MODE_NORMAL) {
@@ -542,9 +550,11 @@ public class MaeMainController extends JPanel {
     public void addAdjudication(File goldstandard) {
         try {
             setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
+            getDrivers().add(0, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
             getDriver().readAnnotation(goldstandard);
             getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
             getTablePanel().prepareAllTables();
+            switchAdjudicationTag();
             logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
         } catch (MaeException e) {
             showError(e);
@@ -582,8 +592,56 @@ public class MaeMainController extends JPanel {
         return false;
     }
 
-    public void switchAnnotationTab(int tabId) {
-        if (getMode() != MODE_ADJUD) {
+    public void switchAdjudicationTag() {
+        assignAdjudicationColors();
+    }
+
+    void assignAdjudicationColors() {
+        try {
+            getTextPanel().clearColoring();
+            getTextPanel().clearSelection();
+            TagType type = getTablePanel().getCurrentTagType();
+            Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorsOfTagType(type, Collections.<TagType>emptyList()));
+            paintOverlappingStat(type, goldAnchors);
+            paintGoldTags(goldAnchors);
+        } catch (MaeDBException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void paintGoldTags(Collection<Integer> goldAnchors) {
+        for (Integer goldAnchor : goldAnchors) {
+            getTextPanel().assignOverlappingColorAt(goldAnchor, ColorHandler.getVividForeground(), false);
+        }
+    }
+
+    void paintOverlappingStat(TagType type, Set<Integer> goldAnchors) throws MaeDBException {
+        MappedSet<Integer, Integer> anchorToDriverIndex = new MappedSet<>();
+        // 0th is the driver for gold, skipping.
+        for (int i = 1; i < getDrivers().size(); i++) {
+            MaeDriverI driver = getDriverAt(i);
+            List<Integer> anchors = driver.getAllAnchorsOfTagType(type, Collections.<TagType>emptyList());
+            for (Integer anchor : anchors) {
+                if (!goldAnchors.contains(anchor)) {
+                    anchorToDriverIndex.putItem(anchor, i);
+                }
+            }
+        }
+        for (Integer anchor : anchorToDriverIndex.keySet()) {
+            Set<Integer> drivers = (Set<Integer>) anchorToDriverIndex.get(anchor);
+            if (drivers.size() == 1) {
+                Integer driverIndex = drivers.iterator().next();
+                getTextPanel().assignOverlappingColorAt(anchor, documentTabColors.getColor(driverIndex), false);
+            } else if (drivers.size() == getDrivers().size() - 1) { // full overlap
+                getTextPanel().assignOverlappingColorAt(anchor, ColorHandler.getFadingForeground(), true);
+            } else { // partial overlap
+                getTextPanel().assignOverlappingColorAt(anchor, ColorHandler.getFadingForeground(), false);
+            }
+        }
+    }
+
+    public void switchAnnotationDocument(int tabId) {
+        if (!isAdjudicating()) {
             try {
                 sendWaitMessage();
                 if (getDriver().isAnnotationLoaded()) {
@@ -592,7 +650,7 @@ public class MaeMainController extends JPanel {
                     getTextPanel().clearCaret();
                     updateNotificationArea();
                 }
-                currentDriver = drivers.get(tabId);
+                currentDriver = getDrivers().get(tabId);
                 getTablePanel().insertAllTags();
                 assignTextColorsOver(anchorsToRepaint());
                 storePaintedStates();
@@ -737,14 +795,14 @@ public class MaeMainController extends JPanel {
     }
 
     private void wipeDrivers() {
-        for (MaeDriverI driver : drivers) {
+        for (MaeDriverI driver : getDrivers()) {
             try {
                 driver.destroy();
             } catch (Exception e) {
                 showError(e);
             }
         }
-        drivers.clear();
+        getDrivers().clear();
     }
 
     public Color getDocumentColor(int documentTabIndex) {
@@ -822,7 +880,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void propagateSelectionFromTextPanel() {
-        if (getMode() == MODE_ADJUD) {
+        if (isAdjudicating()) {
             propagateToAdjudicationArea();
         } else {
             propagateToAnnotationArea();
@@ -947,12 +1005,16 @@ public class MaeMainController extends JPanel {
             }
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
-            selectTagAndTable(tag);
-            updateSavedStatusInTextPanel();
-            if (tagType.isExtent()) {
-                assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
+            if (isAdjudicating()) {
+                switchAdjudicationTag();
+            } else {
+                selectTagAndTable(tag);
+                if (tagType.isExtent()) {
+                    assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
+                }
             }
-            if (normalModeOnCreation()) {
+            updateSavedStatusInTextPanel();
+            if (normalModeOnCreation() && !isAdjudicating()) {
                 switchToNormalMode();
             }
             return tag;

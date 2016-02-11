@@ -212,6 +212,12 @@ public class TextPanelView extends JPanel {
             return documentLabel.getText();
         }
 
+        public void setLabel(String label) {
+            documentLabel.setText(label);
+            updateUI();
+
+        }
+
         public int getTabIndex() {
             return parentPane.indexOfTabComponent(DocumentTabTitle.this);
         }

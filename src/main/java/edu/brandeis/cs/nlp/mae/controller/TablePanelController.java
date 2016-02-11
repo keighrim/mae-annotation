@@ -33,6 +33,8 @@ import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
@@ -94,12 +96,6 @@ class TablePanelController extends MaeControllerI {
         return view;
     }
 
-
-    boolean isAdjudicating() {
-        return getMainController().getMode() == MaeMainController.MODE_ADJUD;
-
-    }
-
     void emptyTagTables() {
         getView().getTabs().removeAll();
         activeExtentTags = new HashSet<>();
@@ -118,7 +114,7 @@ class TablePanelController extends MaeControllerI {
         getActiveLinkTags().clear();
         getActiveExtentTags().clear();
 
-        if (isAdjudicating()) {
+        if (getMainController().isAdjudicating()) {
             prepareAdjudicationTables();
         } else {
             prepareAnnotationTables();
@@ -135,6 +131,7 @@ class TablePanelController extends MaeControllerI {
             JLabel title = new JLabel(name);
             getView().addTab(name, title, makeAdjudicationArea(type));
         }
+        getView().getTabs().addChangeListener(new AdjudicationTabSwitchListener());
     }
 
     private void prepareAnnotationTables() throws MaeDBException {
@@ -230,7 +227,7 @@ class TablePanelController extends MaeControllerI {
         TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
         insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
-        if (tag.getTagtype().isExtent() && !isAdjudicating()) {
+        if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
             insertTagToAllTagsTable(tag);
         }
     }
@@ -432,7 +429,7 @@ class TablePanelController extends MaeControllerI {
         }
 
         JTable table;
-        if (!isAdjudicating()) {
+        if (!getMainController().isAdjudicating()) {
             table = new JTable(model);
         } else {
             final AdjudicationTableModelI adjudModel = (AdjudicationTableModelI) model;
@@ -449,7 +446,7 @@ class TablePanelController extends MaeControllerI {
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
 
-        if (!isAdjudicating()) {
+        if (!getMainController().isAdjudicating()) {
             table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
         }
 
@@ -776,8 +773,8 @@ class TablePanelController extends MaeControllerI {
             if (!annotationFileName.equals(tag.getFilename())) {
                 addRow(convertTagIntoRow(tag, this));
             } else {
+                setRowAsGoldTag(getRowCount());
                 addRow(convertTagIntoRow(tag, this));
-                setRowAsGoldTag(getRowCount() - 1);
             }
         }
 
@@ -810,6 +807,7 @@ class TablePanelController extends MaeControllerI {
 
         AdjudicationLinkTableModel(TagType tagType) {
             super(tagType);
+            goldTagRows = new HashSet<>();
         }
 
         @Override
@@ -836,8 +834,8 @@ class TablePanelController extends MaeControllerI {
         public void populateTable(Tag tag) throws MaeDBException {
             String annotationFileName = getDriver().getAnnotationFileBaseName();
             if (annotationFileName.equals(tag.getFilename())) {
+                setRowAsGoldTag(getRowCount());
                 addRow(convertTagIntoRow(tag, this));
-                setRowAsGoldTag(getRowCount() - 1);
             } else {
                 addRow(convertTagIntoRow(tag, this));
 
@@ -1014,6 +1012,14 @@ class TablePanelController extends MaeControllerI {
             }
         }
 
+    }
+
+    private class AdjudicationTabSwitchListener implements ChangeListener {
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            getMainController().switchAdjudicationTag();
+
+        }
     }
 
 }

@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.controller;
@@ -73,8 +73,8 @@ class TextPanelController extends MaeControllerI{
         return view;
     }
 
-    private void clearColoring() throws MaeDBException {
-        unassignAllFGColors();
+    public void clearColoring() throws MaeDBException {
+        unassignAllFGColor();
         removeAllBGColors();
     }
 
@@ -189,7 +189,7 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void addAdjudicationTab(String goldTitle, String goldText) {
+    void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
         // TODO: 2016-02-07 16:31:49EST closing gold means return to normal mode
@@ -249,11 +249,12 @@ class TextPanelController extends MaeControllerI{
     /**
      * add asterisk to windows title when file is changed
      */
-    void updateTabTitles(boolean colorToo) {
+    void updateTabTitles(boolean colorToo) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
             TextPanelView.DocumentTabTitle title = (TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(i);
+            title.setLabel(driver.getAnnotationFileBaseName());
             title.setChanged(driver.isAnnotationChanged());
             if (colorToo) {
                 title.setLabelColor(getMainController().getDocumentColor(i));
@@ -374,12 +375,21 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void unassignAllFGColors() throws MaeDBException {
+    void unassignAnchoredFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         int anchorIndex = 0;
         while (anchorIndex < anchorLocations.size()) {
             anchorIndex += setFGColorAtLocation(Color.black, anchorLocations.get(anchorIndex), false, false);
         }
+    }
+
+    void unassignAllFGColor() throws MaeDBException {
+        int[] entireDocument = SpanHandler.range(0, getDriver().getPrimaryText().length());
+        for (int anchor : entireDocument) {
+            setFGColorAtLocation(Color.black, anchor, false, false);
+
+        }
+
     }
 
     /**
@@ -405,18 +415,17 @@ class TextPanelController extends MaeControllerI{
         return length;
     }
 
-    void assignFGColorOver(int...locations) throws MaeDBException {
-
-        int locIndex = 0;
-        while (locIndex < locations.length) {
-            locIndex += assignFGColorAt(locations[locIndex]);
-        }
+    void assignOverlappingColorAt(Integer location, Color srcColor, boolean fullOverlap) {
+        setFGColorAtLocation(srcColor, location, fullOverlap, false);
     }
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
-        int locIndex = 0;
-        while (locIndex < locations.size()) {
-            locIndex += assignFGColorAt(locations.get(locIndex));
+//        int locIndex = 0;
+//        while (locIndex < locations.size()) {
+//            locIndex += assignFGColorAt(locations.get(locIndex));
+//        }
+        for (Integer location : locations) {
+            assignFGColorAt(location);
         }
     }
 
@@ -507,7 +516,7 @@ class TextPanelController extends MaeControllerI{
                 int start = Math.min(e.getDot(), e.getMark());
                 int end = Math.max(e.getDot(), e.getMark());
                 if (getMainController().getMode() == MaeMainController.MODE_NORMAL ||
-                        getMainController().getMode() == MaeMainController.MODE_ADJUD) {
+                        getMainController().isAdjudicating()) {
                     // in normal mode or in adjudication, clear selection before adding a new selection
                     clearSelection();
                 }
@@ -560,7 +569,7 @@ class TextPanelController extends MaeControllerI{
     private class TextPanelTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            getMainController().switchAnnotationTab(((JTabbedPane) e.getSource()).getSelectedIndex());
+            getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
 
         }
     }
