@@ -167,7 +167,7 @@ public class MaeMainController extends JPanel {
 
             @Override
             public void windowClosing(WindowEvent winEvt) {
-                if (showUnsavedChangeWarning()) {
+                if (showUnsavedChangeWarning() && showIncompleteTagsWarning()) {
                     try {
                         getDriver().destroy();
                         System.exit(0);
