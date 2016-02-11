@@ -65,26 +65,27 @@ class StatusBarController extends MaeControllerI {
     }
 
     private String getModePrefix() {
+        String prefix = getMainController().isAdjudicating()? MaeStrings.SB_ADJUD_PREFIX : "";
         switch (getMainController().getMode()) {
             case MaeMainController.MODE_MULTI_SPAN:
-                return MaeStrings.SB_MSPAN_MODE_PREFIX;
+                if (prefix.length() > 1) prefix += " ";
+                prefix += MaeStrings.SB_MSPAN_MODE_PREFIX;
+                break;
             case MaeMainController.MODE_ARG_SEL:
-                return MaeStrings.SB_MARGS_MODE_PREFIX;
-            case MaeMainController.MODE_ADJUD:
-                return MaeStrings.SB_ADJUD_PREFIX;
-            default:
-                return "";
+                if (prefix.length() > 1) prefix += " ";
+                prefix += MaeStrings.SB_MARGS_MODE_PREFIX;
+                break;
         }
+        if (prefix.length() > 0) prefix = String.format("[%s] ", prefix);
+        return prefix;
     }
 
     void setEmptySelectionText() {
-        switch (getMainController().getMode()) {
-            case MaeMainController.MODE_ADJUD:
-            case MaeMainController.MODE_ARG_SEL:
-                setText(MaeStrings.SB_MARGS_NOTAG);
-                break;
-            default:
-                setText(MaeStrings.SB_NOTEXT);
+        if (getMainController().isAdjudicating() ||
+                getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
+            setText(MaeStrings.SB_MARGS_NOTAG);
+        } else {
+            setText(MaeStrings.SB_NOTEXT);
         }
     }
 
@@ -103,7 +104,10 @@ class StatusBarController extends MaeControllerI {
             int[] spans = getMainController().getSelectedTextSpans();
             switch (getMainController().getMode()) {
                 case MaeMainController.MODE_NORMAL:
-                    setText(MaeStrings.SB_TEXT + SpanHandler.convertArrayToString(spans));
+                    String statMessage = getMainController().isAdjudicating() ?
+                            String.format(MaeStrings.SB_ADJUD_TAG, getMainController().getAdjudicatingTags().size(), getMainController().getAdjudicatingTagType())
+                            : MaeStrings.SB_TEXT + SpanHandler.convertArrayToString(spans);
+                    setText(statMessage);
                     break;
                 case MaeMainController.MODE_MULTI_SPAN:
                     setText(MaeStrings.SB_MSPAN_TEXT + SpanHandler.convertArrayToString(spans));
@@ -112,10 +116,6 @@ class StatusBarController extends MaeControllerI {
                     List<ExtentTag> potentialArguments = getMainController().getSelectedArguments();
                     setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), potentialArguments));
                     break;
-                case MaeMainController.MODE_ADJUD:
-                    List<Tag> adjudicating = getMainController().getAdjudicatingTags();
-                    setText(String.format(MaeStrings.SB_ADJUD_TAG, adjudicating.size(), getMainController().getAdjudicatingTagType()));
-
             }
             getMainController().mouseCursorToDefault();
         }

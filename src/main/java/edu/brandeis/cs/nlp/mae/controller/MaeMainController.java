@@ -59,7 +59,8 @@ public class MaeMainController extends JPanel {
     public static final int MODE_NORMAL = 0;
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
-    public static final int MODE_ADJUD = 9;
+    public static final int START_ADJUD = 9;
+    public static final int END_ADJUD = 8;
     private static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
     private int mode;
 
@@ -85,6 +86,7 @@ public class MaeMainController extends JPanel {
     private Map<TagType, Boolean> coloredTagsInLastDocument;
     private ColorHandler documentTabColors;
     private List<Tag> adjudicatingTags;
+    private boolean isAdjudicating;
 
     public MaeMainController() {
 
@@ -93,6 +95,7 @@ public class MaeMainController extends JPanel {
         mode = MODE_NORMAL;
         tagsForColor = new ArrayList<>();
         adjudicatingTags = new LinkedList<>();
+        isAdjudicating = false;
 
         // documentTabColors are used when adjudicating
         // by default, 6 colors allowed to distinguish documents
@@ -266,7 +269,11 @@ public class MaeMainController extends JPanel {
     }
 
     public boolean isAdjudicating() {
-        return getMode() == MODE_ADJUD;
+        return isAdjudicating;
+    }
+
+    private void setAdjudicating(boolean b) {
+        this.isAdjudicating = b;
     }
 
     public void updateSavedStatusInTextPanel() {
@@ -422,37 +429,39 @@ public class MaeMainController extends JPanel {
             showError(message);
             return;
         }
-        if (!isAdjudicating()) {
-            if (showUnsavedChangeWarning()) {
-                File goldstandard = getDialogs().showStartAdjudicationDialog();
-                if (goldstandard != null) { // that is, not cancelled
-                    // TODO: 2016-02-07 16:54:59EST implement read from an existing GS
-                    mode = MODE_ADJUD;
-                    writeCurrentTextOnEmptyFile(goldstandard);
-                    addAdjudication(goldstandard);
-
-                    // TODO: 2016-02-07 01:05:58EST implement from here
-                    // * rebuild table
-                    //   * change double click listener
-                    // * rebuild mode menu
-                    //   * only return to normal is active
-                    //   * modify switchToNormalMode() for reverting all above changes
-
-                    removeAllBGColors();
-                    addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
-                    getMenu().resetModeMenu();
-                    sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
-                }
+        if (!isAdjudicating() && showUnsavedChangeWarning()) {
+            File goldstandard = getDialogs().showStartAdjudicationDialog();
+            if (goldstandard == null) { // terminate if the user cancelled file selection
+                return;
             }
+            // TODO: 2016-02-07 16:54:59EST implement read from an existing GS
+            setAdjudicating(true);
+            writeCurrentTextOnEmptyFile(goldstandard);
+            addAdjudication(goldstandard);
+
+            // TODO: 2016-02-07 01:05:58EST implement from here
+            // * rebuild table
+            //   * change double click listener
+            // * rebuild mode menu
+            //   * only return to normal is active
+            //   * modify switchToNormalMode() for reverting all above changes
+
+            removeAllBGColors();
+            addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
+            getMenu().resetFileMenu();
+            sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+        }
+    }
+
+    public void switchToAnnotationMode() {
+        if (isAdjudicating()) {
+            // TODO: 2016-02-07 01:10:16EST revert all interface changes from adjud mode
         }
     }
 
     public void switchToNormalMode() {
 
-        if (isAdjudicating()) {
-            // TODO: 2016-02-07 01:10:16EST revert all interface changes from adjud mode
-//        } else if (mode != MODE_NORMAL) {
-        } if (mode != MODE_NORMAL) {
+        if (mode != MODE_NORMAL) {
             mode = MODE_NORMAL;
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
             removeAllBGColors();
@@ -600,7 +609,7 @@ public class MaeMainController extends JPanel {
         try {
             getTextPanel().clearColoring();
             getTextPanel().clearSelection();
-            TagType type = getTablePanel().getCurrentTagType();
+            TagType type = getAdjudicatingTagType();
             Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorsOfTagType(type, Collections.<TagType>emptyList()));
             paintOverlappingStat(type, goldAnchors);
             paintGoldTags(goldAnchors);
@@ -880,15 +889,21 @@ public class MaeMainController extends JPanel {
     }
 
     public void propagateSelectionFromTextPanel() {
-        if (isAdjudicating()) {
+        // when adjudicating, table is populated dynamically as user select text span
+        // this is enabled only in normal mode because the purpose of dynamic table filling
+        // is for reviewing, not for producing a new tag
+        // basically, adjudicator are ideally not allowed make new tags
+        if (isAdjudicating() && getMode() == MODE_NORMAL) {
             propagateToAdjudicationArea();
+        } else if (isAdjudicating()) {
+            // don't populate table
         } else {
             propagateToAnnotationArea();
         }
         updateNotificationArea();
     }
 
-    TagType getAdjudicatingTagType() {
+    public TagType getAdjudicatingTagType() {
         return getTablePanel().getCurrentTagType();
     }
 
@@ -899,7 +914,7 @@ public class MaeMainController extends JPanel {
     void propagateToAdjudicationArea() {
         getTablePanel().clearAdjudicationTable();
         adjudicatingTags.clear();
-        TagType currentType = getTablePanel().getCurrentTagType();
+        TagType currentType = getAdjudicatingTagType();
         List<ExtentTag> selectedTags = getExtentTagsInSelectedSpansFromALlDocuments();
         if (currentType.isExtent()) {
             for (ExtentTag tag : selectedTags) {
@@ -984,7 +999,7 @@ public class MaeMainController extends JPanel {
         boolean nc = getSelectedTextSpans() == null || getSelectedTextSpans().length == 0;
         String message;
         if (tagType.isLink()) {
-            message = String.format("creating DB row for am yet-empty Link tag: (%s)", tagType.getName());
+            message = String.format("creating DB row for a yet-empty Link tag: (%s)", tagType.getName());
         } else if (nc) {
             message = String.format("creating DB row for a NC extent tag: (%s)", tagType.getName());
         } else {
@@ -1006,7 +1021,7 @@ public class MaeMainController extends JPanel {
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
             if (isAdjudicating()) {
-                switchAdjudicationTag();
+                assignAdjudicationColors();
             } else {
                 selectTagAndTable(tag);
                 if (tagType.isExtent()) {
@@ -1014,7 +1029,7 @@ public class MaeMainController extends JPanel {
                 }
             }
             updateSavedStatusInTextPanel();
-            if (normalModeOnCreation() && !isAdjudicating()) {
+            if (normalModeOnCreation()) {
                 switchToNormalMode();
             }
             return tag;

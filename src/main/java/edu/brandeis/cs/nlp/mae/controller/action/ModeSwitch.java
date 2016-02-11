@@ -49,11 +49,14 @@ public class ModeSwitch extends MenuActionI {
             case MaeMainController.MODE_MULTI_SPAN:
                 getMainController().switchToMSpanMode();
                 break;
-            case MaeMainController.MODE_ADJUD:
-                getMainController().switchToAdjudMode();
-                break;
             case MaeMainController.MODE_NORMAL:
                 getMainController().switchToNormalMode();
+                break;
+            case MaeMainController.START_ADJUD:
+                getMainController().switchToAdjudMode();
+                break;
+            case MaeMainController.END_ADJUD:
+                getMainController().switchToAnnotationMode();
                 break;
         }
     }

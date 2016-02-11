@@ -122,20 +122,22 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void addSelection(int[] contiguousSpan) {
-        try {
-            boolean duplicate = false;
-            for (int[] prevSelected : selectionHistory) {
-                if (Arrays.equals(contiguousSpan, prevSelected)) {
-                    duplicate = true;
-                    break;
-                }
+    boolean intPairCollectionContains(Collection<int[]> c, int[] pair) {
+        for (int[] inCollection : c) {
+            if (Arrays.equals(pair, inCollection)) {
+                return true;
             }
-            if (!duplicate) {
-                if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL ||
-                        getMainController().getDriver().getTagsIn(SpanHandler.range(contiguousSpan[0], contiguousSpan[1])).size() > 0) {
-                    selectionHistory.add(0, contiguousSpan);
-                }
+        }
+        return false;
+    }
+
+    void addSelection(int[] newSpanPair) {
+        try {
+            int[] newSpanArray = SpanHandler.range(newSpanPair[0], newSpanPair[1]);
+            if (!intPairCollectionContains(selectionHistory, newSpanPair) &&
+                    ((getMainController().getMode() != MaeMainController.MODE_ARG_SEL
+                            || getDriver().getTagsIn(newSpanArray).size() > 0))) {
+                selectionHistory.add(0, newSpanPair);
             }
         } catch (MaeDBException e) {
             e.printStackTrace();
@@ -510,33 +512,28 @@ class TextPanelController extends MaeControllerI{
         @Override
         public void caretUpdate(CaretEvent e) {
 
-            if (e.getDot() != e.getMark()) {
-                // that is, mouse is dragged and text is selected
-
+            if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
                 int start = Math.min(e.getDot(), e.getMark());
                 int end = Math.max(e.getDot(), e.getMark());
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL ||
-                        getMainController().isAdjudicating()) {
-                    // in normal mode or in adjudication, clear selection before adding a new selection
+                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                    // in normal mode, clear selection before adding a new selection
                     clearSelection();
                 }
                 addSelection(new int[]{start, end});
+            } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
+                // MSPAN mode always ignore single click
             } else {
-                switch (getMainController().getMode()) {
-                    case MaeMainController.MODE_NORMAL:
-                        clearSelection();
-                        break;
-                    case MaeMainController.MODE_ARG_SEL:
-                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
-                        break;
-                    case MaeMainController.MODE_ADJUD:
-                        clearSelection();
-                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
-                        break;
-
+                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                    // reset selection either in annotation or adjudication mode
+                    clearSelection();
+                }
+                if (getMainController().isAdjudicating()
+                        || getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
+                    addSelection(new int[]{e.getDot(), e.getDot() + 1});
                 }
             }
             try {
+                removeAllBGColors();
                 addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
             } catch (MaeControlException ignored) {
                 // possible MaeException chained from BadLocationException is ignored
