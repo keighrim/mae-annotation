@@ -62,14 +62,14 @@ public class XMLLoader {
         try {
             try {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
-                driver.setAnnotationFileName(file.getAbsolutePath());
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
-                logger.info("file is not a XML, reading as the primary text: " + file.getAbsolutePath());
+                logger.info("file is not a XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
                 Scanner scanner = new Scanner(file);
                 driver.setPrimaryText(scanner.useDelimiter("\\A").next());
                 scanner.close(); // Put this call in a finally block
             }
+            driver.setAnnotationFileName(file.getAbsolutePath());
         } catch (FileNotFoundException e) {
             String message = "file not found: " + file.getAbsolutePath();
             logger.error(message);
@@ -88,6 +88,11 @@ public class XMLLoader {
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
             Node taskName = doc.getDocumentElement();
+            if (!taskName.getNodeName().equals(driver.getTaskName())) {
+                String message = "annotation file does not match to DTD!";
+                logger.error(message);
+                throw new SAXException(message);
+            }
             NodeList taskNodes = taskName.getChildNodes();
             boolean textExists = false;
             for (int i = 0; i < taskNodes.getLength(); i++) {
