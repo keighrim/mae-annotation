@@ -136,6 +136,8 @@ public class MaeStrings {
     public final static String MENUITEM_CREATE_NCTAG = "Create NC Extent Tag with no text associated";
     public final static String MENUITEM_CREATE_LTAG_EMPTY = "Create Link Tag with no arguments associated";
     public final static String MENUITEM_CREATE_LTAG_FROM_SEL = "Create Link tag with selected arguments";
+    public final static String MENUITEM_COPY_TAG_SINGLE = "Copy %s from %s to gold standard";
+    public final static String MENU_COPY = "Copy ...";
 
     /* for dialogs */
     public final static String SETARG_SEL_TAGTYPE = "Select Link Type";

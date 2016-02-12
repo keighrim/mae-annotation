@@ -155,7 +155,7 @@ public class MaeMainController extends JPanel {
                     for (String fileName : filesToOpen) {
                         main.addDocument(new File((fileName)));
                         try {
-                            Thread.sleep(4000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -1072,10 +1072,41 @@ public class MaeMainController extends JPanel {
         return  null;
     }
 
-    public Tag copyTagToGoldStandard(Tag tag) {
-        // TODO: 2016-02-07 13:42:04EST NotImplemented
+    public Tag getTagBySourceAndTid(String sourceFileName, String tid) {
+        try {
+            return getDriverOf(sourceFileName).getTagByTid(tid);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return null;
+    }
+
+    public Tag copyTag(Tag tag) {
+        TagType type = tag.getTagtype();
+        try {
+            if (type.isExtent()) {
+                ExtentTag etag = ((ExtentTag) tag);
+                return copyExtentTag(etag);
+            } else {
+
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
         return null;
 
+    }
+
+    ExtentTag copyExtentTag(ExtentTag original) throws MaeDBException {
+        TagType type = original.getTagtype();
+        ExtentTag newTag = getDriver().createExtentTag(type, original.getText(), original.getSpansAsArray());
+        Map<String, String> attMap = original.getAttributesWithNames();
+        for (String attTypeName : attMap.keySet()) {
+            AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(type, attTypeName);
+            getDriver().addAttribute(newTag, attType, attMap.get(attTypeName));
+        }
+        adjudicationStatUpdate();
+        return newTag;
     }
 
     public void selectTagAndTable(Tag tag) {

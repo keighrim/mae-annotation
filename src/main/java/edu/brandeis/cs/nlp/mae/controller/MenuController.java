@@ -33,13 +33,14 @@ import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 
 import javax.swing.*;
-import java.util.List;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.awt.*;
+import java.util.List;
 
 import static edu.brandeis.cs.nlp.mae.MaeHotKeys.*;
 import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
+import static edu.brandeis.cs.nlp.mae.controller.MaeMainController.*;
 
 /**
  * Created by krim on 1/2/2016.
@@ -53,6 +54,7 @@ class MenuController extends MaeControllerI {
     private static final int CAT_LTAG_FROM_TABLE = 4;
     private static final int DELETE_MENU = 0;
     private static final int SETARG_MENU = 1;
+    private static final int COPY_MENU = 2;
 
     private static final int MENUBAR_FILE = 0;
     private static final int MENUBAR_TAGS = 1;
@@ -167,8 +169,8 @@ class MenuController extends MaeControllerI {
                 MENUITEM_END_ADJUD
                 : MENUITEM_START_ADJUD;
         String adjudItemCmd = getMainController().isAdjudicating()?
-                Integer.toString(MaeMainController.END_ADJUD)
-                : Integer.toString(MaeMainController.START_ADJUD);
+                Integer.toString(END_ADJUD)
+                : Integer.toString(START_ADJUD);
         MaeActionI adjudModeAction = new ModeSwitch(adjudItemLabel, null, ksADJUDMODE, null, getMainController());
 
         JMenu menu = new JMenu(MENU_FILE);
@@ -225,19 +227,19 @@ class MenuController extends MaeControllerI {
             MaeActionI normalModeAction = new ModeSwitch(MENUITEM_NORMAL_MODE, null, ksNORMALMODE, null, getMainController());
 
             JMenuItem multiSpanMode = new JMenuItem(multiSpanModeAction);
-            multiSpanMode.setActionCommand(Integer.toString(MaeMainController.MODE_MULTI_SPAN));
+            multiSpanMode.setActionCommand(Integer.toString(MODE_MULTI_SPAN));
             JMenuItem argSelMode = new JMenuItem(argSelModeAction);
-            argSelMode.setActionCommand(Integer.toString(MaeMainController.MODE_ARG_SEL));
+            argSelMode.setActionCommand(Integer.toString(MODE_ARG_SEL));
             JMenuItem normalMode = new JMenuItem(normalModeAction);
-            normalMode.setActionCommand(Integer.toString(MaeMainController.MODE_NORMAL));
+            normalMode.setActionCommand(Integer.toString(MODE_NORMAL));
             switch (getMainController().getMode()) {
-                case MaeMainController.MODE_NORMAL:
+                case MODE_NORMAL:
                     normalMode.setEnabled(false);
                     break;
-                case MaeMainController.MODE_MULTI_SPAN:
+                case MODE_MULTI_SPAN:
                     multiSpanMode.setEnabled(false);
                     break;
-                case MaeMainController.MODE_ARG_SEL:
+                case MODE_ARG_SEL:
                     argSelMode.setEnabled(false);
                     break;
             }
@@ -299,15 +301,33 @@ class MenuController extends MaeControllerI {
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
 
+        int mode = getMainController().getMode();
         if (getMainController().isTextSelected()) {
+            TagType currentType = getMainController().getAdjudicatingTagType();
             if (getMainController().isAdjudicating()
-                    && getMainController().getMode() != MaeMainController.MODE_ARG_SEL
-                    && getMainController().getAdjudicatingTagType().isExtent()) {
+                    && mode != MODE_ARG_SEL
+                    && currentType.isExtent()) {
                 contextMenu.add(createSingleTypeMakeTagMenu());
-            } else if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
+                List<ExtentTag> tagsFromAllDocs = getMainController().getExtentTagsFromAllDocumentsInSelectedSpans();
+                tagsFromAllDocs.removeAll(tags);
+                List<ExtentTag> interestedTags = new LinkedList<>();
+                for (ExtentTag tag : tagsFromAllDocs) {
+                    if (tag.getTagtype().equals(currentType)) {
+                        interestedTags.add(tag);
+                    }
+                }
+                switch (interestedTags.size()) {
+                    case 0:
+                        break;
+                    case 1:
+                        contextMenu.add(createSingleCopyMenu(tagsFromAllDocs.get(0)));
+                        break;
+                    case 2:
+                        contextMenu.add(createPluralCopyMenu(tagsFromAllDocs));
+                }
+            } else if (mode != MODE_ARG_SEL) {
                 contextMenu.add(createMakeTagMenu(CAT_ETAG));
-            } else if (getMainController().getSelectedArguments() != null
-                    && getMainController().getSelectedArguments().size() > 0) {
+            } else if (getMainController().getSelectedArguments() != null && getMainController().getSelectedArguments().size() > 0) {
                 contextMenu.add(createMakeTagMenu(CAT_LTAG));
             }
         }
@@ -333,7 +353,7 @@ class MenuController extends MaeControllerI {
                 contextMenu.add(createPluralSetArgMenu(tags));
 
         }
-        if (getMainController().getMode() != MaeMainController.MODE_NORMAL) {
+        if (mode != MODE_NORMAL) {
             contextMenu.addSeparator();
             contextMenu.add(createUndoLastSelectionMenu());
             contextMenu.add(createStartOverMenu());
@@ -356,7 +376,33 @@ class MenuController extends MaeControllerI {
         return new JMenuItem(new ResetSelection(MENUITEM_STARTOVER, null, null, cmnSTARTOVER, getMainController()));
     }
 
-    JMenuItem createSingleTypeMakeTagMenu() {
+    private JMenuItem createSingleCopyMenu(Tag tag) {
+        return createCopyMenuItem(tag, String.format(MaeStrings.MENUITEM_COPY_TAG_SINGLE, tag.toString(), tag.getFilename()), cmnCOPY);
+    }
+
+    private JMenu createPluralCopyMenu(List<ExtentTag> tags) {
+        JMenu copyMenu = new JMenu(MENU_COPY);
+        copyMenu.setMnemonic(cmnCOPY);
+        // this will assign hotkey
+        createMenuItemsWithNumberMnemonics(tags, MENUITEM_COPY_TAG_SINGLE, copyMenu, 10, COPY_MENU);
+
+        return copyMenu;
+    }
+
+    private JMenuItem createCopyMenuItem(Tag tag, String label, int mnemonic) {
+        MaeActionI copyTagAction = getCopyTagAction(label, mnemonic);
+        JMenuItem copyTagItem = new JMenuItem(copyTagAction);
+        copyTagItem.setActionCommand(tag.getFilename() + MaeStrings.SEP + tag.getId());
+        return copyTagItem;
+    }
+
+    private MaeActionI getCopyTagAction(String copyTagLabel, int mnemonic) {
+        return new CopyTag(copyTagLabel, null, null, mnemonic, getMainController());
+
+    }
+
+
+    private JMenuItem createSingleTypeMakeTagMenu() {
         TagType type = getMainController().getAdjudicatingTagType();
         MaeActionI makeTagAction = new MakeTag(String.format(MaeStrings.MENUITEM_CREATE_CERTAIN_ETAG, type.getName()), null, null, cmnCREATE, getMainController());
         JMenuItem makeTagItem = new JMenuItem(makeTagAction);
@@ -364,9 +410,9 @@ class MenuController extends MaeControllerI {
         return makeTagItem;
     }
 
-    JMenu createMakeTagMenu(int category) {
+    private JMenu createMakeTagMenu(int category) {
         JMenu makeTagMenu = new JMenu(getMakeTagMenuLabel(category));
-        makeTagMenu.setMnemonic(getMenuMnemonic(category));
+        makeTagMenu.setMnemonic(getMakeTagMenuMnemonic(category));
         List<TagType> types = null;
         try {
             types = getTagTypes(category);
@@ -383,7 +429,7 @@ class MenuController extends MaeControllerI {
         return makeTagMenu;
     }
 
-    private int getMenuMnemonic(int category) {
+    private int getMakeTagMenuMnemonic(int category) {
         switch (category) {
             case CAT_NCTAG:
                 return cmnCREATENC;
@@ -510,7 +556,7 @@ class MenuController extends MaeControllerI {
         Integer mnemonic;
         int i = 0;
         for (Tag tag : tags) {
-            String labelWithoutMnemonic = String.format(labelTemplate, tag.toString());
+            String labelWithoutMnemonic = String.format(labelTemplate, tag.toString(), tag.getFilename());
             if (i < endPoint) {
                 label = String.format("(%d) %s", i + 1, labelWithoutMnemonic);
                 mnemonic = numKeys[i++];
@@ -525,6 +571,8 @@ class MenuController extends MaeControllerI {
                 case SETARG_MENU:
                     menu.add(createSetArgMenuItem(tag, label, mnemonic));
                     break;
+                case COPY_MENU:
+                    menu.add(createCopyMenuItem(tag, label, mnemonic));
             }
         }
     }
@@ -538,14 +586,14 @@ class MenuController extends MaeControllerI {
         TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
 
         if (selected == 1) {
-            contextMenu.add(createSingleDeleteMenu(table.getSelectedRow(), model));
+            contextMenu.add(createSingleDeleteMenu(model, table.getSelectedRow()));
             if (model.getAssociatedTagType().isExtent()) {
-                contextMenu.add(createSingleSetArgMenu(table.getSelectedRow(), model));
+                contextMenu.add(createSingleSetArgMenu(model, table.getSelectedRow()));
             }
         } else {
-            contextMenu.add(createPluralDeleteMenu(table.getSelectedRows(), model));
+            contextMenu.add(createPluralDeleteMenu(model, table.getSelectedRows()));
             if (model.getAssociatedTagType().isExtent()) {
-                contextMenu.add(createMakeLinkFromTableMenu(table.getSelectedRows(), model));
+                contextMenu.add(createMakeLinkFromTableMenu(model, table.getSelectedRows()));
             }
         }
 
@@ -553,13 +601,13 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem createSingleDeleteMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
+    private JMenuItem createSingleDeleteMenu(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return createSingleDeleteMenu(tag);
     }
 
-    private JMenu createPluralDeleteMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
+    private JMenu createPluralDeleteMenu(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
         List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
             tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
@@ -567,7 +615,7 @@ class MenuController extends MaeControllerI {
         return createPluralDeleteMenu(tags);
     }
 
-    JMenu createMakeLinkFromTableMenu(int[] selectedRows, TablePanelController.TagTableModel model) throws MaeDBException {
+    JMenu createMakeLinkFromTableMenu(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
         JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
         String tids = MaeStrings.SEP;
         for (int row : selectedRows) {
@@ -583,7 +631,7 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem createSingleSetArgMenu(int selectedRow, TablePanelController.TagTableModel model) throws MaeDBException {
+    private JMenuItem createSingleSetArgMenu(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return createSingleSetArgMenu((ExtentTag) tag);
