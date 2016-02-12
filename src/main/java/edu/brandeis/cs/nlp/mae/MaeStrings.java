@@ -132,6 +132,7 @@ public class MaeStrings {
     public final static String MENU_SETARG = "Set ...";
     public final static String MENUITEM_SETARG_SINGLE = "Set %s as argument of link tag"; // tid
     public final static String MENUITEM_CREATE_ETAG = "Create Extent Tag with selected text";
+    public final static String MENUITEM_CREATE_CERTAIN_ETAG = "Create %s Tag with selected text";
     public final static String MENUITEM_CREATE_NCTAG = "Create NC Extent Tag with no text associated";
     public final static String MENUITEM_CREATE_LTAG_EMPTY = "Create Link Tag with no arguments associated";
     public final static String MENUITEM_CREATE_LTAG_FROM_SEL = "Create Link tag with selected arguments";

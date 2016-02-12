@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
@@ -78,6 +79,25 @@ class TextPanelController extends MaeControllerI{
         removeAllBGColors();
     }
 
+    void repaintBGColor() {
+        try {
+            removeAllBGColors();
+            addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
+        } catch (MaeControlException ignored) {
+            // possible MaeException chained from BadLocationException is ignored
+        }
+    }
+
+    void repaintFGColor(Tag tag) throws MaeDBException {
+        if (tag.getTagtype().isExtent()) {
+            assignFGColorOver(((ExtentTag) tag).getSpansAsList());
+        } else {
+            for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                assignFGColorOver(arg.getSpansAsList());
+            }
+        }
+    }
+
     private void addGuideTab(String guideTitle, String guideText) {
         disableTabSwitchListener();
         getView().initTabs();
@@ -122,6 +142,17 @@ class TextPanelController extends MaeControllerI{
 
     }
 
+    boolean validateNewSpanPair(int[] newSpanPair) throws MaeDBException {
+        if (intPairCollectionContains(selectionHistory, newSpanPair)) {
+            return false;
+        }
+        int[] newSpanArray = SpanHandler.range(newSpanPair[0], newSpanPair[1]);
+        if (getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
+            return getMainController().getExtentTagsIn(newSpanArray).size() > 0;
+        }
+        return true;
+    }
+
     boolean intPairCollectionContains(Collection<int[]> c, int[] pair) {
         for (int[] inCollection : c) {
             if (Arrays.equals(pair, inCollection)) {
@@ -131,16 +162,9 @@ class TextPanelController extends MaeControllerI{
         return false;
     }
 
-    void addSelection(int[] newSpanPair) {
-        try {
-            int[] newSpanArray = SpanHandler.range(newSpanPair[0], newSpanPair[1]);
-            if (!intPairCollectionContains(selectionHistory, newSpanPair) &&
-                    ((getMainController().getMode() != MaeMainController.MODE_ARG_SEL
-                            || getDriver().getTagsIn(newSpanArray).size() > 0))) {
-                selectionHistory.add(0, newSpanPair);
-            }
-        } catch (MaeDBException e) {
-            e.printStackTrace();
+    void addSelection(int[] newSpanPair) throws MaeDBException {
+        if (validateNewSpanPair(newSpanPair)) {
+            selectionHistory.add(0, newSpanPair);
         }
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
     }
@@ -154,7 +178,7 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    int[] leavingLatestSelection() {
+    int[] leavingLatestSelection() throws MaeDBException {
         int[] latest = getLatestSelection();
         if (latest == null) {
             return new int[0];
@@ -509,36 +533,42 @@ class TextPanelController extends MaeControllerI{
 
     private class TextPanelCaretListener implements CaretListener {
 
+        boolean acceptingSingleClick() {
+            return getMainController().getMode() == MaeMainController.MODE_ARG_SEL;
+
+        }
+
         @Override
         public void caretUpdate(CaretEvent e) {
 
+            try {
             if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
-                int start = Math.min(e.getDot(), e.getMark());
-                int end = Math.max(e.getDot(), e.getMark());
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    // in normal mode, clear selection before adding a new selection
-                    clearSelection();
-                }
-                addSelection(new int[]{start, end});
+                addDraggedSelection(e.getDot(), e.getMark());
             } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
                 // MSPAN mode always ignore single click
             } else {
                 if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    // reset selection either in annotation or adjudication mode
-                    clearSelection();
+                    clearSelection(); // single click will clear out prev selection
                 }
-                if (getMainController().isAdjudicating()
-                        || getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
-                    addSelection(new int[]{e.getDot(), e.getDot() + 1});
+                if (acceptingSingleClick()) {
+                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
                 }
             }
-            try {
-                removeAllBGColors();
-                addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
-            } catch (MaeControlException ignored) {
-                // possible MaeException chained from BadLocationException is ignored
+            } catch (MaeDBException ex) {
+                getMainController().showError(ex);
             }
+            repaintBGColor();
             getMainController().propagateSelectionFromTextPanel();
+        }
+
+        void addDraggedSelection(int dot, int mark) throws MaeDBException {
+            int start = Math.min(dot, mark);
+            int end = Math.max(dot, mark);
+            if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                // in normal mode, clear selection before adding a new selection
+                clearSelection();
+            }
+            addSelection(new int[]{start, end});
         }
     }
 

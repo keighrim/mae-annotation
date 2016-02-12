@@ -334,7 +334,7 @@ class TablePanelController extends MaeControllerI {
             logger.debug("finally, removing the original extent tag");
         }
         tableModel.removeRow(tableModel.searchForRowByTid(tag.getId()));
-        getMainController().deleteTagFromTableDeletion(tag);
+        getMainController().deleteTagFromDB(tag);
 
     }
 

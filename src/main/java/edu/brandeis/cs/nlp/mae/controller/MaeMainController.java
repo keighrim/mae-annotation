@@ -42,8 +42,6 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -85,7 +83,7 @@ public class MaeMainController extends JPanel {
     private List<TagType> tagsForColor;
     private Map<TagType, Boolean> coloredTagsInLastDocument;
     private ColorHandler documentTabColors;
-    private List<Tag> adjudicatingTags;
+    private Set<Tag> adjudicatingTags;
     private boolean isAdjudicating;
 
     public MaeMainController() {
@@ -94,7 +92,7 @@ public class MaeMainController extends JPanel {
 
         mode = MODE_NORMAL;
         tagsForColor = new ArrayList<>();
-        adjudicatingTags = new LinkedList<>();
+        adjudicatingTags = new HashSet<>();
         isAdjudicating = false;
 
         // documentTabColors are used when adjudicating
@@ -324,6 +322,19 @@ public class MaeMainController extends JPanel {
         return currentDriver;
     }
 
+    public MaeDriverI getDriverOf(String srcName) {
+        for (MaeDriverI driver : getDrivers()) {
+            try {
+                if (driver.getAnnotationFileName().endsWith(srcName)) {
+                    return driver;
+                }
+            } catch (MaeDBException e) {
+                showError(e);
+            }
+        }
+        return null;
+    }
+
     public List<MaeDriverI> getDrivers() {
         return drivers;
     }
@@ -403,6 +414,7 @@ public class MaeMainController extends JPanel {
     public void switchToArgSelMode() {
 
         if (mode != MODE_ARG_SEL) {
+            clearTextSelection();
             mode = MODE_ARG_SEL;
             sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
             getMenu().resetModeMenu();
@@ -412,6 +424,7 @@ public class MaeMainController extends JPanel {
     public void switchToMSpanMode() {
 
         if (mode != MODE_MULTI_SPAN) {
+            clearTextSelection();
             mode = MODE_MULTI_SPAN;
             sendTemporaryNotification(MaeStrings.SB_MSPAN_MODE_NOTI, 3000);
             getMenu().resetModeMenu();
@@ -447,7 +460,6 @@ public class MaeMainController extends JPanel {
             //   * modify switchToNormalMode() for reverting all above changes
 
             removeAllBGColors();
-            addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
             getMenu().resetFileMenu();
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
         }
@@ -463,9 +475,9 @@ public class MaeMainController extends JPanel {
 
         if (mode != MODE_NORMAL) {
             mode = MODE_NORMAL;
+            clearTextSelection();
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
             removeAllBGColors();
-            addBGColorOver(getTextPanel().leavingLatestSelection(), ColorHandler.getDefaultHighlighter());
             getMenu().resetModeMenu();
         }
     }
@@ -696,13 +708,33 @@ public class MaeMainController extends JPanel {
     }
 
     public List<ExtentTag> getExtentTagsInSelectedSpans() {
+        return getExtentTagsIn(getSelectedTextSpans());
+    }
+
+    public List<ExtentTag> getExtentTagsIn(int[] locations) {
         // will return sorted list of tags
         try {
-            return getDriver().getTagsIn(getSelectedTextSpans());
+            return getDriver().getTagsIn(locations);
         } catch (Exception e) {
             showError(e);
             return new ArrayList<>();
         }
+    }
+
+    public List<ExtentTag> getExtentTagsFromAllDocumentsInSelectedSpans() {
+        return getExtentTagsFromAllDocumentsIn(getSelectedTextSpans());
+    }
+
+    public List<ExtentTag> getExtentTagsFromAllDocumentsIn(int[] locations) {
+        List<ExtentTag> tags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                tags.addAll(driver.getTagsIn(locations));
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return tags;
     }
 
     public List<ExtentTag> getSelectedArguments() {
@@ -713,19 +745,6 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
         return null;
-    }
-
-    public List<ExtentTag> getExtentTagsInSelectedSpansFromALlDocuments() {
-        // will return sorted list of tags
-        List<ExtentTag> tags = new LinkedList<>();
-        try {
-            for (MaeDriverI driver : getDrivers()) {
-                tags.addAll(driver.getTagsIn(getSelectedTextSpans()));
-            }
-        } catch (Exception e) {
-            showError(e);
-        }
-        return tags;
     }
 
     public void undoLastSelection() {
@@ -748,6 +767,7 @@ public class MaeMainController extends JPanel {
 
     public void clearTextSelection() {
         getTextPanel().clearSelection();
+        propagateSelectionFromTextPanel();
         sendTemporaryNotification("Clear!, Click anywhere to continue", 3000);
     }
 
@@ -907,7 +927,7 @@ public class MaeMainController extends JPanel {
         return getTablePanel().getCurrentTagType();
     }
 
-    List<Tag> getAdjudicatingTags() {
+    Set<Tag> getAdjudicatingTags() {
         return adjudicatingTags;
     }
 
@@ -915,7 +935,7 @@ public class MaeMainController extends JPanel {
         getTablePanel().clearAdjudicationTable();
         adjudicatingTags.clear();
         TagType currentType = getAdjudicatingTagType();
-        List<ExtentTag> selectedTags = getExtentTagsInSelectedSpansFromALlDocuments();
+        List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
         if (currentType.isExtent()) {
             for (ExtentTag tag : selectedTags) {
                 if (tag.getTagtype().equals(currentType)) {
@@ -930,10 +950,13 @@ public class MaeMainController extends JPanel {
         } else {
             for (ExtentTag tag : selectedTags) {
                 try {
-                    Set<LinkTag> linkers = getDriver().getLinksHasArgumentTag(tag);
+                    MaeDriverI driver = getDriverOf(tag.getFilename());
+                    Set<LinkTag> linkers = driver.getLinksHasArgumentTag(tag);
                     for (LinkTag linker : linkers) {
                         if (linker.getTagtype().equals(currentType)) {
-                            getTablePanel().insertTagIntoAdjudicationTable(linker);
+                            if (!adjudicatingTags.contains(linker)) {
+                                getTablePanel().insertTagIntoAdjudicationTable(linker);
+                            }
                             adjudicatingTags.add(linker);
                         }
                     }
@@ -986,9 +1009,19 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public void removeTag(Tag tag) {
+    void adjudicationStatUpdate() {
+        assignAdjudicationColors();
+        clearTextSelection();
+    }
+
+    public void deleteTag(Tag tag) {
         try {
-            getTablePanel().removeTagFromTable(tag);
+            if (!isAdjudicating()) {
+                getTablePanel().removeTagFromTable(tag);
+            } else {
+                deleteTagFromDB(tag);
+                adjudicationStatUpdate();
+            }
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -1021,7 +1054,7 @@ public class MaeMainController extends JPanel {
             populateDefaultAttributes(tag);
             getTablePanel().insertTagIntoTable(tag);
             if (isAdjudicating()) {
-                assignAdjudicationColors();
+                adjudicationStatUpdate();
             } else {
                 selectTagAndTable(tag);
                 if (tagType.isExtent()) {
@@ -1068,16 +1101,12 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void deleteTagFromTableDeletion(Tag tag) {
-        logger.debug(String.format("removing DB row based on table deletion: \"%s\"", tag.getId()));
+    public void deleteTagFromDB(Tag tag) {
+        logger.debug(String.format("removing DB row: \"%s\"", tag.getId()));
         try {
             getDriver().deleteTag(tag);
-            if (tag.getTagtype().isExtent()) {
-                assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
-            } else {
-                for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
-                    assignTextColorsOver(arg.getSpansAsList());
-                }
+            if (!isAdjudicating()) {
+                getTextPanel().repaintFGColor(tag);
             }
             updateSavedStatusInTextPanel();
         } catch (MaeDBException e) {

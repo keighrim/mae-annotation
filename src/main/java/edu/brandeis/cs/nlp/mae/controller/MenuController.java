@@ -164,11 +164,11 @@ class MenuController extends MaeControllerI {
         MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
         MaeActionI closeFileAction = new CloseFile(MENUITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
         String adjudItemLabel = getMainController().isAdjudicating()?
-                        MENUITEM_END_ADJUD
-                        : MENUITEM_START_ADJUD;
+                MENUITEM_END_ADJUD
+                : MENUITEM_START_ADJUD;
         String adjudItemCmd = getMainController().isAdjudicating()?
-                        Integer.toString(MaeMainController.END_ADJUD)
-                        : Integer.toString(MaeMainController.START_ADJUD);
+                Integer.toString(MaeMainController.END_ADJUD)
+                : Integer.toString(MaeMainController.START_ADJUD);
         MaeActionI adjudModeAction = new ModeSwitch(adjudItemLabel, null, ksADJUDMODE, null, getMainController());
 
         JMenu menu = new JMenu(MENU_FILE);
@@ -299,18 +299,26 @@ class MenuController extends MaeControllerI {
         List<ExtentTag> tags = getMainController().getExtentTagsInSelectedSpans();
         JPopupMenu contextMenu = new JPopupMenu();
 
-        // TODO: 2016-02-07 11:09:27EST add more items for adjudication
         if (getMainController().isTextSelected()) {
-            if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
+            if (getMainController().isAdjudicating()
+                    && getMainController().getMode() != MaeMainController.MODE_ARG_SEL
+                    && getMainController().getAdjudicatingTagType().isExtent()) {
+                contextMenu.add(createSingleTypeMakeTagMenu());
+            } else if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL) {
                 contextMenu.add(createMakeTagMenu(CAT_ETAG));
             } else if (getMainController().getSelectedArguments() != null
                     && getMainController().getSelectedArguments().size() > 0) {
                 contextMenu.add(createMakeTagMenu(CAT_LTAG));
             }
-            contextMenu.addSeparator();
         }
-        contextMenu.add(createMakeTagMenu(CAT_NCTAG));
-        contextMenu.add(createMakeTagMenu(CAT_EMPTY_LTAG));
+        if (!getMainController().isAdjudicating()) {
+            // to eliminate unnecessary degree of freedom
+            if (contextMenu.getComponentCount() > 0) {
+                contextMenu.addSeparator();
+            }
+            contextMenu.add(createMakeTagMenu(CAT_NCTAG));
+            contextMenu.add(createMakeTagMenu(CAT_EMPTY_LTAG));
+        }
         switch (tags.size()) {
             case 0:
                 break;
@@ -327,9 +335,13 @@ class MenuController extends MaeControllerI {
         }
         if (getMainController().getMode() != MaeMainController.MODE_NORMAL) {
             contextMenu.addSeparator();
-            // this will not work unless figure out how to prevent right click from firing caret update
             contextMenu.add(createUndoLastSelectionMenu());
             contextMenu.add(createStartOverMenu());
+        }
+        if (contextMenu.getComponentCount() == 0) {
+            JMenuItem noItem = new JMenuItem("No action available");
+            contextMenu.add(noItem);
+            noItem.setEnabled(false);
         }
 
         return contextMenu;
@@ -342,6 +354,14 @@ class MenuController extends MaeControllerI {
 
     private JMenuItem createStartOverMenu() {
         return new JMenuItem(new ResetSelection(MENUITEM_STARTOVER, null, null, cmnSTARTOVER, getMainController()));
+    }
+
+    JMenuItem createSingleTypeMakeTagMenu() {
+        TagType type = getMainController().getAdjudicatingTagType();
+        MaeActionI makeTagAction = new MakeTag(String.format(MaeStrings.MENUITEM_CREATE_CERTAIN_ETAG, type.getName()), null, null, cmnCREATE, getMainController());
+        JMenuItem makeTagItem = new JMenuItem(makeTagAction);
+        makeTagItem.setActionCommand(type.getName());
+        return makeTagItem;
     }
 
     JMenu createMakeTagMenu(int category) {
