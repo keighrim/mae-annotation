@@ -48,6 +48,8 @@ Also, MAE is written using open source software below.
 * [Maven](https://maven.apache.org/) ([apache2](http://www.apache.org/licenses/))
 * [Apache common-io](https://commons.apache.org/) ([apache2](http://www.apache.org/licenses/))
 * [Xerial sqlite3-JDBC driver](https://bitbucket.org/xerial/sqlite-jdbc) ([apache2](http://www.apache.org/licenses/))
+* [LogBack logging framework](http://logback.qos.ch/) ([LGPL 2.1](http://logback.qos.ch/license.html))
+* [SLF4J logging framwork](http://www.slf4j.org/) ([MIT](http://www.slf4j.org/license.html))
 * [ORMlite](http://ormlite.com/) ([open source license](http://ormlite.com/javadoc/ormlite-core/doc-files/ormlite_9.html#License)) 
 
 ## Change History
