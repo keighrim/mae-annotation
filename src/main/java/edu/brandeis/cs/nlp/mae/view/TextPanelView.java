@@ -38,21 +38,24 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by krim on 1/2/2016.
  */
 public class TextPanelView extends JPanel {
 
-    public static final int DEFAULT_FONT_SIZE = 14;
-    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
-    public static final int VERYLARGE_FONT_SIZE = 36;
+    public static final String DEFAULT_FONT_FAMILY = "monospaced";
+    private Font[] fontCache;
+    private Map<Integer, Font> codepointCache;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
     public TextPanelView() {
         super(new BorderLayout());
         documentTabs = new JTabbedPane();
+        fontCache = new Font[10];
+        codepointCache = new HashMap<>();
         clearAllTabs();
 
     }
@@ -80,25 +83,74 @@ public class TextPanelView extends JPanel {
         setDocumentOpen(false);
     }
 
-    private static StyledDocument stringToStyledDocument(String plainText) {
+    private StyledDocument stringToStyledDocument(String plainText, int fontSize) {
         StyledDocument document = new DefaultStyledDocument();
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         try {
-            document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
+            int offset = 0;
+            while (offset < plainText.length()) {
+                int length = 1;
+                String fontFam = DEFAULT_FONT_FAMILY;
+                Character c = plainText.charAt(offset);
+                if (Character.isHighSurrogate(c)) {
+                    fontFam = getRenderableFont(plainText.codePointAt(offset)).getFontName();
+                    length = 2;
+
+                }
+                document.insertString(offset, plainText.substring(offset, offset+length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
+                StyleConstants.setFontFamily(attributeSet, fontFam);
+                StyleConstants.setFontSize(attributeSet, fontSize);
+                document.setCharacterAttributes(offset, length, attributeSet, false);
+
+                offset += length;
+            }
         } catch (BadLocationException ignored) {
         }
         return document;
 
     }
 
+    Font getRenderableFont(int codepoint) {
+        // Variation Selectors
+        if (codepoint >= '\uFE00' && codepoint <= '\uFE0F') {
+            return null;
+        }
+        // first check cached font
+        int fontCachingPoint = 0;
+        for (int i = 0; i < fontCache.length; i++) {
+            Font cached = fontCache[fontCachingPoint];
+            if (cached != null && cached.canDisplay(codepoint)) {
+                return cached;
+            } else if (cached == null) {
+                fontCachingPoint = i;
+                break;
+            }
+        }
+        if (codepointCache.containsKey(codepoint)) {
+            fontCache[fontCachingPoint] = codepointCache.get(codepoint);
+            return codepointCache.get(codepoint);
+        } else {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            for (Font font : ge.getAllFonts()) {
+                if (font.getFamily() != "Apple Color Emoji" && font.canDisplay(codepoint)) {
+                    codepointCache.put(codepoint, font);
+                    fontCache[fontCachingPoint] = font;
+                    return font;
+                }
+            }
+
+        }
+        return new Font("", 0, 0);
+    }
     /**
      * Used to add a text panel, mainly for guide text.
      * @param documentTitle
      * @param guideText
      */
-    public void addTextTab(String documentTitle, String guideText) {
+    public void addTextTab(String documentTitle, String guideText, int fontSize) {
         // TODO: 1/2/2016 add tooltip for the tab
         // always open a new tab at the end, and switch to the new tab
-        getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText)));
+        getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText, fontSize)));
         selectTab(getTabs().getTabCount() - 1);
         Component title = getTabs().getComponentAt(getTabs().getTabCount() - 1);
         title.setFont(title.getFont().deriveFont(Font.PLAIN));
@@ -111,8 +163,6 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
-        // DejaVu Sans is virtually the only font that support widest range of unicode, including emojis
-        documentArea.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
@@ -133,6 +183,10 @@ public class TextPanelView extends JPanel {
 
     public Font getTextFont() {
         return getDocumentPane().getFont();
+    }
+
+    public void setTextFont(AttributeSet attSet) {
+        getDocument().setCharacterAttributes(0, getDocument().getLength(), attSet, false);
     }
 
     public void setTextFont(Font font) {
