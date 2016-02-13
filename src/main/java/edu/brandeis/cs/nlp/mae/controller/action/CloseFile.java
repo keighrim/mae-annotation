@@ -41,7 +41,7 @@ public class CloseFile extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showUnsavedChangeWarning()) {
+        if (getMainController().showCurrentUnsavedChangeWarning()) {
             getMainController().closeCurrentDocument();
         }
     }

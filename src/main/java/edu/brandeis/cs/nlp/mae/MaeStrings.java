@@ -49,13 +49,13 @@ public class MaeStrings {
 
     /* Internal data structures and actionEvents */
     public final static String COMBO_DELIMITER = " - ";
-    public final static String SPANDELIMITER = "~";
-    public final static String SPANSEPARATOR = ",";
+    public final static String SPANRANGE = "~";
+    public final static String SPANDELIMITER = ",";
     public final static int NC_START = -1;
     public final static int NC_END = -1;
     public final static String NC_TEXT = "";
     public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
-            MaeStrings.NC_START, MaeStrings.SPANDELIMITER, MaeStrings.NC_END);
+            MaeStrings.NC_START, MaeStrings.SPANRANGE, MaeStrings.NC_END);
 
     public final static String ATT_VALUESET_SEPARATOR = ":::";
     // these two might be too much hard-coded

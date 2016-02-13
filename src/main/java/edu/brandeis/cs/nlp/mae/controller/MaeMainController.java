@@ -201,6 +201,19 @@ public class MaeMainController extends JPanel {
 
     }
 
+    public boolean showCurrentUnsavedChangeWarning() {
+        if (getDriver().isAnnotationChanged()) {
+            String warning = null;
+            try {
+                warning = String.format("Warning! You have unsaved changes. \n%s\n Are you sure to continue?"
+                        , getDriver().getAnnotationFileBaseName().toString());
+            } catch (MaeDBException ignored) {
+            }
+            return showWarning(warning);
+        }
+        return true;
+    }
+
     public boolean showUnsavedChangeWarning() {
         List<String> unsavedFiles = new LinkedList<>();
         for (MaeDriverI driver : getDrivers()) {
