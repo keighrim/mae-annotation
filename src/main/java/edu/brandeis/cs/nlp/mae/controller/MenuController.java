@@ -28,9 +28,11 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.action.*;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -322,7 +324,7 @@ class MenuController extends MaeControllerI {
                     case 1:
                         contextMenu.add(createSingleCopyMenu(tagsFromAllDocs.get(0)));
                         break;
-                    case 2:
+                    default:
                         contextMenu.add(createPluralCopyMenu(tagsFromAllDocs));
                 }
             } else if (mode != MODE_ARG_SEL) {
@@ -585,20 +587,38 @@ class MenuController extends MaeControllerI {
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
         TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
 
-        if (selected == 1) {
-            contextMenu.add(createSingleDeleteMenu(model, table.getSelectedRow()));
-            if (model.getAssociatedTagType().isExtent()) {
-                contextMenu.add(createSingleSetArgMenu(model, table.getSelectedRow()));
+        int selectedRow = table.getSelectedRow();
+        if (!getMainController().isAdjudicating()) {
+            if (selected == 1) {
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+            } else {
+                contextMenu.add(createPluralDeleteMenu(model, table.getSelectedRows()));
+                if (model.getAssociatedTagType().isExtent()) {
+                    contextMenu.add(createMakeLinkFromTableMenu(model, table.getSelectedRows()));
+                }
             }
-        } else {
-            contextMenu.add(createPluralDeleteMenu(model, table.getSelectedRows()));
-            if (model.getAssociatedTagType().isExtent()) {
-                contextMenu.add(createMakeLinkFromTableMenu(model, table.getSelectedRows()));
+        } else { // multi row selection is disabled in adjudication
+            String srcFileName = (String) table.getValueAt(selectedRow, TablePanelController.SRC_COL);
+            if (srcFileName.equals(getMainController().getDriver().getAnnotationFileBaseName())) {
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+
+            } else {
+                String tid = (String) table.getValueAt(selectedRow, TablePanelController.ID_COL);
+                MaeDriverI driver = getMainController().getDriverOf(srcFileName);
+                Tag tag = driver.getTagByTid(tid);
+                contextMenu.add(createSingleCopyMenu(tag));
             }
         }
 
         return contextMenu;
 
+    }
+
+    private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+        contextMenu.add(createSingleDeleteMenu(model, selectedRow));
+        if (model.getAssociatedTagType().isExtent()) {
+            contextMenu.add(createSingleSetArgMenu(model, selectedRow));
+        }
     }
 
     private JMenuItem createSingleDeleteMenu(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
@@ -637,4 +657,8 @@ class MenuController extends MaeControllerI {
         return createSingleSetArgMenu((ExtentTag) tag);
     }
 
+//    private JMenuItem createSingleCopyToGSMenu(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+//        String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
+//        String source =
+//    }
 }

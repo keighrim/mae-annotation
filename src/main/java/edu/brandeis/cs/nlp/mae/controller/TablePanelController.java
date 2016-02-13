@@ -31,6 +31,7 @@ import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
+import javafx.scene.control.TableSelectionModel;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -402,6 +403,7 @@ class TablePanelController extends MaeControllerI {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(type) : new AdjudicationLinkTableModel(type);
         JTable table = makeTagTable(type, model);
         table.addMouseListener(new AdjudicationTablePanelMouseListener());
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         logger.debug("successfully created an adjudication table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -437,7 +439,12 @@ class TablePanelController extends MaeControllerI {
                 @Override
                 public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
                     Component c = super.prepareRenderer(renderer, row, col);
-                    c.setBackground(adjudModel.isGoldTagRow(row)? getBackground() : Color.LIGHT_GRAY);
+                    c.setBackground(adjudModel.isGoldTagRow(row) ? getBackground() : Color.LIGHT_GRAY);
+                    if (isRowSelected(row)) {
+                        c.setForeground(Color.BLUE);
+                    } else {
+                        c.setForeground(UIManager.getColor("Table.foreground"));
+                    }
                     return c;
                 }
             };
@@ -445,7 +452,6 @@ class TablePanelController extends MaeControllerI {
 
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
-
         if (!getMainController().isAdjudicating()) {
             table.removeColumn(table.getColumnModel().getColumn(SRC_COL));
         }
