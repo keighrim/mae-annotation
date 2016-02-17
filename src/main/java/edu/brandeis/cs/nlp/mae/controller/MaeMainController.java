@@ -42,6 +42,8 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -166,6 +168,25 @@ public class MaeMainController extends JPanel {
 
     private void setWindowFrame(JFrame mainFrame) {
         this.mainFrame = mainFrame;
+        this.mainFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.mainFrame.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowClosing(WindowEvent winEvt) {
+                if (isDocumentOpen()) {
+                    if (showUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
+                        try {
+                            getDriver().destroy();
+                            System.exit(0);
+                        } catch (MaeDBException e) {
+                            showError(e);
+                        }
+                    }
+                }
+                System.exit(0);
+            }
+        });
+
     }
 
     private JFrame initUI() {

@@ -52,7 +52,7 @@ public class MaeStrings {
             return "vUNKNOWN";
         }
     }
-    
+
     /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
