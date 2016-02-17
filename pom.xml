@@ -30,7 +30,7 @@
 
     <groupId>edu.brandeis.cs.nlp</groupId>
     <artifactId>mae</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <licenses>
         <license>
@@ -113,6 +113,9 @@
                             <classpathPrefix>lib/</classpathPrefix>
                             <mainClass>edu.brandeis.cs.nlp.mae.controller.MaeMainController</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <Class-Path>lib/</Class-Path>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
@@ -133,6 +136,31 @@
                             <outputDirectory>
                                 ${project.build.directory}/lib/
                             </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>edu.brandeis.cs.nlp.mae.controller.MaeMainController</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>${project.artifactId}-${project.version}-fatjar</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
                 </executions>

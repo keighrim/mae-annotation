@@ -37,7 +37,7 @@ public class MaeStrings {
     /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    public final static String VERSION = "v1.0-snapshot";
+    public final static String VERSION = "v1.0.1";
     public final static String TITLE_PREFIX = "MAE " + VERSION;
     public final static String DB_DRIVER = "jdbc:sqlite:";
     public final static String ANN_DB_FILE = "mae.db";

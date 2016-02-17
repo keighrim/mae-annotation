@@ -167,14 +167,17 @@ public class MaeMainController extends JPanel {
 
             @Override
             public void windowClosing(WindowEvent winEvt) {
-                if (showUnsavedChangeWarning() && showIncompleteTagsWarning()) {
-                    try {
-                        getDriver().destroy();
-                        System.exit(0);
-                    } catch (MaeDBException e) {
-                        showError(e);
+                if (isDocumentOpen()) {
+                    if (showUnsavedChangeWarning() && showIncompleteTagsWarning()) {
+                        try {
+                            getDriver().destroy();
+                            System.exit(0);
+                        } catch (MaeDBException e) {
+                            showError(e);
+                        }
                     }
                 }
+                System.exit(0);
             }
         });
 
