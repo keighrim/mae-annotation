@@ -171,7 +171,7 @@ class TextPanelController extends MaeControllerI{
 //        if (!getView().isAnyDocumentOpen()) {
         getView().clearAllTabs();
 //        }
-        getView().addTextTab(documentTitle, documentText, DEFAULT_FONT_SIZE);
+        getView().addTextTab(documentTitle, documentText, currentFontSize);
         if (!getView().isAnyDocumentOpen()) {
             addListeners();
         }
