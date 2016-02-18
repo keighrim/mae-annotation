@@ -24,6 +24,8 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -38,7 +40,6 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by krim on 1/2/2016.
@@ -46,16 +47,12 @@ import java.util.Map;
 public class TextPanelView extends JPanel {
 
     public static final String DEFAULT_FONT_FAMILY = "monospaced";
-    private Font[] fontCache;
-    private Map<Integer, Font> codepointCache;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
     public TextPanelView() {
         super(new BorderLayout());
         documentTabs = new JTabbedPane();
-        fontCache = new Font[10];
-        codepointCache = new HashMap<>();
         clearAllTabs();
 
     }
@@ -93,7 +90,7 @@ public class TextPanelView extends JPanel {
                 String fontFam = DEFAULT_FONT_FAMILY;
                 Character c = plainText.charAt(offset);
                 if (Character.isHighSurrogate(c)) {
-                    fontFam = getRenderableFont(plainText.codePointAt(offset)).getFontName();
+                    fontFam = FontHandler.getFontToDraw(plainText.codePointAt(offset)).getFontName();
                     length = 2;
 
                 }
@@ -110,40 +107,6 @@ public class TextPanelView extends JPanel {
 
     }
 
-    Font getRenderableFont(int codepoint) {
-        // Variation Selectors
-        if (codepoint >= '\uFE00' && codepoint <= '\uFE0F') {
-            return null;
-        }
-        // first check cached font
-        int fontCachingPoint = 0;
-        for (int i = 0; i < fontCache.length; i++) {
-            Font cached = fontCache[i];
-            if (cached != null && cached.canDisplay(codepoint)) {
-                return cached;
-            } else if (cached == null) {
-                fontCachingPoint = i;
-                break;
-            }
-        }
-
-        // then exhaustively search through all system fonts
-        if (codepointCache.containsKey(codepoint)) {
-            fontCache[fontCachingPoint] = codepointCache.get(codepoint);
-            return codepointCache.get(codepoint);
-        } else {
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            for (Font font : ge.getAllFonts()) {
-                if (!font.getFamily().equals("Apple Color Emoji") && font.canDisplay(codepoint)) {
-                    codepointCache.put(codepoint, font);
-                    fontCache[fontCachingPoint] = font;
-                    return font;
-                }
-            }
-
-        }
-        return new Font("", 0, 0);
-    }
     /**
      * Used to add a text panel, mainly for guide text.
      * @param documentTitle
@@ -152,7 +115,7 @@ public class TextPanelView extends JPanel {
     public void addTextTab(String documentTitle, String guideText, int fontSize) {
         // TODO: 1/2/2016 add tooltip for the tab
         // always open a new tab at the end, and switch to the new tab
-        getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText, fontSize)));
+        getTabs().addTab(documentTitle, createDocumentArea(FontHandler.stringToSimpleStyledDocument(guideText, "monospaced", fontSize)));
         selectTab(getTabs().getTabCount() - 1);
         Component title = getTabs().getComponentAt(getTabs().getTabCount() - 1);
         title.setFont(title.getFont().deriveFont(Font.PLAIN));
