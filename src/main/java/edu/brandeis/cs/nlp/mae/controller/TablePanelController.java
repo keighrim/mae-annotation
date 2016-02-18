@@ -603,11 +603,19 @@ class TablePanelController extends MaeControllerI {
         void propagateChange(TableModelEvent event, String tid, String newValue, List<Integer> oldSpans) {
             if (argumentTextColumns.contains(event.getColumn() + 1)) {
                 // update adjacent text column
-                ExtentTag newArg = (ExtentTag) getMainController().getTagByTid(newValue);
-                String newText = newArg.getText();
-                setValueAt(newText, event.getFirstRow(), event.getColumn() + 1);
-                getMainController().assignTextColorsOver(oldSpans);
-                getMainController().assignTextColorsOver(newArg.getSpansAsList());
+                if (newValue.length() == 0) {
+                    setValueAt("", event.getFirstRow(), event.getColumn() + 1);
+                } else {
+                    ExtentTag newArg = (ExtentTag) getMainController().getTagByTid(newValue);
+                    String newText = newArg.getText();
+                    setValueAt(newText, event.getFirstRow(), event.getColumn() + 1);
+                }
+                getMainController().removeAllBGColors();
+                try {
+                    getMainController().addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
+                } catch (MaeDBException e) {
+                    getMainController().showError(e);
+                }
 
             }
         }
