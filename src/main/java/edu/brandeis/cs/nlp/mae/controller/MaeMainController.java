@@ -798,12 +798,16 @@ public class MaeMainController extends JPanel {
                 String argTypeName = colName.substring(0, colName.length() - MaeStrings.ARG_IDCOL_SUF.length());
                 ArgumentType argType = getDriver().getArgumentTypeOfTagTypeByName(tag.getTagtype(), argTypeName);
                 LinkTag linker = (LinkTag) getTagByTid(tid);
-                ExtentTag arg = (ExtentTag) getTagByTid(value);
-                if (arg == null) {
-                    showError("Argument not found: " + value);
-                    return false;
+                if (value.length() == 0) {
+                    succeed = (getDriver().addOrUpdateArgument(linker, argType, null) == null);
+                } else {
+                    ExtentTag arg = (ExtentTag) getTagByTid(value);
+                    if (arg == null) {
+                        showError("Argument not found: " + value);
+                        return false;
+                    }
+                    succeed = (getDriver().addOrUpdateArgument(linker, argType, arg) != null);
                 }
-                succeed = (getDriver().addOrUpdateArgument(linker, argType, arg) != null);
             } else if (tag.getTagtype().isLink() && colName.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
                 // do nothing, will be automatically updated when argId is updated
                 return true;

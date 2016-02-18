@@ -32,9 +32,9 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
-import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.XMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
@@ -700,6 +700,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     }
 
+    @Override
     public Attribute addAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
         try {
             Attribute att = new Attribute(tag, attType, attValue);
@@ -726,6 +727,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Set<Attribute> addAttributes(Tag tag, Map<AttributeType, String> attributes) throws MaeDBException {
+        // TODO: 2016-02-18 17:54:33EST run batch task for better performance
         Set<Attribute> created = new HashSet<>();
         try {
             for (AttributeType attType : attributes.keySet()) {
@@ -749,19 +751,25 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
         try {
-            logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument.getId(), linker.getId(), linker.getTagTypeName()));
+            logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument == null ? "null" : argument.getId(), linker.getId(), linker.getTagTypeName()));
             try {
                 Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
                 if (oldArg != null) {
                     argDao.delete(oldArg);
                 }
-                Argument arg = new Argument(linker, argType, argument);
-                argDao.create(arg);
-                lTagDao.update(linker);
-                resetQueryBuilders();
-                logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
-                setAnnotationChanged(true);
-                return arg;
+                if (argument != null) {
+                    Argument arg = new Argument(linker, argType, argument);
+                    argDao.create(arg);
+                    lTagDao.update(linker);
+                    resetQueryBuilders();
+                    logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
+                    setAnnotationChanged(true);
+                    return arg;
+                } else {
+                    logger.debug("no new argument is provided. leaving the argument deleted");
+                    return null;
+                }
+
             } catch (SQLException e) {
                 throw catchSQLException(e);
             }
