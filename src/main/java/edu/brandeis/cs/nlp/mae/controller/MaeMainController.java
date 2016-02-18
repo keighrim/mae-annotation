@@ -176,8 +176,9 @@ public class MaeMainController extends JPanel {
                             showError(e);
                         }
                     }
+                } else {
+                    System.exit(0);
                 }
-                System.exit(0);
             }
         });
 
