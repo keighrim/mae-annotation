@@ -118,7 +118,7 @@ public class TextPanelView extends JPanel {
         // first check cached font
         int fontCachingPoint = 0;
         for (int i = 0; i < fontCache.length; i++) {
-            Font cached = fontCache[fontCachingPoint];
+            Font cached = fontCache[i];
             if (cached != null && cached.canDisplay(codepoint)) {
                 return cached;
             } else if (cached == null) {
@@ -126,13 +126,15 @@ public class TextPanelView extends JPanel {
                 break;
             }
         }
+
+        // then exhaustively search through all system fonts
         if (codepointCache.containsKey(codepoint)) {
             fontCache[fontCachingPoint] = codepointCache.get(codepoint);
             return codepointCache.get(codepoint);
         } else {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             for (Font font : ge.getAllFonts()) {
-                if (font.getFamily() != "Apple Color Emoji" && font.canDisplay(codepoint)) {
+                if (!font.getFamily().equals("Apple Color Emoji") && font.canDisplay(codepoint)) {
                     codepointCache.put(codepoint, font);
                     fontCache[fontCachingPoint] = font;
                     return font;
