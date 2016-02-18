@@ -369,7 +369,7 @@ class MenuController extends MaeControllerI {
         }
     }
 
-    private MaeActionI getMakeTagAction(int category, int mnemonicNum, TagType type) {
+    private MaeActionI getMakeTagAction(int category, Integer mnemonicNum, TagType type) {
         String makeTagItemLabel;
         Integer mnemonic;
         if (mnemonicNum < 10) {
@@ -433,14 +433,14 @@ class MenuController extends MaeControllerI {
         return deleteMenu;
     }
 
-    private JMenuItem createDeleteMenuItem(Tag tag, String label, int mnemonic) {
+    private JMenuItem createDeleteMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI deleteTagAction = getDeleteTagAction(label, mnemonic);
         JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
         deleteTagItem.setActionCommand(tag.getId());
         return deleteTagItem;
     }
 
-    private JMenuItem createWholeDeleteMenuItem(java.util.List<? extends Tag> tags, String label, int mnemonic) {
+    private JMenuItem createWholeDeleteMenuItem(java.util.List<? extends Tag> tags, String label, Integer mnemonic) {
         String tids = "";
         for (Tag tag : tags) {
             tids += tag.getId() + SEP;
@@ -451,7 +451,7 @@ class MenuController extends MaeControllerI {
         return deleteTagItem;
     }
 
-    private MaeActionI getDeleteTagAction(String deleteTagLabel, int mnemonic) {
+    private MaeActionI getDeleteTagAction(String deleteTagLabel, Integer mnemonic) {
         return new DeleteTag(deleteTagLabel, null, null, mnemonic, getMainController());
 
     }
@@ -461,14 +461,14 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem createSetArgMenuItem(Tag tag, String label, int mnemonic) {
+    private JMenuItem createSetArgMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI setArgAction = getSetArgTagAction(label, mnemonic);
         JMenuItem setArgItem = new JMenuItem(setArgAction);
         setArgItem.setActionCommand(tag.getId());
         return setArgItem;
     }
 
-    private MaeActionI getSetArgTagAction(String label, int mnemonic) {
+    private MaeActionI getSetArgTagAction(String label, Integer mnemonic) {
         return new SetArgument(label, null, null, mnemonic, getMainController());
 
     }
