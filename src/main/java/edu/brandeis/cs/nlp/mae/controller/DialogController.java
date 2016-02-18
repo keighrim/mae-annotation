@@ -395,6 +395,7 @@ class DialogController {
             int typeNum = 0;
             for (final ArgumentType type : argTypes) {
                 final JComboBox<ExtentTag> candidates = new JComboBox<>();
+                candidates.setFont(MaeStrings.UNICODE_FONT);
                 for (ExtentTag tag : argumentCandidates) {
                     candidates.addItem(tag);
                 }
