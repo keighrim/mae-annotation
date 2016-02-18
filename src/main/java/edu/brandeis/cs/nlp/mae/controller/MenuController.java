@@ -425,7 +425,7 @@ class MenuController extends MaeControllerI {
     JMenu createPluralDeleteMenu(java.util.List<? extends Tag> tags) throws MaeDBException {
         JMenu deleteMenu = new JMenu(MENU_DELETE_TAG);
         deleteMenu.setMnemonic(cmnDELETE);
-        deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tags.toString()), n0));
+        deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size()), n0));
 
         // this will assign hotkey
         createMenuItemsWithNumberMnemonics(tags, MENUITEM_DELETE_TAG_SINGLE, deleteMenu, 9, DELETE_MENU);
@@ -436,6 +436,9 @@ class MenuController extends MaeControllerI {
     private JMenuItem createDeleteMenuItem(Tag tag, String label, int mnemonic) {
         MaeActionI deleteTagAction = getDeleteTagAction(label, mnemonic);
         JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        Font defFont = deleteTagItem.getFont();
+        int defSize = defFont.getSize();
+        deleteTagItem.setFont(MaeStrings.UNICODE_FONT);
         deleteTagItem.setActionCommand(tag.getId());
         return deleteTagItem;
     }
@@ -464,6 +467,9 @@ class MenuController extends MaeControllerI {
     private JMenuItem createSetArgMenuItem(Tag tag, String label, int mnemonic) {
         MaeActionI setArgAction = getSetArgTagAction(label, mnemonic);
         JMenuItem setArgItem = new JMenuItem(setArgAction);
+        Font defFont = setArgItem.getFont();
+        int defSize = defFont.getSize();
+        setArgItem.setFont(MaeStrings.UNICODE_FONT);
         setArgItem.setActionCommand(tag.getId());
         return setArgItem;
     }
