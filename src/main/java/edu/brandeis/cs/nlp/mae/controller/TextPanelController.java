@@ -27,7 +27,6 @@ package edu.brandeis.cs.nlp.mae.controller;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
@@ -57,6 +56,8 @@ class TextPanelController extends MaeControllerI{
 
     private int[] selected;
     private List<int[]> selectionHistory;
+    public static final int DEFAULT_FONT_SIZE = 14;
+    private int currentFontSize = DEFAULT_FONT_SIZE;
 
     TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
@@ -94,7 +95,7 @@ class TextPanelController extends MaeControllerI{
 
     private void addGuideTab(String guideTitle, String guideText) {
         getView().clearAllTabs();
-        getView().addTextTab(guideTitle, guideText);
+        getView().addTextTab(guideTitle, guideText, DEFAULT_FONT_SIZE);
     }
 
     @Override
@@ -170,7 +171,7 @@ class TextPanelController extends MaeControllerI{
 //        if (!getView().isAnyDocumentOpen()) {
         getView().clearAllTabs();
 //        }
-        getView().addTextTab(documentTitle, documentText);
+        getView().addTextTab(documentTitle, documentText, currentFontSize);
         if (!getView().isAnyDocumentOpen()) {
             addListeners();
         }
@@ -188,29 +189,26 @@ class TextPanelController extends MaeControllerI{
     }
 
     void resetFontSize() {
-        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.DEFAULT_FONT_SIZE));
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, DEFAULT_FONT_SIZE);
+        currentFontSize = DEFAULT_FONT_SIZE;
+        getView().setTextFont(attributeSet);
 
     }
 
     void increaseFontSize() {
-        Font original = getView().getTextFont();
-        Font increased = new Font(original.getName(), original.getStyle(), original.getSize() + 1);
-        getView().setTextFont(increased);
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, ++currentFontSize);
+        getView().setTextFont(attributeSet);
 
     }
 
     void decreaseFontSize() {
-        Font original = getView().getTextFont();
-        Font decreased = new Font(original.getName(), original.getStyle(), original.getSize() - 1);
-        getView().setTextFont(decreased);
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, --currentFontSize);
+        getView().setTextFont(attributeSet);
 
     }
-
-    void veryLargeFonts() {
-        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.VERYLARGE_FONT_SIZE));
-
-    }
-
 
     void selectTab(int tabId) {
         // TODO: 1/4/2016 finish this for multi file support

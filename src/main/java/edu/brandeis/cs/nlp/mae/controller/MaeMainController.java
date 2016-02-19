@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -179,6 +178,7 @@ public class MaeMainController extends JPanel {
                 } else {
                     System.exit(0);
                 }
+                System.exit(0);
             }
         });
 
@@ -187,17 +187,17 @@ public class MaeMainController extends JPanel {
     private JFrame initUI() {
         logger.debug("initiating UI components.");
 
-        FontUIResource resource = new FontUIResource(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
-        java.util.Enumeration keys = UIManager.getDefaults().keys();
-        while (keys.hasMoreElements())
-        {
-            Object key = keys.nextElement();
-            Object value = UIManager.get(key);
-            if (value instanceof javax.swing.plaf.FontUIResource)
-            {
-                UIManager.put(key, resource);
-            }
-        }
+//        FontUIResource resource = new FontUIResource(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
+//        java.util.Enumeration keys = UIManager.getDefaults().keys();
+//        while (keys.hasMoreElements())
+//        {
+//            Object key = keys.nextElement();
+//            Object value = UIManager.get(key);
+//            if (value instanceof javax.swing.plaf.FontUIResource)
+//            {
+//                UIManager.put(key, resource);
+//            }
+//        }
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 

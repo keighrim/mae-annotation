@@ -65,7 +65,7 @@ public class XMLLoader {
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
                 logger.info("file is not a XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
-                Scanner scanner = new Scanner(file);
+                Scanner scanner = new Scanner(file, "UTF-8");
                 driver.setPrimaryText(scanner.useDelimiter("\\A").next());
                 scanner.close(); // Put this call in a finally block
             }
