@@ -28,6 +28,10 @@ import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.FileWriter;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
+import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
+import edu.brandeis.cs.nlp.mae.io.XMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 
 import javax.swing.*;
@@ -168,7 +172,7 @@ class DialogController {
         }
     }
 
-    public File showStartAdjudicationDialog() {
+    public File showStartAdjudicationDialog() throws MaeControlException, MaeDBException, MaeIOException {
         Object[] options = {"Yes", "No, Load Gold Standard file", "Cancel"};
         int response = JOptionPane.showOptionDialog(getParent(),
                 "Start adjudication with an empty Gold Standard file?",
@@ -179,13 +183,31 @@ class DialogController {
                 options,
                 options[0]);
         switch (response) {
-            case 0:
-                return showFileChooseDialogAndSelect("goldstandard.xml", true);
-            case 1:
-                return showFileChooseDialogAndSelect("goldstandard.xml", false);
+            case JOptionPane.YES_OPTION:
+                return getNewGoldstandardFile();
+            case JOptionPane.NO_OPTION:
+                return getExistingGoldstandardFile();
             default:
                 return null;
         }
+    }
+
+    File getExistingGoldstandardFile() throws MaeIOXMLException, MaeDBException {
+        File existingGS = showFileChooseDialogAndSelect("goldstandard.xml", false);
+        XMLLoader xmlLoader = new XMLLoader(getMainController().getDriver());
+        if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
+            return existingGS;
+        }
+        return null;
+    }
+
+    File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
+        File newGS = showFileChooseDialogAndSelect("goldstandard.xml", true);
+        if (newGS != null) {
+            FileWriter.writeTextOnEmptyFile(getMainController().getDriver().getPrimaryText(), newGS);
+            return newGS;
+        }
+        return null;
     }
 
     class IncompleteTagsWarningOptionPanel extends JDialog {

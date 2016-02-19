@@ -65,15 +65,13 @@ public class XMLLoader {
                 driver.setAnnotationFileName(file.getAbsolutePath());
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
-                logger.info("file is not a XML, reading as the primary text: " + file.getAbsolutePath());
+                logger.info("file is not an XML, reading as the primary text: " + file.getAbsolutePath());
                 Scanner scanner = new Scanner(file);
                 driver.setPrimaryText(scanner.useDelimiter("\\A").next());
                 scanner.close(); // Put this call in a finally block
             }
         } catch (FileNotFoundException e) {
-            String message = "file not found: " + file.getAbsolutePath();
-            logger.error(message);
-            throw new MaeIOXMLException(message, e);
+            catchFileNotFoundError(file, e);
         }
     }
 
@@ -87,13 +85,9 @@ public class XMLLoader {
         try {
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
-            Node taskName = doc.getDocumentElement();
-            if (!taskName.getNodeName().equals(driver.getTaskName())) {
-                String message = "annotation file does not match to DTD!";
-                logger.error(message);
-                throw new MaeIOXMLException(message);
-            }
-            NodeList taskNodes = taskName.getChildNodes();
+            Node root = doc.getDocumentElement();
+            assertRootNodeMatches(root);
+            NodeList taskNodes = root.getChildNodes();
             boolean textExists = false;
             for (int i = 0; i < taskNodes.getLength(); i++) {
                 Node child = taskNodes.item(i);
@@ -113,15 +107,74 @@ public class XMLLoader {
                 throw new MaeIOXMLException(message);
             }
         } catch (ParserConfigurationException e) {
-            String message = "failed to create SAX-parser/DOM-builder";
-            logger.error(message);
-            throw new MaeIOXMLException(message, e);
+            catchInputFileParseError(e);
         } catch (IOException e) {
-            String message = "found an error in input XML";
+            catchFileIOError(e);
+        }
+    }
+
+    void catchFileNotFoundError(File file, FileNotFoundException e) throws MaeIOXMLException {
+        String message = "file not found: " + file.getAbsolutePath();
+        logger.error(message);
+        throw new MaeIOXMLException(message, e);
+    }
+
+    void catchInputFileParseError(ParserConfigurationException e) throws MaeIOXMLException {
+        String message = "failed to create XML-parser/DOM-builder";
+        logger.error(message);
+        throw new MaeIOXMLException(message, e);
+    }
+
+    void catchFileIOError(IOException e) throws MaeIOXMLException {
+        String message = "found an error in input XML";
+        logger.error(message);
+        throw new MaeIOXMLException(message, e);
+    }
+
+    void assertRootNodeMatches(Node rootNode) throws MaeDBException, MaeIOXMLException {
+        if (!rootNode.getNodeName().equals(driver.getTaskName())) {
+            String message = "file does not match to DTD!";
+            logger.error(message);
+            throw new MaeIOXMLException(message);
+        }
+    }
+
+    void assertPrimaryTextMatches(Node textNode) throws MaeDBException, MaeIOXMLException {
+        if (!textNode.getTextContent().equals(driver.getPrimaryText())) {
+            String message = "file's text is different from current work!";
+            logger.error(message);
+            throw new MaeIOXMLException(message);
+        }
+    }
+
+    public boolean isFileMatchesCurrentWork(File file) throws MaeIOXMLException, MaeDBException {
+        try {
+            Document doc = xmlInputStreamToDomWithLineNum(new FileInputStream(file));
+            doc.getDocumentElement().normalize();
+            Node root = doc.getDocumentElement();
+            assertRootNodeMatches(root);
+            NodeList children = root.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                if (child.getNodeName().equalsIgnoreCase("text")) {
+                    assertPrimaryTextMatches(child);
+                }
+            }
+        } catch (ParserConfigurationException e) {
+            catchInputFileParseError(e);
+        } catch (FileNotFoundException e) {
+            catchFileNotFoundError(file, e);
+        } catch (IOException e) {
+            catchFileIOError(e);
+        } catch (SAXException e) {
+            String message = "file is not an XML: " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIOXMLException(message, e);
         }
+        return true;
+
     }
+
 
     private void readAnnotations(Node tagsNode) throws MaeDBException, MaeIOXMLException {
         logger.debug("reading annotations... at " + tagsNode.getUserData("lineNum"));

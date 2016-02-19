@@ -148,7 +148,7 @@ public class MaeStrings {
     public final static String NO_TASK_IND = "No DTD";
     public final static String NO_FILE_IND = "No File";
     public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
-    public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or a XML document with stand-alone annotations.";
+    public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or an XML document with stand-alone annotations.";
     public static final String UNSAVED_INDICATOR = "*";
 
     /* popup messages */

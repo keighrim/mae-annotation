@@ -456,21 +456,17 @@ public class MaeMainController extends JPanel {
             return;
         }
         if (!isAdjudicating() && showUnsavedChangeWarning()) {
-            File goldstandard = getDialogs().showStartAdjudicationDialog();
+            File goldstandard = null;
+            try {
+                goldstandard = getDialogs().showStartAdjudicationDialog();
+            } catch (MaeException e) {
+                showError(e);
+            }
             if (goldstandard == null) { // terminate if the user cancelled file selection
                 return;
             }
-            // TODO: 2016-02-07 16:54:59EST implement read from an existing GS
             setAdjudicating(true);
-            writeCurrentTextOnEmptyFile(goldstandard);
             addAdjudication(goldstandard);
-
-            // TODO: 2016-02-07 01:05:58EST implement from here
-            // * rebuild table
-            //   * change double click listener
-            // * rebuild mode menu
-            //   * only return to normal is active
-            //   * modify switchToNormalMode() for reverting all above changes
 
             removeAllBGColors();
             getMenu().resetFileMenu();
@@ -492,22 +488,6 @@ public class MaeMainController extends JPanel {
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
             removeAllBGColors();
             getMenu().resetModeMenu();
-        }
-    }
-
-    void writeCurrentTextOnEmptyFile(File file) {
-        try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileOutputStream output = new FileOutputStream(file);
-            output.write(getDriver().getPrimaryText().getBytes());
-            output.flush();
-            output.close();
-        } catch (IOException e) {
-            showError("Cannot create a new file!", e);
-        } catch (MaeDBException e) {
-            showError("Cannot read primary text!", e);
         }
     }
 
