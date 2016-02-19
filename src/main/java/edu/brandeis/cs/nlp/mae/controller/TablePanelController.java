@@ -29,20 +29,21 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
+import javax.swing.table.*;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created by krim on 12/31/2015.
@@ -340,6 +341,7 @@ class TablePanelController extends MaeControllerI {
         JTable table = makeTagTableFromEmptyModel(model, true);
         tabOrder.add(dummyForAllTagTab);
         tableMap.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
+        addTextColumnFontRenderer(model, table);
 
         return new JScrollPane(table);
     }
@@ -356,8 +358,33 @@ class TablePanelController extends MaeControllerI {
             addArgumentColumns(type, table);
         }
         addAttributeColumns(type, table);
+        addTextColumnFontRenderer(model, table);
 
         return new JScrollPane(table);
+    }
+
+    private void addTextColumnFontRenderer(TagTableModel model, JTable table) {
+        for (final int col : model.getTextColumns()) {
+            // we set a custom cell renderer to support full Unicode surrogate chars
+            // subtract 1 because the 0th col (SRC) is hidden by default)
+            table.getColumnModel().getColumn(col - 1).setCellRenderer(new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    JTextPane renderer = new JTextPane();
+                    int fontSize = c.getFont().getSize();
+                    renderer.setContentType("text/plain; charset=UTF-8");
+                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize));
+                    renderer.setBackground(c.getBackground());
+                    renderer.setForeground(c.getForeground());
+                    renderer.setMargin(new Insets(0,2,0,2));
+                    renderer.setBorder(hasFocus ?
+                            UIManager.getBorder("Table.focusCellHighlightBorder")
+                            : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+                    return renderer;
+                }
+            });
+        }
     }
 
     private JTable makeTagTableFromEmptyModel(TagTableModel model, boolean isExtent) {
@@ -478,6 +505,13 @@ class TablePanelController extends MaeControllerI {
 
         }
 
+        public Set<Integer> getTextColumns() {
+            Set<Integer> textCol = new HashSet<>();
+            textCol.add(TEXT_COL);
+            return textCol;
+
+        }
+
         @Override
         public boolean isCellEditable(int row, int col) {
             return (col != ID_COL) && (col != SRC_COL) && (col != TEXT_COL);
@@ -587,6 +621,12 @@ class TablePanelController extends MaeControllerI {
         LinkTagTableModel(TagType tagType) {
             super(tagType);
             argumentTextColumns = new HashSet<>();
+
+        }
+
+        @Override
+        public Set<Integer> getTextColumns() {
+            return argumentTextColumns;
 
         }
 
