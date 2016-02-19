@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Multi-document Annotation Environment by keighrim</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Multi-document Annotation Environment</h1>
+        <p>MAE - Multi-ducoment Annotation Environment</p>
+
+        <p class="view"><a href="https://github.com/keighrim/mae-annotation">View the Project on GitHub <small>keighrim/mae-annotation</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/keighrim/mae-annotation/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/keighrim/mae-annotation/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/keighrim/mae-annotation">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="multi-purpose-annotation-environment" class="anchor" href="#multi-purpose-annotation-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multi-purpose Annotation Environment</h1>
+
+<p><a href="http://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/:license-GPLv3-green.svg" alt="License"></a> 
+<a href="https://github.com/keighrim/mae-annotation/releases"><img src="https://img.shields.io/github/release/keighrim/mae-annotation.svg" alt="Latest release"></a>
+<a href="https://github.com/keighrim/mae-annotation/issues"><img src="https://img.shields.io/github/issues/keighrim/mae-annotation.svg" alt="Open issues"></a>
+<a href="https://travis-ci.org/keighrim/mae-annotation/"><img src="https://img.shields.io/travis/keighrim/mae-annotation.svg" alt="Travis CI"></a> </p>
+
+<h3>
+<a id="mae-v10-is-released" class="anchor" href="#mae-v10-is-released" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>MAE v1.0 is released!</h3>
+
+<p>What's new: </p>
+
+<ul>
+<li>Completely re-written from the ground.</li>
+<li>More intuitive and clean menu structure.</li>
+<li>Verification of annotation when loading and saving.</li>
+<li><strong>Now requires Java 7</strong></li>
+</ul>
+
+<h2>
+<a id="introducing-mae" class="anchor" href="#introducing-mae" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introducing MAE</h2>
+
+<p>MAE (Multi-purpose Annotation Environment) is an annotation tool originally created by <a href="http://amberstubbs.net">Amber Stubbs</a> for Brandeis University for use in her dissertation research. It is a lightweight program written in Java, with SQLite database back end.</p>
+
+<p>Currently <a href="https://github.com/keighrim">Keigh Rim</a> is in charge of the maintenance of the project since 2014, along with the companion adjudication tool <a href="https://github.com/keighrim/mai-adjudication">MAI</a>, which will soon be integrated into MAE.</p>
+
+<p>MAE allows users to define their own annotation tasks, annotate partial words - including discontinuous text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
+Also MAI allows for easy adjudication of extent tags, link tags, and non-consuming tags from any XML standoff annotated documents. (for best results, the files output by MAE should be used).
+While it does not enforce strict rules for annotation schemes, it is very easy to set up and start running. Check out the wiki for the user guide with detailed instructions.</p>
+
+<h2>
+<a id="how-to-use" class="anchor" href="#how-to-use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to use</h2>
+
+<h3>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Requirements</h3>
+
+<p>Latest MAE requires Java 7 to run, and Maven to build. See wiki for more details.</p>
+
+<p>For more robust Unicode support, MAE uses <a href="http://dejavu-fonts.org/wiki/Main_Page">DejaVu Sans</a> font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also required to have DejaVu Sans font installed.</p>
+
+<h3>
+<a id="download-and-run" class="anchor" href="#download-and-run" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download and run</h3>
+
+<p>Download release package or executable <code>.jar</code> from from <a href="https://github.com/keighrim/mae-annotation/releases">releases</a> page. After you have <code>mae-&lt;VERSION&gt;.jar</code> file, simply double click the file will run MAE. Be sure that you have a proper version of Java installed.</p>
+
+<h3>
+<a id="annotation" class="anchor" href="#annotation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Annotation</h3>
+
+<p>We are providing the user guide to MAE using project <a href="https://github.com/keighrim/mae-annotation/wiki">Wiki</a>.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>MAE is a free software: you can redistribute it and/or modify it under the terms of the <a href="http://www.gnu.org/licenses/gpl.html">GNU General Public License</a> as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+
+<p>Also, MAE is written using open source software below.</p>
+
+<h4>
+<a id="open-source-software-used-in-mae" class="anchor" href="#open-source-software-used-in-mae" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Open source software used in MAE</h4>
+
+<ul>
+<li>
+<a href="https://maven.apache.org/">Maven</a> (<a href="http://www.apache.org/licenses/">apache2</a>)</li>
+<li>
+<a href="https://commons.apache.org/">Apache common-io</a> (<a href="http://www.apache.org/licenses/">apache2</a>)</li>
+<li>
+<a href="https://bitbucket.org/xerial/sqlite-jdbc">Xerial sqlite3-JDBC driver</a> (<a href="http://www.apache.org/licenses/">apache2</a>)</li>
+<li>
+<a href="http://logback.qos.ch/">LogBack logging framework</a> (<a href="http://logback.qos.ch/license.html">LGPL 2.1</a>)</li>
+<li>
+<a href="http://www.slf4j.org/">SLF4J logging framwork</a> (<a href="http://www.slf4j.org/license.html">MIT</a>)</li>
+<li>
+<a href="http://ormlite.com/">ORMlite</a> (<a href="http://ormlite.com/javadoc/ormlite-core/doc-files/ormlite_9.html#License">open source license</a>) </li>
+</ul>
+
+<h2>
+<a id="change-history" class="anchor" href="#change-history" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change History</h2>
+
+<p>All changes are documented on <a href="https://github.com/keighrim/mae-annotation/releases">releases</a> page.</p>
+
+<h3>
+<a id="see-also" class="anchor" href="#see-also" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>See also</h3>
+
+<p>For learn more about natural language annotation, please refer to Amber Stubbs and James Pustejovsky's book <a href="http://shop.oreilly.com/product/0636920020578.do">Natural Language Annotation for Machine Learning</a>. (Please note that the book is written using MAE 0.9.6)</p>
+
+<p>You can also visit Amber Stubb's <a href="https://code.google.com/p/mae-annotation/">old code base archive</a> hosted on Google Code.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/keighrim">keighrim</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
