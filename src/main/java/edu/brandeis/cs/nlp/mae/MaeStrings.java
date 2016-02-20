@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -148,7 +149,7 @@ public class MaeStrings {
     public final static String MENUITEM_STARTOVER = "Wipe all selections";
     public final static String MENU_DELETE_TAG = "Delete ...";
     public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s"; // tid
-    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s"; // numbers, list of tids
+    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete all %d tags"; // numbers, list of tids
     public final static String MENU_SETARG = "Set ...";
     public final static String MENUITEM_SETARG_SINGLE = "Set %s as argument of link tag"; // tid
     public final static String MENUITEM_CREATE_ETAG = "Create Extent Tag with selected text";
@@ -189,4 +190,6 @@ public class MaeStrings {
                     "covered under the GNU General Public License version 3. " +
                     "Visit course website for user guide and components license."
             , VERSION, CUR_YEAR);
+
+    public static final Font UNICODE_FONT = new Font("DejaVu Sans", Font.PLAIN, 12);
 }

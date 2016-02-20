@@ -393,6 +393,7 @@ class MenuController extends MaeControllerI {
     private JMenuItem createCopyMenuItem(Tag tag, String label, int mnemonic) {
         MaeActionI copyTagAction = getCopyTagAction(label, mnemonic);
         JMenuItem copyTagItem = new JMenuItem(copyTagAction);
+        switchFontForUnicode(copyTagItem);
         copyTagItem.setActionCommand(tag.getFilename() + MaeStrings.SEP + tag.getId());
         return copyTagItem;
     }
@@ -497,7 +498,7 @@ class MenuController extends MaeControllerI {
     JMenu createPluralDeleteMenu(List<? extends Tag> tags) throws MaeDBException {
         JMenu deleteMenu = new JMenu(MENU_DELETE_TAG);
         deleteMenu.setMnemonic(cmnDELETE);
-        deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size(), tags.toString()), n0));
+        deleteMenu.add(createWholeDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size()), n0));
 
         // this will assign hotkey
         createMenuItemsWithNumberMnemonics(tags, MENUITEM_DELETE_TAG_SINGLE, deleteMenu, 9, DELETE_MENU);
@@ -508,6 +509,7 @@ class MenuController extends MaeControllerI {
     private JMenuItem createDeleteMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI deleteTagAction = getDeleteTagAction(label, mnemonic);
         JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
+        switchFontForUnicode(deleteTagItem);
         deleteTagItem.setActionCommand(tag.getId());
         return deleteTagItem;
     }
@@ -536,8 +538,14 @@ class MenuController extends MaeControllerI {
     private JMenuItem createSetArgMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI setArgAction = getSetArgTagAction(label, mnemonic);
         JMenuItem setArgItem = new JMenuItem(setArgAction);
+        switchFontForUnicode(setArgItem);
         setArgItem.setActionCommand(tag.getId());
         return setArgItem;
+    }
+
+    private void switchFontForUnicode(JMenuItem setArgItem) {
+        Font defFont = setArgItem.getFont();
+        setArgItem.setFont(MaeStrings.UNICODE_FONT);
     }
 
     private MaeActionI getSetArgTagAction(String label, Integer mnemonic) {

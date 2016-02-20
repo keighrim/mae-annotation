@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -175,12 +174,8 @@ public class MaeMainController extends JPanel {
             public void windowClosing(WindowEvent winEvt) {
                 if (isDocumentOpen()) {
                     if (showUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
-                        try {
-                            getDriver().destroy();
-                            System.exit(0);
-                        } catch (MaeDBException e) {
-                            showError(e);
-                        }
+                        wipeDrivers();
+                        System.exit(0);
                     }
                 } else {
                     System.exit(0);
@@ -193,17 +188,6 @@ public class MaeMainController extends JPanel {
     private JFrame initUI() {
         logger.debug("initiating UI components.");
 
-        FontUIResource resource = new FontUIResource(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
-        java.util.Enumeration keys = UIManager.getDefaults().keys();
-        while (keys.hasMoreElements())
-        {
-            Object key = keys.nextElement();
-            Object value = UIManager.get(key);
-            if (value instanceof javax.swing.plaf.FontUIResource)
-            {
-                UIManager.put(key, resource);
-            }
-        }
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
     }
 
@@ -650,6 +634,7 @@ public class MaeMainController extends JPanel {
 
     void assignAdjudicationColors() {
         try {
+            // TODO: 2016-02-20 11:09:09EST clearcoloring is extremely slow: need optimization 
             getTextPanel().clearColoring();
             getTextPanel().clearSelection();
             TagType type = getAdjudicatingTagType();
@@ -665,6 +650,7 @@ public class MaeMainController extends JPanel {
         for (Integer goldAnchor : goldAnchors) {
             getTextPanel().assignOverlappingColorAt(goldAnchor, ColorHandler.getVividForeground(), false);
         }
+//        getTextPanel().assignOverlappingColorOver(new LinkedList<>(goldAnchors), ColorHandler.getVividForeground(), false);
     }
 
     void paintOverlappingStat(TagType type, Set<Integer> goldAnchors) throws MaeDBException {

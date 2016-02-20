@@ -65,12 +65,14 @@ public class XMLLoader {
                 driver.setAnnotationFileName(file.getAbsolutePath());
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
-                logger.info("file is not an XML, reading as the primary text: " + file.getAbsolutePath());
-                Scanner scanner = new Scanner(file);
+                logger.info("file is not an XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
+                driver.setAnnotationFileName(file.getAbsolutePath());
+                Scanner scanner = new Scanner(file, "UTF-8");
                 driver.setPrimaryText(scanner.useDelimiter("\\A").next());
                 scanner.close(); // Put this call in a finally block
             }
         } catch (FileNotFoundException e) {
+            driver.setAnnotationFileName(null);
             catchFileNotFoundError(file, e);
         }
     }

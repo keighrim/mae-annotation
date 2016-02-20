@@ -59,6 +59,9 @@ class TextPanelController extends MaeControllerI{
 
     private int[] selected;
     private List<int[]> selectionHistory;
+    public static final int DEFAULT_FONT_SIZE = 14;
+    private int currentFontSize = DEFAULT_FONT_SIZE;
+
 
     TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
@@ -101,7 +104,7 @@ class TextPanelController extends MaeControllerI{
     private void addGuideTab(String guideTitle, String guideText) {
         disableTabSwitchListener();
         getView().initTabs();
-        getView().addTextTab(guideTitle, guideText);
+        getView().addTextTab(guideTitle, guideText, DEFAULT_FONT_SIZE);
     }
 
     public void noTaskGuide() {
@@ -207,7 +210,7 @@ class TextPanelController extends MaeControllerI{
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
         title.addCloseListener(new DocumentCloseListener());
-        getView().addTextTab(title, documentText);
+        getView().addTextTab(title, documentText, currentFontSize);
         addListeners();
         if (!getView().isAnyDocumentOpen()) {
             getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
@@ -220,7 +223,7 @@ class TextPanelController extends MaeControllerI{
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
         title.addCloseListener(new DocumentCloseListener());
-        getView().addAdjudicationTab(title, goldText);
+        getView().addAdjudicationTab(title, goldText, currentFontSize);
         addListeners();
         for (int i = 1; i < tabs.getTabCount(); i++) {
             tabs.getTabComponentAt(i).setEnabled(false);
@@ -233,7 +236,6 @@ class TextPanelController extends MaeControllerI{
 
     void removeAdjudicationTab() throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
-        System.out.println(((TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(0)).getLabel());
         tabs.remove(0);
 
         for (int i = 0; i < tabs.getTabCount(); i++) {
@@ -253,26 +255,24 @@ class TextPanelController extends MaeControllerI{
     }
 
     void resetFontSize() {
-        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.DEFAULT_FONT_SIZE));
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, DEFAULT_FONT_SIZE);
+        currentFontSize = DEFAULT_FONT_SIZE;
+        getView().setTextFont(attributeSet);
 
     }
 
     void increaseFontSize() {
-        Font original = getView().getTextFont();
-        Font increased = new Font(original.getName(), original.getStyle(), original.getSize() + 1);
-        getView().setTextFont(increased);
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, ++currentFontSize);
+        getView().setTextFont(attributeSet);
 
     }
 
     void decreaseFontSize() {
-        Font original = getView().getTextFont();
-        Font decreased = new Font(original.getName(), original.getStyle(), original.getSize() - 1);
-        getView().setTextFont(decreased);
-
-    }
-
-    void veryLargeFonts() {
-        getView().setTextFont(new Font(TextPanelView.DEFAULT_FONT_FAMILY, Font.PLAIN, TextPanelView.VERYLARGE_FONT_SIZE));
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, --currentFontSize);
+        getView().setTextFont(attributeSet);
 
     }
 
@@ -425,8 +425,9 @@ class TextPanelController extends MaeControllerI{
 
     void unassignAllFGColor() throws MaeDBException {
         int[] entireDocument = SpanHandler.range(0, getDriver().getPrimaryText().length());
-        for (int anchor : entireDocument) {
-            setFGColorAtLocation(Color.black, anchor, false, false);
+        int anchorIndex = 0;
+        while (anchorIndex < entireDocument.length) {
+            anchorIndex += setFGColorAtLocation(Color.black, entireDocument[anchorIndex], false, false);
 
         }
 
@@ -455,17 +456,35 @@ class TextPanelController extends MaeControllerI{
         return length;
     }
 
+    void assignOverlappingColorOver(List<Integer> locations, Color srcColor, boolean fullOverlap) {
+        int locIndex = 0;
+        while (locIndex < locations.size()) {
+            locIndex += setFGColorAtLocation(srcColor, locations.get(locIndex), fullOverlap, false);
+        }
+    }
+
     void assignOverlappingColorAt(Integer location, Color srcColor, boolean fullOverlap) {
-        setFGColorAtLocation(srcColor, location, fullOverlap, false);
+        DefaultStyledDocument styleDoc = getDocument();
+        try {
+            if (location == 0 || !Character.isHighSurrogate(styleDoc.getText(location - 1, 1).charAt(0))) {
+                setFGColorAtLocation(srcColor, location, fullOverlap, false);
+            }
+        } catch (BadLocationException ignored) {
+        }
+    }
+
+    void assignFGColorOver(int...locations) throws MaeDBException {
+
+        int locIndex = 0;
+        while (locIndex < locations.length) {
+            locIndex += assignFGColorAt(locations[locIndex]);
+        }
     }
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
-//        int locIndex = 0;
-//        while (locIndex < locations.size()) {
-//            locIndex += assignFGColorAt(locations.get(locIndex));
-//        }
-        for (Integer location : locations) {
-            assignFGColorAt(location);
+        int locIndex = 0;
+        while (locIndex < locations.size()) {
+            locIndex += assignFGColorAt(locations.get(locIndex));
         }
     }
 

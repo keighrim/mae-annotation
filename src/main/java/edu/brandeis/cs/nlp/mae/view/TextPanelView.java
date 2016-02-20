@@ -18,13 +18,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.view;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -50,9 +51,7 @@ import java.util.HashMap;
  */
 public class TextPanelView extends JPanel {
 
-    public static final int DEFAULT_FONT_SIZE = 14;
-    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
-    public static final int VERYLARGE_FONT_SIZE = 36;
+    public static final String DEFAULT_FONT_FAMILY = Font.MONOSPACED;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
@@ -85,31 +84,31 @@ public class TextPanelView extends JPanel {
         setDocumentOpen(false);
     }
 
-    private static StyledDocument stringToStyledDocument(String plainText) {
-        StyledDocument document = new DefaultStyledDocument();
-        try {
-            document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
-        } catch (BadLocationException ignored) {
-        }
-        return document;
+//    private static StyledDocument stringToStyledDocument(String plainText) {
+//        StyledDocument document = new DefaultStyledDocument();
+//        try {
+//            document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
+//        } catch (BadLocationException ignored) {
+//        }
+//        return document;
+//
+//    }
 
-    }
-
-    public void addAdjudicationTab(DocumentTabTitle title, String text) {
-        getTabs().insertTab(title.getLabel(), null, createDocumentArea(stringToStyledDocument(text)), null, 0);
+    public void addAdjudicationTab(DocumentTabTitle title, String text, int fontSize) {
+        getTabs().insertTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)), null, 0);
         getTabs().setTabComponentAt(0, title);
         selectTab(0);
     }
 
-    public void addTextTab(DocumentTabTitle title, String text) {
+    public void addTextTab(DocumentTabTitle title, String text, int fontSize) {
         // always open a new tab at the end, and switch to the new tab
-        getTabs().addTab(title.getLabel(), createDocumentArea(stringToStyledDocument(text)));
+        getTabs().addTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, title);
         selectTab(getTabs().getTabCount() - 1);
     }
 
-    public void addTextTab(String title, String text) {
-        getTabs().addTab(title, createDocumentArea(stringToStyledDocument(text)));
+    public void addTextTab(String title, String text, int fontSize) {
+        getTabs().addTab(title, null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
         selectTab(getTabs().getTabCount() - 1);
     }
 
@@ -120,8 +119,6 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
-        // DejaVu Sans is virtually the only font that support widest range of unicode, including emojis
-        documentArea.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
@@ -142,6 +139,12 @@ public class TextPanelView extends JPanel {
 
     public Font getTextFont() {
         return getDocumentPane().getFont();
+
+    }
+
+    public void setTextFont(AttributeSet attSet) {
+        getDocument().setCharacterAttributes(0, getDocument().getLength(), attSet, false);
+
     }
 
     public void setTextFont(Font font) {

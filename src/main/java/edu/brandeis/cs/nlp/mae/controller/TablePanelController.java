@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
@@ -37,10 +38,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -393,6 +391,7 @@ class TablePanelController extends MaeControllerI {
         JTable table = createMinimumTable(model, true);
         tabOrder.add(dummyForAllTagsTab);
         tableMap.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
+        addTextColumnFontRenderer(model, table);
 
         return new JScrollPane(table);
     }
@@ -400,6 +399,7 @@ class TablePanelController extends MaeControllerI {
     private JComponent makeAnnotationArea(TagType type) {
         TagTableModel model = type.isExtent()? new TagTableModel(type) : new LinkTagTableModel(type);
         JTable table = makeTagTable(type, model);
+        addTextColumnFontRenderer(model, table);
         logger.debug("successfully created a table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -409,6 +409,7 @@ class TablePanelController extends MaeControllerI {
         JTable table = makeTagTable(type, model);
         table.addMouseListener(new AdjudicationTablePanelMouseListener());
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        addTextColumnFontRenderer(model, table);
         logger.debug("successfully created an adjudication table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -512,6 +513,31 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
+    private void addTextColumnFontRenderer(TagTableModel model, JTable table) {
+        int colOffset = getMainController().isAdjudicating() ? 0 : 1;
+        for (final int col : model.getTextColumns()) {
+            // we set a custom cell renderer to support full Unicode surrogate chars
+            // subtract 1 because the 0th col (SRC) is hidden by default)
+            table.getColumnModel().getColumn(col - colOffset).setCellRenderer(new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    JTextPane renderer = new JTextPane();
+                    int fontSize = c.getFont().getSize();
+                    renderer.setContentType("text/plain; charset=UTF-8");
+                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize));
+                    renderer.setBackground(c.getBackground());
+                    renderer.setForeground(c.getForeground());
+                    renderer.setMargin(new Insets(0,2,0,2));
+                    renderer.setBorder(hasFocus ?
+                            UIManager.getBorder("Table.focusCellHighlightBorder")
+                            : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+                    return renderer;
+                }
+            });
+        }
+    }
+
     private JComboBox makeValidValuesComboBox(AttributeType att) {
         JComboBox<String> options = new JComboBox<>();
         options.addItem("");
@@ -565,6 +591,13 @@ class TablePanelController extends MaeControllerI {
                 }
             }
             return -1;
+
+        }
+
+        public Set<Integer> getTextColumns() {
+            Set<Integer> textCol = new HashSet<>();
+            textCol.add(TEXT_COL);
+            return textCol;
 
         }
 
@@ -688,6 +721,12 @@ class TablePanelController extends MaeControllerI {
         LinkTagTableModel(TagType tagType) {
             super(tagType);
             argumentTextColumns = new HashSet<>();
+
+        }
+
+        @Override
+        public Set<Integer> getTextColumns() {
+            return argumentTextColumns;
 
         }
 
