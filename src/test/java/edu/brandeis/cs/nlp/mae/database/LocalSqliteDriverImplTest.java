@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
  *
- * For feedback, reporting bugs, use the project repo on github
- * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>
+ * For feedback, reporting bugs, use the project on Github
+ * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
 package edu.brandeis.cs.nlp.mae.database;
@@ -55,6 +55,7 @@ public class LocalSqliteDriverImplTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver.setAnnotationFileName("TEST_SAMPLE");
 
         noun = driver.createTagType("NOUN", "N", false);
         verb = driver.createTagType("VERB", "V", false);
