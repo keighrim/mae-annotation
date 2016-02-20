@@ -32,7 +32,6 @@ import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
-import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -442,7 +441,7 @@ class MenuController extends MaeControllerI {
         }
     }
 
-    private MaeActionI getMakeTagAction(int category, int mnemonicNum, TagType type) {
+    private MaeActionI getMakeTagAction(int category, Integer mnemonicNum, TagType type) {
         String makeTagItemLabel;
         Integer mnemonic;
         if (mnemonicNum < 10) {
@@ -506,14 +505,14 @@ class MenuController extends MaeControllerI {
         return deleteMenu;
     }
 
-    private JMenuItem createDeleteMenuItem(Tag tag, String label, int mnemonic) {
+    private JMenuItem createDeleteMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI deleteTagAction = getDeleteTagAction(label, mnemonic);
         JMenuItem deleteTagItem = new JMenuItem(deleteTagAction);
         deleteTagItem.setActionCommand(tag.getId());
         return deleteTagItem;
     }
 
-    private JMenuItem createWholeDeleteMenuItem(List<? extends Tag> tags, String label, int mnemonic) {
+    private JMenuItem createWholeDeleteMenuItem(List<? extends Tag> tags, String label, Integer mnemonic) {
         String tids = "";
         for (Tag tag : tags) {
             tids += tag.getId() + SEP;
@@ -524,7 +523,7 @@ class MenuController extends MaeControllerI {
         return deleteTagItem;
     }
 
-    private MaeActionI getDeleteTagAction(String deleteTagLabel, int mnemonic) {
+    private MaeActionI getDeleteTagAction(String deleteTagLabel, Integer mnemonic) {
         return new DeleteTag(deleteTagLabel, null, null, mnemonic, getMainController());
 
     }
@@ -534,14 +533,14 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem createSetArgMenuItem(Tag tag, String label, int mnemonic) {
+    private JMenuItem createSetArgMenuItem(Tag tag, String label, Integer mnemonic) {
         MaeActionI setArgAction = getSetArgTagAction(label, mnemonic);
         JMenuItem setArgItem = new JMenuItem(setArgAction);
         setArgItem.setActionCommand(tag.getId());
         return setArgItem;
     }
 
-    private MaeActionI getSetArgTagAction(String label, int mnemonic) {
+    private MaeActionI getSetArgTagAction(String label, Integer mnemonic) {
         return new SetArgument(label, null, null, mnemonic, getMainController());
 
     }
@@ -657,8 +656,4 @@ class MenuController extends MaeControllerI {
         return createSingleSetArgMenu((ExtentTag) tag);
     }
 
-//    private JMenuItem createSingleCopyToGSMenu(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
-//        String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
-//        String source =
-//    }
 }
