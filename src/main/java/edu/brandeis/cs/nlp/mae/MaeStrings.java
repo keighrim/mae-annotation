@@ -24,7 +24,10 @@
 
 package edu.brandeis.cs.nlp.mae;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Properties;
 
 /**
  * Contains string resources for MAE main
@@ -33,11 +36,27 @@ import java.util.Calendar;
  *
  */
 public class MaeStrings {
+
+    public static String getVersion()
+    {
+        String path = "/version.properties";
+        InputStream stream = MaeStrings.class.getResourceAsStream(path);
+        if (stream == null)
+            return "vUNKNOWN";
+        Properties props = new Properties();
+        try {
+            props.load(stream);
+            stream.close();
+            return (String) props.get("version");
+        } catch (IOException e) {
+            return "vUNKNOWN";
+        }
+    }
     
     /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    public final static String VERSION = "v1.0-snapshot";
+    public final static String VERSION = getVersion();
     public final static String TITLE_PREFIX = "MAE " + VERSION;
     public final static String DB_DRIVER = "jdbc:sqlite:";
     public final static String ANN_DB_FILE = "mae.db";
