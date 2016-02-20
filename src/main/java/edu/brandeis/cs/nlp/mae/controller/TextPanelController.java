@@ -114,6 +114,8 @@ class TextPanelController extends MaeControllerI{
 
     @Override
     void addListeners() {
+        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
+        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
     }
 
     void disableTabSwitchListener() {
@@ -206,8 +208,7 @@ class TextPanelController extends MaeControllerI{
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
         title.addCloseListener(new DocumentCloseListener());
         getView().addTextTab(title, documentText);
-        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
-        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+        addListeners();
         if (!getView().isAnyDocumentOpen()) {
             getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
             getView().setDocumentOpen(true);
@@ -218,17 +219,28 @@ class TextPanelController extends MaeControllerI{
     void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
-        // TODO: 2016-02-07 16:31:49EST closing gold means return to normal mode
         title.addCloseListener(new DocumentCloseListener());
         getView().addAdjudicationTab(title, goldText);
-        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
-        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+        addListeners();
         for (int i = 1; i < tabs.getTabCount(); i++) {
             tabs.getTabComponentAt(i).setEnabled(false);
             tabs.setEnabledAt(i, false);
 
         }
         updateTabTitles(true);
+
+    }
+
+    void removeAdjudicationTab() throws MaeDBException {
+        JTabbedPane tabs = getView().getTabs();
+        System.out.println(((TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(0)).getLabel());
+        tabs.remove(0);
+
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            tabs.getTabComponentAt(i).setEnabled(true);
+            tabs.setEnabledAt(i, true);
+        }
+        updateTabTitles(false);
 
     }
 
@@ -284,6 +296,8 @@ class TextPanelController extends MaeControllerI{
             title.setChanged(driver.isAnnotationChanged());
             if (colorToo) {
                 title.setLabelColor(getMainController().getDocumentColor(i));
+            } else {
+                title.setLabelColor(Color.BLACK);
             }
 
         }

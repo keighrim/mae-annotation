@@ -98,7 +98,13 @@ class TablePanelController extends MaeControllerI {
     }
 
     void emptyTagTables() {
-        getView().getTabs().removeAll();
+        JTabbedPane tabs = getView().getTabs();
+        for (ChangeListener listen : tabs.getChangeListeners()) {
+            if (listen instanceof AdjudicationTabSwitchListener) {
+                tabs.removeChangeListener(listen);
+            }
+        }
+        tabs.removeAll();
         activeExtentTags = new HashSet<>();
         activeLinkTags = new HashSet<>();
         tabOrder = new ArrayList<>();

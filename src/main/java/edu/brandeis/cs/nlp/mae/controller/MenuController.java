@@ -123,7 +123,7 @@ class MenuController extends MaeControllerI {
 
     }
 
-    void resetAMenu(int menuIndex) {
+    private void resetAMenu(int menuIndex) {
         JMenu menu = menubarOrder[menuIndex];
         menubar.remove(menu);
         menu = prepareAMenu(menuIndex);
@@ -164,16 +164,14 @@ class MenuController extends MaeControllerI {
 
     private JMenu prepareFileMenu() {
         MaeActionI loadTaskAction = new LoadTask(MENUITEM_LOADTASK, null, ksLOADTASK, null, getMainController());
-        MaeActionI openFileAction = new OpenFile(MENUITEM_OPENFILE, null, ksOPENFILE, null, getMainController());
+        String openFileLabel = getMainController().isAdjudicating() ?
+                MENUITEM_ADDFILE : MENUITEM_OPENFILE;
+        MaeActionI openFileAction = new OpenFile(openFileLabel, null, ksOPENFILE, null, getMainController());
         MaeActionI saveXMLAction = new SaveXML(MENUITEM_SAVEXML, null, ksSAVEXML, null, getMainController());
-        MaeActionI closeFileAction = new CloseFile(MENUITEM_CLOSEFILE, null, ksCLOSEFILE, null, getMainController());
-        String adjudItemLabel = getMainController().isAdjudicating()?
-                MENUITEM_END_ADJUD
-                : MENUITEM_START_ADJUD;
-        String adjudItemCmd = getMainController().isAdjudicating()?
-                Integer.toString(END_ADJUD)
-                : Integer.toString(START_ADJUD);
-        MaeActionI adjudModeAction = new ModeSwitch(adjudItemLabel, null, ksADJUDMODE, null, getMainController());
+        String closeFileLabel = getMainController().isAdjudicating() ?
+                MENUITEM_END_ADJUD : MENUITEM_CLOSEFILE;
+        MaeActionI closeFileAction = new CloseFile(closeFileLabel, null, ksCLOSEFILE, null, getMainController());
+        MaeActionI adjudModeAction = new ModeSwitch(MENUITEM_START_ADJUD, null, ksADJUDMODE, null, getMainController());
 
         JMenu menu = new JMenu(MENU_FILE);
         menu.setMnemonic(MENU_FILE.charAt(0));
@@ -183,7 +181,7 @@ class MenuController extends MaeControllerI {
         JMenuItem saveXML = new JMenuItem(saveXMLAction);
         JMenuItem closeFile = new JMenuItem(closeFileAction);
         JMenuItem adjudMode = new JMenuItem(adjudModeAction);
-        adjudMode.setActionCommand(adjudItemCmd);
+        adjudMode.setActionCommand(Integer.toString(START_ADJUD));
         boolean taskLoaded = getMainController().isTaskLoaded();
         boolean fileLoaded = getMainController().isDocumentOpen();
         openFile.setEnabled(taskLoaded);
@@ -196,8 +194,10 @@ class MenuController extends MaeControllerI {
         menu.add(saveXML);
         menu.addSeparator();
         menu.add(closeFile);
-        menu.addSeparator();
-        menu.add(adjudMode);
+        if (!getMainController().isAdjudicating()) {
+            menu.addSeparator();
+            menu.add(adjudMode);
+        }
         logger.debug("file menu is created: " + menu.getItemCount());
         return menu;
     }

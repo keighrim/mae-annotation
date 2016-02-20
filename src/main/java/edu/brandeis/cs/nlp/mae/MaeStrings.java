@@ -103,6 +103,7 @@ public class MaeStrings {
     public final static String MENU_FILE = "File";
     public final static String MENUITEM_LOADTASK = "New Task Definition";
     public final static String MENUITEM_OPENFILE = "Open Document";
+    public final static String MENUITEM_ADDFILE = "Add Document";
     public final static String MENUITEM_SAVEXML = "Save Annotation As XML";
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";

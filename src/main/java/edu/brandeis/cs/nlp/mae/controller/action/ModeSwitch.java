@@ -55,9 +55,6 @@ public class ModeSwitch extends MenuActionI {
             case MaeMainController.START_ADJUD:
                 getMainController().switchToAdjudMode();
                 break;
-            case MaeMainController.END_ADJUD:
-                getMainController().switchToAnnotationMode();
-                break;
         }
     }
 

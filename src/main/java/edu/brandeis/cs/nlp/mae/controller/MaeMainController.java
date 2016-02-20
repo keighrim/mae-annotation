@@ -58,7 +58,6 @@ public class MaeMainController extends JPanel {
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
     public static final int START_ADJUD = 9;
-    public static final int END_ADJUD = 8;
     private static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
     private int mode;
 
@@ -361,8 +360,11 @@ public class MaeMainController extends JPanel {
     }
 
     public void closeCurrentDocument() {
-        // TODO: 2016-02-07 11:08:47EST if current work is adjudication, return ro normal mode after closing
-        closeDocumentAt(getCurrentDocumentTabIndex());
+        if (isAdjudicating()) {
+            switchToAnnotationMode();
+        } else {
+            closeDocumentAt(getCurrentDocumentTabIndex());
+        }
     }
 
     public void closeDocumentAt(int i) {
@@ -445,6 +447,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchToAdjudMode() {
+        // TODO: 2016-02-19 16:58:37EST what happens when entering adjud with unsaved annotations
         if (getDrivers().size() == 1) {
             showError("Cannot start adjudication with a single annotation instance");
             return;
@@ -476,7 +479,19 @@ public class MaeMainController extends JPanel {
 
     public void switchToAnnotationMode() {
         if (isAdjudicating()) {
-            // TODO: 2016-02-07 01:10:16EST revert all interface changes from adjud mode
+            try {
+                getDrivers().remove(0).destroy();
+                currentDriver = getDriverAt(0);
+                getTextPanel().removeAdjudicationTab();
+                setAdjudicating(false);
+                getTablePanel().prepareAllTables();
+                getTablePanel().insertAllTags();
+                getTextPanel().assignAllFGColors();
+                sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+                getMenu().resetFileMenu();
+            } catch (MaeException e) {
+                showError(e);
+            }
         }
     }
 
@@ -536,19 +551,20 @@ public class MaeMainController extends JPanel {
     public void addDocument(File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
         try {
-            boolean multiFile = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
+            boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
             sendWaitMessage();
-            if (multiFile) {
+            if (secondaryDocument) {
                 setupScheme(new File(getDriver().getTaskFileName()), false);
+                // setting up the scheme will switch driver to the new one
             }
             getDriver().readAnnotation(annotationFile);
             getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
             logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-            if (!multiFile) {
+            if (!secondaryDocument) {
                 getMenu().resetFileMenu();
                 getMenu().resetTagsMenu();
                 getMenu().resetModeMenu();
-                getTablePanel().insertAllTags();
+                getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
             }
             getTextPanel().assignAllFGColors();
             showIncompleteTagsWarning(true);
