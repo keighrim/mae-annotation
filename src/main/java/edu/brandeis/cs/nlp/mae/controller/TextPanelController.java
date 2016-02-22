@@ -201,18 +201,24 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    void addDocumentTab(String documentTitle, String documentText) {
+    void addDocumentTab(String documentTitle, String documentText) throws MaeDBException {
         if (!getView().isAnyDocumentOpen()) {
             getView().initTabs();
         }
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
         title.addCloseListener(new DocumentCloseListener());
-        getView().addTextTab(title, documentText, currentFontSize);
+        getView().addTextTab(title, documentText, currentFontSize, !getMainController().isAdjudicating());
         addListeners();
         if (!getView().isAnyDocumentOpen()) {
             getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
             getView().setDocumentOpen(true);
+        }
+        if (getMainController().isAdjudicating()) {
+            int newTab = tabs.getTabCount() - 1;
+            tabs.getTabComponentAt(newTab).setEnabled(false);
+            tabs.setEnabledAt(newTab, false);
+            updateTabTitles(true);
         }
 
     }
@@ -627,7 +633,9 @@ class TextPanelController extends MaeControllerI{
     private class TextPanelTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
+            if (!getMainController().isAdjudicating()) {
+                getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
+            }
 
         }
     }

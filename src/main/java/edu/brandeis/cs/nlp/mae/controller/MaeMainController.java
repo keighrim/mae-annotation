@@ -78,6 +78,7 @@ public class MaeMainController extends JPanel {
     // database connectors
     private List<MaeDriverI> drivers;
     private MaeDriverI currentDriver;
+    private final int adjudDriverIndex = 0;
 
     private ColorHandler textHighlighColors;
     private List<TagType> tagsForColor;
@@ -453,7 +454,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchToAdjudMode() {
-        // TODO: 2016-02-19 16:58:37EST what happens when entering adjud with unsaved annotations
+        // TODO: 2016-02-19 16:58:37EST prevent entering adjud with unsaved annotations
         if (getDrivers().size() == 1) {
             showError("Cannot start adjudication with a single annotation instance");
             return;
@@ -486,8 +487,8 @@ public class MaeMainController extends JPanel {
     public void switchToAnnotationMode() {
         if (isAdjudicating()) {
             try {
-                getDrivers().remove(0).destroy();
-                currentDriver = getDriverAt(0);
+                getDrivers().remove(adjudDriverIndex).destroy();
+                currentDriver = getDriverAt(adjudDriverIndex);
                 getTextPanel().removeAdjudicationTab();
                 setAdjudicating(false);
                 getTablePanel().prepareAllTables();
@@ -572,8 +573,13 @@ public class MaeMainController extends JPanel {
                 getMenu().resetModeMenu();
                 getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
             }
-            getTextPanel().assignAllFGColors();
-            showIncompleteTagsWarning(true);
+            if (isAdjudicating()) {
+                currentDriver = drivers.get(adjudDriverIndex);
+                assignAdjudicationColors();
+            } else {
+                getTextPanel().assignAllFGColors();
+                showIncompleteTagsWarning(true);
+            }
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
         } catch (MaeException e) {
             showError(e);
@@ -586,7 +592,7 @@ public class MaeMainController extends JPanel {
     public void addAdjudication(File goldstandard) {
         try {
             setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
-            getDrivers().add(0, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
+            getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
             getDriver().readAnnotation(goldstandard);
             getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
             getTablePanel().prepareAllTables();
@@ -634,7 +640,7 @@ public class MaeMainController extends JPanel {
 
     void assignAdjudicationColors() {
         try {
-            // TODO: 2016-02-20 11:09:09EST clearcoloring is extremely slow: need optimization
+            // TODO: 2016-02-20 11:09:09EST clear coloring is extremely slow: need optimization
             getTextPanel().clearColoring();
             getTextPanel().clearSelection();
             TagType type = getAdjudicatingTagType();
@@ -971,9 +977,7 @@ public class MaeMainController extends JPanel {
                     Set<LinkTag> linkers = driver.getLinksHasArgumentTag(tag);
                     for (LinkTag linker : linkers) {
                         if (linker.getTagtype().equals(currentType)) {
-                            if (!adjudicatingTags.contains(linker)) {
-                                getTablePanel().insertTagIntoAdjudicationTable(linker);
-                            }
+                            getTablePanel().insertTagIntoAdjudicationTable(linker);
                             adjudicatingTags.add(linker);
                         }
                     }

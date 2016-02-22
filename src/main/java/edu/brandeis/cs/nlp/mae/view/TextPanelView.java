@@ -90,11 +90,13 @@ public class TextPanelView extends JPanel {
         selectTab(0);
     }
 
-    public void addTextTab(DocumentTabTitle title, String text, int fontSize) {
+    public void addTextTab(DocumentTabTitle title, String text, int fontSize, boolean switchToNewTab) {
         // always open a new tab at the end, and switch to the new tab
         getTabs().addTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, title);
-        selectTab(getTabs().getTabCount() - 1);
+        if (switchToNewTab) {
+            selectTab(getTabs().getTabCount() - 1);
+        }
     }
 
     public void addTextTab(String title, String text, int fontSize) {
