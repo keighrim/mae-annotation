@@ -101,7 +101,7 @@ public class FontHandler {
         StyledDocument document = new DefaultStyledDocument();
         try {
             int offset = 0;
-            while (offset < plainText.length()) {
+            while (plainText != null && offset < plainText.length()) {
                 int length = 1;
                 SimpleAttributeSet attributeSet = new SimpleAttributeSet();
                 String fontFam = defaultFontName;
