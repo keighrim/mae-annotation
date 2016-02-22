@@ -47,8 +47,6 @@ public interface MaeDriverI {
 
     void destroy() throws MaeDBException;
 
-    // TODO: 12/31/2015 separate each section into separate interface and make DriverImple to implement multiple interfaces
-
     // task
     void readTask(File file) throws MaeDBException, MaeIODTDException, FileNotFoundException;
 
@@ -61,6 +59,8 @@ public interface MaeDriverI {
     String getTaskFileName() throws MaeDBException;
 
     void setTaskFileName(String fileName) throws MaeDBException;
+
+    String getDBSourceName();
 
     String getAnnotationFileName() throws MaeDBException;
 
@@ -80,7 +80,7 @@ public interface MaeDriverI {
 
     boolean isAnnotationChanged();
 
-    public boolean isPrimaryTextLoaded();
+    boolean isPrimaryTextLoaded();
 
     // character index (anchor)
 

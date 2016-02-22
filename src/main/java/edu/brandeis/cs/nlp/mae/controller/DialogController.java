@@ -28,6 +28,10 @@ import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.FileWriter;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
+import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
+import edu.brandeis.cs.nlp.mae.io.XMLLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 
 import javax.swing.*;
@@ -85,9 +89,15 @@ class DialogController {
 
     }
 
-    void showError(String errorMessage) {
-        // TODO: 1/1/2016 maybe can implement "send error log to dev" button
-        JOptionPane.showMessageDialog(getParent(), errorMessage, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+    void showError(String message, Exception e) {
+        String errorTitle = e.getClass().getName();
+        String errorMessage = String.format("%s: %s", message, e.getMessage());
+        JOptionPane.showMessageDialog(getParent(), errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
+
+    }
+
+    void showError(String message) {
+        JOptionPane.showMessageDialog(getParent(), message, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
 
     }
 
@@ -95,7 +105,6 @@ class DialogController {
         if (defaultName.length() > 0) {
             fileChooser.setSelectedFile(new File(defaultName));
         }
-        // TODO: 1/1/2016 implement multi selection for multi file support
 
         if (saveFile) {
             if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
@@ -145,11 +154,11 @@ class DialogController {
         return null;
     }
 
-    boolean showIncompleteTagsWarning(Set<Tag> incomplete) {
+    boolean showIncompleteTagsWarning(Set<Tag> incomplete, boolean simplyWarn) {
         if (incomplete == null || incomplete.size() < 1) {
             return true;
         }
-        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete);
+        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete, simplyWarn);
         options.setVisible(true);
         switch (options.getResponse()) {
             case JOptionPane.YES_OPTION:
@@ -163,11 +172,49 @@ class DialogController {
         }
     }
 
+    public File showStartAdjudicationDialog() throws MaeControlException, MaeDBException, MaeIOException {
+        Object[] options = {"Yes", "No, Load Gold Standard file", "Cancel"};
+        int response = JOptionPane.showOptionDialog(getParent(),
+                "Start adjudication with an empty Gold Standard file?",
+                "Start adjudication",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+        switch (response) {
+            case JOptionPane.YES_OPTION:
+                return getNewGoldstandardFile();
+            case JOptionPane.NO_OPTION:
+                return getExistingGoldstandardFile();
+            default:
+                return null;
+        }
+    }
+
+    File getExistingGoldstandardFile() throws MaeIOXMLException, MaeDBException {
+        File existingGS = showFileChooseDialogAndSelect("goldstandard.xml", false);
+        XMLLoader xmlLoader = new XMLLoader(getMainController().getDriver());
+        if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
+            return existingGS;
+        }
+        return null;
+    }
+
+    File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
+        File newGS = showFileChooseDialogAndSelect("goldstandard.xml", true);
+        if (newGS != null) {
+            FileWriter.writeTextOnEmptyFile(getMainController().getDriver().getPrimaryText(), newGS);
+            return newGS;
+        }
+        return null;
+    }
+
     class IncompleteTagsWarningOptionPanel extends JDialog {
         JList<String> incompleteTags;
         int response;
 
-        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete) {
+        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete, boolean simplyWarn) {
             super(getMainController().getMainWindow(), "Missing Something", true);
             setSize(100, 200);
 
@@ -182,12 +229,12 @@ class DialogController {
             addListenersToList(see);
             JPanel buttons = new JPanel(new FlowLayout());
             buttons.add(yes);
-            buttons.add(no);
+            if (!simplyWarn) buttons.add(no);
             buttons.add(see);
 
             String tag = incomplete.size() == 1? "tag" : "tags";
-            add(new JLabel(String.format("" +
-                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Are you sure to continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
+            add(new JLabel(String.format(
+                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
                     BorderLayout.NORTH);
             add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
             add(buttons, BorderLayout.SOUTH);
@@ -395,6 +442,7 @@ class DialogController {
             int typeNum = 0;
             for (final ArgumentType type : argTypes) {
                 final JComboBox<ExtentTag> candidates = new JComboBox<>();
+                candidates.setFont(MaeStrings.UNICODE_FONT);
                 for (ExtentTag tag : argumentCandidates) {
                     candidates.addItem(tag);
                 }

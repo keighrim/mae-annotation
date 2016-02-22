@@ -183,6 +183,11 @@ public class MaeHotKeys {
 //            = KeyStroke.getKeyStroke(KeyEvent.VK_O, 0);
 //    public final static KeyStroke ksSTARTOVER = ksNO;
 
+    public final static KeyStroke ksNY
+            = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0);
+    public final static KeyStroke ksCOPY = ksNY;
+    public final static int cmnCOPY = KeyEvent.VK_Y;
+
     public final static KeyStroke ksNC
             = KeyStroke.getKeyStroke(KeyEvent.VK_C, 0);
     public final static KeyStroke ksCREATE = ksNC;
@@ -246,7 +251,10 @@ public class MaeHotKeys {
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
     public final static KeyStroke ksSAVERTF = ksCR;
 
-    public final static KeyStroke ksCLOSEFILE = ksF4;
+    public final static KeyStroke ksCW
+            = KeyStroke.getKeyStroke(KeyEvent.VK_W,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksCLOSEFILE = ksCW;
 
     public final static KeyStroke ksCS
             = KeyStroke.getKeyStroke(KeyEvent.VK_S, 
@@ -276,7 +284,10 @@ public class MaeHotKeys {
     public final static KeyStroke ksNORMALMODE = ksCE;
     public final static KeyStroke ksMSPANMODE = ksC1;
     public final static KeyStroke ksARGSMODE = ksC2;
-    public final static KeyStroke ksADJUDMODE = ksC9;
+    public final static KeyStroke ksCJ
+            = KeyStroke.getKeyStroke(KeyEvent.VK_J,
+            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+    public final static KeyStroke ksADJUDMODE = ksCJ;
 
     // help menu keys
     public final static  KeyStroke ksABOUT = ksF1;

@@ -47,8 +47,6 @@ import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.*;
 
-// TODO 151225 split this big chunk of drivers into TagDriver.java, AttDriver.java, etc (names are subject to change)
-
 public class LocalSqliteDriverImpl implements MaeDriverI {
 
     // not static for multi file support: needs to instantiate many Drivers
@@ -183,6 +181,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
+    public String getDBSourceName() {
+        return SQLITE_FILENAME;
+    }
+
+    @Override
     public String getAnnotationFileName() throws MaeDBException {
         return workingTask.getAnnotationFileName();
     }
@@ -196,7 +199,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public void setAnnotationFileName(String fileName) throws MaeDBException {
         try {
-            // TODO: 2016-01-21 21:22:25EST test this actually updates file name
             this.workingTask.setAnnotationFileName(fileName);
             taskDao.update(workingTask);
         } catch (SQLException e) {
@@ -309,13 +311,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public List<Integer> getAllAnchors() throws MaeDBException{
-        // TODO: 1/3/2016  old implementation was getting location:Set<Tag> hashedset, now only returns locations and then querying associated tags is another responsibility
-        // ==> make sure this is not a dangerous decision
-        // TODO 151214 when making hghlights, implement getProperColor()
-        // to get the first turned-on TagType from a sorted List<TagType>, and also check that's the last (to make it bold)
-
         List<Integer> anchors = new ArrayList<>();
-
         try {
             for (CharIndex location : charIndexDao.queryForAll()) {
                 anchors.add(location.getLocation());
@@ -491,7 +487,6 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     public List<? extends Tag> getAllTagsOfType(TagType type) throws MaeDBException {
-        // TODO 151215 split into two methods if necessary (each for link and etag)
         try {
             tagTypeDao.refresh(type);
             return new ArrayList<>(type.getTags());
@@ -596,7 +591,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public ExtentTag createExtentTag(String tid, TagType tagType, String text, int... spans) throws MaeDBException {
         try {
-            ExtentTag tag = new ExtentTag(tid, tagType, workingTask.getAnnotationFileName());
+            ExtentTag tag = new ExtentTag(tid, tagType, getAnnotationFileBaseName());
             tag.setText(text);
             for (CharIndex ci: tag.setSpans(spans)) {
                 charIndexDao.create(ci);
@@ -642,7 +637,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException {
         try {
-            LinkTag link = new LinkTag(tid, tagType, workingTask.getAnnotationFileName());
+            LinkTag link = new LinkTag(tid, tagType, getAnnotationFileBaseName());
             lTagDao.create(link);
             boolean added = idHandler.addId(tagType, tid);
             if (!added) {
@@ -687,11 +682,13 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             if (oldAtt != null) {
                 logger.debug(String.format("an old attribute \"%s\" is deleted from \"%s\"", oldAtt.toString(), tag.toString()));
                 attDao.delete(oldAtt);
+                setAnnotationChanged(true);
             }
             if (attValue != null && attValue.length() > 0) {
                 return addAttribute(tag, attType, attValue);
             } else {
                 logger.debug("no new value is provided. leaving the attribute deleted");
+                setAnnotationChanged(true);
                 return null;
             }
         } catch (SQLException e) {
@@ -756,6 +753,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
                 Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
                 if (oldArg != null) {
                     argDao.delete(oldArg);
+                    setAnnotationChanged(true);
                 }
                 if (argument != null) {
                     Argument arg = new Argument(linker, argType, argument);

@@ -24,6 +24,9 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
+import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -33,8 +36,12 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
@@ -44,16 +51,14 @@ import java.util.HashMap;
  */
 public class TextPanelView extends JPanel {
 
-    public static final int DEFAULT_FONT_SIZE = 14;
-    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
-    public static final int VERYLARGE_FONT_SIZE = 36;
+    public static final String DEFAULT_FONT_FAMILY = Font.MONOSPACED;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
     public TextPanelView() {
         super(new BorderLayout());
         documentTabs = new JTabbedPane();
-        clearAllTabs();
+        initTabs();
 
     }
 
@@ -69,39 +74,32 @@ public class TextPanelView extends JPanel {
         return getTabs().getSelectedIndex();
     }
 
-
     public void selectTab(int tab) {
         getTabs().setSelectedIndex(tab);
     }
 
-    public void clearAllTabs() {
+    public void initTabs() {
         getTabs().removeAll();
         add(getTabs(), BorderLayout.CENTER);
         setDocumentOpen(false);
     }
 
-    private static StyledDocument stringToStyledDocument(String plainText) {
-        StyledDocument document = new DefaultStyledDocument();
-        try {
-            document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
-        } catch (BadLocationException ignored) {
-        }
-        return document;
-
+    public void addAdjudicationTab(DocumentTabTitle title, String text, int fontSize) {
+        getTabs().insertTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)), null, 0);
+        getTabs().setTabComponentAt(0, title);
+        selectTab(0);
     }
 
-    /**
-     * Used to add a text panel, mainly for guide text.
-     * @param documentTitle
-     * @param guideText
-     */
-    public void addTextTab(String documentTitle, String guideText) {
-        // TODO: 1/2/2016 add tooltip for the tab
+    public void addTextTab(DocumentTabTitle title, String text, int fontSize) {
         // always open a new tab at the end, and switch to the new tab
-        getTabs().addTab(documentTitle, createDocumentArea(stringToStyledDocument(guideText)));
+        getTabs().addTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
+        getTabs().setTabComponentAt(getTabs().getTabCount() - 1, title);
         selectTab(getTabs().getTabCount() - 1);
-        Component title = getTabs().getComponentAt(getTabs().getTabCount() - 1);
-        title.setFont(title.getFont().deriveFont(Font.PLAIN));
+    }
+
+    public void addTextTab(String title, String text, int fontSize) {
+        getTabs().addTab(title, null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
+        selectTab(getTabs().getTabCount() - 1);
     }
 
     public JScrollPane createDocumentArea(StyledDocument document) {
@@ -111,8 +109,6 @@ public class TextPanelView extends JPanel {
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
-        // DejaVu Sans is virtually the only font that support widest range of unicode, including emojis
-        documentArea.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         documentArea.setStyledDocument(document);
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
@@ -133,6 +129,12 @@ public class TextPanelView extends JPanel {
 
     public Font getTextFont() {
         return getDocumentPane().getFont();
+
+    }
+
+    public void setTextFont(AttributeSet attSet) {
+        getDocument().setCharacterAttributes(0, getDocument().getLength(), attSet, false);
+
     }
 
     public void setTextFont(Font font) {
@@ -147,7 +149,88 @@ public class TextPanelView extends JPanel {
         return this.documentTabs;
     }
 
+    public static class DocumentTabTitle extends JPanel {
+        JTabbedPane parentPane;
+        JButton closeButton;
+        JLabel documentLabel;
+        JLabel changeState;
 
+        public DocumentTabTitle(String label, JTabbedPane parentPane) {
+            super(new GridBagLayout());
+            setOpaque(false);
+            this.parentPane = parentPane;
+            documentLabel = new JLabel(label);
+            documentLabel.setFont(new Font("dialog", Font.BOLD, 12));
+            changeState = new JLabel(" ");
+            changeState.setFont(documentLabel.getFont().deriveFont(Font.BOLD));
+            createCloseButton(label);
+
+            add(changeState);
+            add(documentLabel);
+            add(closeButton);
+        }
+
+        private void createCloseButton(String label) {
+            closeButton = new JButton("x");
+            closeButton.setFont(new Font("sanserif", Font.PLAIN, 9));
+            closeButton.setFocusable(false);
+            closeButton.setBorderPainted(false);
+            closeButton.setUI(new BasicButtonUI());
+            closeButton.setContentAreaFilled(false);
+            closeButton.setRolloverEnabled(true);
+            closeButton.setToolTipText(String.format("Close %s", label));
+            closeButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    Component component = e.getComponent();
+                    if (component instanceof AbstractButton) {
+                        AbstractButton button = (AbstractButton) component;
+                        button.setForeground(isEnabled() ? Color.RED : Color.LIGHT_GRAY);
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    Component component = e.getComponent();
+                    if (component instanceof AbstractButton) {
+                        AbstractButton button = (AbstractButton) component;
+                        button.setForeground(Color.BLACK);
+                    }
+                }
+            });
+
+        }
+
+        public String getLabel() {
+            return documentLabel.getText();
+        }
+
+        public void setLabel(String label) {
+            documentLabel.setText(label);
+            updateUI();
+
+        }
+
+        public int getTabIndex() {
+            return parentPane.indexOfTabComponent(DocumentTabTitle.this);
+        }
+
+        public void addCloseListener(ActionListener listener) {
+            closeButton.addActionListener(listener);
+        }
+
+        public void setChanged(boolean changed) {
+            if (changed) {
+                changeState.setText(MaeStrings.UNSAVED_INDICATOR);
+            } else {
+                changeState.setText(" ");
+            }
+        }
+
+        public void setLabelColor(Color color) {
+            documentLabel.setForeground(color);
+        }
+    }
 
     /**
      *  adopted from https://tips4java.wordpress.com/2009/05/23/text-component-line-number/ , thank!
@@ -161,7 +244,7 @@ public class TextPanelView extends JPanel {
      *  This class was designed to be used as a component added to the row header
      *  of a JScrollPane.
      */
-    public static class TextLineNumberRowHeader extends JPanel
+    static class TextLineNumberRowHeader extends JPanel
             implements CaretListener, DocumentListener, PropertyChangeListener
     {
         public final static float LEFT = 0.0f;

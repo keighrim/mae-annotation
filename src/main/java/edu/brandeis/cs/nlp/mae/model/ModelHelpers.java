@@ -24,8 +24,6 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
-
 import java.util.*;
 
 /**

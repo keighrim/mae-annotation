@@ -24,9 +24,10 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -35,21 +36,25 @@ import java.awt.event.ActionEvent;
  * Called when the user selects the option to delete the highlighted rows from
  * the table in view.  Rows are removed both from the database and the table.
  */
-public class MakeLink extends MenuActionI {
+public class CopyTag extends MenuActionI {
 
-    public MakeLink(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public CopyTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
         try {
-            TagType linkType = getMainController().getDriver().getTagTypeByName(event.getActionCommand());
-            getMainController().createLinkFromDialog(linkType, getMainController().getSelectedArguments());
+            String[] srcAndTid = event.getActionCommand().split(MaeStrings.SEP);
+            if (getMainController().getDriver().getAnnotationFileName().endsWith(srcAndTid[0])) {
+                getMainController().showError("Cannot copy a tag from itself!");
+                return;
+            }
+            Tag original = getMainController().getTagBySourceAndTid(srcAndTid[0], srcAndTid[1]);
+            getMainController().copyTag(original);
         } catch (MaeDBException e) {
             catchException(e);
         }
-
     }
 
 }

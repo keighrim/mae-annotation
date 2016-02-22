@@ -24,25 +24,10 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.model.ArgumentType;
-import edu.brandeis.cs.nlp.mae.model.ExtentTag;
-import edu.brandeis.cs.nlp.mae.model.LinkTag;
-import edu.brandeis.cs.nlp.mae.model.TagType;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Called when the user selects the option to delete the highlighted rows from

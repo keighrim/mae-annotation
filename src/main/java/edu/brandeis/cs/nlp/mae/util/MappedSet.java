@@ -79,7 +79,7 @@ public class MappedSet<K,V> implements MappedCollection<K, V> {
      */
     public void putItem (K key, V value) {
         if (containsKey(key)) {
-            getAsList(key).add(value);
+            get(key).add(value);
         } else {
             TreeSet<V> newtree = new TreeSet<>();
             newtree.add(value);

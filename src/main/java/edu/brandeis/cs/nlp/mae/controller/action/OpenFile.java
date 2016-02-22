@@ -42,16 +42,14 @@ public class OpenFile extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showUnsavedChangeWarning()) {
-            try {
-                File file = getMainController().selectSingleFile("", false);
-                if (file != null) {
-                    getMainController().newDocument(file);
-                }
-
-            } catch (Exception e) {
-                catchException(e);
+        try {
+            File file = getMainController().selectSingleFile("", false);
+            if (file != null) {
+                getMainController().addDocument(file);
             }
+
+        } catch (Exception e) {
+            catchException(e);
         }
     }
 

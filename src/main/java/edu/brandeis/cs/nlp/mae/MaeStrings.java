@@ -24,7 +24,11 @@
 
 package edu.brandeis.cs.nlp.mae;
 
+import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Properties;
 
 /**
  * Contains string resources for MAE main
@@ -33,11 +37,27 @@ import java.util.Calendar;
  *
  */
 public class MaeStrings {
-    
+
+    public static String getVersion()
+    {
+        String path = "/version.properties";
+        InputStream stream = MaeStrings.class.getResourceAsStream(path);
+        if (stream == null)
+            return "vUNKNOWN";
+        Properties props = new Properties();
+        try {
+            props.load(stream);
+            stream.close();
+            return (String) props.get("version");
+        } catch (IOException e) {
+            return "vUNKNOWN";
+        }
+    }
+
     /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-    public final static String VERSION = "v1.0.1";
+    public final static String VERSION = getVersion();
     public final static String TITLE_PREFIX = "MAE " + VERSION;
     public final static String DB_DRIVER = "jdbc:sqlite:";
     public final static String ANN_DB_FILE = "mae.db";
@@ -49,16 +69,16 @@ public class MaeStrings {
 
     /* Internal data structures and actionEvents */
     public final static String COMBO_DELIMITER = " - ";
-    public final static String SPANDELIMITER = "~";
-    public final static String SPANSEPARATOR = ",";
+    public final static String SPANRANGE = "~";
+    public final static String SPANDELIMITER = ",";
     public final static int NC_START = -1;
     public final static int NC_END = -1;
     public final static String NC_TEXT = "";
     public final static String NCSPAN_PLACEHOLDER = String.format("%d%s%d",
-            MaeStrings.NC_START, MaeStrings.SPANDELIMITER, MaeStrings.NC_END);
+            MaeStrings.NC_START, MaeStrings.SPANRANGE, MaeStrings.NC_END);
 
     public final static String ATT_VALUESET_SEPARATOR = ":::";
-    // TODO 151209 are these two below safe?
+    // these two might be too much hard-coded
     public final static String SPANTEXTTRUNC = " ... ";
     public final static String LONGTEXTTRUNC = " … ";
     public final static String ADD_NC_COMMAND = "ADDNC:";
@@ -89,22 +109,27 @@ public class MaeStrings {
     public final static String SB_NORM_MODE_NOTI = "Now in normal mode! Click anywhere to continue.";
     public final static String SB_NEWTASK = "New task is successfully loaded! Click anywhere to continue.";
     public final static String SB_FILEOPEN = "New document is successfully open! Click anywhere to continue.";
-    public final static String SB_MSPAN_MODE_PREFIX = "[Multi-span] ";
+    public final static String SB_MSPAN_MODE_PREFIX = "Multi-span";
     public final static String SB_MSPAN_TEXT = SB_TEXT;
     public final static String SB_MSPAN_NOTEXT = SB_NOTEXT;
-    public final static String SB_MARGS_MODE_PREFIX = "[Arguments select] ";
+    public final static String SB_MARGS_MODE_PREFIX = "Arguments select";
     public final static String SB_MARGS_TAG = SB_TAG;
     public final static String SB_MARGS_NOTAG = SB_NOTAG;
+    public final static String SB_ADJUD_PREFIX = "ADJUDICATING!";
+    public final static String SB_ADJUD_TAG = " %d %s Tags Selected.";
 
 
     /* main menus */
     public final static String MENU_FILE = "File";
     public final static String MENUITEM_LOADTASK = "New Task Definition";
     public final static String MENUITEM_OPENFILE = "Open Document";
+    public final static String MENUITEM_ADDFILE = "Add Document";
     public final static String MENUITEM_SAVEXML = "Save Annotation As XML";
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
-    public final static String MENU_FILE_ITEM_CLOSEFILE = "Close Annotation";
+    public final static String MENUITEM_CLOSEFILE = "Close Document";
+    public final static String MENUITEM_START_ADJUD = "Start adjudication";
+    public final static String MENUITEM_END_ADJUD = "End adjudication";
     public final static String MENU_TAGS = "Tags";
     public final static String MENU_MODE = "Mode";
     public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
@@ -124,13 +149,16 @@ public class MaeStrings {
     public final static String MENUITEM_STARTOVER = "Wipe all selections";
     public final static String MENU_DELETE_TAG = "Delete ...";
     public final static String MENUITEM_DELETE_TAG_SINGLE = "Delete %s"; // tid
-    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete %d tags: %s"; // numbers, list of tids
+    public final static String MENUITEM_DELETE_TAG_PLURAL = "Delete all %d tags"; // numbers, list of tids
     public final static String MENU_SETARG = "Set ...";
     public final static String MENUITEM_SETARG_SINGLE = "Set %s as argument of link tag"; // tid
     public final static String MENUITEM_CREATE_ETAG = "Create Extent Tag with selected text";
+    public final static String MENUITEM_CREATE_CERTAIN_ETAG = "Create %s Tag with selected text";
     public final static String MENUITEM_CREATE_NCTAG = "Create NC Extent Tag with no text associated";
     public final static String MENUITEM_CREATE_LTAG_EMPTY = "Create Link Tag with no arguments associated";
     public final static String MENUITEM_CREATE_LTAG_FROM_SEL = "Create Link tag with selected arguments";
+    public final static String MENUITEM_COPY_TAG_SINGLE = "Copy %s from %s to gold standard";
+    public final static String MENU_COPY = "Copy ...";
 
     /* for dialogs */
     public final static String SETARG_SEL_TAGTYPE = "Select Link Type";
@@ -141,8 +169,8 @@ public class MaeStrings {
     public final static String NO_TASK_IND = "No DTD";
     public final static String NO_FILE_IND = "No File";
     public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
-    public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or a XML document with stand-alone annotations.";
-    public static final String UNSAVED_SUFFIX = " *";
+    public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or an XML document with stand-alone annotations.";
+    public static final String UNSAVED_INDICATOR = "*";
 
     /* popup messages */
     public static final String WARN_POPUP_TITLE = "Attention, Please";
@@ -162,4 +190,6 @@ public class MaeStrings {
                     "covered under the GNU General Public License version 3. " +
                     "Visit course website for user guide and components license."
             , VERSION, CUR_YEAR);
+
+    public static final Font UNICODE_FONT = new Font("DejaVu Sans", Font.PLAIN, 12);
 }

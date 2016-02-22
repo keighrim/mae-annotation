@@ -24,7 +24,6 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.model.Tag;
@@ -54,7 +53,7 @@ public class DeleteTag extends MenuActionI {
 
     void deleteTag(String tid) {
         Tag tag = getMainController().getTagByTid(tid);
-        getMainController().removeTag(tag);
+        getMainController().deleteTag(tag);
     }
 }
 
