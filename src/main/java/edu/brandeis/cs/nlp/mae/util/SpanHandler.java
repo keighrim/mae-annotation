@@ -54,12 +54,12 @@ public class SpanHandler {
         }
 
         // split each span
-        String[] pairs = spansString.split(MaeStrings.SPANSEPARATOR);
+        String[] pairs = spansString.split(MaeStrings.SPANDELIMITER);
         for (String pair : pairs) {
             logger.debug(String.format("converting \"%s\" into a pair", pair));
             int[] span = new int[2];
             int i = 0;
-            for (String loc : pair.split(MaeStrings.SPANDELIMITER)) {
+            for (String loc : pair.split(MaeStrings.SPANRANGE)) {
                 logger.debug(String.format("start/end: %d, offset: %s", i, loc));
                 span[i++] = Integer.parseInt(loc);
                 logger.debug(String.format("after putting: %s", Arrays.toString(span)));
@@ -73,8 +73,8 @@ public class SpanHandler {
 
     /**
      * Takes an array of integer pairs, then merge it into a string. Each span
-     * separated by SPANSEPARATOR start and end point of each span joined with
-     * SPANDELIMITER
+     * separated by SPANDELIMITER start and end point of each span joined with
+     * SPANRANGE
      *
      * @param spans - an sorted set of integer pairs
      * @return a formatted string of spans of a tag
@@ -89,9 +89,9 @@ public class SpanHandler {
 //        Iterator<int[]> iter = spans.iterator();
 //        while (iter.hasNext()) {
 //            int[] span = iter.next();
-//            spanString += span[0] + MaeStrings.SPANDELIMITER + span[1];
+//            spanString += span[0] + MaeStrings.SPANRANGE + span[1];
 //            if (iter.hasNext()) {
-//                spanString += MaeStrings.SPANSEPARATOR;
+//                spanString += MaeStrings.SPANDELIMITER;
 //            }
 //        }
 //        logger.debug("=== Conversion finished ===");
@@ -158,15 +158,15 @@ public class SpanHandler {
 
         int prev = spans[0];
         if (spans.length == 1) {
-            return String.format("%d%s%d", prev, MaeStrings.SPANDELIMITER, prev+1);
+            return String.format("%d%s%d", prev, MaeStrings.SPANRANGE, prev+1);
         }
         String spansString = Integer.toString(prev);
         for (int i = 1; i < spans.length; i++) {
             if (i == spans.length - 1) {
                 // +1's for exclusive end
-                spansString += MaeStrings.SPANDELIMITER + (spans[i] + 1);
+                spansString += MaeStrings.SPANRANGE + (spans[i] + 1);
             } else if (prev + 1 < spans[i]) {
-                spansString += MaeStrings.SPANDELIMITER + (prev + 1) + MaeStrings.SPANSEPARATOR + spans[i];
+                spansString += MaeStrings.SPANRANGE + (prev + 1) + MaeStrings.SPANDELIMITER + spans[i];
                 prev = spans[i];
             } else {
                 prev = spans[i];
@@ -186,11 +186,11 @@ public class SpanHandler {
 
         List<int[]> spansArrays = new LinkedList<>();
         // split each span
-        String[] pairs = spansString.split(MaeStrings.SPANSEPARATOR);
+        String[] pairs = spansString.split(MaeStrings.SPANDELIMITER);
         for (String pair : pairs) {
             try {
-                int start = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[0]);
-                int end = Integer.parseInt(pair.split(MaeStrings.SPANDELIMITER)[1]);
+                int start = Integer.parseInt(pair.split(MaeStrings.SPANRANGE)[0]);
+                int end = Integer.parseInt(pair.split(MaeStrings.SPANRANGE)[1]);
                 if (start >= end) {
                     throw new MaeException("SpanString ill-formed: start of each span should be smaller than its paired end");
                 }

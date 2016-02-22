@@ -55,6 +55,7 @@ public class LocalSqliteDriverImplTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver.setAnnotationFileName("TEST_SAMPLE");
 
         noun = driver.createTagType("NOUN", "N", false);
         verb = driver.createTagType("VERB", "V", false);

@@ -49,9 +49,14 @@ public class TablePanelView extends JPanel {
     }
 
     public void addTab(String titleText, JComponent titleComponent, JComponent tableComponent) {
-        // TODO: 2016-01-07 21:30:06EST add tooltip
         getTabs().addTab(titleText, tableComponent);
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, titleComponent);
+    }
+
+    public JTable getTable() {
+        JScrollPane sp = (JScrollPane) getTabs().getSelectedComponent();
+        JTable table = (JTable) sp.getViewport().getView();
+        return table;
     }
 
     private void clear() {
@@ -73,7 +78,6 @@ public class TablePanelView extends JPanel {
      */
     public static class TogglingTabTitle extends JPanel {
         private TagType tagType;
-        private Color color;
         private JCheckBox toggle;
         private JLabel titleLabel;
 
@@ -85,7 +89,6 @@ public class TablePanelView extends JPanel {
          */
         public TogglingTabTitle(TagType tagType) {
             this.tagType = tagType;
-            this.color = Color.white;
             this.toggle = new JCheckBox();
             this.init();
         }
@@ -98,9 +101,8 @@ public class TablePanelView extends JPanel {
          */
         public TogglingTabTitle(TagType tagType, Color color) {
             this.tagType = tagType;
-            this.color = color;
-            Icon unselected = new BorderRect(this.color, 13);
-            Icon selected = new ColorRect(this.color, 13);
+            Icon unselected = new BorderRect(color, 13);
+            Icon selected = new ColorRect(color, 13);
             this.toggle = new JCheckBox(unselected);
             this.toggle.setSelectedIcon(selected);
             this.init();
@@ -112,6 +114,7 @@ public class TablePanelView extends JPanel {
         private void init() {
             // set layout and transparency
             setLayout(new GridBagLayout());
+            toggle.setOpaque(false);
             setOpaque(false);
 
             // make components to be set on titleLabel and place them

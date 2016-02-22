@@ -29,8 +29,6 @@ import edu.brandeis.cs.nlp.mae.model.TagType;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.SQLException;
-
 import static org.junit.Assert.assertEquals;
 
 /**

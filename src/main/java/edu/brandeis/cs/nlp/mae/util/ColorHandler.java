@@ -26,7 +26,7 @@ package edu.brandeis.cs.nlp.mae.util;
 
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -67,20 +67,34 @@ public class ColorHandler {
         }
     }
 
+    public ColorHandler(int size, boolean startWithBlack) {
+        this(size);
+        colors.add(0, Color.BLACK);
+
+    }
+
     public static Highlighter.HighlightPainter getDefaultHighlighter() {
         return DefaultHighlighter.DefaultPainter;
     }
 
     public static Highlighter.HighlightPainter getFadingHighlighter() {
-        return new DefaultHighlighter.DefaultHighlightPainter(Color.lightGray);
+        return new DefaultHighlighter.DefaultHighlightPainter(getFadingForeground());
     }
 
     public static Highlighter.HighlightPainter getVividHighliter() {
-        return new DefaultHighlighter.DefaultHighlightPainter(new Color(90, 220, 30));
+        return new DefaultHighlighter.DefaultHighlightPainter(getVividForeground());
     }
 
     public static Highlighter.HighlightPainter getCustomHighliter(Color color) {
         return new DefaultHighlighter.DefaultHighlightPainter(color);
+    }
+
+    public static Color getFadingForeground() {
+        return Color.lightGray;
+    }
+
+    public static Color getVividForeground() {
+        return new Color(90, 220, 30);
     }
 
     public List<Color> getColors() {

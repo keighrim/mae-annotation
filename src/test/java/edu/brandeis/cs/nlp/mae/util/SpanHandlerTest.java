@@ -48,7 +48,7 @@ public class SpanHandlerTest {
                 SpanHandler.listOfArraysEquals(Arrays.asList(new int[]{-1,-1}), pairs)
         );
 
-        String cString = String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 3);
+        String cString = String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 3);
         pairs = SpanHandler.convertStringToPairs(cString);
         List<int[]> gold = new LinkedList<>();
         gold.add(new int[]{0, 3});
@@ -58,9 +58,9 @@ public class SpanHandlerTest {
         );
 
         cString = String.format("%d%s%d%s%d%s%d%s%d%s%d",
-                0, MaeStrings.SPANDELIMITER, 3, MaeStrings.SPANSEPARATOR,
-                7, MaeStrings.SPANDELIMITER, 11, MaeStrings.SPANSEPARATOR,
-                20, MaeStrings.SPANDELIMITER, 24);
+                0, MaeStrings.SPANRANGE, 3, MaeStrings.SPANDELIMITER,
+                7, MaeStrings.SPANRANGE, 11, MaeStrings.SPANDELIMITER,
+                20, MaeStrings.SPANRANGE, 24);
         pairs = SpanHandler.convertStringToPairs(cString);
         gold = new LinkedList<>();
         gold.add(new int[]{0, 3});
@@ -97,9 +97,9 @@ public class SpanHandlerTest {
         assertEquals(
                 "Should convert an multispan, found: " + string,
                 String.format("%d%s%d%s%d%s%d%s%d%s%d",
-                        0, MaeStrings.SPANDELIMITER, 3, MaeStrings.SPANSEPARATOR,
-                        7, MaeStrings.SPANDELIMITER, 11, MaeStrings.SPANSEPARATOR,
-                        20, MaeStrings.SPANDELIMITER, 24),
+                        0, MaeStrings.SPANRANGE, 3, MaeStrings.SPANDELIMITER,
+                        7, MaeStrings.SPANRANGE, 11, MaeStrings.SPANDELIMITER,
+                        20, MaeStrings.SPANRANGE, 24),
                 string
         );
 
@@ -111,9 +111,9 @@ public class SpanHandlerTest {
         assertEquals(
                 "Should convert an multispan, found: " + string,
                 String.format("%d%s%d%s%d%s%d%s%d%s%d",
-                        0, MaeStrings.SPANDELIMITER, 3, MaeStrings.SPANSEPARATOR,
-                        7, MaeStrings.SPANDELIMITER, 11, MaeStrings.SPANSEPARATOR,
-                        20, MaeStrings.SPANDELIMITER, 24),
+                        0, MaeStrings.SPANRANGE, 3, MaeStrings.SPANDELIMITER,
+                        7, MaeStrings.SPANRANGE, 11, MaeStrings.SPANDELIMITER,
+                        20, MaeStrings.SPANRANGE, 24),
                 string
         );
     }
@@ -208,28 +208,28 @@ public class SpanHandlerTest {
         string = SpanHandler.convertArrayToString(array);
         assertEquals(
                 "Should convert an single span, found: " + string,
-                String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 4), string
+                String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 4), string
         );
 
         array = new int[]{0,1};
         string = SpanHandler.convertArrayToString(array);
         assertEquals(
                 "Should convert an doubleton span, found: " + string,
-                String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 2), string
+                String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 2), string
         );
 
          array = new int[]{0};
         string = SpanHandler.convertArrayToString(array);
         assertEquals(
                 "Should convert an singleton span, found: " + string,
-                String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 1), string
+                String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 1), string
         );
 
         array = new int[]{0,1,2,3,7,8,9,10};
         string = SpanHandler.convertArrayToString(array);
         assertEquals(
                 "Should convert an multispan, found: " + string,
-                String.format("%d%s%d%s%d%s%d", 0, MaeStrings.SPANDELIMITER, 4, MaeStrings.SPANSEPARATOR, 7, MaeStrings.SPANDELIMITER, 11),
+                String.format("%d%s%d%s%d%s%d", 0, MaeStrings.SPANRANGE, 4, MaeStrings.SPANDELIMITER, 7, MaeStrings.SPANRANGE, 11),
                 string
         );
 
@@ -244,7 +244,7 @@ public class SpanHandlerTest {
                 new int[0], array
         );
 
-        String cString = String.format("%d%s%d", 0, MaeStrings.SPANDELIMITER, 3);
+        String cString = String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 3);
         array = SpanHandler.convertStringToArray(cString);
         assertArrayEquals(
                 "Should convert a single span, found: " + Arrays.toString(array),
@@ -252,9 +252,9 @@ public class SpanHandlerTest {
         );
 
         cString = String.format("%d%s%d%s%d%s%d%s%d%s%d",
-                0, MaeStrings.SPANDELIMITER, 3, MaeStrings.SPANSEPARATOR,
-                7, MaeStrings.SPANDELIMITER, 11, MaeStrings.SPANSEPARATOR,
-                20, MaeStrings.SPANDELIMITER, 24);
+                0, MaeStrings.SPANRANGE, 3, MaeStrings.SPANDELIMITER,
+                7, MaeStrings.SPANRANGE, 11, MaeStrings.SPANDELIMITER,
+                20, MaeStrings.SPANRANGE, 24);
         array = SpanHandler.convertStringToArray(cString);
         assertArrayEquals(
                 "Should convert a multispan, found: " + Arrays.toString(array),
@@ -262,9 +262,9 @@ public class SpanHandlerTest {
         );
 
         cString = String.format("%d%s%d%s%d%s%d%s%d%s%d",
-                20, MaeStrings.SPANDELIMITER, 24, MaeStrings.SPANSEPARATOR,
-                7, MaeStrings.SPANDELIMITER, 11, MaeStrings.SPANSEPARATOR,
-                0, MaeStrings.SPANDELIMITER, 3);
+                20, MaeStrings.SPANRANGE, 24, MaeStrings.SPANDELIMITER,
+                7, MaeStrings.SPANRANGE, 11, MaeStrings.SPANDELIMITER,
+                0, MaeStrings.SPANRANGE, 3);
         array = SpanHandler.convertStringToArray(cString);
         assertArrayEquals(
                 "Should convert a not-sorted multispan, found: " + Arrays.toString(array),
