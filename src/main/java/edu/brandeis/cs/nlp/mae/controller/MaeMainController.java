@@ -409,7 +409,7 @@ public class MaeMainController extends JPanel {
 
     }
 
-    void updateNotificationArea() {
+    synchronized void updateNotificationArea() {
         getStatusBar().refresh();
         mouseCursorToDefault();
 
