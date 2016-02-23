@@ -54,7 +54,7 @@ import java.util.List;
 /**
  * Created by krim on 12/31/2015.
  */
-class TextPanelController extends MaeControllerI{
+class TextPanelController extends MaeControllerI {
 
     TextPanelView view;
 
@@ -416,11 +416,6 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void assignAllFGColors() throws MaeDBException {
-        assignFGColorOver(getDriver().getAllAnchors());
-
-    }
-
     void unassignAnchoredFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         int anchorIndex = 0;
@@ -467,6 +462,58 @@ class TextPanelController extends MaeControllerI{
         } catch (BadLocationException ignored) {
         }
     }
+
+    void assignAllFGColor() throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchors());
+
+    }
+
+    void assignFGColorOf(TagType type) throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchorsOfTagType(type));
+    }
+
+    void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
+        int locIndex = 0;
+        Set<TagType> activeTags = getMainController().getActiveExtentTags();
+        Set<TagType> activeLinks = getMainController().getActiveLinkTags();
+
+        MappedSet<Integer, TagType> existingAnchors = new MappedSet<>();
+        for (TagType tagType : activeTags) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        MappedSet<Integer, TagType> existingArgumentAnchors = new MappedSet<>();
+        for (TagType tagType : activeLinks) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingArgumentAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        while (locIndex < largeSpan.size()) {
+            Integer location = largeSpan.get(locIndex);
+            boolean plural = false;
+            boolean argument = false;
+            Color c = DEFAULT_FONT_COLOR;
+
+            if (existingAnchors.containsKey(location)) {
+                List<TagType> types = new ArrayList<>(existingAnchors.get(location));
+                if (types.size() > 0) {
+                    c = getMainController().getFGColor(types.get(0));
+                }
+                if (types.size() > 1) {
+                    plural = true;
+                }
+            }
+            if (existingArgumentAnchors.containsKey(location)) {
+                argument = true;
+            }
+
+            locIndex += setFGColorAtLocation(c, location, plural, argument);
+        }
+    }
+
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
         int locIndex = 0;
@@ -558,18 +605,18 @@ class TextPanelController extends MaeControllerI{
         public void caretUpdate(CaretEvent e) {
 
             try {
-            if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
-                addDraggedSelection(e.getDot(), e.getMark());
-            } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
-                // MSPAN mode always ignore single click
-            } else {
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    clearSelection(); // single click will clear out prev selection
-                }
-                if (acceptingSingleClick()) {
+                if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
+                    addDraggedSelection(e.getDot(), e.getMark());
+                } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
+                    // MSPAN mode always ignore single click
+                } else {
+                    if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                        clearSelection(); // single click will clear out prev selection
+                    }
+                    if (acceptingSingleClick()) {
                         addSelection(new int[]{e.getDot(), e.getDot() + 1});
+                    }
                 }
-            }
             } catch (MaeDBException ex) {
                 getMainController().showError(ex);
             }

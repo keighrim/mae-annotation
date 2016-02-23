@@ -493,7 +493,7 @@ public class MaeMainController extends JPanel {
                 setAdjudicating(false);
                 getTablePanel().prepareAllTables();
                 getTablePanel().insertAllTags();
-                getTextPanel().assignAllFGColors();
+                getTextPanel().assignAllFGColor();
                 sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
                 getMenu().resetFileMenu();
             } catch (MaeException e) {
@@ -578,7 +578,7 @@ public class MaeMainController extends JPanel {
                 currentDriver = drivers.get(adjudDriverIndex);
                 assignAdjudicationColors();
             } else {
-                getTextPanel().assignAllFGColors();
+                getTextPanel().assignAllFGColor();
                 logger.info("painting is done");
                 showIncompleteTagsWarning(true);
             }
@@ -802,7 +802,11 @@ public class MaeMainController extends JPanel {
 
     public void assignTextColorsOver(List<Integer> anchors) {
         try {
-            getTextPanel().assignFGColorOver(anchors);
+            if (anchors.size() > 100) {
+                getTextPanel().massivelyAssignFGColors(anchors);
+            } else {
+                getTextPanel().assignFGColorOver(anchors);
+            }
         } catch (Exception e) {
             showError(e);
         }
