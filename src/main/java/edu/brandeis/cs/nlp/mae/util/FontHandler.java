@@ -101,23 +101,26 @@ public class FontHandler {
         StyledDocument document = new DefaultStyledDocument();
         try {
             int offset = 0;
-            while (plainText != null && offset < plainText.length()) {
-                int length = 1;
-                SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-                String fontFam = defaultFontName;
-                Character c = plainText.charAt(offset);
-                if (Character.isHighSurrogate(c)) {
-                    fontFam = getFontToDraw(plainText.codePointAt(offset)).getFontName();
-                    length = 2;
+            if (plainText != null) {
+                while (offset < plainText.length()) {
 
+                    int length = 1;
+                    SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+                    String fontFam = defaultFontName;
+                    Character c = plainText.charAt(offset);
+                    if (Character.isHighSurrogate(c)) {
+                        fontFam = getFontToDraw(plainText.codePointAt(offset)).getFontName();
+                        length = 2;
+
+                    }
+                    document.insertString(offset, plainText.substring(offset, offset + length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
+                    StyleConstants.setFontFamily(attributeSet, fontFam);
+                    StyleConstants.setFontSize(attributeSet, fontSize);
+                    StyleConstants.setForeground(attributeSet, fontColor);
+                    document.setCharacterAttributes(offset, length, attributeSet, false);
+
+                    offset += length;
                 }
-                document.insertString(offset, plainText.substring(offset, offset+length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
-                StyleConstants.setFontFamily(attributeSet, fontFam);
-                StyleConstants.setFontSize(attributeSet, fontSize);
-                StyleConstants.setForeground(attributeSet, fontColor);
-                document.setCharacterAttributes(offset, length, attributeSet, false);
-
-                offset += length;
             }
         } catch (BadLocationException ignored) {
         }

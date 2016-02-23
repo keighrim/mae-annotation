@@ -86,6 +86,8 @@ public interface MaeDriverI {
 
     List<Integer> getAllAnchors() throws MaeDBException;
 
+    List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException;
+
     List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException;
 
     List<Integer> getAnchorsByTid(String tid) throws MaeDBException;
@@ -182,5 +184,8 @@ public interface MaeDriverI {
     void setArgumentTypeRequired(ArgumentType type, boolean b) throws MaeDBException;
 
     // args
-    Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+    Argument addArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+
+    Argument UpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+
 }

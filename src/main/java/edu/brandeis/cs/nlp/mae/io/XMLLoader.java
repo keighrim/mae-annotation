@@ -270,7 +270,7 @@ public class XMLLoader {
                 String attValue = nodeAttributes.getNamedItem(argName + "ID").getNodeValue();
                 if (attValue.length() > 0) {
                     ExtentTag argumentTag = (ExtentTag) driver.getTagByTid(attValue);
-                    driver.addOrUpdateArgument(tag, argTypeMap.get(argName), argumentTag);
+                    driver.addArgument(tag, argTypeMap.get(argName), argumentTag);
                 }
                 nodeAttributes.removeNamedItem(argName + "ID");
                 nodeAttributes.removeNamedItem(argName + "Text");
