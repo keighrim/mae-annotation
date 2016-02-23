@@ -42,10 +42,7 @@ import javax.swing.table.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -509,13 +506,62 @@ class TablePanelController extends MaeControllerI {
             TableColumn column = new TableColumn(model.getColumnCount()-1);
             // TODO: 2016-01-07 22:21:08EST this column should be id_ref
             column.setCellEditor(new DefaultCellEditor(new JTextField()));
+            if (argType.isRequired()) {
+                setBoldColumnHeader(column);
+            }
             table.addColumn(column);
 
             model.addColumn(argType.getName() + "Text");
             column = new TableColumn(model.getColumnCount()-1);
+            if (argType.isRequired()) {
+                setBoldColumnHeader(column);
+            }
             table.addColumn(column);
             model.addArgumentTextColumn(model.getColumnCount() - 1);
         }
+    }
+
+    private void setBoldColumnHeader(TableColumn column) {
+        column.setHeaderRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value,
+                        isSelected, hasFocus, row, column);
+                JTableHeader tableHeader = table.getTableHeader();
+                if (tableHeader != null) {
+                    setForeground(tableHeader.getForeground());
+                    setFont(tableHeader.getFont().deriveFont(Font.BOLD));
+                }
+                setIcon(getIcon(table, column));
+                setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+                setHorizontalTextPosition(LEFT);
+                return this;
+            }
+
+            RowSorter.SortKey getSortKey(JTable table, int col) {
+                RowSorter sorter = table.getRowSorter();
+                if (sorter != null && sorter.getSortKeys().size() > 0) {
+                    return (RowSorter.SortKey) sorter.getSortKeys().get(0);
+                } else {
+                    return null;
+                }
+
+            }
+
+            Icon getIcon(JTable table, int col) {
+                RowSorter.SortKey sortKey = getSortKey(table, col);
+                if (sortKey != null && table.convertColumnIndexToView(sortKey.getColumn()) == col) {
+                    String iconKey = sortKey.getSortOrder() == SortOrder.ASCENDING ?
+                            "Table.ascendingSortIcon"
+                            : "Table.descendingSortIcon";
+                    return UIManager.getIcon(iconKey);
+                } else {
+                    return null;
+                }
+            }
+
+        });
     }
 
     private void addAttributeColumns(TagType type, JTable table) {
@@ -535,6 +581,9 @@ class TablePanelController extends MaeControllerI {
                 column.setCellEditor(new DefaultCellEditor(new JTextField()));
             } else {
                 column.setCellEditor(new DefaultCellEditor(new JTextField()));
+            }
+            if (attType.isRequired()) {
+                setBoldColumnHeader(column);
             }
             table.addColumn(column);
         }
