@@ -192,6 +192,7 @@ class TablePanelController extends MaeControllerI {
     }
 
     void insertAllTags() throws MaeControlException, MaeDBException {
+        int perf = 0;
         if (!getMainController().isTaskLoaded() || !getMainController().isDocumentOpen()) {
             throw new MaeControlException("Cannot populate tables without a document open!");
         }
@@ -199,11 +200,11 @@ class TablePanelController extends MaeControllerI {
             if (type.equals(dummyForAllTagsTab)) {
             } else if (type.isExtent()) {
                 for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
-                    insertTagIntoTable(tag);
+                    insertNewTagIntoTable(tag, type);
                 }
             } else {
                 for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
-                    insertTagIntoTable(tag);
+                    insertNewTagIntoTable(tag, type);
                 }
             }
         }
@@ -227,13 +228,22 @@ class TablePanelController extends MaeControllerI {
         model.setValueAt(value, row, col);
     }
 
-    void insertTagIntoTable(Tag tag) throws MaeDBException, MaeControlException {
-        TagTableModel tableModel = (TagTableModel) tableMap.get(tag.getTagTypeName()).getModel();
+    void insertTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
+        TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
         insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
         if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
             insertTagToAllTagsTable(tag);
         }
+    }
+
+    void insertNewTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
+        TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
+        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoRow(tag, tableModel));
+        if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
+            insertTagToAllTagsTable(tag);
+        }
+
     }
 
     void insertTagIntoAdjudicationTable(Tag tag) throws MaeDBException {
@@ -426,7 +436,7 @@ class TablePanelController extends MaeControllerI {
         return table;
     }
 
-    private JTable createMinimumTable(TagTableModel model, boolean isExtent) {
+    private JTable createMinimumTable(final TagTableModel model, boolean isExtent) {
         model.addColumn(MaeStrings.SRC_COL_NAME);
         model.addColumn(MaeStrings.ID_COL_NAME);
 
@@ -525,9 +535,8 @@ class TablePanelController extends MaeControllerI {
                     JTextPane renderer = new JTextPane();
                     int fontSize = c.getFont().getSize();
                     renderer.setContentType("text/plain; charset=UTF-8");
-                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize));
+                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize, c.getForeground()));
                     renderer.setBackground(c.getBackground());
-                    renderer.setForeground(c.getForeground());
                     renderer.setMargin(new Insets(0,2,0,2));
                     renderer.setBorder(hasFocus ?
                             UIManager.getBorder("Table.focusCellHighlightBorder")
@@ -599,6 +608,10 @@ class TablePanelController extends MaeControllerI {
             textCol.add(TEXT_COL);
             return textCol;
 
+        }
+
+        public boolean isTextColum(int col) {
+            return getTextColumns().contains(col);
         }
 
         @Override
@@ -984,7 +997,7 @@ class TablePanelController extends MaeControllerI {
         }
 
         private List<Integer> getRelevantAnchors() throws MaeDBException {
-            return getDriver().getAllAnchorsOfTagType(tagType, Collections.<TagType>emptyList());
+            return getDriver().getAllAnchorsOfTagType(tagType);
 
         }
 

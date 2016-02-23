@@ -32,6 +32,7 @@ import edu.brandeis.cs.nlp.mae.model.LinkTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TextPanelView;
@@ -53,13 +54,14 @@ import java.util.List;
 /**
  * Created by krim on 12/31/2015.
  */
-class TextPanelController extends MaeControllerI{
+class TextPanelController extends MaeControllerI {
 
     TextPanelView view;
 
     private int[] selected;
     private List<int[]> selectionHistory;
     public static final int DEFAULT_FONT_SIZE = 14;
+    public static final Color DEFAULT_FONT_COLOR = Color.BLACK;
     private int currentFontSize = DEFAULT_FONT_SIZE;
 
 
@@ -201,18 +203,24 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    void addDocumentTab(String documentTitle, String documentText) {
+    void addDocumentTab(String documentTitle, String documentText) throws MaeDBException {
         if (!getView().isAnyDocumentOpen()) {
             getView().initTabs();
         }
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
         title.addCloseListener(new DocumentCloseListener());
-        getView().addTextTab(title, documentText, currentFontSize);
+        getView().addTextTab(title, documentText, currentFontSize, !getMainController().isAdjudicating());
         addListeners();
         if (!getView().isAnyDocumentOpen()) {
             getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
             getView().setDocumentOpen(true);
+        }
+        if (getMainController().isAdjudicating()) {
+            int newTab = tabs.getTabCount() - 1;
+            tabs.getTabComponentAt(newTab).setEnabled(false);
+            tabs.setEnabledAt(newTab, false);
+            updateTabTitles(true);
         }
 
     }
@@ -408,50 +416,34 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void assignAllFGColors() throws MaeDBException {
-        assignFGColorOver(getDriver().getAllAnchors());
-
-    }
-
     void unassignAnchoredFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         int anchorIndex = 0;
         while (anchorIndex < anchorLocations.size()) {
-            anchorIndex += setFGColorAtLocation(Color.black, anchorLocations.get(anchorIndex), false, false);
+            anchorIndex += setFGColorAtLocation(DEFAULT_FONT_COLOR, anchorLocations.get(anchorIndex), false, false);
         }
     }
 
     void unassignAllFGColor() throws MaeDBException {
-        int[] entireDocument = SpanHandler.range(0, getDriver().getPrimaryText().length());
-        int anchorIndex = 0;
-        while (anchorIndex < entireDocument.length) {
-            anchorIndex += setFGColorAtLocation(Color.black, entireDocument[anchorIndex], false, false);
-
-        }
+        getView().getDocumentPane().setStyledDocument(
+                FontHandler.stringToSimpleStyledDocument(getDriver().getPrimaryText(), TextPanelView.DEFAULT_FONT_FAMILY, currentFontSize, Color.BLACK)
+        );
 
     }
 
-    /**
-     * Sets the color of a specific span of text.  Called for each extent tag.
-     *
-     * @param color The color the text will become. Determined by the tag name and
-     *              colorTable (Hashtable)
-     * @param location the location of the start of the extent
-     * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
-     */
     private int setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
         StyleConstants.setUnderline(attributeSet, underline);
         StyleConstants.setItalic(attributeSet, italic);
-        int length = 0;
         try {
-            length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
+            int length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
+            styleDoc.setCharacterAttributes(location, length, attributeSet, false);
+            return length;
         } catch (BadLocationException ignored) {
         }
-        styleDoc.setCharacterAttributes(location, length, attributeSet, false);
-        return length;
+        return 0;
     }
 
     void assignOverlappingColorOver(List<Integer> locations, Color srcColor, boolean fullOverlap) {
@@ -471,13 +463,57 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    void assignFGColorOver(int...locations) throws MaeDBException {
+    void assignAllFGColor() throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchors());
 
+    }
+
+    void assignFGColorOf(TagType type) throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchorsOfTagType(type));
+    }
+
+    void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
         int locIndex = 0;
-        while (locIndex < locations.length) {
-            locIndex += assignFGColorAt(locations[locIndex]);
+        Set<TagType> activeTags = getMainController().getActiveExtentTags();
+        Set<TagType> activeLinks = getMainController().getActiveLinkTags();
+
+        MappedSet<Integer, TagType> existingAnchors = new MappedSet<>();
+        for (TagType tagType : activeTags) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        MappedSet<Integer, TagType> existingArgumentAnchors = new MappedSet<>();
+        for (TagType tagType : activeLinks) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingArgumentAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        while (locIndex < largeSpan.size()) {
+            Integer location = largeSpan.get(locIndex);
+            boolean plural = false;
+            boolean argument = false;
+            Color c = DEFAULT_FONT_COLOR;
+
+            if (existingAnchors.containsKey(location)) {
+                List<TagType> types = new ArrayList<>(existingAnchors.get(location));
+                if (types.size() > 0) {
+                    c = getMainController().getFGColor(types.get(0));
+                }
+                if (types.size() > 1) {
+                    plural = true;
+                }
+            }
+            if (existingArgumentAnchors.containsKey(location)) {
+                argument = true;
+            }
+
+            locIndex += setFGColorAtLocation(c, location, plural, argument);
         }
     }
+
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
         int locIndex = 0;
@@ -486,15 +522,11 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    /**
-     * This method is for coloring/underlining text in the text window.  It detects
-     * overlaps, and should be called every time a tag is added or removed.
-     */
     private int assignFGColorAt(int location) throws MaeDBException {
         boolean singular = false;
         boolean plural = false;
         boolean argument = false;
-        Color c = Color.black; // default color is black
+        Color c = DEFAULT_FONT_COLOR;
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
         Set<TagType> activeLinks = getMainController().getActiveLinkTags();
 
@@ -573,18 +605,18 @@ class TextPanelController extends MaeControllerI{
         public void caretUpdate(CaretEvent e) {
 
             try {
-            if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
-                addDraggedSelection(e.getDot(), e.getMark());
-            } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
-                // MSPAN mode always ignore single click
-            } else {
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    clearSelection(); // single click will clear out prev selection
-                }
-                if (acceptingSingleClick()) {
+                if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
+                    addDraggedSelection(e.getDot(), e.getMark());
+                } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
+                    // MSPAN mode always ignore single click
+                } else {
+                    if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                        clearSelection(); // single click will clear out prev selection
+                    }
+                    if (acceptingSingleClick()) {
                         addSelection(new int[]{e.getDot(), e.getDot() + 1});
+                    }
                 }
-            }
             } catch (MaeDBException ex) {
                 getMainController().showError(ex);
             }
@@ -627,7 +659,9 @@ class TextPanelController extends MaeControllerI{
     private class TextPanelTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
+            if (!getMainController().isAdjudicating()) {
+                getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
+            }
 
         }
     }

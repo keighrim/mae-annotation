@@ -85,20 +85,25 @@ public class TextPanelView extends JPanel {
     }
 
     public void addAdjudicationTab(DocumentTabTitle title, String text, int fontSize) {
-        getTabs().insertTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)), null, 0);
+        getTabs().insertTab(title.getLabel(), null, createDocumentArea(
+                FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize, Color.BLACK)), null, 0);
         getTabs().setTabComponentAt(0, title);
         selectTab(0);
     }
 
-    public void addTextTab(DocumentTabTitle title, String text, int fontSize) {
+    public void addTextTab(DocumentTabTitle title, String text, int fontSize, boolean switchToNewTab) {
         // always open a new tab at the end, and switch to the new tab
-        getTabs().addTab(title.getLabel(), null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
+        getTabs().addTab(title.getLabel(), null, createDocumentArea(
+                FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize, Color.BLACK)));
         getTabs().setTabComponentAt(getTabs().getTabCount() - 1, title);
-        selectTab(getTabs().getTabCount() - 1);
+        if (switchToNewTab) {
+            selectTab(getTabs().getTabCount() - 1);
+        }
     }
 
     public void addTextTab(String title, String text, int fontSize) {
-        getTabs().addTab(title, null, createDocumentArea(FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize)));
+        getTabs().addTab(title, null, createDocumentArea(
+                FontHandler.stringToSimpleStyledDocument(text, DEFAULT_FONT_FAMILY, fontSize, Color.BLACK)));
         selectTab(getTabs().getTabCount() - 1);
     }
 

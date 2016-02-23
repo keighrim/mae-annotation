@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 public class LocalSqliteDriverImpl implements MaeDriverI {
 
@@ -323,6 +324,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     }
 
+    @Override
     public List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException{
 
         try {
@@ -424,7 +426,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public Set<LinkTag> getLinksHasArgumentTag(ExtentTag argument) throws MaeDBException{
         try {
             TreeSet<LinkTag> links = new TreeSet<>();
-            List<Argument> results = null;
+            List<Argument> results;
             results = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_ETAG, argument).query();
             for (Argument result : results) {
                 links.add(result.getLinker());
@@ -659,7 +661,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public LinkTag createLinkTag(String tid, TagType tagType, HashMap<ArgumentType, ExtentTag> arguments) throws MaeDBException {
         LinkTag link = createLinkTag(tid, tagType);
         for (ArgumentType argType : arguments.keySet()) {
-            addOrUpdateArgument(link, argType, arguments.get(argType));
+            addArgument(link, argType, arguments.get(argType));
         }
         try {
             lTagDao.update(link);
@@ -723,15 +725,22 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Set<Attribute> addAttributes(Tag tag, Map<AttributeType, String> attributes) throws MaeDBException {
-        // TODO: 2016-02-18 17:54:33EST run batch task for better performance
-        Set<Attribute> created = new HashSet<>();
+    public Set<Attribute> addAttributes(Tag tag, final Map<AttributeType, String> attributes) throws MaeDBException {
+        final Set<Attribute> created = new HashSet<>();
         try {
             for (AttributeType attType : attributes.keySet()) {
                 Attribute att = new Attribute(tag, attType, attributes.get(attType));
-                attDao.create(att);
+//                attDao.create(att);
                 created.add(att);
             }
+            attDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (Attribute account : created) {
+                        attDao.create(account);
+                    }
+                    return null;
+                }
+            });
             refreshTag(tag);
             resetQueryBuilders();
             logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", created.toString(), tag.toString()));
@@ -741,28 +750,46 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             throw catchSQLException(e);
         } catch (MaeModelException e) {
             throw new MaeDBException("failed to add an attribute: " + e.getMessage(), e);
+        } catch (Exception ignored) {
         }
+        return null;
 
     }
 
     @Override
-    public Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
+    public Argument addArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
         try {
             logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument == null ? "null" : argument.getId(), linker.getId(), linker.getTagTypeName()));
             try {
-                Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
+                Argument arg = new Argument(linker, argType, argument);
+                argDao.create(arg);
+                lTagDao.update(linker);
+                logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
+                setAnnotationChanged(true);
+                return arg;
+
+            } catch (SQLException e) {
+                throw catchSQLException(e);
+            }
+        } catch (NullPointerException ex) {
+            throw new MaeDBException("no such a tag is in DB");
+        }
+    }
+
+    @Override
+    public Argument UpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException {
+        try {
+            logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument == null ? "null" : argument.getId(), linker.getId(), linker.getTagTypeName()));
+            try {
+                Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).
+                        and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
                 if (oldArg != null) {
                     argDao.delete(oldArg);
                     setAnnotationChanged(true);
                 }
+                resetQueryBuilders();
                 if (argument != null) {
-                    Argument arg = new Argument(linker, argType, argument);
-                    argDao.create(arg);
-                    lTagDao.update(linker);
-                    resetQueryBuilders();
-                    logger.debug(String.format("an argument \"%s\" is attached to \"%s\"", argument.toString(), linker.toString()));
-                    setAnnotationChanged(true);
-                    return arg;
+                    return addArgument(linker, argType, argument);
                 } else {
                     logger.debug("no new argument is provided. leaving the argument deleted");
                     return null;

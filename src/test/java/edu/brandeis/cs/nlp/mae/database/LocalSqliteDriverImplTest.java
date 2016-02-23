@@ -220,8 +220,8 @@ public class LocalSqliteDriverImplTest {
         ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
-        driver.addOrUpdateArgument(link, agent, nTag);
-        driver.addOrUpdateArgument(link, pred, vTag);
+        driver.addArgument(link, agent, nTag);
+        driver.addArgument(link, pred, vTag);
 
 
         List<LinkTag> retrievedTags = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);
@@ -256,8 +256,8 @@ public class LocalSqliteDriverImplTest {
         driver.addAttribute(nTag, proper, "true");
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
-        driver.addOrUpdateArgument(link, agent, nTag);
-        driver.addOrUpdateArgument(link, pred, vTag);
+        driver.addArgument(link, agent, nTag);
+        driver.addArgument(link, pred, vTag);
 
         assertTrue(
                 "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),

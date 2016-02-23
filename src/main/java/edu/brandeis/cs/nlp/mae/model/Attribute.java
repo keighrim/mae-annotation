@@ -45,10 +45,10 @@ public class Attribute implements ModelI {
     @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ATT_COL_TID)
     private String tid;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_ETAG)
+    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_ETAG)
     private ExtentTag extentTag;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_LTAG)
+    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ATT_FCOL_LTAG)
     private LinkTag linkTag;
 
     @DatabaseField(canBeNull = false, columnName = DBSchema.TAB_ATT_COL_VALUE)

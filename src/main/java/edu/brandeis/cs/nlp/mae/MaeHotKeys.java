@@ -302,7 +302,7 @@ public class MaeHotKeys {
             = KeyStroke.getKeyStroke("ctrl PgUp");
     public final static KeyStroke ksCPgdn
             = KeyStroke.getKeyStroke("ctrl PgDown");
-    // TODO: 2016-01-10 16:37:12EST make separate keyboard shorcuts for tab navigation of text and tabel panels
+    // TODO: 2016-01-10 16:37:12EST make separate keyboard shortcuts for tab navigation of text and table panels
     public final static KeyStroke NEXTTAB = ksCTab;
     public final static KeyStroke PREVTAB = ksCShTab;
     public final static KeyStroke TABUP = ksCPgup;
