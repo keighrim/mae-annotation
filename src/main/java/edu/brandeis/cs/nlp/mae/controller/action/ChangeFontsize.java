@@ -51,6 +51,8 @@ public class ChangeFontsize extends MenuActionI {
             case "0":
                 getMainController().resetFontSize();
                 break;
+            case "++":
+                getMainController().presentation();
 
         }
     }

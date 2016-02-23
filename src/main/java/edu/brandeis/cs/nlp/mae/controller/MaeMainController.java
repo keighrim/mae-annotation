@@ -1267,5 +1267,10 @@ public class MaeMainController extends JPanel {
         return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
     }
 
+
+    public void presentation() {
+        getTextPanel().bigFontSize();
+        getTablePanel().bigFontSize();
+    }
 }
 

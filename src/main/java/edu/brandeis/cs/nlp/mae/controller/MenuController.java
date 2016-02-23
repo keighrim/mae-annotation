@@ -278,6 +278,7 @@ class MenuController extends MaeControllerI {
         MaeActionI increaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
         MaeActionI decreaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
         MaeActionI resetFontSizeAction = new ChangeFontsize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
+        MaeActionI presentation = new ChangeFontsize(MENUITEM_BIGFONT, null, null, null, getMainController());
 
         JMenu menu = new JMenu(MENU_DISPLAY);
         menu.setMnemonic(MENU_DISPLAY.charAt(0));
@@ -288,10 +289,13 @@ class MenuController extends MaeControllerI {
         decreaseFontSize.setActionCommand("-");
         JMenuItem resetFontSize = new JMenuItem(resetFontSizeAction);
         resetFontSize.setActionCommand("0");
+        JMenuItem presentationItem = new JMenuItem(presentation);
+        presentationItem.setActionCommand("++");
 
         menu.add(increaseFontSize);
         menu.add(decreaseFontSize);
         menu.add(resetFontSize);
+        menu.add(presentationItem);
         logger.debug("display menu is created: " + menu.getItemCount());
         return menu;
     }

@@ -139,6 +139,7 @@ public class MaeStrings {
     public final static String MENUITEM_ZOOMIN = "Increase font size";
     public final static String MENUITEM_ZOOMOUT = "Decrease font size";
     public final static String MENUITEM_RESET_ZOOM = "Reset font size";
+    public final static String MENUITEM_BIGFONT = "Huge Font";
     public final static String MENU_HELP = "Help";
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";

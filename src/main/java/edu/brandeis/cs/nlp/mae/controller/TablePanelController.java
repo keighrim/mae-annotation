@@ -39,6 +39,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -210,6 +212,21 @@ class TablePanelController extends MaeControllerI {
         }
         addMouseListeners();
         addTableModelListeners();
+
+    }
+
+    void bigFontSize() {
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, 36);
+
+        JTabbedPane tabs = getView().getTabs();
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            JScrollPane sp = (JScrollPane) tabs.getComponentAt(i);
+            JTable table = (JTable) sp.getViewport().getView();
+            table.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
+            table.setRowHeight(36);
+            table.updateUI();
+        }
 
     }
 
