@@ -426,7 +426,7 @@ class TablePanelController extends MaeControllerI {
         return table;
     }
 
-    private JTable createMinimumTable(TagTableModel model, boolean isExtent) {
+    private JTable createMinimumTable(final TagTableModel model, boolean isExtent) {
         model.addColumn(MaeStrings.SRC_COL_NAME);
         model.addColumn(MaeStrings.ID_COL_NAME);
 
@@ -525,9 +525,8 @@ class TablePanelController extends MaeControllerI {
                     JTextPane renderer = new JTextPane();
                     int fontSize = c.getFont().getSize();
                     renderer.setContentType("text/plain; charset=UTF-8");
-                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize));
+                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize, c.getForeground()));
                     renderer.setBackground(c.getBackground());
-                    renderer.setForeground(c.getForeground());
                     renderer.setMargin(new Insets(0,2,0,2));
                     renderer.setBorder(hasFocus ?
                             UIManager.getBorder("Table.focusCellHighlightBorder")
@@ -599,6 +598,10 @@ class TablePanelController extends MaeControllerI {
             textCol.add(TEXT_COL);
             return textCol;
 
+        }
+
+        public boolean isTextColum(int col) {
+            return getTextColumns().contains(col);
         }
 
         @Override

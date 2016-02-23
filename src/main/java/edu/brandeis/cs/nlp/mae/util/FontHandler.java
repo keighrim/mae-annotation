@@ -97,7 +97,7 @@ public class FontHandler {
         return fontCache[0] != null;
     }
 
-    public static StyledDocument stringToSimpleStyledDocument(String plainText, String defaultFontName, int fontSize) {
+    public static StyledDocument stringToSimpleStyledDocument(String plainText, String defaultFontName, int fontSize, Color fontColor) {
         StyledDocument document = new DefaultStyledDocument();
         try {
             int offset = 0;
@@ -114,6 +114,7 @@ public class FontHandler {
                 document.insertString(offset, plainText.substring(offset, offset+length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
                 StyleConstants.setFontFamily(attributeSet, fontFam);
                 StyleConstants.setFontSize(attributeSet, fontSize);
+                StyleConstants.setForeground(attributeSet, fontColor);
                 document.setCharacterAttributes(offset, length, attributeSet, false);
 
                 offset += length;
