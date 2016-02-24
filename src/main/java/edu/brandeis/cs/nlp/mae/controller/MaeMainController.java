@@ -476,10 +476,12 @@ public class MaeMainController extends JPanel {
                 return;
             }
             setAdjudicating(true);
+            mode = MODE_NORMAL;
             addAdjudication(goldstandard);
 
             removeAllBGColors();
             getMenu().resetFileMenu();
+            getMenu().resetModeMenu();
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
         }
     }
@@ -637,6 +639,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchAdjudicationTag() {
+        propagateSelectionFromTextPanel();
         assignAdjudicationColors();
     }
 
@@ -748,6 +751,40 @@ public class MaeMainController extends JPanel {
 
     public List<ExtentTag> getExtentTagsFromAllDocumentsInSelectedSpans() {
         return getExtentTagsFromAllDocumentsIn(getSelectedTextSpans());
+    }
+
+    public List<ExtentTag> getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(TagType type) {
+        if (isTextSelected()) {
+            return getExtentTagsOfATypeFromAllDocumentsIn(type, getSelectedTextSpans());
+        } else {
+            return getNCTagsOfATypeFromAllDocuments(type);
+        }
+    }
+
+    public List<ExtentTag> getNCTagsOfATypeFromAllDocuments(TagType type) {
+        List<ExtentTag> nctags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                nctags.addAll(driver.getAllNCTagsOfType(type));
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return nctags;
+
+    }
+
+    public List<ExtentTag> getExtentTagsOfATypeFromAllDocumentsIn(TagType type, int[] locations) {
+        List<ExtentTag> tags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                tags.addAll(driver.getTagsOfTypeIn(type, locations));
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return tags;
+
     }
 
     public List<ExtentTag> getExtentTagsFromAllDocumentsIn(int[] locations) {
@@ -964,16 +1001,16 @@ public class MaeMainController extends JPanel {
         getTablePanel().clearAdjudicationTable();
         adjudicatingTags.clear();
         TagType currentType = getAdjudicatingTagType();
-        List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
+        List<ExtentTag> selectedTags = getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(currentType);
         if (currentType.isExtent()) {
             for (ExtentTag tag : selectedTags) {
-                if (tag.getTagtype().equals(currentType)) {
+//                if (tag.getTagtype().equals(currentType)) {
                     try {
                         getTablePanel().insertTagIntoAdjudicationTable(tag);
                         adjudicatingTags.add(tag);
                     } catch (MaeDBException e) {
                         e.printStackTrace();
-                    }
+//                    }
                 }
             }
         } else {
