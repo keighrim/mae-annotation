@@ -42,7 +42,6 @@ public class DBSchema {
 
     public final static String TAB_TT = "tag_type";
     public final static String TAB_TT_COL_NAME = "name";
-    public final static String TAB_TT_COL_COLOR = "color";
     public final static String TAB_TT_COL_PREFIX = "prefix";
     public final static String TAB_TT_COL_ISLINK = "is_link";
 
