@@ -32,6 +32,7 @@ import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
+import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -42,7 +43,10 @@ import javax.swing.table.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -480,6 +484,12 @@ class TablePanelController extends MaeControllerI {
             };
         }
 
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            TableColumn column = table.getColumnModel().getColumn(i);
+            setBoldColumnHeader(column);
+
+        }
+
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
         if (!getMainController().isAdjudicating()) {
@@ -522,7 +532,7 @@ class TablePanelController extends MaeControllerI {
     }
 
     private void setBoldColumnHeader(TableColumn column) {
-        column.setHeaderRenderer(new DefaultTableCellRenderer() {
+        column.setHeaderRenderer(new DefaultTableCellHeaderRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
@@ -531,10 +541,12 @@ class TablePanelController extends MaeControllerI {
                 JTableHeader tableHeader = table.getTableHeader();
                 if (tableHeader != null) {
                     setForeground(tableHeader.getForeground());
+                    setBackground(tableHeader.getBackground());
                     setFont(tableHeader.getFont().deriveFont(Font.BOLD));
                 }
                 setIcon(getIcon(table, column));
                 setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+                setHorizontalAlignment(CENTER);
                 setHorizontalTextPosition(LEFT);
                 return this;
             }
