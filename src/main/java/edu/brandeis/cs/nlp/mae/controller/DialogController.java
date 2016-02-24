@@ -443,6 +443,7 @@ class DialogController {
             for (final ArgumentType type : argTypes) {
                 final JComboBox<ExtentTag> candidates = new JComboBox<>();
                 candidates.setFont(MaeStrings.UNICODE_FONT);
+                candidates.addItem(null);
                 for (ExtentTag tag : argumentCandidates) {
                     candidates.addItem(tag);
                 }
@@ -452,7 +453,7 @@ class DialogController {
                         argumentsMap.put(type, (ExtentTag) candidates.getSelectedItem());
                     }
                 });
-                candidates.setSelectedIndex(typeNum++ % argumentCandidates.size());
+                candidates.setSelectedIndex((typeNum++ % argumentCandidates.size()) + 1);
                 JPanel comboPanel = new JPanel();
                 comboPanel.add(candidates);
                 TitledBorder titledBorder = BorderFactory.createTitledBorder(
