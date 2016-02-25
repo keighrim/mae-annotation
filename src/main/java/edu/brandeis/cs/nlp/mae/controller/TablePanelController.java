@@ -32,7 +32,6 @@ import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
-import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -531,7 +530,7 @@ class TablePanelController extends MaeControllerI {
     }
 
     private void setBoldColumnHeader(TableColumn column) {
-        column.setHeaderRenderer(new DefaultTableCellHeaderRenderer() {
+        column.setHeaderRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {

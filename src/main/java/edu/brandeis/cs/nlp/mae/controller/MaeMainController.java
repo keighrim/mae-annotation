@@ -1093,6 +1093,11 @@ public class MaeMainController extends JPanel {
             if (!isAdjudicating()) {
                 getTablePanel().removeTagFromTable(tag);
             } else {
+                if (tag.getTagtype().isExtent()) {
+                    for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
+                        deleteTagFromDB(link);
+                    }
+                }
                 deleteTagFromDB(tag);
                 adjudicationStatUpdate();
             }
@@ -1159,9 +1164,11 @@ public class MaeMainController extends JPanel {
         TagType type = tag.getTagtype();
         try {
             if (type.isExtent()) {
-                ExtentTag etag = ((ExtentTag) tag);
+                ExtentTag etag = (ExtentTag) tag;
                 return copyExtentTag(etag);
             } else {
+                LinkTag ltag = (LinkTag) tag;
+                return copyLinkTag(ltag);
 
             }
         } catch (MaeDBException e) {
@@ -1181,6 +1188,43 @@ public class MaeMainController extends JPanel {
         }
         adjudicationStatUpdate();
         return newTag;
+    }
+
+    LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
+        if (showWarning("Copying a link tag will also copy its arguments,\nunless matching extent tags do not exist in GS.\n(Matching by span, Non-consuming arguments are always copied!)\nDo you want to continue?")) {
+            MaeDriverI originalDriver = getDriverOf(original.getFilename());
+            TagType type = original.getTagtype();
+            LinkTag newTag = getDriver().createLinkTag(type);
+            Map<String, String> attMap = original.getAttributesWithNames();
+            for (ArgumentType argType : type.getArgumentTypes()) {
+                String originalArgId = attMap.get(argType.getName() + MaeStrings.ARG_IDCOL_SUF);
+                if (originalArgId != null && originalArgId.length() > 0) {
+                    ExtentTag originalArg = (ExtentTag) originalDriver.getTagByTid(originalArgId);
+                    boolean matchExists = false;
+                    ExtentTag newArg = null;
+                    for (ExtentTag argCandidate : getDriver().getTagsOfTypeIn(originalArg.getTagtype(), originalArg.getSpansAsArray())) {
+                        argCandidate.getSpansAsString().equals(originalArg.getSpansAsString());
+                        newArg = argCandidate;
+                        matchExists = true;
+                        break;
+                    }
+                    if (!matchExists) {
+                        newArg = copyExtentTag(originalArg);
+                    }
+                    getDriver().addArgument(newTag, argType, newArg);
+                }
+
+            }
+            for (AttributeType attType : type.getAttributeTypes()) {
+                String attValue = attMap.get(attType.getName());
+                if (attValue != null && attValue.length() > 0) {
+                    getDriver().addAttribute(newTag, attType, attValue);
+                }
+            }
+            adjudicationStatUpdate();
+            return newTag;
+        }
+        return null;
     }
 
     public void selectTagAndTable(Tag tag) {
