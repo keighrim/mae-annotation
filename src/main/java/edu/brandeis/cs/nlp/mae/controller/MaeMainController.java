@@ -900,6 +900,21 @@ public class MaeMainController extends JPanel {
         getDrivers().clear();
     }
 
+    public Color getDocumentColor(String documentName) {
+        try {
+            for (int i = 1; i < getDrivers().size(); i++) {
+                MaeDriverI driver = getDriverAt(i);
+                if (driver.getAnnotationFileBaseName().equals(documentName)) {
+                    return getDocumentColor(i);
+                }
+            }
+            showError("No such document open: " + documentName);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return Color.BLACK;
+    }
+
     public Color getDocumentColor(int documentTabIndex) {
         return documentTabColors.getColor(documentTabIndex);
     }
@@ -1001,21 +1016,16 @@ public class MaeMainController extends JPanel {
         getTablePanel().clearAdjudicationTable();
         adjudicatingTags.clear();
         TagType currentType = getAdjudicatingTagType();
-        List<ExtentTag> selectedTags = getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(currentType);
-        if (currentType.isExtent()) {
-            for (ExtentTag tag : selectedTags) {
-//                if (tag.getTagtype().equals(currentType)) {
-                    try {
-                        getTablePanel().insertTagIntoAdjudicationTable(tag);
-                        adjudicatingTags.add(tag);
-                    } catch (MaeDBException e) {
-                        e.printStackTrace();
-//                    }
+        try {
+            if (currentType.isExtent()) {
+                List<ExtentTag> selectedTags = getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(currentType);
+                for (ExtentTag tag : selectedTags) {
+                    getTablePanel().insertTagIntoAdjudicationTable(tag);
+                    adjudicatingTags.add(tag);
                 }
-            }
-        } else {
-            for (ExtentTag tag : selectedTags) {
-                try {
+            } else {
+                List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
+                for (ExtentTag tag : selectedTags) {
                     MaeDriverI driver = getDriverOf(tag.getFilename());
                     Set<LinkTag> linkers = driver.getLinksHasArgumentTag(tag);
                     for (LinkTag linker : linkers) {
@@ -1024,10 +1034,10 @@ public class MaeMainController extends JPanel {
                             adjudicatingTags.add(linker);
                         }
                     }
-                } catch (MaeDBException e) {
-                    e.printStackTrace();
                 }
             }
+        } catch (MaeDBException e) {
+            e.printStackTrace();
         }
 
     }

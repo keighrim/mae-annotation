@@ -35,6 +35,7 @@ import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 import sun.swing.table.DefaultTableCellHeaderRenderer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
@@ -67,6 +68,8 @@ class TablePanelController extends MaeControllerI {
     private Set<TagType> activeExtentTags;
     private List<TagType> tabOrder;
     private Map<String, JTable> tableMap;
+    private Color nonGoldRowBackground = Color.LIGHT_GRAY;
+    private Color adjudicationSelectionForeground = Color.BLUE;
 
     TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
         super(mainController);
@@ -428,6 +431,10 @@ class TablePanelController extends MaeControllerI {
         TagTableModel model = type.isExtent()? new TagTableModel(type) : new LinkTagTableModel(type);
         JTable table = makeTagTable(type, model);
         addTextColumnFontRenderer(model, table);
+        AnnotationCellRenderer renderer = new AnnotationCellRenderer();
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
         logger.debug("successfully created a table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -435,6 +442,10 @@ class TablePanelController extends MaeControllerI {
     private JComponent makeAdjudicationArea(TagType type) {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(type) : new AdjudicationLinkTableModel(type);
         JTable table = makeTagTable(type, model);
+        AdjudicationCellRenderer renderer = new AdjudicationCellRenderer(model);
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
         table.addMouseListener(new AdjudicationTablePanelMouseListener());
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         addTextColumnFontRenderer(model, table);
@@ -469,19 +480,7 @@ class TablePanelController extends MaeControllerI {
             table = new JTable(model);
         } else {
             final AdjudicationTableModelI adjudModel = (AdjudicationTableModelI) model;
-            table = new JTable(adjudModel) {
-                @Override
-                public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
-                    Component c = super.prepareRenderer(renderer, row, col);
-                    c.setBackground(adjudModel.isGoldTagRow(row) ? getBackground() : Color.LIGHT_GRAY);
-                    if (isRowSelected(row)) {
-                        c.setForeground(Color.BLUE);
-                    } else {
-                        c.setForeground(UIManager.getColor("Table.foreground"));
-                    }
-                    return c;
-                }
-            };
+            table = new JTable(adjudModel);
         }
 
         for (int i = 0; i < model.getColumnCount(); i++) {
@@ -576,6 +575,12 @@ class TablePanelController extends MaeControllerI {
         });
     }
 
+    private Color getTableForeground(boolean isSelected) {
+        if (getMainController().isAdjudicating() && isSelected) return adjudicationSelectionForeground;
+        return UIManager.getColor("Table.foreground");
+
+    }
+
     private void addAttributeColumns(TagType type, JTable table) {
         List<AttributeType> attributes = new ArrayList<>(type.getAttributeTypes());
         TagTableModel model = (TagTableModel) table.getModel();
@@ -601,7 +606,7 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
-    private void addTextColumnFontRenderer(TagTableModel model, JTable table) {
+    private void addTextColumnFontRenderer(final TagTableModel model, JTable table) {
         int colOffset = getMainController().isAdjudicating() ? 0 : 1;
         for (final int col : model.getTextColumns()) {
             // we set a custom cell renderer to support full Unicode surrogate chars
@@ -613,12 +618,19 @@ class TablePanelController extends MaeControllerI {
                     JTextPane renderer = new JTextPane();
                     int fontSize = c.getFont().getSize();
                     renderer.setContentType("text/plain; charset=UTF-8");
-                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize, c.getForeground()));
-                    renderer.setBackground(c.getBackground());
+                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize, getTableForeground(isSelected)));
                     renderer.setMargin(new Insets(0,2,0,2));
-                    renderer.setBorder(hasFocus ?
-                            UIManager.getBorder("Table.focusCellHighlightBorder")
-                            : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+                    renderer.setToolTipText(value == null ? " " : (String) value);
+
+                    if (getMainController().isAdjudicating() &&
+                            (!((AdjudicationTableModelI) model).isGoldTagRow(row))) {
+                            renderer.setBackground(nonGoldRowBackground);
+                    } else {
+                        renderer.setBackground(c.getBackground());
+                        renderer.setBorder(hasFocus ?
+                                UIManager.getBorder("Table.focusCellHighlightBorder")
+                                : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+                    }
                     return renderer;
                 }
             });
@@ -632,6 +644,35 @@ class TablePanelController extends MaeControllerI {
             options.addItem(value);
         }
         return options;
+    }
+
+    public static String getMajority(List<String> values) {
+        Map<String, Integer> valueCounts = new HashMap<>();
+
+        for (String value : values) {
+            Integer count = valueCounts.get(value);
+            if (count == null) count = 0;
+            count++;
+            valueCounts.put(value, count);
+        }
+
+        boolean uniformDist = false;
+        if (valueCounts.keySet().size() > 1) {
+            Set<Integer> frequencies = new HashSet<>(valueCounts.values());
+            uniformDist = frequencies.size() == 1;
+        }
+
+        int freq = 0;
+        String value = null;
+        if (!uniformDist) {
+            for (Map.Entry<String, Integer> entry : valueCounts.entrySet()) {
+                if (entry.getValue() > freq) {
+                    freq = entry.getValue();
+                    value = entry.getKey() == null ? "" : entry.getKey();
+                }
+            }
+        }
+        return value;
     }
 
     /**
@@ -879,9 +920,13 @@ class TablePanelController extends MaeControllerI {
 
         boolean isGoldTagRow(int row);
 
+        int getNonGoldRowCount();
+
         void clearTable();
 
         void populateTable(Tag tag) throws MaeDBException;
+
+        String getMostFreqValue(int col);
 
     }
 
@@ -910,6 +955,12 @@ class TablePanelController extends MaeControllerI {
         }
 
         @Override
+        public int getNonGoldRowCount() {
+            return getRowCount() - goldTagRows.size();
+
+        }
+
+        @Override
         public void clearTable() {
             goldTagRows.clear();
             for (int row = getRowCount() - 1; row >= 0; row--) {
@@ -926,6 +977,18 @@ class TablePanelController extends MaeControllerI {
                 setRowAsGoldTag(getRowCount());
                 addRow(convertTagIntoRow(tag, this));
             }
+        }
+
+        @Override
+        public String getMostFreqValue(int col) {
+            List<String> values = new ArrayList<>();
+            for (int i = 0; i < getRowCount(); i++) {
+                if (!isGoldTagRow(i)) {
+                    values.add((String) getValueAt(i, col));
+                }
+            }
+
+            return getMajority(values);
         }
 
         @Override
@@ -952,12 +1015,16 @@ class TablePanelController extends MaeControllerI {
     }
 
     class AdjudicationLinkTableModel extends LinkTagTableModel implements AdjudicationTableModelI {
-
         private Set<Integer> goldTagRows;
 
         AdjudicationLinkTableModel(TagType tagType) {
             super(tagType);
             goldTagRows = new HashSet<>();
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return isGoldTagRow(row) && col != ID_COL && col != SRC_COL && !isArgumentTextColumn(col);
         }
 
         @Override
@@ -972,11 +1039,16 @@ class TablePanelController extends MaeControllerI {
         }
 
         @Override
+        public int getNonGoldRowCount() {
+            return getRowCount() - goldTagRows.size();
+
+        }
+
+        @Override
         public void clearTable() {
             goldTagRows.clear();
             for (int row = getRowCount() - 1; row >= 0; row--) {
                 removeRow(row);
-
             }
         }
 
@@ -993,8 +1065,15 @@ class TablePanelController extends MaeControllerI {
         }
 
         @Override
-        public boolean isCellEditable(int row, int col) {
-            return isGoldTagRow(row) && col != ID_COL && col != SRC_COL && !isArgumentTextColumn(col);
+        public String getMostFreqValue(int col) {
+            List<String> values = new ArrayList<>();
+            for (int i = 0; i < getRowCount(); i++) {
+                if (!isGoldTagRow(i)) {
+                    values.add((String) getValueAt(i, col));
+                }
+            }
+
+            return getMajority(values);
         }
 
     }
@@ -1014,6 +1093,79 @@ class TablePanelController extends MaeControllerI {
             return false;
         }
     }
+
+    private class AnnotationCellRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public JLabel getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+
+            JLabel renderer = new JLabel((String) value);
+            renderer.setOpaque(true);
+            renderer.setFont(c.getFont());
+            renderer.setForeground(getTableForeground(isSelected));
+            renderer.setToolTipText(value == null ? " " : (String) value);
+            renderer.setBackground(c.getBackground());
+            renderer.setBorder(hasFocus ?
+                    UIManager.getBorder("Table.focusCellHighlightBorder")
+                    : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+
+            return renderer;
+        }
+
+    }
+
+    private class AdjudicationCellRenderer extends AnnotationCellRenderer {
+
+        AdjudicationTableModelI dataModel;
+        TagType associatedType;
+        final int indicatorThickness = 2;
+        final Border majorityIndicator = BorderFactory.createLineBorder(Color.GREEN, indicatorThickness);
+        final Border minorityIndicator = BorderFactory.createLineBorder(Color.RED, indicatorThickness);
+        final Border confusionIndicator = BorderFactory.createLineBorder(Color.ORANGE, indicatorThickness);
+
+        public AdjudicationCellRenderer(TagTableModel model) {
+            associatedType = model.getAssociatedTagType();
+            dataModel = (AdjudicationTableModelI) model;
+        }
+
+        @Override
+        public JLabel getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+
+            JLabel renderer = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+
+            renderer.setBackground(dataModel.isGoldTagRow(row) ? getBackground() : nonGoldRowBackground);
+            int lastMinimalColumn = associatedType.isExtent() ? TEXT_COL : ID_COL;
+
+            if (!dataModel.isGoldTagRow(row)) {
+                if (col == SRC_COL) {
+                    if (!dataModel.isGoldTagRow(row)) {
+                        renderer.setForeground(getMainController().getDocumentColor((String) value));
+                        renderer.setBorder(null);
+                    }
+                } else if (col > lastMinimalColumn) {
+                    String majority = dataModel.getMostFreqValue(col);
+                    if (dataModel.getNonGoldRowCount() > 1) {
+                        String attValue = value == null ? "" : (String) value;
+                        if (majority != null && attValue.equals(majority)) {
+                            renderer.setBorder(majorityIndicator);
+                        } else if (majority != null) {
+                            renderer.setBorder(minorityIndicator);
+                        } else {
+                            renderer.setBorder(confusionIndicator);
+                        }
+                    }
+                } else {
+                    renderer.setBorder(null);
+                }
+            }
+
+            return renderer;
+        }
+
+    }
+
+
 
     private class HighlightToggleListener implements ItemListener {
 
