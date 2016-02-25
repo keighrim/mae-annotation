@@ -40,6 +40,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import java.awt.*;
@@ -67,8 +68,6 @@ class TablePanelController extends MaeControllerI {
     private Set<TagType> activeExtentTags;
     private List<TagType> tabOrder;
     private Map<String, JTable> tableMap;
-    private Color nonGoldRowBackground = Color.LIGHT_GRAY;
-    private Color adjudicationSelectionForeground = Color.BLUE;
 
     TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
         super(mainController);
@@ -197,12 +196,12 @@ class TablePanelController extends MaeControllerI {
     }
 
     void insertAllTags() throws MaeControlException, MaeDBException {
-        int perf = 0;
         if (!getMainController().isTaskLoaded() || !getMainController().isDocumentOpen()) {
             throw new MaeControlException("Cannot populate tables without a document open!");
         }
         for (TagType type : tabOrder) {
             if (type.equals(dummyForAllTagsTab)) {
+                // ignore insertions occurred on all-tags table
             } else if (type.isExtent()) {
                 for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
                     insertNewTagIntoTable(tag, type);
@@ -416,12 +415,20 @@ class TablePanelController extends MaeControllerI {
     void addToggleListeners() {
     }
 
+    private void setColumnRenders(JTable table, TableCellRenderer renderer) {
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+
+    }
+
     private JComponent makeAllExtentTagsArea() {
         UneditableTableModel model = new UneditableTableModel(dummyForAllTagsTab);
         JTable table = createMinimumTable(model, true);
         tabOrder.add(dummyForAllTagsTab);
         tableMap.put(MaeStrings.ALL_TABLE_TAB_BACK_NAME, table);
-        addTextColumnFontRenderer(model, table);
+        AnnotationCellRenderer renderer = new AnnotationCellRenderer();
+        setColumnRenders(table, renderer);
 
         return new JScrollPane(table);
     }
@@ -429,11 +436,8 @@ class TablePanelController extends MaeControllerI {
     private JComponent makeAnnotationArea(TagType type) {
         TagTableModel model = type.isExtent()? new TagTableModel(type) : new LinkTagTableModel(type);
         JTable table = makeTagTable(type, model);
-        addTextColumnFontRenderer(model, table);
         AnnotationCellRenderer renderer = new AnnotationCellRenderer();
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
+        setColumnRenders(table, renderer);
         logger.debug("successfully created a table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -442,12 +446,9 @@ class TablePanelController extends MaeControllerI {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(type) : new AdjudicationLinkTableModel(type);
         JTable table = makeTagTable(type, model);
         AdjudicationCellRenderer renderer = new AdjudicationCellRenderer(model);
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
+        setColumnRenders(table, renderer);
         table.addMouseListener(new AdjudicationTablePanelMouseListener());
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        addTextColumnFontRenderer(model, table);
         logger.debug("successfully created an adjudication table for: " + type.getName());
         return new JScrollPane(table);
     }
@@ -532,52 +533,31 @@ class TablePanelController extends MaeControllerI {
     private void setBoldColumnHeader(TableColumn column) {
         column.setHeaderRenderer(new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, column);
-                JTableHeader tableHeader = table.getTableHeader();
+            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+                super.getTableCellRendererComponent(t, v, s, f, r, c);
+                JTableHeader tableHeader = t.getTableHeader();
                 if (tableHeader != null) {
                     setForeground(tableHeader.getForeground());
                     setBackground(tableHeader.getBackground());
                     setFont(tableHeader.getFont().deriveFont(Font.BOLD));
                 }
-                setIcon(getIcon(table, column));
+                Icon sortIcon = null;
+                if (t.getRowSorter().getSortKeys().size() > 0) {
+                    RowSorter.SortKey sortKey = t.getRowSorter().getSortKeys().get(0);
+                    if (sortKey != null && t.convertColumnIndexToView(sortKey.getColumn()) == c) {
+                        String iconKey = sortKey.getSortOrder() == SortOrder.ASCENDING ?
+                                "Table.ascendingSortIcon"
+                                : "Table.descendingSortIcon";
+                        sortIcon = UIManager.getIcon(iconKey);
+                    }
+                }
+                setIcon(sortIcon);
                 setBorder(UIManager.getBorder("TableHeader.cellBorder"));
                 setHorizontalAlignment(CENTER);
                 setHorizontalTextPosition(LEFT);
                 return this;
             }
-
-            RowSorter.SortKey getSortKey(JTable table, int col) {
-                RowSorter sorter = table.getRowSorter();
-                if (sorter != null && sorter.getSortKeys().size() > 0) {
-                    return (RowSorter.SortKey) sorter.getSortKeys().get(0);
-                } else {
-                    return null;
-                }
-
-            }
-
-            Icon getIcon(JTable table, int col) {
-                RowSorter.SortKey sortKey = getSortKey(table, col);
-                if (sortKey != null && table.convertColumnIndexToView(sortKey.getColumn()) == col) {
-                    String iconKey = sortKey.getSortOrder() == SortOrder.ASCENDING ?
-                            "Table.ascendingSortIcon"
-                            : "Table.descendingSortIcon";
-                    return UIManager.getIcon(iconKey);
-                } else {
-                    return null;
-                }
-            }
-
         });
-    }
-
-    private Color getTableForeground(boolean isSelected) {
-        if (getMainController().isAdjudicating() && isSelected) return adjudicationSelectionForeground;
-        return UIManager.getColor("Table.foreground");
-
     }
 
     private void addAttributeColumns(TagType type, JTable table) {
@@ -605,37 +585,6 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
-    private void addTextColumnFontRenderer(final TagTableModel model, JTable table) {
-        int colOffset = getMainController().isAdjudicating() ? 0 : 1;
-        for (final int col : model.getTextColumns()) {
-            // we set a custom cell renderer to support full Unicode surrogate chars
-            // subtract 1 because the 0th col (SRC) is hidden by default)
-            table.getColumnModel().getColumn(col - colOffset).setCellRenderer(new DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                    JTextPane renderer = new JTextPane();
-                    int fontSize = c.getFont().getSize();
-                    renderer.setContentType("text/plain; charset=UTF-8");
-                    renderer.setStyledDocument(FontHandler.stringToSimpleStyledDocument((String) value, "dialog", fontSize, getTableForeground(isSelected)));
-                    renderer.setMargin(new Insets(0,2,0,2));
-                    renderer.setToolTipText(value == null ? " " : (String) value);
-
-                    if (getMainController().isAdjudicating() &&
-                            (!((AdjudicationTableModelI) model).isGoldTagRow(row))) {
-                            renderer.setBackground(nonGoldRowBackground);
-                    } else {
-                        renderer.setBackground(c.getBackground());
-                        renderer.setBorder(hasFocus ?
-                                UIManager.getBorder("Table.focusCellHighlightBorder")
-                                : BorderFactory.createEmptyBorder(1, 1, 1, 1));
-                    }
-                    return renderer;
-                }
-            });
-        }
-    }
-
     private JComboBox makeValidValuesComboBox(AttributeType att) {
         JComboBox<String> options = new JComboBox<>();
         options.addItem("");
@@ -643,35 +592,6 @@ class TablePanelController extends MaeControllerI {
             options.addItem(value);
         }
         return options;
-    }
-
-    public static String getMajority(List<String> values) {
-        Map<String, Integer> valueCounts = new HashMap<>();
-
-        for (String value : values) {
-            Integer count = valueCounts.get(value);
-            if (count == null) count = 0;
-            count++;
-            valueCounts.put(value, count);
-        }
-
-        boolean uniformDist = false;
-        if (valueCounts.keySet().size() > 1) {
-            Set<Integer> frequencies = new HashSet<>(valueCounts.values());
-            uniformDist = frequencies.size() == 1;
-        }
-
-        int freq = 0;
-        String value = null;
-        if (!uniformDist) {
-            for (Map.Entry<String, Integer> entry : valueCounts.entrySet()) {
-                if (entry.getValue() > freq) {
-                    freq = entry.getValue();
-                    value = entry.getKey() == null ? "" : entry.getKey();
-                }
-            }
-        }
-        return value;
     }
 
     /**
@@ -925,8 +845,6 @@ class TablePanelController extends MaeControllerI {
 
         void populateTable(Tag tag) throws MaeDBException;
 
-        String getMostFreqValue(int col);
-
     }
 
     class AdjudicationTableModel extends TagTableModel implements AdjudicationTableModelI {
@@ -976,18 +894,6 @@ class TablePanelController extends MaeControllerI {
                 setRowAsGoldTag(getRowCount());
                 addRow(convertTagIntoRow(tag, this));
             }
-        }
-
-        @Override
-        public String getMostFreqValue(int col) {
-            List<String> values = new ArrayList<>();
-            for (int i = 0; i < getRowCount(); i++) {
-                if (!isGoldTagRow(i)) {
-                    values.add((String) getValueAt(i, col));
-                }
-            }
-
-            return getMajority(values);
         }
 
         @Override
@@ -1063,18 +969,6 @@ class TablePanelController extends MaeControllerI {
             }
         }
 
-        @Override
-        public String getMostFreqValue(int col) {
-            List<String> values = new ArrayList<>();
-            for (int i = 0; i < getRowCount(); i++) {
-                if (!isGoldTagRow(i)) {
-                    values.add((String) getValueAt(i, col));
-                }
-            }
-
-            return getMajority(values);
-        }
-
     }
 
     /**
@@ -1095,14 +989,29 @@ class TablePanelController extends MaeControllerI {
 
     private class AnnotationCellRenderer extends DefaultTableCellRenderer {
 
-        @Override
-        public JLabel getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+        protected Color nonGoldRowBackground = Color.LIGHT_GRAY;
+        protected Color adjudicationSelectionForeground = Color.BLUE;
 
-            JLabel renderer = new JLabel((String) value);
+        @Override
+        public JTextComponent getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            JTextComponent renderer;
+
+            if (col == TEXT_COL - 1) {
+                renderer = new JTextPane();
+                int fontSize = c.getFont().getSize();
+                ((JTextPane) renderer).setContentType("text/plain; charset=UTF-8");
+                ((JTextPane) renderer).setStyledDocument(
+                        FontHandler.stringToSimpleStyledDocument(
+                                (String) value, "dialog", fontSize, getCellForeground(isSelected)));
+            } else {
+                renderer = new JTextArea((String) value);
+                renderer.setFont(c.getFont());
+            }
+
+            renderer.setMargin(new Insets(0,2,0,2));
             renderer.setOpaque(true);
-            renderer.setFont(c.getFont());
-            renderer.setForeground(getTableForeground(isSelected));
+            renderer.setForeground(getCellForeground(isSelected));
             renderer.setToolTipText(value == null ? " " : (String) value);
             renderer.setBackground(c.getBackground());
             renderer.setBorder(hasFocus ?
@@ -1112,16 +1021,31 @@ class TablePanelController extends MaeControllerI {
             return renderer;
         }
 
+        private Color getCellForeground(boolean isSelected) {
+            if (getMainController().isAdjudicating() && isSelected) {
+                return adjudicationSelectionForeground;
+            } else if (isSelected) {
+                return UIManager.getColor("Table.selectionForeground");
+            } else {
+                return UIManager.getColor("Table.foreground");
+            }
+
+        }
+
     }
 
     private class AdjudicationCellRenderer extends AnnotationCellRenderer {
 
         AdjudicationTableModelI dataModel;
         TagType associatedType;
-        final int indicatorThickness = 2;
-        final Border majorityIndicator = BorderFactory.createLineBorder(Color.GREEN, indicatorThickness);
-        final Border minorityIndicator = BorderFactory.createLineBorder(Color.RED, indicatorThickness);
-        final Border confusionIndicator = BorderFactory.createLineBorder(Color.ORANGE, indicatorThickness);
+        final int indicatorThickness = 1;
+        final Border absMinorityIndicator = BorderFactory.createLineBorder(Color.RED, indicatorThickness);
+        final Border minorityIndicator = BorderFactory.createLineBorder(Color.ORANGE, indicatorThickness);
+        final Border majorityIndicator = BorderFactory.createLineBorder(Color.YELLOW, indicatorThickness);
+        final Border absMajorityIndicator = BorderFactory.createLineBorder(Color.GREEN, indicatorThickness);
+        // this needs to match to what's returned from getValueDistribution() in terms of order
+        final Border[] borders = new Border[]{absMinorityIndicator, minorityIndicator, majorityIndicator, absMajorityIndicator};
+
 
         public AdjudicationCellRenderer(TagTableModel model) {
             associatedType = model.getAssociatedTagType();
@@ -1129,42 +1053,136 @@ class TablePanelController extends MaeControllerI {
         }
 
         @Override
-        public JLabel getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+        public JTextComponent getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
 
-            JLabel renderer = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            JTextComponent renderer = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 
-            renderer.setBackground(dataModel.isGoldTagRow(row) ? getBackground() : nonGoldRowBackground);
-            int lastMinimalColumn = associatedType.isExtent() ? TEXT_COL : ID_COL;
+            renderer.setBackground(dataModel.isGoldTagRow(table.convertRowIndexToModel(row)) ? getBackground() : nonGoldRowBackground);
+            int lastMinimalColumn = associatedType.isExtent() ? TEXT_COL : Collections.max(((TagTableModel) dataModel).getTextColumns());
 
-            if (!dataModel.isGoldTagRow(row)) {
+            if (!dataModel.isGoldTagRow(table.convertRowIndexToModel(row))) {
                 if (col == SRC_COL) {
-                    if (!dataModel.isGoldTagRow(row)) {
-                        renderer.setForeground(getMainController().getDocumentColor((String) value));
-                        renderer.setBorder(null);
-                    }
-                } else if (col > lastMinimalColumn) {
-                    String majority = dataModel.getMostFreqValue(col);
-                    if (dataModel.getNonGoldRowCount() > 1) {
-                        String attValue = value == null ? "" : (String) value;
-                        if (majority != null && attValue.equals(majority)) {
-                            renderer.setBorder(majorityIndicator);
-                        } else if (majority != null) {
-                            renderer.setBorder(minorityIndicator);
-                        } else {
-                            renderer.setBorder(confusionIndicator);
-                        }
+                    renderer.setForeground(getMainController().getDocumentColor((String) value));
+                    renderer.setBorder(null);
+                } else if (((TagTableModel) dataModel).isTextColum(col) || col > lastMinimalColumn) {
+                    List[] distribution = getValueDistribution(dataModel, col);
+                    if (distribution != null) {
+                        renderer.setBorder(getAgreementIndicator(distribution, (String) value));
                     }
                 } else {
                     renderer.setBorder(null);
                 }
+            } else {
+                renderer.setBackground(UIManager.getColor("Table.background")); // do not change background on selection
             }
 
             return renderer;
         }
 
+        private Border getAgreementIndicator(List[] distribution, String value) {
+            for (int i = 0; i < distribution.length; i++) {
+                if (distribution[i].contains(value)) return borders[i];
+            }
+            return null;
+        }
+
+        public List[] getValueDistribution(AdjudicationTableModelI model, int col) {
+            // will return array of lists of values
+            // [0] -> the absolute majority (over 0.5) (green)
+            // [1] -> majority (yellow)
+            // [2] -> minority (not the least, not major) (orange)
+            // [3] -> the absolute minority (red)
+            // if values are equally distributed, all are considered as minor
+            // if values are binomialy distributed, the more gets the abs majority, the less gets the abs minority
+            // if values are diverged over three or more values
+            //   only when the most frequent one is occurred more than 50%, it gets the abs majority, otherwise gets simple majority
+            //   the least frequent one and only one always gets the abs minority
+            //   the rest gets minorities
+            List<String> values = new ArrayList<>();
+            for (int i = 0; i < model.getRowCount(); i++) {
+                if (!model.isGoldTagRow(i)) {
+                    values.add((String) model.getValueAt(i, col));
+                }
+            }
+            if (values.size() <= 1) { // single or no line
+                logger.debug("att value agreement: single or no tag selected.");
+                return null;
+            }
+            List<String> absMinor = new ArrayList<>();
+            List<String> minor = new ArrayList<>();
+            List<String> major = new ArrayList<>();
+            List<String> absMajor = new ArrayList<>();
+            List[] distribution = new List[]{absMinor, minor, major, absMajor};
+
+            Map<String, Integer> valueCounts = new HashMap<>();
+
+            for (String value : values) {
+                Integer count = valueCounts.get(value);
+                if (count == null) count = 0;
+                count++;
+                valueCounts.put(value, count);
+            }
+
+            Set<String> valueSet = valueCounts.keySet();
+            Set<Integer> counts = new HashSet<>(valueCounts.values());
+            if (valueSet.size() == 1 && counts.size() == 1) { // unanimity
+                logger.debug("att value agreement: unanimity to " + valueSet.iterator().next());
+                absMajor.addAll(valueCounts.keySet());
+                return distribution;
+            } else if (valueSet.size() > 1 && counts.size() == 1) { // uniform dist
+                logger.debug("att value agreement: uniform distribution of " + valueSet);
+                minor.addAll(valueCounts.keySet());
+                return distribution;
+            } else {
+                Map<Integer, List<String>> countsToValues = new HashMap<>();
+                for (Map.Entry<String, Integer> entry : valueCounts.entrySet()) {
+                    List<String> valuesOccued = countsToValues.get(entry.getValue());
+                    if (valuesOccued == null) valuesOccued = new ArrayList<>();
+                    valuesOccued.add(entry.getKey());
+                    countsToValues.put(entry.getValue(), valuesOccued);
+                }
+                List<Integer> frequencyDist = new ArrayList<>(countsToValues.keySet());
+                Collections.sort(frequencyDist);  // ascending sort
+
+                if (valueSet.size() == 2 && counts.size() == 2) { // binomial dist
+                    logger.debug("att value agreement: binomial distribution of " + valueSet);
+                    absMajor.addAll(countsToValues.get(frequencyDist.get(1)));
+                    absMinor.addAll(countsToValues.get(frequencyDist.get(0)));
+                    return distribution;
+                }
+
+                int majorExist = frequencyDist.size() - 1;
+                int theMostOccurenece = frequencyDist.get(majorExist);
+                List<String> theMost = countsToValues.get(theMostOccurenece);
+                if (theMost.size() == 1) {
+                    logger.debug("att value agreement: diverging, and found majority: " + theMost.get(0));
+                    if (theMostOccurenece > (values.size() / 2)) {
+                        absMajor.addAll(theMost);
+                        logger.debug("att value agreement: it was the absolute majority: " + theMost.get(0));
+                    } else {
+                        major.addAll(theMost);
+                        logger.debug("att value agreement: it did not absolutely majored: " + theMost.get(0));
+                    }
+                    majorExist--;
+                }
+
+                int minorExist = 0;
+                int theLeastOccurenece = frequencyDist.get(minorExist);
+                List<String> theLeast = countsToValues.get(theLeastOccurenece);
+                if (theLeast.size() == 1) {
+                    absMinor.addAll(theLeast);
+                    logger.debug("att value agreement: diverging, and found the absolute minority: " + theLeast.get(0));
+                    minorExist++;
+                }
+
+                for (int i = majorExist; i <= minorExist; i++) {
+                    minor.addAll(countsToValues.get(frequencyDist.get(i)));
+                }
+                return distribution;
+            }
+
+        }
     }
-
-
 
     private class HighlightToggleListener implements ItemListener {
 
