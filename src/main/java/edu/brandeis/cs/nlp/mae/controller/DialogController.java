@@ -119,16 +119,20 @@ class DialogController {
     }
 
     void setAsArgument(String argumentTid) throws MaeDBException {
-        SetArgumentOptionPanel options = new SetArgumentOptionPanel();
-        int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
-                options,
-                String.format("Setting %s an argument of", argumentTid),
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
-            LinkTag linker = options.getSelectedLinkTag();
-            ArgumentType argType = options.getSelectedArgumentType();
-            getMainController().surgicallyUpdateCell(linker, argType.getName() + MaeStrings.ARG_IDCOL_SUF, argumentTid);
+        if (getMainController().getDriver().getAllLinkTagsOfAllTypes().size() == 0) {
+            showWarning("No link tags are found.");
+        } else {
+            SetArgumentOptionPanel options = new SetArgumentOptionPanel();
+            int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
+                    options,
+                    String.format("Setting %s an argument of", argumentTid),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                LinkTag linker = options.getSelectedLinkTag();
+                ArgumentType argType = options.getSelectedArgumentType();
+                getMainController().surgicallyUpdateCell(linker, argType.getName() + MaeStrings.ARG_IDCOL_SUF, argumentTid);
+            }
         }
 
     }
@@ -406,7 +410,7 @@ class DialogController {
             });
 
             for (TagType type : driver.getLinkTagTypes()) {
-                linkTypes.addItem(type);
+                if (driver.getAllLinkTagsOfType(type).size() > 0) linkTypes.addItem(type);
             }
 
             add(new JLabel(MaeStrings.SETARG_SEL_TAGTYPE));

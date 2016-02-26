@@ -44,6 +44,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -113,7 +115,34 @@ public class MaeMainController extends JPanel {
         }
     }
 
+    private static void enableOSXQuitStrategy() {
+        // for two reasons:
+        // 1) unless using apple jdk extensions (com.apple.eawt.Application, QuitStagety)
+        // windowClosing() event is not properly fired on OSX, which used for integrity checks and destroying drivers
+        // 2) cannot just import such classes and methods, because they exist only on Macs
+        // which will cause class-not-found error on other platform (is java really cross-platform?)
+        try {
+            final Class applicationClass = Class.forName("com.apple.eawt.Application");
+            final Method getApplication = applicationClass.getMethod("getApplication");
+            final Object applicationObject = getApplication.invoke(applicationClass);
+
+            final Class strategy = Class.forName("com.apple.eawt.QuitStrategy");
+            final Enum CLOSE_ALL_WINDOWS = Enum.valueOf(strategy, "CLOSE_ALL_WINDOWS");
+
+            final Method setQuitStrategy = applicationClass.getMethod("setQuitStrategy", strategy);
+            setQuitStrategy.invoke(applicationObject, CLOSE_ALL_WINDOWS);
+
+            logger.info("OSX is detected");
+        } catch (ClassNotFoundException | NoSuchMethodException |
+                SecurityException | IllegalAccessException |
+                IllegalArgumentException | InvocationTargetException exp) {
+            logger.info("Not on OSX");
+        }
+    }
+
     public static void main(String[] args) {
+        enableOSXQuitStrategy();
+
         MaeMainController main = new MaeMainController();
         JFrame mainFrame = main.initUI();
         main.setWindowFrame(mainFrame);
