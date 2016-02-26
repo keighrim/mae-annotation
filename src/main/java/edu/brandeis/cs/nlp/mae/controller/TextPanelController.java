@@ -282,6 +282,13 @@ class TextPanelController extends MaeControllerI {
 
     }
 
+    void bigFontSize() {
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, 36);
+        getView().setTextFont(attributeSet);
+
+    }
+
     public int getCurrentTab() {
         return getView().getTabs().getSelectedIndex();
     }

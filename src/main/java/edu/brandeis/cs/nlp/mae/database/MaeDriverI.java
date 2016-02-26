@@ -129,20 +129,28 @@ public interface MaeDriverI {
 
     List<ExtentTag> getTagsIn(int[] locations) throws MaeDBException;
 
+    List<ExtentTag> getTagsOfTypeAt(TagType type, int location) throws MaeDBException;
+
+    List<ExtentTag> getTagsOfTypeIn(TagType type, int[] locations) throws MaeDBException;
+
+    List<ExtentTag> getTagsOfTypeBetween(TagType type, int begin, int end) throws MaeDBException;
+
     MappedSet<TagType,ExtentTag> getTagsByTypesAt(int location) throws MaeDBException;
 
     MappedSet<TagType,ExtentTag> getTagsByTypesIn(int[] locations) throws MaeDBException;
 
     MappedSet<TagType,ExtentTag> getTagsByTypesBetween(int begin, int end) throws MaeDBException;
 
-    List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException;
+    List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException;
+
+    List<ExtentTag> getAllNCTagsOfType(TagType type) throws MaeDBException;
 
     // link tags
     LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException;
 
     LinkTag createLinkTag(TagType tagType) throws MaeDBException;
 
-    List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException;
+    List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException;
 
     void deleteTag(Tag tag) throws MaeDBException;
 

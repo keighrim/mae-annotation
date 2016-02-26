@@ -476,10 +476,12 @@ public class MaeMainController extends JPanel {
                 return;
             }
             setAdjudicating(true);
+            mode = MODE_NORMAL;
             addAdjudication(goldstandard);
 
             removeAllBGColors();
             getMenu().resetFileMenu();
+            getMenu().resetModeMenu();
             sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
         }
     }
@@ -637,6 +639,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void switchAdjudicationTag() {
+        propagateSelectionFromTextPanel();
         assignAdjudicationColors();
     }
 
@@ -750,8 +753,42 @@ public class MaeMainController extends JPanel {
         return getExtentTagsFromAllDocumentsIn(getSelectedTextSpans());
     }
 
-    public List<ExtentTag> getExtentTagsFromAllDocumentsIn(int[] locations) {
+    public List<ExtentTag> getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(TagType type) {
+        if (isTextSelected()) {
+            return getExtentTagsOfATypeFromAllDocumentsIn(type, getSelectedTextSpans());
+        } else {
+            return getNCTagsOfATypeFromAllDocuments(type);
+        }
+    }
+
+    public List<ExtentTag> getNCTagsOfATypeFromAllDocuments(TagType type) {
+        List<ExtentTag> nctags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                nctags.addAll(driver.getAllNCTagsOfType(type));
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return nctags;
+
+    }
+
+    public List<ExtentTag> getExtentTagsOfATypeFromAllDocumentsIn(TagType type, int[] locations) {
         List<ExtentTag> tags = new LinkedList<>();
+        try {
+            for (MaeDriverI driver : getDrivers()) {
+                tags.addAll(driver.getTagsOfTypeIn(type, locations));
+            }
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return tags;
+
+    }
+
+    public List<ExtentTag> getExtentTagsFromAllDocumentsIn(int[] locations) {
+        Set<ExtentTag> tags = new HashSet<>();
         try {
             for (MaeDriverI driver : getDrivers()) {
                 tags.addAll(driver.getTagsIn(locations));
@@ -759,7 +796,11 @@ public class MaeMainController extends JPanel {
         } catch (MaeDBException e) {
             showError(e);
         }
-        return tags;
+        return new ArrayList<>(tags);
+    }
+
+    public boolean isArgumentsSelected() {
+        return getSelectedArguments() != null && getSelectedArguments().size() > 0;
     }
 
     public List<ExtentTag> getSelectedArguments() {
@@ -863,6 +904,21 @@ public class MaeMainController extends JPanel {
         getDrivers().clear();
     }
 
+    public Color getDocumentColor(String documentName) {
+        try {
+            for (int i = 1; i < getDrivers().size(); i++) {
+                MaeDriverI driver = getDriverAt(i);
+                if (driver.getAnnotationFileBaseName().equals(documentName)) {
+                    return getDocumentColor(i);
+                }
+            }
+            showError("No such document open: " + documentName);
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+        return Color.BLACK;
+    }
+
     public Color getDocumentColor(int documentTabIndex) {
         return documentTabColors.getColor(documentTabIndex);
     }
@@ -964,21 +1020,16 @@ public class MaeMainController extends JPanel {
         getTablePanel().clearAdjudicationTable();
         adjudicatingTags.clear();
         TagType currentType = getAdjudicatingTagType();
-        List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
-        if (currentType.isExtent()) {
-            for (ExtentTag tag : selectedTags) {
-                if (tag.getTagtype().equals(currentType)) {
-                    try {
-                        getTablePanel().insertTagIntoAdjudicationTable(tag);
-                        adjudicatingTags.add(tag);
-                    } catch (MaeDBException e) {
-                        e.printStackTrace();
-                    }
+        try {
+            if (currentType.isExtent()) {
+                List<ExtentTag> selectedTags = getExtentTagsOfATypeFromAllDocumentsInSelectedSpans(currentType);
+                for (ExtentTag tag : selectedTags) {
+                    getTablePanel().insertTagIntoAdjudicationTable(tag);
+                    adjudicatingTags.add(tag);
                 }
-            }
-        } else {
-            for (ExtentTag tag : selectedTags) {
-                try {
+            } else {
+                List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
+                for (ExtentTag tag : selectedTags) {
                     MaeDriverI driver = getDriverOf(tag.getFilename());
                     Set<LinkTag> linkers = driver.getLinksHasArgumentTag(tag);
                     for (LinkTag linker : linkers) {
@@ -987,10 +1038,10 @@ public class MaeMainController extends JPanel {
                             adjudicatingTags.add(linker);
                         }
                     }
-                } catch (MaeDBException e) {
-                    e.printStackTrace();
                 }
             }
+        } catch (MaeDBException e) {
+            e.printStackTrace();
         }
 
     }
@@ -1046,6 +1097,11 @@ public class MaeMainController extends JPanel {
             if (!isAdjudicating()) {
                 getTablePanel().removeTagFromTable(tag);
             } else {
+                if (tag.getTagtype().isExtent()) {
+                    for (LinkTag link : getDriver().getLinksHasArgumentTag((ExtentTag) tag)) {
+                        deleteTagFromDB(link);
+                    }
+                }
                 deleteTagFromDB(tag);
                 adjudicationStatUpdate();
             }
@@ -1099,6 +1155,14 @@ public class MaeMainController extends JPanel {
         return  null;
     }
 
+    public void addArgument(LinkTag linker, ArgumentType argType, String argTid) {
+        try {
+            getDriver().addArgument(linker, argType, (ExtentTag) getDriver().getTagByTid(argTid));
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
     public Tag getTagBySourceAndTid(String sourceFileName, String tid) {
         try {
             return getDriverOf(sourceFileName).getTagByTid(tid);
@@ -1112,9 +1176,11 @@ public class MaeMainController extends JPanel {
         TagType type = tag.getTagtype();
         try {
             if (type.isExtent()) {
-                ExtentTag etag = ((ExtentTag) tag);
+                ExtentTag etag = (ExtentTag) tag;
                 return copyExtentTag(etag);
             } else {
+                LinkTag ltag = (LinkTag) tag;
+                return copyLinkTag(ltag);
 
             }
         } catch (MaeDBException e) {
@@ -1134,6 +1200,47 @@ public class MaeMainController extends JPanel {
         }
         adjudicationStatUpdate();
         return newTag;
+    }
+
+    LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
+        String warning = ("Copying a link tag will also copy its arguments,\n" +
+                "unless matching extent tags are found in GS.\n" +
+                "(matched by span AND non-consuming arguments are always copied!)" +
+                "\nDo you want to continue?");
+        if (showWarning(warning)) {
+            MaeDriverI originalDriver = getDriverOf(original.getFilename());
+            TagType type = original.getTagtype();
+            LinkTag newTag = getDriver().createLinkTag(type);
+            Map<String, String> attMap = original.getAttributesWithNames();
+            for (ArgumentType argType : type.getArgumentTypes()) {
+                String originalArgId = attMap.get(argType.getName() + MaeStrings.ARG_IDCOL_SUF);
+                if (originalArgId != null && originalArgId.length() > 0) {
+                    ExtentTag originalArg = (ExtentTag) originalDriver.getTagByTid(originalArgId);
+                    boolean matchExists = false;
+                    ExtentTag newArg = null;
+                    for (ExtentTag argCandidate : getDriver().getTagsOfTypeIn(originalArg.getTagtype(), originalArg.getSpansAsArray())) {
+                        argCandidate.getSpansAsString().equals(originalArg.getSpansAsString());
+                        newArg = argCandidate;
+                        matchExists = true;
+                        break;
+                    }
+                    if (!matchExists) {
+                        newArg = copyExtentTag(originalArg);
+                    }
+                    getDriver().addArgument(newTag, argType, newArg);
+                }
+
+            }
+            for (AttributeType attType : type.getAttributeTypes()) {
+                String attValue = attMap.get(attType.getName());
+                if (attValue != null && attValue.length() > 0) {
+                    getDriver().addAttribute(newTag, attType, attValue);
+                }
+            }
+            adjudicationStatUpdate();
+            return newTag;
+        }
+        return null;
     }
 
     public void selectTagAndTable(Tag tag) {
@@ -1267,5 +1374,10 @@ public class MaeMainController extends JPanel {
         return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
     }
 
+
+    public void presentation() {
+        getTextPanel().bigFontSize();
+        getTablePanel().bigFontSize();
+    }
 }
 

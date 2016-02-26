@@ -48,6 +48,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+import static edu.brandeis.cs.nlp.mae.model.DBSchema.*;
+
 public class LocalSqliteDriverImpl implements MaeDriverI {
 
     // not static for multi file support: needs to instantiate many Drivers
@@ -284,7 +286,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
         try {
             List<ExtentTag> results;
-            charIndexQuery.where().eq(DBSchema.TAB_CI_COL_LOCATION, location);
+            charIndexQuery.where().eq(TAB_CI_COL_LOCATION, location);
             results = eTagQuery.join(charIndexQuery).query();
             resetQueryBuilders();
             return results;
@@ -311,6 +313,37 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
+    public List<ExtentTag> getTagsOfTypeAt(TagType type, int location) throws MaeDBException {
+        try {
+            List<ExtentTag> results;
+            charIndexQuery.where().eq(TAB_CI_COL_LOCATION, location);
+            results = eTagQuery.join(charIndexQuery).where().eq(TAB_TAG_FCOL_TT, type).query();
+            resetQueryBuilders();
+            return results;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public List<ExtentTag> getTagsOfTypeIn(TagType type, int[] locations) throws MaeDBException {
+        Set<ExtentTag> tags = new HashSet<>();
+        for (int location : locations) {
+            tags.addAll(getTagsOfTypeAt(type, location));
+        }
+        return new ArrayList<>(tags);
+    }
+
+    @Override
+    public List<ExtentTag> getTagsOfTypeBetween(TagType type, int begin, int end) throws MaeDBException {
+        Set<ExtentTag> tags = new HashSet<>();
+        for (int i = begin; i < end; i++) {
+            tags.addAll(getTagsOfTypeAt(type, i));
+        }
+        return new ArrayList<>(tags);
+    }
+
+    @Override
     public List<Integer> getAllAnchors() throws MaeDBException{
         List<Integer> anchors = new ArrayList<>();
         try {
@@ -331,12 +364,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             List<CharIndex> locations;
 
             if (type.isExtent()) {
-                eTagQuery.where().eq(DBSchema.TAB_TAG_FCOL_TT, type);
+                eTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
                 locations = charIndexQuery.join(eTagQuery).query();
 
             } else {
-                lTagQuery.where().eq(DBSchema.TAB_TAG_FCOL_TT, type);
-                argQuery.join(lTagQuery).selectColumns(DBSchema.TAB_ARG_FCOL_ETAG).distinct();
+                lTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
+                argQuery.join(lTagQuery).selectColumns(TAB_ARG_FCOL_ETAG).distinct();
                 eTagQuery.join(argQuery);
                 locations = charIndexQuery.join(eTagQuery).query();
 
@@ -427,7 +460,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             TreeSet<LinkTag> links = new TreeSet<>();
             List<Argument> results;
-            results = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_ETAG, argument).query();
+            results = argQuery.where().eq(TAB_ARG_FCOL_ETAG, argument).query();
             for (Argument result : results) {
                 links.add(result.getLinker());
             }
@@ -499,13 +532,25 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException {
+    public List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException {
         return (List<ExtentTag>) getAllTagsOfType(type);
     }
 
     @Override
+    public List<ExtentTag> getAllNCTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException {
+        try {
+            charIndexQuery.selectColumns(DBSchema.TAB_CI_FCOL_ETAG);
+            List<ExtentTag> nctags = eTagQuery.where().eq(TAB_TAG_FCOL_TT, type).and().notIn(TAB_TAG_COL_TID, charIndexQuery).query();
+            resetQueryBuilders();
+            return nctags;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
-    public List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException {
+    public List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException {
         return (List<LinkTag>) getAllTagsOfType(type);
 
     }
@@ -540,8 +585,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public AttributeType getAttributeTypeOfTagTypeByName(TagType type, String name) throws MaeDBException {
         try {
             AttributeType result
-                    = attTypeQuery.where().eq(DBSchema.TAB_AT_FCOL_TT, type).
-                    and().eq(DBSchema.TAB_AT_COL_NAME, name).queryForFirst();
+                    = attTypeQuery.where().eq(TAB_AT_FCOL_TT, type).
+                    and().eq(TAB_AT_COL_NAME, name).queryForFirst();
             resetQueryBuilders();
             return  result;
         } catch (SQLException e) {
@@ -553,8 +598,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public ArgumentType getArgumentTypeOfTagTypeByName(TagType type, String name) throws MaeDBException {
         try {
             ArgumentType result
-                    = argTypeQuery.where().eq(DBSchema.TAB_ART_FCOL_TT, type).
-                    and().eq(DBSchema.TAB_ART_COL_NAME, name).queryForFirst();
+                    = argTypeQuery.where().eq(TAB_ART_FCOL_TT, type).
+                    and().eq(TAB_ART_COL_NAME, name).queryForFirst();
             resetQueryBuilders();
             return  result;
         } catch (SQLException e) {
@@ -565,7 +610,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public List<AttributeType> getAttributeTypesOfTagType(TagType type) throws MaeDBException {
         try {
-            return new ArrayList<>(attTypeDao.queryForEq(DBSchema.TAB_AT_FCOL_TT, type));
+            return new ArrayList<>(attTypeDao.queryForEq(TAB_AT_FCOL_TT, type));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -612,31 +657,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
-    public ExtentTag createExtentTag(String tid, TagType tagType, String text, ArrayList<int[]> spansList) throws MaeDBException {
-        return createExtentTag(tid, tagType, text, SpanHandler.convertPairsToArray(spansList));
-    }
-
-    public ExtentTag createExtentTag(String tid, TagType tagType, String text, String spansString) throws MaeDBException {
-        return createExtentTag(tid, tagType, text, SpanHandler.convertStringToPairs(spansString));
-    }
-
     @Override
     public ExtentTag createExtentTag(TagType tagType, String text, int...spans) throws MaeDBException {
         String tid = idHandler.getNextID(tagType);
         return createExtentTag(tid, tagType, text, spans);
     }
 
-    public ExtentTag createExtentTag(TagType tagType, String text, ArrayList<int[]> spansList) throws MaeDBException {
-        String tid = idHandler.getNextID(tagType);
-        return createExtentTag(tid, tagType, text, spansList);
-    }
-
-    public ExtentTag createExtentTag(TagType tagType, String text, String spansString) throws MaeDBException {
-        String tid = idHandler.getNextID(tagType);
-        return createExtentTag(tid, tagType, text, spansString);
-    }
-
-    @Override
     public LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException {
         try {
             LinkTag link = new LinkTag(tid, tagType, getAnnotationFileBaseName());
@@ -680,7 +706,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public Attribute updateAttribute(Tag tag, AttributeType attType, String attValue) throws MaeDBException {
         logger.debug(String.format("adding an attribute '%s: %s' to tag %s (%s)", attType.getName(), attValue, tag.getId(), tag.getTagTypeName()));
         try {
-            Attribute oldAtt = attQuery.where().eq(DBSchema.TAB_ATT_FCOL_ETAG, tag).and().eq(DBSchema.TAB_ATT_FCOL_AT, attType).queryForFirst();
+            Attribute oldAtt = attQuery.where().eq(TAB_ATT_FCOL_ETAG, tag).and().eq(TAB_ATT_FCOL_AT, attType).queryForFirst();
             if (oldAtt != null) {
                 logger.debug(String.format("an old attribute \"%s\" is deleted from \"%s\"", oldAtt.toString(), tag.toString()));
                 attDao.delete(oldAtt);
@@ -781,8 +807,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             logger.debug(String.format("adding an argument '%s: %s' to tag %s (%s)", argType.getName(), argument == null ? "null" : argument.getId(), linker.getId(), linker.getTagTypeName()));
             try {
-                Argument oldArg = argQuery.where().eq(DBSchema.TAB_ARG_FCOL_LTAG, linker).
-                        and().eq(DBSchema.TAB_ARG_FCOL_ART, argType).queryForFirst();
+                Argument oldArg = argQuery.where().eq(TAB_ARG_FCOL_LTAG, linker).
+                        and().eq(TAB_ARG_FCOL_ART, argType).queryForFirst();
                 if (oldArg != null) {
                     argDao.delete(oldArg);
                     setAnnotationChanged(true);
@@ -806,7 +832,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public boolean updateTagSpans(ExtentTag tag, int[] spans) throws MaeDBException {
         try {
-            List<CharIndex> olds = charIndexQuery.where().eq(DBSchema.TAB_CI_FCOL_ETAG, tag).query();
+            List<CharIndex> olds = charIndexQuery.where().eq(TAB_CI_FCOL_ETAG, tag).query();
             charIndexDao.delete(olds);
             for (CharIndex anchor : tag.setSpans(spans)) {
                 charIndexDao.create(anchor);
@@ -828,8 +854,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public boolean updateTagText(ExtentTag tag, String text) throws MaeDBException {
         try {
             UpdateBuilder<ExtentTag, String> updateBuilder = eTagDao.updateBuilder();
-            updateBuilder.where().eq(DBSchema.TAB_TAG_COL_TID, tag.getId());
-            updateBuilder.updateColumnValue(DBSchema.TAB_ETAG_COL_TEXT,  text);
+            updateBuilder.where().eq(TAB_TAG_COL_TID, tag.getId());
+            updateBuilder.updateColumnValue(TAB_ETAG_COL_TEXT,  text);
             if (updateBuilder.update() == 1) {
                 setAnnotationChanged(true);
                 eTagDao.refresh(tag);
@@ -938,7 +964,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public TagType getTagTypeByName(String typeName) throws MaeDBException {
         try {
-            return tagTypeDao.queryForEq(DBSchema.TAB_TT_COL_NAME, typeName).get(0);
+            return tagTypeDao.queryForEq(TAB_TT_COL_NAME, typeName).get(0);
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -947,7 +973,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public List<ArgumentType> getArgumentTypesOfLinkTagType(TagType link) throws MaeDBException {
         try {
-            return new ArrayList<>(argTypeDao.queryForEq(DBSchema.TAB_ART_FCOL_TT, link));
+            return new ArrayList<>(argTypeDao.queryForEq(TAB_ART_FCOL_TT, link));
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
