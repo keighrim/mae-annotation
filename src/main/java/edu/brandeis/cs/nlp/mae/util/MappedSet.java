@@ -69,6 +69,15 @@ public class MappedSet<K,V> implements MappedCollection<K, V> {
         return new ArrayList<>(keySet());
     }
 
+    public ArrayList<V> valueList() {
+        ArrayList<V> values = new ArrayList<>();
+        for (Set<V> valueSet : map.values()) {
+            values.addAll(valueSet);
+        }
+        return values;
+
+    }
+
     /**
      * Associate yet another value with a key in a Hashtable that doesn't allows duplicates, but sorted
      * Also use to put the first key/value.
@@ -79,7 +88,7 @@ public class MappedSet<K,V> implements MappedCollection<K, V> {
      */
     public void putItem (K key, V value) {
         if (containsKey(key)) {
-            getAsList(key).add(value);
+            get(key).add(value);
         } else {
             TreeSet<V> newtree = new TreeSet<>();
             newtree.add(value);

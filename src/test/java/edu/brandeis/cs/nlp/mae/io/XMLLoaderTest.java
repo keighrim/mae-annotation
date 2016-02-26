@@ -87,6 +87,7 @@ public class XMLLoaderTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver.setAnnotationFileName("TEST_SAMPLE");
         dtdLoader = new DTDLoader(driver);
         readDTDfile();
 
@@ -157,7 +158,7 @@ public class XMLLoaderTest {
                 ExtentTag v0 = allTags.getAsList(type).get(0);
                 assertEquals(
                         "Expected the span of v0 is 12~17 and associated text is \"wants\", found: " + v0.getSpansAsString(),
-                        String.format("%d%s%d", 12, MaeStrings.SPANDELIMITER, 17), v0.getSpansAsString()
+                        String.format("%d%s%d", 12, MaeStrings.SPANRANGE, 17), v0.getSpansAsString()
                 );
                 assertEquals(
                         "Expected v0's associated text is \"wants\", found: " + v0.getText(),

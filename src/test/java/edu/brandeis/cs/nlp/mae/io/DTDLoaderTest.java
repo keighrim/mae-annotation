@@ -267,11 +267,5 @@ public class DTDLoaderTest {
 
     }
 
-    @Test
-    public void canValidateDTDFormat() throws Exception {
-        // TODO 151226 more tests for validating DTD input, load DTD from file, etc.
-
-    }
-
 }
 

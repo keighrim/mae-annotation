@@ -29,8 +29,10 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TextPanelView;
@@ -42,6 +44,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
@@ -50,21 +54,24 @@ import java.util.List;
 /**
  * Created by krim on 12/31/2015.
  */
-class TextPanelController extends MaeControllerI{
+class TextPanelController extends MaeControllerI {
 
     TextPanelView view;
 
     private int[] selected;
     private List<int[]> selectionHistory;
     public static final int DEFAULT_FONT_SIZE = 14;
+    public static final Color DEFAULT_FONT_COLOR = Color.BLACK;
     private int currentFontSize = DEFAULT_FONT_SIZE;
+
 
     TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
         selected = new int[0];
-        reset();
+        noTaskGuide();
+//        reset();
     }
 
     @Override
@@ -72,38 +79,59 @@ class TextPanelController extends MaeControllerI{
         return view;
     }
 
-    @Override
-    void reset() throws MaeDBException {
-        if (!getMainController().isTaskLoaded()) {
-            addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
-        } else if (!getMainController().isDocumentOpen()) {
-            addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
-        } else {
-            selectionHistory.clear();
-            if (getMainController().isDocumentOpen()) {
-                clearColoring();
-                assignAllFGColors();
-            }
-        }
-
-    }
-
-    private void clearColoring() throws MaeDBException {
-        unassignAllFGColors();
+    public void clearColoring() throws MaeDBException {
+        unassignAllFGColor();
         removeAllBGColors();
     }
 
+    void repaintBGColor() {
+        try {
+            removeAllBGColors();
+            addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
+        } catch (MaeControlException ignored) {
+            // possible MaeException chained from BadLocationException is ignored
+        }
+    }
+
+    void repaintFGColor(Tag tag) throws MaeDBException {
+        if (tag.getTagtype().isExtent()) {
+            assignFGColorOver(((ExtentTag) tag).getSpansAsList());
+        } else {
+            for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                assignFGColorOver(arg.getSpansAsList());
+            }
+        }
+    }
+
     private void addGuideTab(String guideTitle, String guideText) {
-        getView().clearAllTabs();
+        disableTabSwitchListener();
+        getView().initTabs();
         getView().addTextTab(guideTitle, guideText, DEFAULT_FONT_SIZE);
+    }
+
+    public void noTaskGuide() {
+        addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+    }
+
+    public void noDocumentGuide() {
+        addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
     }
 
     @Override
     void addListeners() {
         getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
         getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
-        // TODO: 2016-01-11 20:50:41EST this listener is used 4MF
-//        getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
+    }
+
+    void disableTabSwitchListener() {
+
+        JTabbedPane tabs = getView().getTabs();
+        for (ChangeListener listener : tabs.getChangeListeners()) {
+            if (listener instanceof TextPanelTabSwitchListener) {
+                tabs.removeChangeListener(listener);
+            }
+        }
+
     }
 
     protected void setSelection(int[] spans) {
@@ -113,25 +141,35 @@ class TextPanelController extends MaeControllerI{
     void clearSelection() {
         selectionHistory.clear();
         setSelection(new int[0]);
+        removeAllBGColors();
     }
 
-    void addSelection(int[] contiguousSpan) {
-        try {
-            boolean duplicate = false;
-            for (int[] prevSelected : selectionHistory) {
-                if (Arrays.equals(contiguousSpan, prevSelected)) {
-                    duplicate = true;
-                    break;
-                }
+    void clearCaret() {
+        getView().getDocumentPane().setCaretPosition(0);
+
+    }
+
+    boolean validateNewSpanPair(int[] newSpanPair) throws MaeDBException {
+        if (intPairCollectionContains(selectionHistory, newSpanPair)) {
+            return false;
+        }
+        int[] newSpanArray = SpanHandler.range(newSpanPair[0], newSpanPair[1]);
+        return getMainController().getMode() != MaeMainController.MODE_ARG_SEL
+                || getMainController().getExtentTagsIn(newSpanArray).size() > 0;
+    }
+
+    boolean intPairCollectionContains(Collection<int[]> c, int[] pair) {
+        for (int[] inCollection : c) {
+            if (Arrays.equals(pair, inCollection)) {
+                return true;
             }
-            if (!duplicate) {
-                if (getMainController().getMode() != MaeMainController.MODE_ARG_SEL ||
-                        getMainController().getDriver().getTagsIn(SpanHandler.range(contiguousSpan[0], contiguousSpan[1])).size() > 0) {
-                    selectionHistory.add(0, contiguousSpan);
-                }
-            }
-        } catch (MaeDBException e) {
-            e.printStackTrace();
+        }
+        return false;
+    }
+
+    void addSelection(int[] newSpanPair) throws MaeDBException {
+        if (validateNewSpanPair(newSpanPair)) {
+            selectionHistory.add(0, newSpanPair);
         }
         setSelection(SpanHandler.convertPairsToArray(selectionHistory));
     }
@@ -145,7 +183,7 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    int[] leavingLatestSelection() {
+    int[] leavingLatestSelection() throws MaeDBException {
         int[] latest = getLatestSelection();
         if (latest == null) {
             return new int[0];
@@ -165,17 +203,52 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    void addDocument(String documentTitle, String documentText) {
-        // adding a new document wll wipe any existing tabs, either guide or documents
-        // TODO: 2016-01-11 20:47:48EST fix this 4MF
-//        if (!getView().isAnyDocumentOpen()) {
-        getView().clearAllTabs();
-//        }
-        getView().addTextTab(documentTitle, documentText, currentFontSize);
+    void addDocumentTab(String documentTitle, String documentText) throws MaeDBException {
         if (!getView().isAnyDocumentOpen()) {
-            addListeners();
+            getView().initTabs();
         }
-        getView().setDocumentOpen(true);
+        JTabbedPane tabs = getView().getTabs();
+        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
+        title.addCloseListener(new DocumentCloseListener());
+        getView().addTextTab(title, documentText, currentFontSize, !getMainController().isAdjudicating());
+        addListeners();
+        if (!getView().isAnyDocumentOpen()) {
+            getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
+            getView().setDocumentOpen(true);
+        }
+        if (getMainController().isAdjudicating()) {
+            int newTab = tabs.getTabCount() - 1;
+            tabs.getTabComponentAt(newTab).setEnabled(false);
+            tabs.setEnabledAt(newTab, false);
+            updateTabTitles(true);
+        }
+
+    }
+
+    void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
+        JTabbedPane tabs = getView().getTabs();
+        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
+        title.addCloseListener(new DocumentCloseListener());
+        getView().addAdjudicationTab(title, goldText, currentFontSize);
+        addListeners();
+        for (int i = 1; i < tabs.getTabCount(); i++) {
+            tabs.getTabComponentAt(i).setEnabled(false);
+            tabs.setEnabledAt(i, false);
+
+        }
+        updateTabTitles(true);
+
+    }
+
+    void removeAdjudicationTab() throws MaeDBException {
+        JTabbedPane tabs = getView().getTabs();
+        tabs.remove(0);
+
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            tabs.getTabComponentAt(i).setEnabled(true);
+            tabs.setEnabledAt(i, true);
+        }
+        updateTabTitles(false);
 
     }
 
@@ -183,8 +256,7 @@ class TextPanelController extends MaeControllerI{
         return getView().getDocument();
     }
 
-    void closeDocument(int i) {
-        // TODO: 1/4/2016 need tests if this works well with tab switch listener to properly change current tab as well
+    void closeDocumentTab(int i) {
         getView().getTabs().remove(i);
     }
 
@@ -210,28 +282,36 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void selectTab(int tabId) {
-        // TODO: 1/4/2016 finish this for multi file support
-        getView().selectTab(tabId);
-        getMainController().switchAnnotationTab(tabId);
+    void bigFontSize() {
+        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+        StyleConstants.setFontSize(attributeSet, 36);
+        getView().setTextFont(attributeSet);
+
+    }
+
+    public int getCurrentTab() {
+        return getView().getTabs().getSelectedIndex();
+    }
+
+    public int getOpenTabCount() {
+        return getView().getTabs().getTabCount();
     }
 
     /**
      * add asterisk to windows title when file is changed
      */
-    void updateTabTitles() throws MaeDBException {
+    void updateTabTitles(boolean colorToo) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
-            String suffix = "";
-            int boldness = Font.PLAIN;
-            if (driver.isAnnotationChanged()) {
-                suffix = MaeStrings.UNSAVED_SUFFIX;
-                boldness = Font.BOLD;
+            TextPanelView.DocumentTabTitle title = (TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(i);
+            title.setLabel(driver.getAnnotationFileBaseName());
+            title.setChanged(driver.isAnnotationChanged());
+            if (colorToo) {
+                title.setLabelColor(getMainController().getDocumentColor(i));
+            } else {
+                title.setLabelColor(Color.BLACK);
             }
-            Component title = tabs.getComponentAt(i);
-            title.setFont(title.getFont().deriveFont(boldness));
-            tabs.setTitleAt(i, driver.getAnnotationFileBaseName() + suffix);
 
         }
     }
@@ -343,50 +423,104 @@ class TextPanelController extends MaeControllerI{
 
     }
 
-    void assignAllFGColors() throws MaeDBException {
-        assignFGColorOver(getDriver().getAllAnchors());
-
-    }
-
-    void unassignAllFGColors() throws MaeDBException {
+    void unassignAnchoredFGColors() throws MaeDBException {
         List<Integer> anchorLocations = getDriver().getAllAnchors();
         int anchorIndex = 0;
         while (anchorIndex < anchorLocations.size()) {
-            anchorIndex += setFGColorAtLocation(Color.black, anchorLocations.get(anchorIndex), false, false);
+            anchorIndex += setFGColorAtLocation(DEFAULT_FONT_COLOR, anchorLocations.get(anchorIndex), false, false);
         }
     }
 
-    /**
-     * Sets the color of a specific span of text.  Called for each extent tag.
-     *
-     * @param color The color the text will become. Determined by the tag name and
-     *              colorTable (Hashtable)
-     * @param location the location of the start of the extent
-     * @param underline whether or not the text will be underlined, in which case two or more tags are associated with the location
-     */
+    void unassignAllFGColor() throws MaeDBException {
+        getView().getDocumentPane().setStyledDocument(
+                FontHandler.stringToSimpleStyledDocument(getDriver().getPrimaryText(), TextPanelView.DEFAULT_FONT_FAMILY, currentFontSize, Color.BLACK)
+        );
+
+    }
+
     private int setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
-        // TODO: 2016-02-05 13:55:10EST 4unicode changing character att breaks unicode emojis, possible reason: changing a range over the lenth of 1 break code point (emojis are combination of two code point)
         DefaultStyledDocument styleDoc = getDocument();
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setForeground(attributeSet, color);
         StyleConstants.setUnderline(attributeSet, underline);
         StyleConstants.setItalic(attributeSet, italic);
-        int length = 0;
         try {
-            length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
+            int length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
+            styleDoc.setCharacterAttributes(location, length, attributeSet, false);
+            return length;
         } catch (BadLocationException ignored) {
         }
-        styleDoc.setCharacterAttributes(location, length, attributeSet, false);
-        return length;
+        return 0;
     }
 
-    void assignFGColorOver(int...locations) throws MaeDBException {
-
+    void assignOverlappingColorOver(List<Integer> locations, Color srcColor, boolean fullOverlap) {
         int locIndex = 0;
-        while (locIndex < locations.length) {
-            locIndex += assignFGColorAt(locations[locIndex]);
+        while (locIndex < locations.size()) {
+            locIndex += setFGColorAtLocation(srcColor, locations.get(locIndex), fullOverlap, false);
         }
     }
+
+    void assignOverlappingColorAt(Integer location, Color srcColor, boolean fullOverlap) {
+        DefaultStyledDocument styleDoc = getDocument();
+        try {
+            if (location == 0 || !Character.isHighSurrogate(styleDoc.getText(location - 1, 1).charAt(0))) {
+                setFGColorAtLocation(srcColor, location, fullOverlap, false);
+            }
+        } catch (BadLocationException ignored) {
+        }
+    }
+
+    void assignAllFGColor() throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchors());
+
+    }
+
+    void assignFGColorOf(TagType type) throws MaeDBException {
+        massivelyAssignFGColors(getDriver().getAllAnchorsOfTagType(type));
+    }
+
+    void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
+        int locIndex = 0;
+        Set<TagType> activeTags = getMainController().getActiveExtentTags();
+        Set<TagType> activeLinks = getMainController().getActiveLinkTags();
+
+        MappedSet<Integer, TagType> existingAnchors = new MappedSet<>();
+        for (TagType tagType : activeTags) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        MappedSet<Integer, TagType> existingArgumentAnchors = new MappedSet<>();
+        for (TagType tagType : activeLinks) {
+            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+                existingArgumentAnchors.putItem(anchor, tagType);
+            }
+        }
+
+        while (locIndex < largeSpan.size()) {
+            Integer location = largeSpan.get(locIndex);
+            boolean plural = false;
+            boolean argument = false;
+            Color c = DEFAULT_FONT_COLOR;
+
+            if (existingAnchors.containsKey(location)) {
+                List<TagType> types = new ArrayList<>(existingAnchors.get(location));
+                if (types.size() > 0) {
+                    c = getMainController().getFGColor(types.get(0));
+                }
+                if (types.size() > 1) {
+                    plural = true;
+                }
+            }
+            if (existingArgumentAnchors.containsKey(location)) {
+                argument = true;
+            }
+
+            locIndex += setFGColorAtLocation(c, location, plural, argument);
+        }
+    }
+
 
     void assignFGColorOver(List<Integer> locations) throws MaeDBException {
         int locIndex = 0;
@@ -395,15 +529,11 @@ class TextPanelController extends MaeControllerI{
         }
     }
 
-    /**
-     * This method is for coloring/underlining text in the text window.  It detects
-     * overlaps, and should be called every time a tag is added or removed.
-     */
     private int assignFGColorAt(int location) throws MaeDBException {
         boolean singular = false;
         boolean plural = false;
         boolean argument = false;
-        Color c = Color.black; // default color is black
+        Color c = DEFAULT_FONT_COLOR;
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
         Set<TagType> activeLinks = getMainController().getActiveLinkTags();
 
@@ -473,44 +603,72 @@ class TextPanelController extends MaeControllerI{
 
     private class TextPanelCaretListener implements CaretListener {
 
+        boolean acceptingSingleClick() {
+            return getMainController().getMode() == MaeMainController.MODE_ARG_SEL;
+
+        }
+
         @Override
         public void caretUpdate(CaretEvent e) {
 
-            if (e.getDot() != e.getMark()) {
-                // that is, mouse is dragged and text is selected
-
-                int start = Math.min(e.getDot(), e.getMark());
-                int end = Math.max(e.getDot(), e.getMark());
-                if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                    // in normal mode, clear selection before adding a new selection
-                    clearSelection();
-                }
-                addSelection(new int[]{start, end});
-            } else {
-                switch (getMainController().getMode()) {
-                    case MaeMainController.MODE_NORMAL:
-                        clearSelection();
-                        break;
-                    case MaeMainController.MODE_ARG_SEL:
-                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
-                        break;
-
-                }
-            }
             try {
-                removeAllBGColors();
-                addBGColorOver(selected, ColorHandler.getDefaultHighlighter());
-            } catch (MaeControlException ignored) {
-                // possible MaeException chained from BadLocationException is ignored
+                if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
+                    addDraggedSelection(e.getDot(), e.getMark());
+                } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
+                    // MSPAN mode always ignore single click
+                } else {
+                    if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                        clearSelection(); // single click will clear out prev selection
+                    }
+                    if (acceptingSingleClick()) {
+                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
+                    }
+                }
+            } catch (MaeDBException ex) {
+                getMainController().showError(ex);
             }
+            repaintBGColor();
             getMainController().propagateSelectionFromTextPanel();
+        }
+
+        void addDraggedSelection(int dot, int mark) throws MaeDBException {
+            int start = Math.min(dot, mark);
+            int end = Math.max(dot, mark);
+            if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
+                // in normal mode, clear selection before adding a new selection
+                clearSelection();
+            }
+            addSelection(new int[]{start, end});
+        }
+    }
+
+    private class DocumentCloseListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
+            if (title.isEnabled()) {
+                getView().getTabs().setSelectedIndex(title.getTabIndex());
+                if (getMainController().showUnsavedChangeWarning()) {
+                    getMainController().closeCurrentDocument();
+                }
+            }
+
+        }
+        TextPanelView.DocumentTabTitle getProperParent(Component component) {
+            if (component instanceof TextPanelView.DocumentTabTitle) {
+                return (TextPanelView.DocumentTabTitle) component;
+            } else {
+                return getProperParent(component.getParent());
+            }
         }
     }
 
     private class TextPanelTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            // TODO: 1/4/2016  finish this for multi file support
+            if (!getMainController().isAdjudicating()) {
+                getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
+            }
 
         }
     }

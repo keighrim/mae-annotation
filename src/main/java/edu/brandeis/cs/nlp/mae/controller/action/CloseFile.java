@@ -22,48 +22,29 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util;
+package edu.brandeis.cs.nlp.mae.controller.action;
+
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 /**
- * This is an implementation of a Hashtable that 
- * stores more than one value per key.  This is done by 
- * having every key associated with an ArrayList, and every
- * new value being stored in the array is added to the end of
- * the list (unless the list already contains that value)
- *
- * @author Amber Stubbs, Keigh Rim
- *
- *
+ * Listener for the File menu; determines what action to take for loading/saving
+ * documents.
  */
+public class CloseFile extends MenuActionI {
 
+    public CloseFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+        super(text, icon, hotkey, mnemonic, controller);
+    }
 
-import java.util.*;
-
-public interface MappedCollection<K,V>{
-
-    boolean isSizeOne();
-
-    Set<K> keySet();
-
-    ArrayList<K> keyList();
-
-    void putItem(K key, V value);
-
-    void putCollection(K key, Collection<V> collection);
-
-    void merge(MappedCollection<K,V> newHash);
-
-    Collection<V> get(K key);
-
-    ArrayList<V> getAsList(K key);
-
-    Collection<V> remove(K key);
-
-    int size();
-
-    void clear();
-
-    boolean containsKey(K key);
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        if (getMainController().showCurrentUnsavedChangeWarning()) {
+            getMainController().closeCurrentDocument();
+        }
+    }
 
 }
 

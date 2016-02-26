@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.model;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LinkTagDao;
 import org.apache.commons.lang3.StringUtils;
 
@@ -108,8 +109,8 @@ public class LinkTag extends Tag implements ModelI {
         Map<String, String> argumentsNames = new LinkedHashMap<>();
         if (getArguments() != null && getArguments().size() > 0) {
             for (Argument argument : getArguments()) {
-                argumentsNames.put(argument.getName() + "ID", argument.getArgument().getTid());
-                argumentsNames.put(argument.getName() + "Text", argument.getArgument().getText());
+                argumentsNames.put(argument.getName() + MaeStrings.ARG_IDCOL_SUF, argument.getArgument().getTid());
+                argumentsNames.put(argument.getName() + MaeStrings.ARG_TEXTCOL_SUF, argument.getArgument().getText());
             }
         }
         return argumentsNames;

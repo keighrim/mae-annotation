@@ -47,8 +47,6 @@ public interface MaeDriverI {
 
     void destroy() throws MaeDBException;
 
-    // TODO: 12/31/2015 separate each section into separate interface and make DriverImple to implement multiple interfaces
-
     // task
     void readTask(File file) throws MaeDBException, MaeIODTDException, FileNotFoundException;
 
@@ -61,6 +59,8 @@ public interface MaeDriverI {
     String getTaskFileName() throws MaeDBException;
 
     void setTaskFileName(String fileName) throws MaeDBException;
+
+    String getDBSourceName();
 
     String getAnnotationFileName() throws MaeDBException;
 
@@ -80,11 +80,13 @@ public interface MaeDriverI {
 
     boolean isAnnotationChanged();
 
-    public boolean isPrimaryTextLoaded();
+    boolean isPrimaryTextLoaded();
 
     // character index (anchor)
 
     List<Integer> getAllAnchors() throws MaeDBException;
+
+    List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException;
 
     List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException;
 
@@ -127,20 +129,28 @@ public interface MaeDriverI {
 
     List<ExtentTag> getTagsIn(int[] locations) throws MaeDBException;
 
+    List<ExtentTag> getTagsOfTypeAt(TagType type, int location) throws MaeDBException;
+
+    List<ExtentTag> getTagsOfTypeIn(TagType type, int[] locations) throws MaeDBException;
+
+    List<ExtentTag> getTagsOfTypeBetween(TagType type, int begin, int end) throws MaeDBException;
+
     MappedSet<TagType,ExtentTag> getTagsByTypesAt(int location) throws MaeDBException;
 
     MappedSet<TagType,ExtentTag> getTagsByTypesIn(int[] locations) throws MaeDBException;
 
     MappedSet<TagType,ExtentTag> getTagsByTypesBetween(int begin, int end) throws MaeDBException;
 
-    List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException;
+    List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException;
+
+    List<ExtentTag> getAllNCTagsOfType(TagType type) throws MaeDBException;
 
     // link tags
     LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException;
 
     LinkTag createLinkTag(TagType tagType) throws MaeDBException;
 
-    List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException, IllegalArgumentException;
+    List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException;
 
     void deleteTag(Tag tag) throws MaeDBException;
 
@@ -182,5 +192,8 @@ public interface MaeDriverI {
     void setArgumentTypeRequired(ArgumentType type, boolean b) throws MaeDBException;
 
     // args
-    Argument addOrUpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+    Argument addArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+
+    Argument UpdateArgument(LinkTag linker, ArgumentType argType, ExtentTag argument) throws MaeDBException;
+
 }

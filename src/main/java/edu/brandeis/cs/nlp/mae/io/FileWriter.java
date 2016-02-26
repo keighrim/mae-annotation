@@ -22,48 +22,29 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util;
+package edu.brandeis.cs.nlp.mae.io;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
- * This is an implementation of a Hashtable that 
- * stores more than one value per key.  This is done by 
- * having every key associated with an ArrayList, and every
- * new value being stored in the array is added to the end of
- * the list (unless the list already contains that value)
- *
- * @author Amber Stubbs, Keigh Rim
- *
- *
+ * Created by krim on 2/18/2016.
  */
+public class FileWriter {
 
-
-import java.util.*;
-
-public interface MappedCollection<K,V>{
-
-    boolean isSizeOne();
-
-    Set<K> keySet();
-
-    ArrayList<K> keyList();
-
-    void putItem(K key, V value);
-
-    void putCollection(K key, Collection<V> collection);
-
-    void merge(MappedCollection<K,V> newHash);
-
-    Collection<V> get(K key);
-
-    ArrayList<V> getAsList(K key);
-
-    Collection<V> remove(K key);
-
-    int size();
-
-    void clear();
-
-    boolean containsKey(K key);
+    public static void writeTextOnEmptyFile(String text, File file) throws MaeIOException {
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream output = new FileOutputStream(file);
+            output.write(text.getBytes());
+            output.flush();
+            output.close();
+        } catch (IOException e) {
+            throw new MaeIOException("Cannot create a new file!", e);
+        }
+    }
 
 }
-

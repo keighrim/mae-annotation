@@ -55,6 +55,7 @@ public class LocalSqliteDriverImplTest {
     @Before
     public void setUp() throws Exception {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver.setAnnotationFileName("TEST_SAMPLE");
 
         noun = driver.createTagType("NOUN", "N", false);
         verb = driver.createTagType("VERB", "V", false);
@@ -190,6 +191,60 @@ public class LocalSqliteDriverImplTest {
     }
 
     @Test
+    public void canRetrieveAllExtentTagsByTypesInSpan() throws Exception {
+        ExtentTag nTag3 = driver.createExtentTag("N03", noun, "jimmy", 16,17,18,19,20);
+        ExtentTag nTag4 = driver.createExtentTag("N04", noun, "jim", 16,17,18);
+        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15, 16);
+
+        List<ExtentTag> retrievedTags = driver.getTagsOfTypeAt(noun, 16);
+        assertEquals(
+                "Expected 2 noun tags are stored, found: " + retrievedTags.size(),
+                2, retrievedTags.size());
+        assertTrue(
+                "Expected N03 and N04 are anchored on the testing offset",
+                retrievedTags.contains(nTag3) && retrievedTags.contains(nTag4)
+        );
+
+        retrievedTags = driver.getTagsOfTypeAt(verb, 16);
+        assertEquals(
+                "Expected 1 verb tag is stored, found: " + retrievedTags.size(),
+                1, retrievedTags.size());
+        assertTrue(
+                "Expected V01 is anchored on the testing offset",
+                retrievedTags.contains(vTag)
+        );
+
+    }
+
+    @Test
+    public void canRetrieveAllNCTagsByTypes() throws Exception {
+        ExtentTag nTag3 = driver.createExtentTag("N03", noun, "jimmy", 16,17,18,19,20);
+        ExtentTag nTag4 = driver.createExtentTag("N04", noun, "jim", 16,17,18);
+        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15, 16);
+        ExtentTag ncNoun = driver.createExtentTag("N01", noun, null, null);
+        ExtentTag ncVerb = driver.createExtentTag("V02", verb, null, null);
+
+        List<ExtentTag> retrievedTags = driver.getAllNCTagsOfType(noun);
+        assertEquals(
+                "Expected 1 noun NC tag is stored, found: " + retrievedTags.size(),
+                1, retrievedTags.size());
+        assertTrue(
+                "Expected N03 and N04 are anchored on the testing offset",
+                retrievedTags.contains(ncNoun)
+        );
+
+        retrievedTags = driver.getAllNCTagsOfType(verb);
+        assertEquals(
+                "Expected 1 verb NC tag is stored, found: " + retrievedTags.size(),
+                1, retrievedTags.size());
+        assertTrue(
+                "Expected V01 is anchored on the testing offset",
+                retrievedTags.contains(ncVerb)
+        );
+
+    }
+
+    @Test
     public void canUpdateAttribute() throws Exception {
         ExtentTag nTag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
         AttributeType proper = driver.createAttributeType(noun, "proper");
@@ -219,8 +274,8 @@ public class LocalSqliteDriverImplTest {
         ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
-        driver.addOrUpdateArgument(link, agent, nTag);
-        driver.addOrUpdateArgument(link, pred, vTag);
+        driver.addArgument(link, agent, nTag);
+        driver.addArgument(link, pred, vTag);
 
 
         List<LinkTag> retrievedTags = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);
@@ -255,8 +310,8 @@ public class LocalSqliteDriverImplTest {
         driver.addAttribute(nTag, proper, "true");
 
         LinkTag link = driver.createLinkTag("A01", semanticRole);
-        driver.addOrUpdateArgument(link, agent, nTag);
-        driver.addOrUpdateArgument(link, pred, vTag);
+        driver.addArgument(link, agent, nTag);
+        driver.addArgument(link, pred, vTag);
 
         assertTrue(
                 "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),

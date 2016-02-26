@@ -24,7 +24,6 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
@@ -45,7 +44,7 @@ public class LoadTask extends MenuActionI {
             try {
                 File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
-                    getMainController().setupScheme(MaeStrings.ANN_DB_FILE, file, true);
+                    getMainController().setupScheme(file, true);
                 }
 
             } catch (Exception e) {

@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
-import java.util.Timer;
 
 /**
  * Created by krim on 12/31/2015.
@@ -52,11 +50,7 @@ class StatusBarController extends MaeControllerI {
         view.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBarLabel = new JLabel();
         view.add(statusBarLabel);
-        reset();
-    }
-
-    void update() {
-        reset();
+        refresh();
     }
 
     @Override
@@ -70,43 +64,37 @@ class StatusBarController extends MaeControllerI {
     }
 
     private String getModePrefix() {
+        String prefix = getMainController().isAdjudicating()? MaeStrings.SB_ADJUD_PREFIX : "";
         switch (getMainController().getMode()) {
             case MaeMainController.MODE_MULTI_SPAN:
-                return MaeStrings.SB_MSPAN_MODE_PREFIX;
+                if (prefix.length() > 1) prefix += " ";
+                prefix += MaeStrings.SB_MSPAN_MODE_PREFIX;
+                break;
             case MaeMainController.MODE_ARG_SEL:
-                return MaeStrings.SB_MARGS_MODE_PREFIX;
-            default:
-                return "";
+                if (prefix.length() > 1) prefix += " ";
+                prefix += MaeStrings.SB_MARGS_MODE_PREFIX;
+                break;
         }
+        if (prefix.length() > 0) prefix = String.format("[%s] ", prefix);
+        return prefix;
     }
 
     void setEmptySelectionText() {
-        switch (getMainController().getMode()) {
-            case MaeMainController.MODE_ARG_SEL:
-                setText(MaeStrings.SB_MARGS_NOTAG);
-                break;
-            default:
-                setText(MaeStrings.SB_NOTEXT);
+        if (getMainController().isAdjudicating() ||
+                getMainController().getMode() == MaeMainController.MODE_ARG_SEL) {
+            setText(MaeStrings.SB_MARGS_NOTAG);
+        } else {
+            setText(MaeStrings.SB_NOTEXT);
         }
     }
 
-    void delayedReset(long delayInMillisecond) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                reset();
-            }
-        }, delayInMillisecond);
-
-    }
-
-    @Override
-    void reset() {
+    void refresh() {
 
         if (!getMainController().isTaskLoaded()) {
             setText(MaeStrings.SB_NODTD);
         } else if (!getMainController().isDocumentOpen()) {
             setText(MaeStrings.SB_NOFILE);
+            getMainController().mouseCursorToDefault();
         } else {
             if (!getMainController().isTextSelected()) {
                 setEmptySelectionText();
@@ -115,7 +103,10 @@ class StatusBarController extends MaeControllerI {
             int[] spans = getMainController().getSelectedTextSpans();
             switch (getMainController().getMode()) {
                 case MaeMainController.MODE_NORMAL:
-                    setText(MaeStrings.SB_TEXT + SpanHandler.convertArrayToString(spans));
+                    String statMessage = getMainController().isAdjudicating() ?
+                            String.format(MaeStrings.SB_ADJUD_TAG, getMainController().getAdjudicatingTags().size(), getMainController().getAdjudicatingTagType())
+                            : MaeStrings.SB_TEXT + SpanHandler.convertArrayToString(spans);
+                    setText(statMessage);
                     break;
                 case MaeMainController.MODE_MULTI_SPAN:
                     setText(MaeStrings.SB_MSPAN_TEXT + SpanHandler.convertArrayToString(spans));
@@ -125,6 +116,7 @@ class StatusBarController extends MaeControllerI {
                     setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), potentialArguments));
                     break;
             }
+            getMainController().mouseCursorToDefault();
         }
     }
 

@@ -37,10 +37,10 @@ public class Argument implements ModelI {
     @DatabaseField(generatedId = true, columnName = DBSchema.TAB_ARG_COL_ID)
     private int id;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_LTAG)
+    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_LTAG)
     private LinkTag linker;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ETAG)
+    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ETAG)
     private ExtentTag argument;
 
     @DatabaseField(foreign = true, canBeNull = false, foreignAutoRefresh = true, columnName = DBSchema.TAB_ARG_FCOL_ART)
