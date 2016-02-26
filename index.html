@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Multi-document Annotation Environment by keighrim</title>
+    <title>MAE by keighrim</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/github-light.css">
@@ -15,8 +15,8 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Multi-document Annotation Environment</h1>
-        <p>MAE - Multi-ducoment Annotation Environment</p>
+        <h1>MAE</h1>
+        <p>Multi-ducoment Annotation Environment</p>
 
         <p class="view"><a href="https://github.com/keighrim/mae-annotation">View the Project on GitHub <small>keighrim/mae-annotation</small></a></p>
 
@@ -29,7 +29,7 @@
       </header>
       <section>
         <h1>
-<a id="multi-purpose-annotation-environment" class="anchor" href="#multi-purpose-annotation-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multi-purpose Annotation Environment</h1>
+<a id="multi-document-annotation-environment" class="anchor" href="#multi-document-annotation-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multi-document Annotation Environment</h1>
 
 <p><a href="http://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/:license-GPLv3-green.svg" alt="License"></a> 
 <a href="https://github.com/keighrim/mae-annotation/releases"><img src="https://img.shields.io/github/release/keighrim/mae-annotation.svg" alt="Latest release"></a>
@@ -37,26 +37,26 @@
 <a href="https://travis-ci.org/keighrim/mae-annotation/"><img src="https://img.shields.io/travis/keighrim/mae-annotation.svg" alt="Travis CI"></a> </p>
 
 <h3>
-<a id="mae-v10-is-released" class="anchor" href="#mae-v10-is-released" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>MAE v1.0 is released!</h3>
+<a id="mae-v20-is-released" class="anchor" href="#mae-v20-is-released" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>MAE v2.0 is released!</h3>
 
-<p>What's new: </p>
+<h5>
+<a id="whats-new" class="anchor" href="#whats-new" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What's new:</h5>
 
 <ul>
-<li>Completely re-written from the ground.</li>
-<li>More intuitive and clean menu structure.</li>
-<li>Verification of annotation when loading and saving.</li>
-<li><strong>Now requires Java 7</strong></li>
+<li>Multiple files open at the same time</li>
+<li>Adjudication with visualization is integrated (formerly MAI) </li>
+<li>Many bugfix and optimization</li>
 </ul>
 
 <h2>
 <a id="introducing-mae" class="anchor" href="#introducing-mae" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introducing MAE</h2>
 
-<p>MAE (Multi-purpose Annotation Environment) is an annotation tool originally created by <a href="http://amberstubbs.net">Amber Stubbs</a> for Brandeis University for use in her dissertation research. It is a lightweight program written in Java, with SQLite database back end.</p>
+<p>MAE (Multi-document Annotation Environment) is a lightweight, geneal-purpose natural language annotation tool. 
+It was originally created by <a href="http://amberstubbs.net">Amber Stubbs</a> for use in her dissertation research at Brandeis University, 
+and currently <a href="https://github.com/keighrim">Keigh Rim</a> is maintaininig the project.</p>
 
-<p>Currently <a href="https://github.com/keighrim">Keigh Rim</a> is in charge of the maintenance of the project since 2014, along with the companion adjudication tool <a href="https://github.com/keighrim/mai-adjudication">MAI</a>, which will soon be integrated into MAE.</p>
-
-<p>MAE allows users to define their own annotation tasks, annotate partial words - including discontinuous text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
-Also MAI allows for easy adjudication of extent tags, link tags, and non-consuming tags from any XML standoff annotated documents. (for best results, the files output by MAE should be used).
+<p>MAE allows users to define their own annotation tasks, mark up arbitrary text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
+It also allows for easy adjudication with visualization of extent tags, link tags, and non-consuming tags from any XML standoff annotated documents. (for best results, the files output by MAE should be used).
 While it does not enforce strict rules for annotation schemes, it is very easy to set up and start running. Check out the wiki for the user guide with detailed instructions.</p>
 
 <h2>
@@ -65,19 +65,19 @@ While it does not enforce strict rules for annotation schemes, it is very easy t
 <h3>
 <a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Requirements</h3>
 
-<p>Latest MAE requires Java 7 to run, and Maven to build. See wiki for more details.</p>
+<p>Latest MAE requires Java 7 to run, and Maven to build. See <a href="https://github.com/keighrim/mae-annotation/wiki">the project wiki</a> for more details.</p>
 
-<p>For more robust Unicode support, MAE uses <a href="http://dejavu-fonts.org/wiki/Main_Page">DejaVu Sans</a> font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also required to have DejaVu Sans font installed.</p>
+<p>For robust Unicode support, MAE uses <a href="http://dejavu-fonts.org/wiki/Main_Page">DejaVu Sans</a> font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also recommended to have DejaVu Sans font installed.</p>
 
 <h3>
 <a id="download-and-run" class="anchor" href="#download-and-run" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download and run</h3>
 
-<p>Download release package or executable <code>.jar</code> from from <a href="https://github.com/keighrim/mae-annotation/releases">releases</a> page. After you have <code>mae-&lt;VERSION&gt;.jar</code> file, simply double click the file will run MAE. Be sure that you have a proper version of Java installed.</p>
+<p>Download release package or executable <code>.jar</code> from from <a href="https://github.com/keighrim/mae-annotation/releases">releases</a> page. Once you have <code>mae-&lt;VERSION&gt;.jar</code> file, simply double click the file will run MAE. Be sure that you have a proper version of Java installed.</p>
 
 <h3>
-<a id="annotation" class="anchor" href="#annotation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Annotation</h3>
+<a id="annotation-and-adjudication" class="anchor" href="#annotation-and-adjudication" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Annotation and Adjudication</h3>
 
-<p>We are providing the user guide to MAE using project <a href="https://github.com/keighrim/mae-annotation/wiki">Wiki</a>.</p>
+<p>See <a href="https://github.com/keighrim/mae-annotation/wiki">the project wiki</a> for detailed users' guide.</p>
 
 <h2>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
@@ -112,7 +112,7 @@ While it does not enforce strict rules for annotation schemes, it is very easy t
 <h3>
 <a id="see-also" class="anchor" href="#see-also" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>See also</h3>
 
-<p>For learn more about natural language annotation, please refer to Amber Stubbs and James Pustejovsky's book <a href="http://shop.oreilly.com/product/0636920020578.do">Natural Language Annotation for Machine Learning</a>. (Please note that the book is written using MAE 0.9.6)</p>
+<p>To learn more about natural language annotation, please refer to Amber Stubbs and James Pustejovsky's book <a href="http://shop.oreilly.com/product/0636920020578.do">Natural Language Annotation for Machine Learning</a>. (Note that the book is written using MAE 0.9.6)</p>
 
 <p>You can also visit Amber Stubb's <a href="https://code.google.com/p/mae-annotation/">old code base archive</a> hosted on Google Code.</p>
       </section>
