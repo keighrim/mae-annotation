@@ -1028,16 +1028,20 @@ public class MaeMainController extends JPanel {
                     adjudicatingTags.add(tag);
                 }
             } else {
+                Set<LinkTag> linkers = new HashSet<>();
                 List<ExtentTag> selectedTags = getExtentTagsFromAllDocumentsInSelectedSpans();
                 for (ExtentTag tag : selectedTags) {
                     MaeDriverI driver = getDriverOf(tag.getFilename());
-                    Set<LinkTag> linkers = driver.getLinksHasArgumentTag(tag);
-                    for (LinkTag linker : linkers) {
+                    Set<LinkTag> linkersFromAFile = driver.getLinksHasArgumentTag(tag);
+                    for (LinkTag linker : linkersFromAFile) {
                         if (linker.getTagtype().equals(currentType)) {
-                            getTablePanel().insertTagIntoAdjudicationTable(linker);
-                            adjudicatingTags.add(linker);
+                            linkers.add(linker);
                         }
                     }
+                }
+                for (LinkTag linker : linkers) {
+                    getTablePanel().insertTagIntoAdjudicationTable(linker);
+                    adjudicatingTags.add(linker);
                 }
             }
         } catch (MaeDBException e) {
