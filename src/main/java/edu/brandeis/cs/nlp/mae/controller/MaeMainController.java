@@ -788,7 +788,7 @@ public class MaeMainController extends JPanel {
     }
 
     public List<ExtentTag> getExtentTagsFromAllDocumentsIn(int[] locations) {
-        List<ExtentTag> tags = new LinkedList<>();
+        Set<ExtentTag> tags = new HashSet<>();
         try {
             for (MaeDriverI driver : getDrivers()) {
                 tags.addAll(driver.getTagsIn(locations));
@@ -796,7 +796,11 @@ public class MaeMainController extends JPanel {
         } catch (MaeDBException e) {
             showError(e);
         }
-        return tags;
+        return new ArrayList<>(tags);
+    }
+
+    public boolean isArgumentsSelected() {
+        return getSelectedArguments() != null && getSelectedArguments().size() > 0;
     }
 
     public List<ExtentTag> getSelectedArguments() {
@@ -1151,6 +1155,14 @@ public class MaeMainController extends JPanel {
         return  null;
     }
 
+    public void addArgument(LinkTag linker, ArgumentType argType, String argTid) {
+        try {
+            getDriver().addArgument(linker, argType, (ExtentTag) getDriver().getTagByTid(argTid));
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+    }
+
     public Tag getTagBySourceAndTid(String sourceFileName, String tid) {
         try {
             return getDriverOf(sourceFileName).getTagByTid(tid);
@@ -1191,7 +1203,11 @@ public class MaeMainController extends JPanel {
     }
 
     LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
-        if (showWarning("Copying a link tag will also copy its arguments,\nunless matching extent tags do not exist in GS.\n(Matching by span, Non-consuming arguments are always copied!)\nDo you want to continue?")) {
+        String warning = ("Copying a link tag will also copy its arguments,\n" +
+                "unless matching extent tags are found in GS.\n" +
+                "(matched by span AND non-consuming arguments are always copied!)" +
+                "\nDo you want to continue?");
+        if (showWarning(warning)) {
             MaeDriverI originalDriver = getDriverOf(original.getFilename());
             TagType type = original.getTagtype();
             LinkTag newTag = getDriver().createLinkTag(type);

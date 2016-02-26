@@ -146,7 +146,12 @@ class DialogController {
             for (ArgumentType argType : arguments.keySet()) {
                 String argTypeName = argType.getName();
                 String argTid = arguments.get(argType).getTid();
-                getMainController().surgicallyUpdateCell(linker, argTypeName + MaeStrings.ARG_IDCOL_SUF, argTid);
+                if (getMainController().isAdjudicating()) {
+                    getMainController().addArgument(linker, argType, argTid);
+                    getMainController().adjudicationStatUpdate();
+                } else {
+                    getMainController().surgicallyUpdateCell(linker, argTypeName + MaeStrings.ARG_IDCOL_SUF, argTid);
+                }
             }
             return linker;
 
