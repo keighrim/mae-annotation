@@ -141,6 +141,8 @@ public interface MaeDriverI {
 
     MappedSet<TagType,ExtentTag> getTagsByTypesBetween(int begin, int end) throws MaeDBException;
 
+    List<ExtentTag> getAllExtentTagsOfAllTypes(boolean consumingOnly) throws MaeDBException;
+
     List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException;
 
     List<ExtentTag> getAllNCTagsOfType(TagType type) throws MaeDBException;
@@ -149,6 +151,8 @@ public interface MaeDriverI {
     LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException;
 
     LinkTag createLinkTag(TagType tagType) throws MaeDBException;
+
+    List<LinkTag> getAllLinkTagsOfAllTypes() throws MaeDBException;
 
     List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException;
 

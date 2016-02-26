@@ -471,6 +471,24 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
+    @Override
+    public List<LinkTag> getAllLinkTagsOfAllTypes() throws MaeDBException {
+        try {
+            return new ArrayList<>(lTagDao.queryForAll());
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public List<ExtentTag> getAllExtentTagsOfAllTypes(boolean consumingOnly) throws MaeDBException {
+        try {
+            return new ArrayList<>(eTagDao.queryForAll());
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
     public MappedSet<TagType, ExtentTag> getAllExtentTagsByTypes(boolean consumingOnly) throws MaeDBException {
         MappedSet<TagType, ExtentTag> tagsByTypes = new MappedSet<>();
         for (TagType type : getAllTagTypes()) {
