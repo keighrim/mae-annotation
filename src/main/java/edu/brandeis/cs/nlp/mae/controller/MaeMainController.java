@@ -43,7 +43,10 @@ import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -1108,6 +1111,7 @@ public class MaeMainController extends JPanel {
     void propagateToAnnotationArea() {
         getTablePanel().clearTableSelections();
         List<ExtentTag> releventTags = getExtentTagsInSelectedSpans();
+        getTablePanel().clearTableSelections();
         for (ExtentTag tag : releventTags) {
             try {
                 getTablePanel().selectTagFromTable(tag);
@@ -1307,6 +1311,7 @@ public class MaeMainController extends JPanel {
 
     public void selectTagAndTable(Tag tag) {
         try {
+            getTablePanel().clearTableSelections();
             getTablePanel().selectTagFromTable(tag);
             getTablePanel().selectTabOf(tag.getTagtype());
             propagateSelectionFromTablePanel(tag.getId());

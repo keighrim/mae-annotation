@@ -333,7 +333,6 @@ class TablePanelController extends MaeControllerI {
 
     void selectTagFromTable(Tag tag) throws MaeDBException {
         JTable table = tableMap.get(tag.getTagTypeName());
-        table.clearSelection();
         TagTableModel tableModel = (TagTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
         table.addRowSelectionInterval(viewIndex, viewIndex);
