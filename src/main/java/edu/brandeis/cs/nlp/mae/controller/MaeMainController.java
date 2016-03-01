@@ -682,7 +682,7 @@ public class MaeMainController extends JPanel {
     boolean checkDuplicateDocs(File annotationFile) {
         for (MaeDriverI driver : getDrivers()) {
             try {
-                if (annotationFile.getAbsolutePath().equals(driver.getAnnotationFileName())) {
+                if (annotationFile.getAbsolutePath().replace("/./", "/").equals(driver.getAnnotationFileName())) {
                     showError(String.format("%s \nis already open!", annotationFile.getName()));
                     return true;
 

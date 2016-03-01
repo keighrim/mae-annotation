@@ -65,7 +65,7 @@ public class XMLLoader {
         try {
             try {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
-                driver.setAnnotationFileName(file.getAbsolutePath());
+                driver.setAnnotationFileName(file.getAbsolutePath().replace("/./", "/"));
                 this.read(new FileInputStream(file));
             } catch (SAXException e) {
                 logger.info("file is not an XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
