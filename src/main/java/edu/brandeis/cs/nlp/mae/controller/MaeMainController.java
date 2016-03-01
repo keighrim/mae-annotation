@@ -406,7 +406,7 @@ public class MaeMainController extends JPanel {
     public void closeDocumentAt(int i) {
         int openDrivers = getDrivers().size();
         if (i > openDrivers || openDrivers != getTextPanel().getOpenTabCount()) {
-            showError("drivers and documents do not match!");
+            showError("#drivers and #documents do not match!");
         }
         try {
             if (getDrivers().size() > 1) {
@@ -589,54 +589,80 @@ public class MaeMainController extends JPanel {
     public void addDocument(File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
         try {
-            boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
-            sendWaitMessage();
-            if (secondaryDocument) {
-                setupScheme(new File(getDriver().getTaskFileName()), false);
-                // setting up the scheme will switch driver to the new one
+            try {
+                boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
+                sendWaitMessage();
+                if (secondaryDocument) {
+                    setupScheme(new File(getDriver().getTaskFileName()), false);
+                    // setting up the scheme will switch driver to the new one
+                }
+                getDriver().readAnnotation(annotationFile);
+                getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
+                logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+                if (!secondaryDocument) {
+                    getMenu().resetFileMenu();
+                    getMenu().resetTagsMenu();
+                    getMenu().resetModeMenu();
+                    getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
+                    logger.info("inserting is done");
+                }
+                if (isAdjudicating()) {
+                    currentDriver = drivers.get(adjudDriverIndex);
+                    assignAdjudicationColors();
+                } else {
+                    getTextPanel().assignAllFGColor();
+                    logger.info("painting is done");
+                    showIncompleteTagsWarning(true);
+                }
+                sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
+            } catch (MaeIOException e) {
+                showError(e);
+                destroyCurrentDriver();
             }
-            getDriver().readAnnotation(annotationFile);
-            getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
-            logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-            if (!secondaryDocument) {
-                getMenu().resetFileMenu();
-                getMenu().resetTagsMenu();
-                getMenu().resetModeMenu();
-                getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
-                logger.info("inserting is done");
-            }
-            if (isAdjudicating()) {
-                currentDriver = drivers.get(adjudDriverIndex);
-                assignAdjudicationColors();
-            } else {
-                getTextPanel().assignAllFGColor();
-                logger.info("painting is done");
-                showIncompleteTagsWarning(true);
-            }
-            sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
         } catch (MaeException e) {
             showError(e);
-        } catch (FileNotFoundException e) {
-            showError("File not found!", e);
         }
 
     }
 
     public void addAdjudication(File goldstandard) {
         try {
-            setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
-            getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
-            getDriver().readAnnotation(goldstandard);
-            getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
-            getTablePanel().prepareAllTables();
-            switchAdjudicationTag();
-            logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+            try {
+                setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
+                getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
+                getDriver().readAnnotation(goldstandard);
+                getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
+                getTablePanel().prepareAllTables();
+                switchAdjudicationTag();
+                logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+            } catch (MaeIOException e) {
+                showError(e);
+                destroyCurrentDriver();
+            }
         } catch (MaeException e) {
             showError(e);
-        } catch (FileNotFoundException e) {
-            showError("File not found!", e);
         }
     }
+
+    private void destroyCurrentDriver() {
+        try {
+            if (drivers.size() == 1) { // means no annotation file is open (only task file open)
+                String taskFileName = getDriver().getTaskFileName();
+                getDriver().destroy();
+                drivers.clear();
+                setupScheme(new File(taskFileName), false);
+            } else {
+                getDriver().destroy();
+                drivers.remove(drivers.size() - 1);
+                currentDriver = drivers.get(drivers.size() - 1);
+            }
+            updateNotificationArea();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+
+    }
+
 
     Set<String> checkTextSharing() {
         Set<String> differs = new HashSet<>();
