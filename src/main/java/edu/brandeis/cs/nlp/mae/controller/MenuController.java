@@ -646,23 +646,24 @@ class MenuController extends MaeControllerI {
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
         TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
 
-        int selectedRow = table.getSelectedRow();
+        int selectedModelRow = table.convertRowIndexToModel(table.getSelectedRow());
         if (!getMainController().isAdjudicating()) {
             if (selected == 1) {
-                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
             } else {
-                contextMenu.add(getPluralDelete(model, table.getSelectedRows()));
+                int[] selectedModelRows = convertRowIndicesToModel(table, table.getSelectedRows());
+                contextMenu.add(getPluralDelete(model, selectedModelRows));
                 if (model.getAssociatedTagType().isExtent()) {
-                    contextMenu.add(createMakeLinkFromTableMenu(model, table.getSelectedRows()));
+                    contextMenu.add(createMakeLinkFromTableMenu(model, selectedModelRows));
                 }
             }
         } else { // multi row selection is disabled in adjudication
-            String srcFileName = (String) table.getValueAt(selectedRow, TablePanelController.SRC_COL);
+            String srcFileName = (String) table.getValueAt(selectedModelRow, TablePanelController.SRC_COL);
             if (srcFileName.equals(getMainController().getDriver().getAnnotationFileBaseName())) {
-                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
 
             } else {
-                String tid = (String) table.getValueAt(selectedRow, TablePanelController.ID_COL);
+                String tid = (String) table.getValueAt(selectedModelRow, TablePanelController.ID_COL);
                 MaeDriverI driver = getMainController().getDriverOf(srcFileName);
                 Tag tag = driver.getTagByTid(tid);
                 contextMenu.add(getSingleCopy(tag));
@@ -671,6 +672,14 @@ class MenuController extends MaeControllerI {
 
         return contextMenu;
 
+    }
+
+    static int[] convertRowIndicesToModel(JTable table, int[] viewIndices) {
+        int[] modelIndices = new int[viewIndices.length];
+        for (int i = 0; i < viewIndices.length; i++) {
+            modelIndices[i] = table.convertRowIndexToModel(viewIndices[i]);
+        }
+        return modelIndices;
     }
 
     private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {

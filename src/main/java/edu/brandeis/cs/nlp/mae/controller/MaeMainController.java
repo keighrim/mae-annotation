@@ -1190,7 +1190,10 @@ public class MaeMainController extends JPanel {
 
     public void addArgument(LinkTag linker, ArgumentType argType, String argTid) {
         try {
-            getDriver().addArgument(linker, argType, (ExtentTag) getDriver().getTagByTid(argTid));
+            ExtentTag arg = (ExtentTag) getDriver().getTagByTid(argTid);
+            logger.info(String.format(
+                    "adding an argument %s of type \"%s\" to %s", arg.toString(), argType.getName(), linker.getId()));
+            getDriver().addArgument(linker, argType, arg);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -1366,6 +1369,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void surgicallyUpdateCell(Tag tag, String colName, String value) {
+        logger.info(String.format("updating %s's %s to %s", tag.getId(), colName, value));
         getTablePanel().insertValueIntoCell(tag, colName, value);
     }
 
