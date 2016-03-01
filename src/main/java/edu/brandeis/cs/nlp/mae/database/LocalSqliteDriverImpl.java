@@ -770,26 +770,26 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public Set<Attribute> addAttributes(Tag tag, final Map<AttributeType, String> attributes) throws MaeDBException {
-        final Set<Attribute> created = new HashSet<>();
+        final Set<Attribute> toBeAdded = new HashSet<>();
         try {
             for (AttributeType attType : attributes.keySet()) {
                 Attribute att = new Attribute(tag, attType, attributes.get(attType));
 //                attDao.create(att);
-                created.add(att);
+                toBeAdded.add(att);
             }
             attDao.callBatchTasks(new Callable<Void>() {
                 public Void call() throws Exception {
-                    for (Attribute account : created) {
-                        attDao.create(account);
+                    for (Attribute attribute : toBeAdded) {
+                        attDao.create(attribute);
                     }
                     return null;
                 }
             });
             refreshTag(tag);
             resetQueryBuilders();
-            logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", created.toString(), tag.toString()));
+            logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", toBeAdded.toString(), tag.toString()));
             setAnnotationChanged(true);
-            return created;
+            return toBeAdded;
         } catch (SQLException e) {
             throw catchSQLException(e);
         } catch (MaeModelException e) {

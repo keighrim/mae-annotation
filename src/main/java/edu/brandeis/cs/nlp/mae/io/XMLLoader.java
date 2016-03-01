@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae.io;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.*;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -52,6 +54,7 @@ public class XMLLoader {
 
     private MaeDriverI driver;
     private Map<TagType, Map<String, AttributeType>> attTypeMap;
+    String primaryText;
 
     public XMLLoader(MaeDriverI driver) {
         this.attTypeMap = new HashMap<>();
@@ -68,7 +71,8 @@ public class XMLLoader {
                 logger.info("file is not an XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
                 driver.setAnnotationFileName(file.getAbsolutePath());
                 Scanner scanner = new Scanner(file, "UTF-8");
-                driver.setPrimaryText(scanner.useDelimiter("\\A").next());
+                primaryText = scanner.useDelimiter("\\A").next();
+                driver.setPrimaryText(primaryText);
                 scanner.close(); // Put this call in a finally block
             }
         } catch (FileNotFoundException e) {
@@ -177,7 +181,6 @@ public class XMLLoader {
 
     }
 
-
     private void readAnnotations(Node tagsNode) throws MaeDBException, MaeIOXMLException {
         logger.debug("reading annotations... at " + tagsNode.getUserData("lineNum"));
         Map<String, TagType> tagTypeMap = new HashMap<>();
@@ -213,24 +216,24 @@ public class XMLLoader {
             logger.error(message);
             throw new MaeIOXMLException(message);
         }
-        nodeAttributes.removeNamedItem("id");
+//        nodeAttributes.removeNamedItem("id");
 
-        int[] spans;
+        int[] spansArray;
         if (nodeAttributes.getNamedItem("spans") != null) {
             try {
-                spans = SpanHandler.convertStringToArray(nodeAttributes.getNamedItem("spans").getNodeValue());
+                spansArray = SpanHandler.convertStringToArray(nodeAttributes.getNamedItem("spans").getNodeValue());
             } catch (MaeException e) {
                 String message = "spans string is ill-formed";
                 throw new MaeIOXMLException(message, e);
             }
-            nodeAttributes.removeNamedItem("spans");
+//            nodeAttributes.removeNamedItem("spans");
         } else {
             try {
                 int start = Integer.parseInt(nodeAttributes.getNamedItem("start").getNodeValue());
                 int end = Integer.parseInt(nodeAttributes.getNamedItem("end").getNodeValue());
-                nodeAttributes.removeNamedItem("start");
-                nodeAttributes.removeNamedItem("end");
-                spans = SpanHandler.range(start, end);
+//                nodeAttributes.removeNamedItem("start");
+//                nodeAttributes.removeNamedItem("end");
+                spansArray = SpanHandler.range(start, end);
             } catch (NumberFormatException | NullPointerException e) {
                 String message = "an extent tag must have either spans or start-end attributes at " + tagNode.getUserData("lineNum");
                 logger.error(message);
@@ -238,10 +241,23 @@ public class XMLLoader {
             }
         }
 
-        String text = nodeAttributes.getNamedItem("text").getNodeValue();
-        nodeAttributes.removeNamedItem("text");
+        String text = "";
+        if (spansArray.length > 0) {
+            List<int[]> spanPairs = SpanHandler.convertArrayToPairs(spansArray);
+            Iterator<int[]> iter = spanPairs.iterator();
 
-        ExtentTag newTag = driver.createExtentTag(tid, tagType, text, spans);
+            while (iter.hasNext()) {
+                int[] pair = iter.next();
+                text += primaryText.substring(pair[0], pair[1]);
+                if (iter.hasNext()) {
+                    text += MaeStrings.SPANTEXTTRUNC;
+                }
+            }
+        }
+//        String text = nodeAttributes.getNamedItem("text").getNodeValue();
+//        nodeAttributes.removeNamedItem("text");
+
+        ExtentTag newTag = driver.createExtentTag(tid, tagType, text, spansArray);
 
         addAllAttributes(possibleAttTypeMap, nodeAttributes, newTag);
 
@@ -255,7 +271,7 @@ public class XMLLoader {
         NamedNodeMap nodeAttributes = tagNode.getAttributes();
 
         String tid = nodeAttributes.getNamedItem("id").getNodeValue();
-        nodeAttributes.removeNamedItem("id");
+//        nodeAttributes.removeNamedItem("id");
 
         LinkTag newTag = driver.createLinkTag(tid, tagType);
 
@@ -272,8 +288,8 @@ public class XMLLoader {
                     ExtentTag argumentTag = (ExtentTag) driver.getTagByTid(attValue);
                     driver.addArgument(tag, argTypeMap.get(argName), argumentTag);
                 }
-                nodeAttributes.removeNamedItem(argName + "ID");
-                nodeAttributes.removeNamedItem(argName + "Text");
+//                nodeAttributes.removeNamedItem(argName + "ID");
+//                nodeAttributes.removeNamedItem(argName + "Text");
             }
         }
     }
@@ -285,7 +301,6 @@ public class XMLLoader {
             if (nodeAttributes.getNamedItem(attName) != null) {
                 String attValue = nodeAttributes.getNamedItem(attName).getNodeValue();
                 if (attValue.length() > 0) {
-//                    driver.addAttribute(tag, attTypeMap.get(attName), attValue);
                     attributes.put(attTypeMap.get(attName), attValue);
                     attributesCount++;
                 }
@@ -324,7 +339,8 @@ public class XMLLoader {
 
     private void readPrimaryText(Node textNode) throws MaeDBException {
         logger.debug("reading primary document... at " + textNode.getUserData("lineNum"));
-        driver.setPrimaryText(textNode.getTextContent());
+        primaryText = textNode.getTextContent();
+        driver.setPrimaryText(primaryText);
 
     }
 
@@ -387,7 +403,12 @@ public class XMLLoader {
                 }
             }
         };
-        parser.parse(is, handler);
+
+
+        Reader reader = new InputStreamReader(is,"UTF-8");
+
+        InputSource source = new InputSource(reader);
+        parser.parse(source, handler);
 
         return doc;
     }
