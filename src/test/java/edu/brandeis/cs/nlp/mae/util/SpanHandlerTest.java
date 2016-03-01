@@ -130,12 +130,21 @@ public class SpanHandlerTest {
                 SpanHandler.listOfArraysEquals(pairs, gold)
         );
 
+        array = new int[]{9};
+        pairs = SpanHandler.convertArrayToPairs(array);
+        gold.clear();
+        gold.add(new int[]{9,10});
+        assertTrue(
+                "Should convert a singleton span, found: " + SpanHandler.listOfArraysToString(pairs),
+                SpanHandler.listOfArraysEquals(pairs, gold)
+        );
+
         array = new int[]{0,1,2,3};
         pairs = SpanHandler.convertArrayToPairs(array);
         gold.clear();
         gold.add(new int[]{0,4});
         assertTrue(
-                "Should convert an single span, found: " + SpanHandler.listOfArraysToString(pairs),
+                "Should convert a single span, found: " + SpanHandler.listOfArraysToString(pairs),
                 SpanHandler.listOfArraysEquals(pairs, gold)
         );
 

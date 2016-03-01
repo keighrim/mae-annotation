@@ -112,6 +112,10 @@ public class SpanHandler {
             ArrayList<int[]> nonComsumingSpan = new ArrayList<>();
             nonComsumingSpan.add(new int[]{MaeStrings.NC_START, MaeStrings.NC_END});
             return nonComsumingSpan;
+        } else if (spans.length == 1) {
+            ArrayList<int[]> singletonSpan = new ArrayList<>();
+            singletonSpan.add(new int[]{spans[0], spans[0] + 1});
+            return singletonSpan;
         }
 
         Arrays.sort(spans);

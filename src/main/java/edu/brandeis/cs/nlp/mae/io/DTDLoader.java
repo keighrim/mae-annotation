@@ -181,7 +181,7 @@ public class DTDLoader {
 
     private void processMeta(String element, int lineNum) throws MaeIODTDException, MaeDBException {
         // currently it can only process "internal parsed entities" element of DTD
-        Pattern elementPattern = Pattern.compile("<!\\s*ENTITY +(.+) +\"(.+)\">");
+        Pattern elementPattern = Pattern.compile("<!\\s*ENTITY +(.+) +\"(.+)\" *>");
         Matcher elementMatcher = elementPattern.matcher(element);
         boolean add;
         add = elementMatcher.matches() && addMetadata(elementMatcher.group(1), elementMatcher.group(2));

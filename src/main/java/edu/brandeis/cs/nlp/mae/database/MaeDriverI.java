@@ -54,7 +54,7 @@ public interface MaeDriverI {
 
     void setTaskName(String value) throws MaeDBException;
 
-    void readAnnotation(File file) throws MaeDBException, MaeIOXMLException, FileNotFoundException;
+    void readAnnotation(File file) throws MaeDBException, MaeIOXMLException;
 
     String getTaskFileName() throws MaeDBException;
 

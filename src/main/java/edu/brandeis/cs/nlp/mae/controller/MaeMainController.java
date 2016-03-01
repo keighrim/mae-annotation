@@ -43,7 +43,10 @@ import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -406,7 +409,7 @@ public class MaeMainController extends JPanel {
     public void closeDocumentAt(int i) {
         int openDrivers = getDrivers().size();
         if (i > openDrivers || openDrivers != getTextPanel().getOpenTabCount()) {
-            showError("drivers and documents do not match!");
+            showError("#drivers and #documents do not match!");
         }
         try {
             if (getDrivers().size() > 1) {
@@ -589,54 +592,80 @@ public class MaeMainController extends JPanel {
     public void addDocument(File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
         try {
-            boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
-            sendWaitMessage();
-            if (secondaryDocument) {
-                setupScheme(new File(getDriver().getTaskFileName()), false);
-                // setting up the scheme will switch driver to the new one
+            try {
+                boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
+                sendWaitMessage();
+                if (secondaryDocument) {
+                    setupScheme(new File(getDriver().getTaskFileName()), false);
+                    // setting up the scheme will switch driver to the new one
+                }
+                getDriver().readAnnotation(annotationFile);
+                getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
+                logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+                if (!secondaryDocument) {
+                    getMenu().resetFileMenu();
+                    getMenu().resetTagsMenu();
+                    getMenu().resetModeMenu();
+                    getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
+                    logger.info("inserting is done");
+                }
+                if (isAdjudicating()) {
+                    currentDriver = drivers.get(adjudDriverIndex);
+                    assignAdjudicationColors();
+                } else {
+                    getTextPanel().assignAllFGColor();
+                    logger.info("painting is done");
+                    showIncompleteTagsWarning(true);
+                }
+                sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
+            } catch (MaeIOException e) {
+                showError(e);
+                destroyCurrentDriver();
             }
-            getDriver().readAnnotation(annotationFile);
-            getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
-            logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-            if (!secondaryDocument) {
-                getMenu().resetFileMenu();
-                getMenu().resetTagsMenu();
-                getMenu().resetModeMenu();
-                getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
-                logger.info("inserting is done");
-            }
-            if (isAdjudicating()) {
-                currentDriver = drivers.get(adjudDriverIndex);
-                assignAdjudicationColors();
-            } else {
-                getTextPanel().assignAllFGColor();
-                logger.info("painting is done");
-                showIncompleteTagsWarning(true);
-            }
-            sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
         } catch (MaeException e) {
             showError(e);
-        } catch (FileNotFoundException e) {
-            showError("File not found!", e);
         }
 
     }
 
     public void addAdjudication(File goldstandard) {
         try {
-            setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
-            getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
-            getDriver().readAnnotation(goldstandard);
-            getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
-            getTablePanel().prepareAllTables();
-            switchAdjudicationTag();
-            logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+            try {
+                setupScheme(new File(getDriver().getTaskFileName()), false); // will set up a new dirver for GS
+                getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
+                getDriver().readAnnotation(goldstandard);
+                getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
+                getTablePanel().prepareAllTables();
+                switchAdjudicationTag();
+                logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+            } catch (MaeIOException e) {
+                showError(e);
+                destroyCurrentDriver();
+            }
         } catch (MaeException e) {
             showError(e);
-        } catch (FileNotFoundException e) {
-            showError("File not found!", e);
         }
     }
+
+    private void destroyCurrentDriver() {
+        try {
+            if (drivers.size() == 1) { // means no annotation file is open (only task file open)
+                String taskFileName = getDriver().getTaskFileName();
+                getDriver().destroy();
+                drivers.clear();
+                setupScheme(new File(taskFileName), false);
+            } else {
+                getDriver().destroy();
+                drivers.remove(drivers.size() - 1);
+                currentDriver = drivers.get(drivers.size() - 1);
+            }
+            updateNotificationArea();
+        } catch (MaeDBException e) {
+            showError(e);
+        }
+
+    }
+
 
     Set<String> checkTextSharing() {
         Set<String> differs = new HashSet<>();
@@ -656,7 +685,7 @@ public class MaeMainController extends JPanel {
     boolean checkDuplicateDocs(File annotationFile) {
         for (MaeDriverI driver : getDrivers()) {
             try {
-                if (annotationFile.getAbsolutePath().equals(driver.getAnnotationFileName())) {
+                if (annotationFile.getAbsolutePath().replace("/./", "/").equals(driver.getAnnotationFileName())) {
                     showError(String.format("%s \nis already open!", annotationFile.getName()));
                     return true;
 
@@ -1082,6 +1111,7 @@ public class MaeMainController extends JPanel {
     void propagateToAnnotationArea() {
         getTablePanel().clearTableSelections();
         List<ExtentTag> releventTags = getExtentTagsInSelectedSpans();
+        getTablePanel().clearTableSelections();
         for (ExtentTag tag : releventTags) {
             try {
                 getTablePanel().selectTagFromTable(tag);
@@ -1190,7 +1220,10 @@ public class MaeMainController extends JPanel {
 
     public void addArgument(LinkTag linker, ArgumentType argType, String argTid) {
         try {
-            getDriver().addArgument(linker, argType, (ExtentTag) getDriver().getTagByTid(argTid));
+            ExtentTag arg = (ExtentTag) getDriver().getTagByTid(argTid);
+            logger.info(String.format(
+                    "adding an argument %s of type \"%s\" to %s", arg.toString(), argType.getName(), linker.getId()));
+            getDriver().addArgument(linker, argType, arg);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -1278,6 +1311,7 @@ public class MaeMainController extends JPanel {
 
     public void selectTagAndTable(Tag tag) {
         try {
+            getTablePanel().clearTableSelections();
             getTablePanel().selectTagFromTable(tag);
             getTablePanel().selectTabOf(tag.getTagtype());
             propagateSelectionFromTablePanel(tag.getId());
@@ -1366,6 +1400,7 @@ public class MaeMainController extends JPanel {
     }
 
     public void surgicallyUpdateCell(Tag tag, String colName, String value) {
+        logger.info(String.format("updating %s's %s to %s", tag.getId(), colName, value));
         getTablePanel().insertValueIntoCell(tag, colName, value);
     }
 
