@@ -806,7 +806,11 @@ class TablePanelController extends MaeControllerI {
                 }
                 getMainController().removeAllBGColors();
                 try {
-                    getMainController().addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
+                    List<Integer> newSpans = getDriver().getAnchorsByTid(tid);
+                    getMainController().assignTextColorsOver(oldSpans);
+                    getMainController().assignTextColorsOver(newSpans);
+                    getMainController().removeAllBGColors();
+                    getMainController().addBGColorOver(newSpans, ColorHandler.getVividHighliter());
                 } catch (MaeDBException e) {
                     getMainController().showError(e);
                 }
