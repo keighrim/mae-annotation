@@ -143,59 +143,68 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public static void main(String[] args) {
+    private static MaeMainController createAndShowGUI() {
         enableOSXQuitStrategy();
 
-        MaeMainController main = new MaeMainController();
-        JFrame mainFrame = main.initUI();
-        main.setWindowFrame(mainFrame);
+        MaeMainController controller = new MaeMainController();
+        JFrame mainFrame = controller.initUI();
+        controller.setWindowFrame(mainFrame);
         mainFrame.pack();
         mainFrame.setSize(900, 700);
         mainFrame.setVisible(true);
 
-        if (args.length > 0) {
-            boolean argCmd = false;
-            List<String> argsList = new ArrayList<>();
-            String taskFilename = null;
-            String docFilename = null;
-            String docFilenames = null;
-            for (String arg : args) {
-                argsList.add(arg);
-            }
-            if (argsList.contains("--task")) {
-                taskFilename = argsList.get(argsList.indexOf("--task") + 1);
-                argCmd = true;
-                if (argsList.contains("--doc")) {
-                    docFilename = argsList.get(argsList.indexOf("--doc") + 1);
+        return controller;
 
-                } else if (argsList.contains("--docs")) {
-                    docFilenames = argsList.get(argsList.indexOf("--docs") + 1);
+    }
 
-                }
-            }
-            if (!argCmd) {
-            }
-            if (!argCmd) {
-                System.out.println("TODO: show some help text");
-            }
+    public static void main(final String[] args) {
 
-            if (taskFilename != null) {
-                main.setupScheme(new File(taskFilename), true);
-                if (docFilename != null) {
-                    main.addDocument(new File(docFilename));
-                } else if (docFilenames != null) {
-                    String[] filesToOpen = docFilenames.split(",");
-                    for (String fileName : filesToOpen) {
-                        main.addDocument(new File((fileName)));
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MaeMainController controller = createAndShowGUI();
+
+                if (args.length > 0) {
+                    boolean argCmd = false;
+                    List<String> argsList = new ArrayList<>();
+                    String tFilename = null;
+                    String dFilename = null;
+                    String dFilenames = null;
+                    Collections.addAll(argsList, args);
+                    if (argsList.contains("--task")) {
+                        tFilename = argsList.get(argsList.indexOf("--task") + 1);
+                        argCmd = true;
+                        if (argsList.contains("--doc")) {
+                            dFilename = argsList.get(argsList.indexOf("--doc") + 1);
+
+                        } else if (argsList.contains("--docs")) {
+                            dFilenames = argsList.get(argsList.indexOf("--docs") + 1);
+
+                        }
+                    }
+                    if (!argCmd) {
+                        System.out.println("TODO: show some help text");
+                    }
+
+                    if (tFilename != null) {
+                        controller.setupScheme(new File(tFilename), true);
+                        if (dFilename != null) {
+                            controller.addDocument(new File(dFilename));
+                        } else if (dFilenames != null) {
+                            String[] filesToOpen = dFilenames.split(",");
+                            for (String fileName : filesToOpen) {
+                                controller.addDocument(new File((fileName)));
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     }
 
     private void setWindowFrame(JFrame mainFrame) {
@@ -243,8 +252,9 @@ public class MaeMainController extends JPanel {
         if (getDriver().isAnnotationChanged()) {
             String warning = null;
             try {
-                warning = String.format("Warning! You have unsaved changes. \n%s\n Are you sure to continue?"
-                        , getDriver().getAnnotationFileBaseName().toString());
+                warning = String.format(
+                        "Warning! You have unsaved changes. \n%s\n Are you sure to continue?"
+                        , getDriver().getAnnotationFileBaseName());
             } catch (MaeDBException ignored) {
             }
             return showWarning(warning);
@@ -279,14 +289,14 @@ public class MaeMainController extends JPanel {
     }
 
     public void showError(Exception e) {
-        getDialogs().showError(e);
         logException(e);
+        getDialogs().showError(e);
     }
 
     public void showError(String message, Exception e) {
+        logException(e);
         getDialogs().showError(message, e);
         logger.error(message);
-        logException(e);
     }
 
     void logException(Exception e) {
@@ -470,7 +480,7 @@ public class MaeMainController extends JPanel {
         if (mode != MODE_ARG_SEL) {
             clearTextSelection();
             mode = MODE_ARG_SEL;
-            sendTemporaryNotification(MaeStrings.SB_ARGSEL_MODE_NOTI, 3000);
+            sendNotification(MaeStrings.SB_ARGSEL_MODE_NOTI);
             getMenu().resetModeMenu();
         }
     }
@@ -480,7 +490,7 @@ public class MaeMainController extends JPanel {
         if (mode != MODE_MULTI_SPAN) {
             clearTextSelection();
             mode = MODE_MULTI_SPAN;
-            sendTemporaryNotification(MaeStrings.SB_MSPAN_MODE_NOTI, 3000);
+            sendNotification(MaeStrings.SB_MSPAN_MODE_NOTI);
             getMenu().resetModeMenu();
         }
     }
@@ -514,7 +524,7 @@ public class MaeMainController extends JPanel {
             removeAllBGColors();
             getMenu().resetFileMenu();
             getMenu().resetModeMenu();
-            sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+            sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
         }
     }
 
@@ -528,7 +538,7 @@ public class MaeMainController extends JPanel {
                 getTablePanel().prepareAllTables();
                 getTablePanel().insertAllTags();
                 getTextPanel().assignAllFGColor();
-                sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+                sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
                 getMenu().resetFileMenu();
             } catch (MaeException e) {
                 showError(e);
@@ -541,7 +551,7 @@ public class MaeMainController extends JPanel {
         if (mode != MODE_NORMAL) {
             mode = MODE_NORMAL;
             clearTextSelection();
-            sendTemporaryNotification(MaeStrings.SB_NORM_MODE_NOTI, 3000);
+            sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
             removeAllBGColors();
             getMenu().resetModeMenu();
         }
@@ -580,7 +590,7 @@ public class MaeMainController extends JPanel {
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
                 getTablePanel().prepareAllTables();
                 storePaintedStates();
-                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 3000);
+                sendNotification(MaeStrings.SB_NEWTASK);
             }
         } catch (MaeDBException e) {
             showError("Found an error in DB!", e);
@@ -617,7 +627,7 @@ public class MaeMainController extends JPanel {
                     logger.info("painting is done");
                     showIncompleteTagsWarning(true);
                 }
-                sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 3000);
+                sendNotification(MaeStrings.SB_FILEOPEN);
             } catch (MaeIOException e) {
                 showError(e);
                 destroyCurrentDriver();
@@ -885,14 +895,14 @@ public class MaeMainController extends JPanel {
             notification = "Nothing to undo! Click anywhere to continue.";
         }
 
-        sendTemporaryNotification(notification, 3000);
+        sendNotification(notification);
 
     }
 
     public void clearTextSelection() {
         getTextPanel().clearSelection();
         propagateSelectionFromTextPanel();
-        sendTemporaryNotification("Clear!, Click anywhere to continue", 3000);
+//        sendTemporaryNotification("Cleared!, Click anywhere to continue", 3000);
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
@@ -1044,7 +1054,8 @@ public class MaeMainController extends JPanel {
 
     public LinkTag createLinkFromDialog(TagType linkType, List<ExtentTag> candidates) {
         try {
-            return getDialogs().createLink(linkType, candidates);
+            LinkTag link = getDialogs().createLink(linkType, candidates);
+            return link;
         } catch (MaeDBException e) {
             showError(e);
             return null;
@@ -1205,6 +1216,8 @@ public class MaeMainController extends JPanel {
                 selectTagAndTable(tag);
                 if (tagType.isExtent()) {
                     assignTextColorsOver(((ExtentTag) tag).getSpansAsList());
+                } else {
+
                 }
             }
             updateSavedStatusInTextPanel();
@@ -1224,6 +1237,7 @@ public class MaeMainController extends JPanel {
             logger.info(String.format(
                     "adding an argument %s of type \"%s\" to %s", arg.toString(), argType.getName(), linker.getId()));
             getDriver().addArgument(linker, argType, arg);
+            assignTextColorsOver(arg.getSpansAsList());
         } catch (MaeDBException e) {
             showError(e);
         }
