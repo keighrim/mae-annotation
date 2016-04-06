@@ -295,8 +295,8 @@ public class MaeMainController extends JPanel {
 
     public void showError(String message, Exception e) {
         logException(e);
-        getDialogs().showError(message, e);
         logger.error(message);
+        getDialogs().showError(message, e);
     }
 
     void logException(Exception e) {
@@ -307,8 +307,8 @@ public class MaeMainController extends JPanel {
     }
 
     public void showError(String message) {
-        getDialogs().showError(message);
         logger.error(message);
+        getDialogs().showError(message);
     }
 
     public boolean isTaskLoaded() {
@@ -561,7 +561,7 @@ public class MaeMainController extends JPanel {
         // this always wipes out on-going annotation works,
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         try {
-            sendWaitMessage();
+            if (fromNewTask) { sendWaitMessage(); }
             String dbFilename = String.format("mae-%d", System.currentTimeMillis());
             File dbFile;
             try {
@@ -602,38 +602,41 @@ public class MaeMainController extends JPanel {
     public void addDocument(File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
         try {
-            try {
-                boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
-                sendWaitMessage();
-                if (secondaryDocument) {
-                    setupScheme(new File(getDriver().getTaskFileName()), false);
-                    // setting up the scheme will switch driver to the new one
-                }
-                getDriver().readAnnotation(annotationFile);
-                getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
-                logger.info(String.format("document \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-                if (!secondaryDocument) {
-                    getMenu().resetFileMenu();
-                    getMenu().resetTagsMenu();
-                    getMenu().resetModeMenu();
-                    getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
-                    logger.info("inserting is done");
-                }
-                if (isAdjudicating()) {
-                    currentDriver = drivers.get(adjudDriverIndex);
-                    assignAdjudicationColors();
-                } else {
-                    getTextPanel().assignAllFGColor();
-                    logger.info("painting is done");
-                    showIncompleteTagsWarning(true);
-                }
-                sendNotification(MaeStrings.SB_FILEOPEN);
-            } catch (MaeIOException e) {
-                showError(e);
-                destroyCurrentDriver();
+            boolean secondaryDocument = getDrivers().size() > 0 && getDriver().isAnnotationLoaded();
+            sendWaitMessage();
+            if (secondaryDocument) {
+                setupScheme(new File(getDriver().getTaskFileName()), false);
+                // setting up the scheme will switch driver to the new one
             }
+            try {
+                getDriver().readAnnotation(annotationFile);
+                logger.info(String.format("document \"%s\" is loaded.", getDriver().getAnnotationFileBaseName()));
+            } catch (MaeException e) {
+                showError("Failed to load file; destroying incomplete DB: ", e);
+                destroyCurrentDriver(); // this includes resetting statBar
+                // TODO: 2016-04-05 15:39:40EDT add method to reset to DTD status in DriverI
+                return;
+            }
+            getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
+            if (!secondaryDocument) {
+                getMenu().resetFileMenu();
+                getMenu().resetTagsMenu();
+                getMenu().resetModeMenu();
+                getTablePanel().insertAllTags(); // from second, inserting into table is done by tab change listener
+                logger.info("inserting is done");
+            }
+            if (isAdjudicating()) {
+                currentDriver = drivers.get(adjudDriverIndex);
+                assignAdjudicationColors();
+            } else {
+                getTextPanel().assignAllFGColor();
+                logger.info("painting is done");
+                showIncompleteTagsWarning(true);
+            }
+            sendNotification(MaeStrings.SB_FILEOPEN);
         } catch (MaeException e) {
             showError(e);
+            closeCurrentDocument();
         }
 
     }
@@ -1428,6 +1431,8 @@ public class MaeMainController extends JPanel {
     }
 
     public Set<Tag> getIncompleteTags() {
+        // TODO: 2016-04-05 15:58:18EDT optimized this method
+        // TODO: 2016-04-05 15:59:10EDT add supplement for checking adjudication file
         try {
             Set<Tag> incomplete = new TreeSet<>();
             for (TagType type : getDriver().getAllTagTypes()) {

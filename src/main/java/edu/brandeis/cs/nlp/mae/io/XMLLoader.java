@@ -66,14 +66,21 @@ public class XMLLoader {
             try {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
                 driver.setAnnotationFileName(file.getAbsolutePath().replace("/./", "/"));
-                this.read(new FileInputStream(file));
+                this.readXmlStream(new FileInputStream(file));
             } catch (SAXException e) {
-                logger.info("file is not an XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
-                driver.setAnnotationFileName(file.getAbsolutePath());
-                Scanner scanner = new Scanner(file, "UTF-8");
-                primaryText = scanner.useDelimiter("\\A").next();
-                driver.setPrimaryText(primaryText);
-                scanner.close(); // Put this call in a finally block
+                try {
+                    logger.info("file is not an XML or does not match DTD, reading as the primary text: " + file.getAbsolutePath());
+                    Scanner scanner = new Scanner(file, "UTF-8");
+                    primaryText = scanner.useDelimiter("\\A").next();
+                    driver.setPrimaryText(primaryText);
+                    scanner.close(); // Put this call in a finally block
+                } catch (NoSuchElementException ex) {
+                    String message = "failed to read the file, may be a binary file? " + file.getAbsolutePath();
+                    driver.setAnnotationFileName(null);
+                    logger.error(message);
+                    throw new MaeIOXMLException(message);
+                }
+
             }
         } catch (FileNotFoundException e) {
             driver.setAnnotationFileName(null);
@@ -83,11 +90,11 @@ public class XMLLoader {
 
     public void read(String string) throws MaeIOXMLException, MaeDBException, SAXException {
         logger.debug("reading annotations from plain JAVA string");
-        this.read(IOUtils.toInputStream(string));
+        this.readXmlStream(IOUtils.toInputStream(string));
 
     }
 
-    public void read(InputStream stream) throws MaeIOXMLException, MaeDBException, SAXException {
+    public void readXmlStream(InputStream stream) throws MaeIOXMLException, MaeDBException, SAXException {
         try {
             Document doc = xmlInputStreamToDomWithLineNum(stream);
             doc.getDocumentElement().normalize();
@@ -137,11 +144,11 @@ public class XMLLoader {
         throw new MaeIOXMLException(message, e);
     }
 
-    void assertRootNodeMatches(Node rootNode) throws MaeDBException, MaeIOXMLException {
+    void assertRootNodeMatches(Node rootNode) throws MaeDBException, SAXException {
         if (!rootNode.getNodeName().equals(driver.getTaskName())) {
             String message = "file does not match to DTD!";
             logger.error(message);
-            throw new MaeIOXMLException(message);
+            throw new SAXException(message);
         }
     }
 
