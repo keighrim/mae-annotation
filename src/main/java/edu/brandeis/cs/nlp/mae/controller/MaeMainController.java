@@ -611,10 +611,13 @@ public class MaeMainController extends JPanel {
             try {
                 getDriver().readAnnotation(annotationFile);
                 logger.info(String.format("document \"%s\" is loaded.", getDriver().getAnnotationFileBaseName()));
-            } catch (MaeException e) {
-                showError("Failed to load file; destroying incomplete DB: ", e);
+            } catch (MaeDBException e) {
+                showError("Failed to load file due to an error in DB; destroying incomplete DB: ", e);
                 destroyCurrentDriver(); // this includes resetting statBar
-                // TODO: 2016-04-05 15:39:40EDT add method to reset to DTD status in DriverI
+                return;
+            } catch (MaeIOException e) {
+                showError(e.getMessage());
+                destroyCurrentDriver(); // this includes resetting statBar
                 return;
             }
             getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
