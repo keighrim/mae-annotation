@@ -148,15 +148,19 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
 
     public abstract String toXmlString();
 
-    protected String escapeXmlString(String text) {
-        text = text.replace("\n", " ");
-        text = text.replace("&", "&amp;");
-        text = text.replace("&amp;amp;", "&amp;");
-        text = text.replace("<", "&lt;");
-        text = text.replace(">", "&gt;");
-        text = text.replace("\"", "&quot;");
-        text = text.replace("'", "&apos;");
-        return text;
+    String escapeXmlString(String text) {
+        if (text == null) {
+            return "";
+        } else {
+            text = text.replace("\n", " ");
+            text = text.replace("&", "&amp;");
+            text = text.replace("&amp;amp;", "&amp;");
+            text = text.replace("<", "&lt;");
+            text = text.replace(">", "&gt;");
+            text = text.replace("\"", "&quot;");
+            text = text.replace("'", "&apos;");
+            return text;
+        }
 
     }
 
