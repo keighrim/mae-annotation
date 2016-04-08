@@ -40,7 +40,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.Highlighter;
+import javax.swing.Timer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -49,7 +52,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
-import java.util.Timer;
 
 /**
  * Created by krim on 12/30/2015.
@@ -64,7 +66,7 @@ public class MaeMainController extends JPanel {
     private int mode;
 
     private JFrame mainFrame;
-
+    private Timer temporaryNotificationTimer;
 
     private StatusBarController statusBar;
     private TextPanelController textPanel;
@@ -348,23 +350,29 @@ public class MaeMainController extends JPanel {
         logger.debug(message);
     }
 
-    public void updateNotificationAreaIn(long millisecond) {
-        new Timer().schedule(new TimerTask() {
+    public void updateNotificationAreaIn(int millisecond) {
+        this.temporaryNotificationTimer = new Timer(0, new ActionListener() {
             @Override
-            public void run() {
+            public void actionPerformed(ActionEvent e) {
                 updateNotificationArea();
             }
-        }, millisecond);
+        });
+        temporaryNotificationTimer.setInitialDelay(millisecond);
+        temporaryNotificationTimer.start();
 
     }
 
     synchronized void updateNotificationArea() {
+        if (temporaryNotificationTimer != null && temporaryNotificationTimer.isRunning()) {
+            temporaryNotificationTimer.stop();
+        }
         getStatusBar().refresh();
         mouseCursorToDefault();
 
     }
 
-    public void sendTemporaryNotification(String message, long periodMillisecond) {
+    public void sendTemporaryNotification(String message, int periodMillisecond) {
+        updateNotificationArea();
         sendNotification(message);
         updateNotificationAreaIn(periodMillisecond);
     }
@@ -497,7 +505,7 @@ public class MaeMainController extends JPanel {
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
                 getTablePanel().prepareAllTables();
                 storePaintedStates();
-                sendNotification(MaeStrings.SB_NEWTASK);
+                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 4000);
             }
         } catch (MaeDBException e) {
             showError("Found an error in DB!", e);
@@ -543,7 +551,7 @@ public class MaeMainController extends JPanel {
                 logger.info("painting is done");
                 showIncompleteTagsWarning(true);
             }
-            sendNotification(MaeStrings.SB_FILEOPEN);
+            sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 4000);
         } catch (MaeException e) {
             showError(e);
             closeCurrentDocument();
@@ -815,7 +823,7 @@ public class MaeMainController extends JPanel {
     public void clearTextSelection() {
         getTextPanel().clearSelection();
         propagateSelectionFromTextPanel();
-//        sendTemporaryNotification("Cleared!, Click anywhere to continue", 3000);
+        sendTemporaryNotification("Cleared!, Click anywhere to continue", 1000);
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
