@@ -333,7 +333,6 @@ class TablePanelController extends MaeControllerI {
 
     void selectTagFromTable(Tag tag) throws MaeDBException {
         JTable table = tableMap.get(tag.getTagTypeName());
-        table.clearSelection();
         TagTableModel tableModel = (TagTableModel) table.getModel();
         int viewIndex = table.convertRowIndexToView(tableModel.searchForRowByTid(tag.getId()));
         table.addRowSelectionInterval(viewIndex, viewIndex);
@@ -807,7 +806,11 @@ class TablePanelController extends MaeControllerI {
                 }
                 getMainController().removeAllBGColors();
                 try {
-                    getMainController().addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
+                    List<Integer> newSpans = getDriver().getAnchorsByTid(tid);
+                    getMainController().assignTextColorsOver(oldSpans);
+                    getMainController().assignTextColorsOver(newSpans);
+                    getMainController().removeAllBGColors();
+                    getMainController().addBGColorOver(newSpans, ColorHandler.getVividHighliter());
                 } catch (MaeDBException e) {
                     getMainController().showError(e);
                 }
@@ -1235,7 +1238,7 @@ class TablePanelController extends MaeControllerI {
                     getMainController().assignTextColorsOver(getRelevantAnchors());
 
                 }
-                getMainController().updateNotificationAreaIn(1000);
+                getMainController().updateNotificationArea();
 
             } catch (MaeDBException ex) {
                 getMainController().showError(ex);

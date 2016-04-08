@@ -30,8 +30,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.FileWriter;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
-import edu.brandeis.cs.nlp.mae.io.XMLLoader;
+import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 
 import javax.swing.*;
@@ -119,16 +118,20 @@ class DialogController {
     }
 
     void setAsArgument(String argumentTid) throws MaeDBException {
-        SetArgumentOptionPanel options = new SetArgumentOptionPanel();
-        int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
-                options,
-                String.format("Setting %s an argument of", argumentTid),
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
-            LinkTag linker = options.getSelectedLinkTag();
-            ArgumentType argType = options.getSelectedArgumentType();
-            getMainController().surgicallyUpdateCell(linker, argType.getName() + MaeStrings.ARG_IDCOL_SUF, argumentTid);
+        if (getMainController().getDriver().getAllLinkTagsOfAllTypes().size() == 0) {
+            showWarning("No link tags are found.");
+        } else {
+            SetArgumentOptionPanel options = new SetArgumentOptionPanel();
+            int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
+                    options,
+                    String.format("Setting %s an argument of", argumentTid),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                LinkTag linker = options.getSelectedLinkTag();
+                ArgumentType argType = options.getSelectedArgumentType();
+                getMainController().surgicallyUpdateCell(linker, argType.getName() + MaeStrings.ARG_IDCOL_SUF, argumentTid);
+            }
         }
 
     }
@@ -197,9 +200,9 @@ class DialogController {
         }
     }
 
-    File getExistingGoldstandardFile() throws MaeIOXMLException, MaeDBException {
+    File getExistingGoldstandardFile() throws MaeIOException, MaeDBException {
         File existingGS = showFileChooseDialogAndSelect("goldstandard.xml", false);
-        XMLLoader xmlLoader = new XMLLoader(getMainController().getDriver());
+        AnnotationLoader xmlLoader = new AnnotationLoader(getMainController().getDriver());
         if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
             return existingGS;
         }
@@ -406,7 +409,7 @@ class DialogController {
             });
 
             for (TagType type : driver.getLinkTagTypes()) {
-                linkTypes.addItem(type);
+                if (driver.getAllLinkTagsOfType(type).size() > 0) linkTypes.addItem(type);
             }
 
             add(new JLabel(MaeStrings.SETARG_SEL_TAGTYPE));

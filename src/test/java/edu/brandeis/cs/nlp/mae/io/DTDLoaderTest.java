@@ -261,7 +261,7 @@ public class DTDLoaderTest {
 
     @Test
     public void canReadFile() throws Exception {
-        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("sampleTask.dtd");
+        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/sampleTask.dtd");
         File sampleFile = new File(sampleFileUrl.getPath());
         dtdLoader.read(sampleFile);
 

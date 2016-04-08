@@ -32,10 +32,10 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
-import edu.brandeis.cs.nlp.mae.io.XMLLoader;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -170,9 +170,9 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public void readAnnotation(File file) throws FileNotFoundException, MaeIOXMLException, MaeDBException {
-        XMLLoader xmll = new XMLLoader(this);
-        xmll.read(file);
+    public void readAnnotation(File file) throws MaeIOException, MaeDBException {
+        AnnotationLoader xmll = new AnnotationLoader(this);
+        xmll.loadFile(file);
         setAnnotationChanged(false);
 
     }
@@ -471,6 +471,24 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
     }
 
+    @Override
+    public List<LinkTag> getAllLinkTagsOfAllTypes() throws MaeDBException {
+        try {
+            return new ArrayList<>(lTagDao.queryForAll());
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
+    @Override
+    public List<ExtentTag> getAllExtentTagsOfAllTypes(boolean consumingOnly) throws MaeDBException {
+        try {
+            return new ArrayList<>(eTagDao.queryForAll());
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
+
     public MappedSet<TagType, ExtentTag> getAllExtentTagsByTypes(boolean consumingOnly) throws MaeDBException {
         MappedSet<TagType, ExtentTag> tagsByTypes = new MappedSet<>();
         for (TagType type : getAllTagTypes()) {
@@ -751,27 +769,141 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Set<Attribute> addAttributes(Tag tag, final Map<AttributeType, String> attributes) throws MaeDBException {
-        final Set<Attribute> created = new HashSet<>();
+    public void batchCreateExtentTags(final Collection<ExtentTag> tags) throws MaeDBException {
+        try {
+            eTagDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (ExtentTag tag : tags) {
+                        eTagDao.create(tag);
+                        if (!idHandler.addId(tag.getTagtype(), tag.getId())) {
+                            throw new MaeDBException("tag id is already in DB!: " + tag.getId());
+                        }
+                    }
+                    return null;
+                }
+            });
+            logger.debug(String.format("%d tags are inserted",tags.size()));
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeModelException e) {
+            throw new MaeDBException("failed to add an attribute: " + e.getMessage(), e);
+        } catch (MaeDBException e) {
+            throw e;
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    @Override
+    public void batchCreateAnchors(final Collection<CharIndex> anchors) throws MaeDBException {
+        try {
+            charIndexDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (CharIndex anchor : anchors) {
+                        charIndexDao.create(anchor);
+                    }
+                    return null;
+                }
+            });
+            logger.debug(String.format("%d anchors are inserted",anchors.size()));
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeModelException e) {
+            throw new MaeDBException("failed to add an attribute: " + e.getMessage(), e);
+        } catch (MaeDBException e) {
+            throw e;
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    @Override
+    public void batchCreateLinkTags(final Collection<LinkTag> tags) throws MaeDBException {
+        try {
+            lTagDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (LinkTag tag : tags) {
+                        lTagDao.create(tag);
+                        if (!idHandler.addId(tag.getTagtype(), tag.getId())) {
+                            throw new MaeDBException("tag id is already in DB!: " + tag.getId());
+                        }
+                    }
+                    return null;
+                }
+            });
+            logger.debug(String.format("%d tags are inserted",tags.size()));
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeDBException e) {
+            throw e;
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    @Override
+    public void batchCreateAttributes(final Collection<Attribute> atts) throws MaeDBException {
+        try {
+            attDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (Attribute att : atts) {
+                        attDao.create(att);
+                    }
+                    return null;
+                }
+            });
+            logger.debug(String.format("%d attributes are inserted", atts.size()));
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeDBException e) {
+            throw e;
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    @Override
+    public void batchCreateArguments(final Collection<Argument> args) throws MaeDBException {
+        try {
+            argDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (Argument arg : args) {
+                        argDao.create(arg);
+                    }
+                    return null;
+                }
+            });
+            logger.debug(String.format("%d arguments are inserted", args.size()));
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        } catch (MaeDBException e) {
+            throw e;
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    @Override
+    public Set<Attribute> batchAddAttributes(Tag tag, final Map<AttributeType, String> attributes) throws MaeDBException {
+        final Set<Attribute> toBeAdded = new HashSet<>();
         try {
             for (AttributeType attType : attributes.keySet()) {
                 Attribute att = new Attribute(tag, attType, attributes.get(attType));
-//                attDao.create(att);
-                created.add(att);
+                toBeAdded.add(att);
             }
             attDao.callBatchTasks(new Callable<Void>() {
                 public Void call() throws Exception {
-                    for (Attribute account : created) {
-                        attDao.create(account);
+                    for (Attribute attribute : toBeAdded) {
+                        attDao.create(attribute);
                     }
                     return null;
                 }
             });
             refreshTag(tag);
             resetQueryBuilders();
-            logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", created.toString(), tag.toString()));
+            logger.debug(String.format("attributes \"%s\" are attached to \"%s\"", toBeAdded.toString(), tag.toString()));
             setAnnotationChanged(true);
-            return created;
+            return toBeAdded;
         } catch (SQLException e) {
             throw catchSQLException(e);
         } catch (MaeModelException e) {

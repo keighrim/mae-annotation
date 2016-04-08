@@ -309,6 +309,7 @@ class MenuController extends MaeControllerI {
         int mode = getMainController().getMode();
         boolean adjudicating = getMainController().isAdjudicating();
         TagType currentType = getMainController().getAdjudicatingTagType();
+
         if (getMainController().isTextSelected()) {
 
             if (adjudicating) {
@@ -329,7 +330,7 @@ class MenuController extends MaeControllerI {
                 contextMenu.add(createMakeTagMenu(CAT_LTAG));
             }
 
-        } else {
+        } else { // no text selected
 
             if (!getMainController().isAdjudicating()) {
                 // to eliminate unnecessary degree of freedom
@@ -342,11 +343,12 @@ class MenuController extends MaeControllerI {
 //                    (currentType.isLink())) {
 //                contextMenu.add(createMakeTagMenu(CAT_CURTYPE_TAG)); // for creating NC tag
             }
-            if (tags.size() > 0) {
-                contextMenu.addSeparator();
-                contextMenu.add(createDeleteMenu(tags));
-                contextMenu.add(createSetArgMenu(tags));
-            }
+        }
+
+        if (tags.size() > 0) {
+            contextMenu.addSeparator();
+            contextMenu.add(createDeleteMenu(tags));
+            contextMenu.add(createSetArgMenu(tags));
         }
         if (mode != MODE_NORMAL && getMainController().isTextSelected()) {
             contextMenu.addSeparator();
@@ -368,9 +370,9 @@ class MenuController extends MaeControllerI {
             case 0:
                 return null;
             case 1:
-                return getPluralDelete(tags);
-            default:
                 return getSingleDelete(tags.get(0));
+            default:
+                return getPluralDelete(tags);
         }
 
     }
@@ -380,9 +382,9 @@ class MenuController extends MaeControllerI {
             case 0:
                 return null;
             case 1:
-                return getPluralSetArg(tags);
-            default:
                 return getSingleSetArg(tags.get(0));
+            default:
+                return getPluralSetArg(tags);
         }
     }
 
@@ -644,23 +646,24 @@ class MenuController extends MaeControllerI {
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
         TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
 
-        int selectedRow = table.getSelectedRow();
+        int selectedModelRow = table.convertRowIndexToModel(table.getSelectedRow());
         if (!getMainController().isAdjudicating()) {
             if (selected == 1) {
-                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
             } else {
-                contextMenu.add(getPluralDelete(model, table.getSelectedRows()));
+                int[] selectedModelRows = convertRowIndicesToModel(table, table.getSelectedRows());
+                contextMenu.add(getPluralDelete(model, selectedModelRows));
                 if (model.getAssociatedTagType().isExtent()) {
-                    contextMenu.add(createMakeLinkFromTableMenu(model, table.getSelectedRows()));
+                    contextMenu.add(createMakeLinkFromTableMenu(model, selectedModelRows));
                 }
             }
         } else { // multi row selection is disabled in adjudication
-            String srcFileName = (String) table.getValueAt(selectedRow, TablePanelController.SRC_COL);
+            String srcFileName = (String) table.getValueAt(selectedModelRow, TablePanelController.SRC_COL);
             if (srcFileName.equals(getMainController().getDriver().getAnnotationFileBaseName())) {
-                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedRow);
+                prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
 
             } else {
-                String tid = (String) table.getValueAt(selectedRow, TablePanelController.ID_COL);
+                String tid = (String) table.getValueAt(selectedModelRow, TablePanelController.ID_COL);
                 MaeDriverI driver = getMainController().getDriverOf(srcFileName);
                 Tag tag = driver.getTagByTid(tid);
                 contextMenu.add(getSingleCopy(tag));
@@ -669,6 +672,14 @@ class MenuController extends MaeControllerI {
 
         return contextMenu;
 
+    }
+
+    static int[] convertRowIndicesToModel(JTable table, int[] viewIndices) {
+        int[] modelIndices = new int[viewIndices.length];
+        for (int i = 0; i < viewIndices.length; i++) {
+            modelIndices[i] = table.convertRowIndexToModel(viewIndices[i]);
+        }
+        return modelIndices;
     }
 
     private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
@@ -694,13 +705,14 @@ class MenuController extends MaeControllerI {
 
     private JMenu createMakeLinkFromTableMenu(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
         JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
+        makeLinkFromTableMenu.setMnemonic(getMakeTagMenuMnemonic(CAT_LTAG_FROM_TABLE));
         String tids = MaeStrings.SEP;
         for (int row : selectedRows) {
             tids += model.getValueAt(row, TablePanelController.ID_COL) + MaeStrings.SEP;
         }
         int typeCount = 0;
         for (TagType linkType : getTagTypes(CAT_LTAG)) {
-            JMenuItem makeLinkFromTableItem = new JMenuItem(getMakeTagAction(CAT_LTAG_FROM_TABLE, typeCount, linkType));
+            JMenuItem makeLinkFromTableItem = new JMenuItem(getMakeTagAction(CAT_LTAG_FROM_TABLE, typeCount++, linkType));
             makeLinkFromTableItem.setActionCommand(linkType.getName() + tids);
             makeLinkFromTableMenu.add(makeLinkFromTableItem);
         }
