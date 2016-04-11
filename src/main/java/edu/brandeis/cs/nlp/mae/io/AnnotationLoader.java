@@ -90,19 +90,17 @@ public class AnnotationLoader {
 
 
     public static boolean isXml(File file) throws MaeIOException {
-        if (file.exists()) {
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(file);
-            } catch (FileNotFoundException ignored) {
-                // check if file exists at the beginning
-            }
-            while (scanner.hasNextLine()) {
+        try {
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine().trim();
                 if (nextLine.length() > 1) {
                     return nextLine.startsWith("<?xml");
                 }
             }
+        } catch (FileNotFoundException e) {
+            throw new MaeIOException("file not found", e);
+            // checked if file exists at the beginning
         }
         return false;
     }
