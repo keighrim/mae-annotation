@@ -28,8 +28,12 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.model.ArgumentType;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -47,6 +51,8 @@ import java.util.List;
  * Created by krim on 4/6/16.
  */
 public class MaeXMLParser {
+    private static final Logger logger = LoggerFactory.getLogger(MaeXMLParser.class.getName());
+
     private MaeDriverI driver;
     private MaeSAXHandler xmlHandler;
 
@@ -124,14 +130,21 @@ public class MaeXMLParser {
         private String taskName;
         private List<String> extTagTypeNames;
         private List<String> linkTagTypeName;
+        private MappedSet<String, String> argTypeMap;
 
         public MaeSAXHandler() {
             initParsedLists();
         }
 
-        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeName) {
+        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeName) throws MaeDBException {
             this.extTagTypeNames = extTagTypeNames;
             this.linkTagTypeName = linkTagTypeName;
+            this.argTypeMap = new MappedSet<>();
+            for (String linkTypeName : linkTagTypeName) {
+                for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(driver.getTagTypeByName(linkTypeName))) {
+                    argTypeMap.putItem(linkTypeName, argType.getName());
+                }
+            }
             initParsedLists();
 
         }
@@ -147,6 +160,7 @@ public class MaeXMLParser {
                                  Attributes attributes) throws SAXException {
 
             if (!hasRootElem) {
+                logger.debug("found root node: " + qName);
                 if (qName.equalsIgnoreCase("text") || attributes.getLength() > 0) {
                     throw new SAXException("Root node should be the task name");
                 } else {
@@ -154,6 +168,7 @@ public class MaeXMLParser {
                     hasRootElem = true;
                 }
             } else if (qName.equalsIgnoreCase("text")) {
+                logger.debug("found text node: " + qName);
                 hasTextElem = true;
             } else if (qName.equalsIgnoreCase("tags")) {
             } else {
@@ -164,9 +179,11 @@ public class MaeXMLParser {
         private void parseTag(String tagTypeName, Attributes attributes) throws SAXException {
             ParsedTag tag = new ParsedTag();
             if (extTagTypeNames.contains(tagTypeName)) {
+                logger.debug(String.format("found extent tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseExtentTag(tagTypeName, tag, attributes);
             } else if (linkTagTypeName.contains(tagTypeName)) {
-                parseLinkTak(tagTypeName, tag, attributes);
+                logger.debug(String.format("found link tag: %s(%s)", attributes.getValue("id"), tagTypeName));
+                parseLinkTag(tagTypeName, tag, attributes);
             } else {
                 throw new SAXException("unexpected tag type found: " + tagTypeName);
             }
@@ -248,7 +265,7 @@ public class MaeXMLParser {
             }
         }
 
-        private void parseLinkTak(String tagTypeName, ParsedTag tag, Attributes attributes) throws SAXException {
+        private void parseLinkTag(String tagTypeName, ParsedTag tag, Attributes attributes) throws SAXException {
 
             tag.setTagTypeName(tagTypeName);
             tag.setLink(true);
@@ -259,7 +276,9 @@ public class MaeXMLParser {
                 if (name.equalsIgnoreCase("id")) {
                     tag.setTid(value);
                     tid = value;
-                } else if (name.endsWith(MaeStrings.ARG_IDCOL_SUF) && value.length() > 0) {
+                } else if (name.endsWith(MaeStrings.ARG_IDCOL_SUF) && value.length() > 0
+                        && argTypeMap.get(tagTypeName).contains(name.substring(0, name.length() - MaeStrings.ARG_IDCOL_SUF.length()))) {
+
                     ParsedArg arg = new ParsedArg();
                     arg.setTid(tid);
                     arg.setTagTypeName(tagTypeName);

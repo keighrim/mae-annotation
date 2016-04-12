@@ -616,10 +616,13 @@ public class MaeMainController extends JPanel {
     boolean checkDuplicateDocs(File annotationFile) {
         for (MaeDriverI driver : getDrivers()) {
             try {
-                if (annotationFile.getAbsolutePath().replace("/./", "/").equals(driver.getAnnotationFileName())) {
-                    showError(String.format("%s \nis already open!", annotationFile.getName()));
-                    return true;
+                if (driver.getAnnotationFileName() != null) {
+                    String curDriverFilename = driver.getAnnotationFileName().replace("/./", "/");
+                    if (annotationFile.getAbsolutePath().replace("/./", "/").equals(curDriverFilename)) {
+                        showError(String.format("%s \nis already open!", annotationFile.getName()));
+                        return true;
 
+                    }
                 }
             } catch (MaeDBException ignored) {
             }
