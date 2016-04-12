@@ -202,6 +202,16 @@ public class SpanHandlerTest {
                 "Should convert an not-sorted multispan, found: " + Arrays.toString(array),
                 Arrays.toString(new int[]{0,1,2,7,8,9,10,20,21,22,23}), Arrays.toString(array)
         );
+
+        pairs.clear();
+        pairs.add(new int[]{5,6});
+        pairs.add(new int[]{1,2});
+        System.out.println(Arrays.deepToString(pairs.toArray()));
+        array = SpanHandler.convertPairsToArray(pairs);
+        assertEquals(
+                "Should convert an small multispan, found: " + Arrays.toString(array),
+                Arrays.toString(new int[]{1,5}), Arrays.toString(array)
+        );
     }
 
     @Test
@@ -227,7 +237,7 @@ public class SpanHandlerTest {
                 String.format("%d%s%d", 0, MaeStrings.SPANRANGE, 2), string
         );
 
-         array = new int[]{0};
+        array = new int[]{0};
         string = SpanHandler.convertArrayToString(array);
         assertEquals(
                 "Should convert an singleton span, found: " + string,
@@ -239,6 +249,27 @@ public class SpanHandlerTest {
         assertEquals(
                 "Should convert an multispan, found: " + string,
                 String.format("%d%s%d%s%d%s%d", 0, MaeStrings.SPANRANGE, 4, MaeStrings.SPANDELIMITER, 7, MaeStrings.SPANRANGE, 11),
+                string
+        );
+
+        array = new int[]{1,3,7};
+        string = SpanHandler.convertArrayToString(array);
+        assertEquals(
+                "Should convert an singleton multispan, found: " + string,
+                String.format("%d%s%d%s%d%s%d%s%d%s%d",
+                        1, MaeStrings.SPANRANGE, 2, MaeStrings.SPANDELIMITER,
+                        3, MaeStrings.SPANRANGE, 4, MaeStrings.SPANDELIMITER,
+                        7, MaeStrings.SPANRANGE, 8),
+                string
+        );
+
+        array = new int[]{1,2,3,7};
+        string = SpanHandler.convertArrayToString(array);
+        assertEquals(
+                "Should convert another singleton multispan, found: " + string,
+                String.format("%d%s%d%s%d%s%d",
+                        1, MaeStrings.SPANRANGE, 4, MaeStrings.SPANDELIMITER,
+                        7, MaeStrings.SPANRANGE, 8),
                 string
         );
 
@@ -318,6 +349,27 @@ public class SpanHandlerTest {
         assertTrue(
                 "Can merge three arrays and remove all duplicates, found: " + Arrays.toString(d),
                 Arrays.equals(new int[]{0,1,2,3,10,11,12,13}, d)
+        );
+
+    }
+
+    @Test
+    public void testConcatenateSmallArrays() throws Exception {
+        int[] a = new int[]{0};
+        int[] b = new int[]{11};
+        int[] c = new int[]{8};
+        List<int[]> two = Arrays.asList(a, b);
+        int[] twoCon = SpanHandler.concatenateArrays(two);
+        assertTrue(
+                "Can merge two arrays, found: " + Arrays.toString(twoCon),
+                Arrays.equals(new int[]{0,11}, twoCon)
+        );
+
+        List<int[]> three = Arrays.asList(a, b, c);
+        int[] threeCon = SpanHandler.concatenateArrays(three);
+        assertTrue(
+                "Can merge two arrays, found: " + Arrays.toString(threeCon),
+                Arrays.equals(new int[]{0,8,11}, threeCon)
         );
 
     }

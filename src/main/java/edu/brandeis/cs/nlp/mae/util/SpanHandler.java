@@ -166,12 +166,12 @@ public class SpanHandler {
         }
         String spansString = Integer.toString(prev);
         for (int i = 1; i < spans.length; i++) {
-            if (i == spans.length - 1) {
-                // +1's for exclusive end
-                spansString += MaeStrings.SPANRANGE + (spans[i] + 1);
-            } else if (prev + 1 < spans[i]) {
+            // prev+1 for exclusive end
+            if (prev + 1 < spans[i]) {
                 spansString += MaeStrings.SPANRANGE + (prev + 1) + MaeStrings.SPANDELIMITER + spans[i];
-                prev = spans[i];
+            }
+            if (i == spans.length - 1) {
+                spansString += MaeStrings.SPANRANGE + (spans[i] + 1);
             } else {
                 prev = spans[i];
             }

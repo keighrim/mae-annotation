@@ -37,6 +37,7 @@ import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.slf4j.Logger;
@@ -195,8 +196,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     public String getAnnotationFileBaseName() throws MaeDBException {
-        String[] pathTokens = getAnnotationFileName().split("[\\\\|/]");
-        return pathTokens[pathTokens.length - 1];
+        return FileHandler.getFileBaseName(getAnnotationFileName());
     }
 
     @Override
