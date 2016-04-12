@@ -1339,7 +1339,11 @@ class TablePanelController extends MaeControllerI {
     private class AdjudicationTabSwitchListener implements ChangeListener {
         @Override
         public void stateChanged(ChangeEvent e) {
-            getMainController().switchAdjudicationTag();
+            try {
+                getMainController().switchAdjudicationTag();
+            } catch (MaeDBException ex) {
+                getMainController().showError(ex);
+            }
 
         }
     }
