@@ -40,26 +40,24 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.Highlighter;
+import javax.swing.Timer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
-import java.util.Timer;
 
 /**
  * Created by krim on 12/30/2015.
  */
 public class MaeMainController extends JPanel {
 
-    public static final int DEFAULT_FONT_SIZE = 12;
-    public static final String DEFAULT_FONT_FAMILY = "DejaVu Sans";
     public static final int MODE_NORMAL = 0;
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
@@ -68,7 +66,7 @@ public class MaeMainController extends JPanel {
     private int mode;
 
     private JFrame mainFrame;
-
+    private Timer temporaryNotificationTimer;
 
     private StatusBarController statusBar;
     private TextPanelController textPanel;
@@ -118,96 +116,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    private static void enableOSXQuitStrategy() {
-        // for two reasons:
-        // 1) unless using apple jdk extensions (com.apple.eawt.Application, QuitStagety)
-        // windowClosing() event is not properly fired on OSX, which used for integrity checks and destroying drivers
-        // 2) cannot just import such classes and methods, because they exist only on Macs
-        // which will cause class-not-found error on other platform (is java really cross-platform?)
-        try {
-            final Class applicationClass = Class.forName("com.apple.eawt.Application");
-            final Method getApplication = applicationClass.getMethod("getApplication");
-            final Object applicationObject = getApplication.invoke(applicationClass);
-
-            final Class strategy = Class.forName("com.apple.eawt.QuitStrategy");
-            final Enum CLOSE_ALL_WINDOWS = Enum.valueOf(strategy, "CLOSE_ALL_WINDOWS");
-
-            final Method setQuitStrategy = applicationClass.getMethod("setQuitStrategy", strategy);
-            setQuitStrategy.invoke(applicationObject, CLOSE_ALL_WINDOWS);
-
-            logger.info("OSX is detected");
-        } catch (ClassNotFoundException | NoSuchMethodException |
-                SecurityException | IllegalAccessException |
-                IllegalArgumentException | InvocationTargetException exp) {
-            logger.info("Not on OSX");
-        }
-    }
-
-    private static MaeMainController createAndShowGUI() {
-        enableOSXQuitStrategy();
-
-        MaeMainController controller = new MaeMainController();
-        JFrame mainFrame = controller.initUI();
-        controller.setWindowFrame(mainFrame);
-        mainFrame.pack();
-        mainFrame.setSize(900, 700);
-        mainFrame.setVisible(true);
-
-        return controller;
-
-    }
-
-    public static void main(final String[] args) {
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                MaeMainController controller = createAndShowGUI();
-
-                if (args.length > 0) {
-                    boolean argCmd = false;
-                    List<String> argsList = new ArrayList<>();
-                    String tFilename = null;
-                    String dFilename = null;
-                    String dFilenames = null;
-                    Collections.addAll(argsList, args);
-                    if (argsList.contains("--task")) {
-                        tFilename = argsList.get(argsList.indexOf("--task") + 1);
-                        argCmd = true;
-                        if (argsList.contains("--doc")) {
-                            dFilename = argsList.get(argsList.indexOf("--doc") + 1);
-
-                        } else if (argsList.contains("--docs")) {
-                            dFilenames = argsList.get(argsList.indexOf("--docs") + 1);
-
-                        }
-                    }
-                    if (!argCmd) {
-                        System.out.println("TODO: show some help text");
-                    }
-
-                    if (tFilename != null) {
-                        controller.setupScheme(new File(tFilename), true);
-                        if (dFilename != null) {
-                            controller.addDocument(new File(dFilename));
-                        } else if (dFilenames != null) {
-                            String[] filesToOpen = dFilenames.split(",");
-                            for (String fileName : filesToOpen) {
-                                controller.addDocument(new File((fileName)));
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    private void setWindowFrame(JFrame mainFrame) {
+    public void setWindowFrame(JFrame mainFrame) {
         this.mainFrame = mainFrame;
         this.mainFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.mainFrame.addWindowListener(new WindowAdapter() {
@@ -227,7 +136,7 @@ public class MaeMainController extends JPanel {
 
     }
 
-    private JFrame initUI() {
+    public JFrame initUI() {
         logger.debug("initiating UI components.");
 
         return new MaeMainView(menu.getView(), textPanel.getView(), statusBar.getView(), tablePanel.getView());
@@ -441,23 +350,29 @@ public class MaeMainController extends JPanel {
         logger.debug(message);
     }
 
-    public void updateNotificationAreaIn(long millisecond) {
-        new Timer().schedule(new TimerTask() {
+    public void updateNotificationAreaIn(int millisecond) {
+        this.temporaryNotificationTimer = new Timer(0, new ActionListener() {
             @Override
-            public void run() {
+            public void actionPerformed(ActionEvent e) {
                 updateNotificationArea();
             }
-        }, millisecond);
+        });
+        temporaryNotificationTimer.setInitialDelay(millisecond);
+        temporaryNotificationTimer.start();
 
     }
 
     synchronized void updateNotificationArea() {
+        if (temporaryNotificationTimer != null && temporaryNotificationTimer.isRunning()) {
+            temporaryNotificationTimer.stop();
+        }
         getStatusBar().refresh();
         mouseCursorToDefault();
 
     }
 
-    public void sendTemporaryNotification(String message, long periodMillisecond) {
+    public void sendTemporaryNotification(String message, int periodMillisecond) {
+        updateNotificationArea();
         sendNotification(message);
         updateNotificationAreaIn(periodMillisecond);
     }
@@ -590,7 +505,7 @@ public class MaeMainController extends JPanel {
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
                 getTablePanel().prepareAllTables();
                 storePaintedStates();
-                sendNotification(MaeStrings.SB_NEWTASK);
+                sendTemporaryNotification(MaeStrings.SB_NEWTASK, 4000);
             }
         } catch (MaeDBException e) {
             showError("Found an error in DB!", e);
@@ -636,7 +551,7 @@ public class MaeMainController extends JPanel {
                 logger.info("painting is done");
                 showIncompleteTagsWarning(true);
             }
-            sendNotification(MaeStrings.SB_FILEOPEN);
+            sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 4000);
         } catch (MaeException e) {
             showError(e);
             closeCurrentDocument();
@@ -908,7 +823,7 @@ public class MaeMainController extends JPanel {
     public void clearTextSelection() {
         getTextPanel().clearSelection();
         propagateSelectionFromTextPanel();
-//        sendTemporaryNotification("Cleared!, Click anywhere to continue", 3000);
+        sendTemporaryNotification("Cleared!, Click anywhere to continue", 1000);
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
@@ -1463,7 +1378,6 @@ public class MaeMainController extends JPanel {
     public boolean showIncompleteTagsWarning(boolean simplyWarn) {
         return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
     }
-
 
     public void presentation() {
         getTextPanel().bigFontSize();

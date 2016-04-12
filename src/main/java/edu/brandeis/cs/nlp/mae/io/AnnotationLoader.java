@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.io;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -51,6 +52,8 @@ public class AnnotationLoader {
     private Map<String, ArgumentType> argTypeMap = new HashMap<>();
     private Map<String, ExtentTag> extTagMap = new HashMap<>();
     private Map<String, LinkTag> linkTagMap = new HashMap<>();
+    private List<String> extTidOrder = new LinkedList<>();
+    private List<String> linkTidOrder = new LinkedList<>();
 
     public AnnotationLoader(MaeDriverI driver) throws MaeDBException {
         this.driver = driver;
@@ -90,19 +93,17 @@ public class AnnotationLoader {
 
 
     public static boolean isXml(File file) throws MaeIOException {
-        if (file.exists()) {
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(file);
-            } catch (FileNotFoundException ignored) {
-                // check if file exists at the beginning
-            }
-            while (scanner.hasNextLine()) {
+        try {
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine().trim();
                 if (nextLine.length() > 1) {
                     return nextLine.startsWith("<?xml");
                 }
             }
+        } catch (FileNotFoundException e) {
+            throw new MaeIOException("file not found", e);
+            // checked if file exists at the beginning
         }
         return false;
     }
@@ -230,22 +231,34 @@ public class AnnotationLoader {
 
     private void insertTagsToDB(List<ParsedTag> parsedTags) throws MaeDBException {
         List<CharIndex> anchors = new ArrayList<>();
+        String fileBaseName = FileHandler.getFileBaseName(this.fileName);
         for (ParsedTag parsedTag : parsedTags) {
             if (!parsedTag.isLink()) {
-                ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), this.fileName);
+                ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileBaseName);
                 tag.setText(parsedTag.getText());
                 for (CharIndex ci : tag.setSpans(parsedTag.getSpans())) {
                     anchors.add(ci);
                 }
-                extTagMap.put(parsedTag.getTid(), tag);
+                String tid = parsedTag.getTid();
+                extTagMap.put(tid, tag);
+                extTidOrder.add(tid);
             } else {
-                LinkTag tag = new LinkTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), this.fileName);
+                LinkTag tag = new LinkTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileBaseName);
                 linkTagMap.put(parsedTag.getTid(), tag);
+                linkTidOrder.add(parsedTag.getTid());
             }
         }
-        driver.batchCreateExtentTags(extTagMap.values());
+        List<ExtentTag> extTagsOrderOfAppearance = new LinkedList<>();
+        for (String tid : extTidOrder) {
+            extTagsOrderOfAppearance.add(extTagMap.get(tid));
+        }
+        List<LinkTag> linkTagsOrderOfAppearance = new LinkedList<>();
+        for (String tid : linkTidOrder) {
+            linkTagsOrderOfAppearance.add(linkTagMap.get(tid));
+        }
+        driver.batchCreateExtentTags(extTagsOrderOfAppearance);
         driver.batchCreateAnchors(anchors);
-        driver.batchCreateLinkTags(linkTagMap.values());
+        driver.batchCreateLinkTags(linkTagsOrderOfAppearance);
     }
 
     private void insertAttsToDB(List<ParsedAtt> parsedAtts) throws MaeDBException {
