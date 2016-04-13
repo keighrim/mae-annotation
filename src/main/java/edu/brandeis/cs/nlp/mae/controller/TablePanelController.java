@@ -160,10 +160,15 @@ class TablePanelController extends MaeControllerI {
             String name = type.getName();
             TablePanelView.TogglingTabTitle title = createTogglingTabTitle(type);
             getView().addTab(name, title, makeAnnotationArea(type));
-            title.addToggleListener(new HighlightToggleListener(title.getTagType(), false));
+            HighlightToggleListener toggleListener = new HighlightToggleListener(title.getTagType(), false, title);
+            title.addToggleListener(toggleListener);
+            if (type.isExtent()) {
+                title.addMouseListener(toggleListener);
+            }
+
         }
 
-        allTagsTabTitle.addToggleListener(new HighlightToggleListener(dummyForAllTagsTab, true));
+        allTagsTabTitle.addToggleListener(new HighlightToggleListener(dummyForAllTagsTab, true, allTagsTabTitle));
         // this will turn on each extent tag title
         allTagsTabTitle.setHighlighted(true);
     }
@@ -234,6 +239,10 @@ class TablePanelController extends MaeControllerI {
 
     int getTabIndexOfTagType(TagType type) {
         return tabOrder.indexOf(type);
+    }
+
+    TablePanelView.TogglingTabTitle getTagTabTitle(TagType type) {
+        return getTagTabTitle(getTabIndexOfTagType(type));
     }
 
     TablePanelView.TogglingTabTitle getTagTabTitle(int tabIndex) {
@@ -1187,15 +1196,39 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
-    private class HighlightToggleListener implements ItemListener {
+    private class HighlightToggleListener extends MouseAdapter implements ItemListener {
 
         private TagType tagType;
         private boolean forAllTagsTable;
+        private TablePanelView.TogglingTabTitle toggle;
 
-        HighlightToggleListener(TagType tagType, boolean forAllTagsTable) {
+        HighlightToggleListener(TagType tagType, boolean forAllTagsTable, TablePanelView.TogglingTabTitle toggle) {
             this.tagType = tagType;
             this.forAllTagsTable = forAllTagsTable;
+            this.toggle = toggle;
 
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if (e.isPopupTrigger() && tagType != dummyForAllTagsTab) {
+                callColorSetter();
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger() && tagType != dummyForAllTagsTab) {
+                callColorSetter();
+            }
+        }
+
+        void callColorSetter() {
+            Color newColor = JColorChooser.showDialog(null, "Choose a Color", toggle.getColor());
+            if (newColor != null) {
+                toggle.setColor(newColor);
+                getMainController().setFGColor(tagType, newColor);
+            }
         }
 
         TagType getTagType() {

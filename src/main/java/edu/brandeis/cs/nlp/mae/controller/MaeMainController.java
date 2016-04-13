@@ -931,7 +931,9 @@ public class MaeMainController extends JPanel {
 
     void resetPaintableColors() {
         try {
-            textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+            if (getTextHighlightColors() == null) {
+                textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
+            }
             tagsForColor.clear();
         } catch (MaeDBException e) {
             showError(e);
@@ -1013,6 +1015,17 @@ public class MaeMainController extends JPanel {
 
     public ColorHandler getTextHighlightColors() {
         return textHighlighColors;
+    }
+
+    public void setFGColor(TagType tagType, Color newColor) {
+        getTextHighlightColors().setColor(newColor, tagsForColor.indexOf(tagType));
+        if (getTablePanel().getActiveExtentTags().contains(tagType)) {
+            try {
+                assignTextColorsOver(getDriver().getAllAnchorsOfTagType(tagType));
+            } catch (MaeDBException e) {
+                showError(e);
+            }
+        }
     }
 
     public boolean isTextSelected() {
