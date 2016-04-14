@@ -24,19 +24,74 @@
 
 package edu.brandeis.cs.nlp.mae.util;
 
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
+
 import java.io.File;
+import java.io.FileFilter;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by krim on 4/12/16.
  */
 public class FileHandler {
 
+    public static String ANNOTATOR_SUFFIX_DELIM = "_";
+    public static String XML_EXT = ".xml";
+    public static FileFilter XML_FILTER  = new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        return pathname.getName().toLowerCase().endsWith(".xml");
+                    } };
+
     public static String getFileBaseName(File file) {
-        return getFileBaseName(file.getAbsoluteFile());
+        return getFileBaseName(file.getAbsolutePath());
     }
 
     public static String getFileBaseName(String fileFullName) {
         String[] pathTokens = fileFullName.split("[\\\\|/]");
         return pathTokens[pathTokens.length - 1];
     }
+
+    public static List<File> getAllFileIn(File directory) throws MaeIOException {
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles(XML_FILTER);
+            if (files.length > 0) {
+                return Arrays.asList(files);
+            } else {
+                throw new MaeIOException("No XML found in the directory: " + directory.getName());
+            }
+        } else {
+            throw new MaeIOException("Not a directory: " + directory.getName());
+        }
+    }
+
+
+    private static String[] splitSuffix(String string, String delimiter) {
+        int splitPoint = string.lastIndexOf(delimiter);
+        String rest = string.substring(0, splitPoint);
+        String suffix = string.substring(splitPoint + delimiter.length(), string.length());
+        return new String[]{rest, suffix};
+    }
+
+    public static String getFileNameWithoutExtension(String fileBaseName) {
+        return splitSuffix(fileBaseName, ".")[0];
+
+    }
+
+    public static String[] splitAnnotationAnnotator(String fileNameWOExt) {
+        return splitSuffix(fileNameWOExt, ANNOTATOR_SUFFIX_DELIM);
+
+    }
+
+    public static boolean containsBaseName(String baseName, List<File> files) {
+        for (File f : files) {
+            if (getFileBaseName(f).equals(baseName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }
