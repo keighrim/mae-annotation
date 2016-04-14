@@ -110,11 +110,11 @@ public class MaeMainView extends JFrame {
                     new BasicStroke(strokeLength / 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.setPaint(Color.white);
             g2.rotate(Math.PI * indicatorAngle / 180, indicatorPivotX, indicatorPivotY);
-            int numStrokes = 12;
-            for (int i = 0; i < numStrokes; i++) {
-                float scale = (float) ((numStrokes - (float) i - 1.0) / (numStrokes - 1));
+            int strokeCount = 12;
+            for (int i = 0; i < strokeCount; i++) {
+                float scale = (float) ((strokeCount - (float) i - 1.0) / (strokeCount - 1));
                 g2.drawLine(indicatorPivotX + strokeLength, indicatorPivotY, indicatorPivotX + strokeLength * 2, indicatorPivotY);
-                g2.rotate(-Math.PI / (numStrokes / 2), indicatorPivotX, indicatorPivotY);
+                g2.rotate(-Math.PI / (strokeCount / 2), indicatorPivotX, indicatorPivotY);
                 g2.setComposite(AlphaComposite.getInstance(
                         AlphaComposite.SRC_OVER, scale * fade));
             }

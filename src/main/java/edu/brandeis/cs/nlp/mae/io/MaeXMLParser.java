@@ -199,39 +199,46 @@ public class MaeXMLParser {
             for(int i = 0; i < attributes.getLength(); i++){
                 String attName = attributes.getQName(i);
                 String attValue = attributes.getValue(i);
-                if (attName.equalsIgnoreCase("id")) {
-                    tag.setTid(attValue);
-                    tid = attValue;
-                } else if (attName.equalsIgnoreCase("spans")) {
-                    try {
-                        int[] spans = SpanHandler.convertStringToArray(attValue);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } catch (MaeException e) {
-                        throw new SAXException(e.getMessage());
-                    }
-                } else if (attName.equalsIgnoreCase("start")) {
-                    if (tempEnd != null) {
-                        int[] spans = convertStartEndToSpansArray(attValue, tempEnd);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } else {
-                        tempStart = attValue;
-                    }
-                } else if (attName.equalsIgnoreCase("end")) {
-                    if (tempStart != null) {
-                        int[] spans = convertStartEndToSpansArray(tempStart, attValue);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } else {
-                        tempEnd = attValue;
-                    }
-                } else if (attName.equalsIgnoreCase("text")) {
-//                tag.setText(value);
-                    // to avoid the bug in reading unicode high surrogates,
-                    // text fields are directly sliced from primary text that is on memory
-                } else {
-                    parseAttribute(tagTypeName, tid, attName, attValue);
+                switch (attName.toLowerCase()) {
+                    case "id":
+                        tag.setTid(attValue);
+                        tid = attValue;
+                        break;
+                    case "spans":
+                        try {
+                            int[] spans = SpanHandler.convertStringToArray(attValue);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } catch (MaeException e) {
+                            throw new SAXException(e.getMessage());
+                        }
+                        break;
+                    case "start":
+                        if (tempEnd != null) {
+                            int[] spans = convertStartEndToSpansArray(attValue, tempEnd);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } else {
+                            tempStart = attValue;
+                        }
+                        break;
+                    case "end":
+                        if (tempStart != null) {
+                            int[] spans = convertStartEndToSpansArray(tempStart, attValue);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } else {
+                            tempEnd = attValue;
+                        }
+                        break;
+                    case "text":
+//                        tag.setText(value);
+                        // to avoid the bug in reading unicode high surrogates,
+                        // text fields are directly sliced from primary text that is on memory
+                        break;
+                    default:
+                        parseAttribute(tagTypeName, tid, attName, attValue);
+
                 }
             }
             tags.add(tag);
