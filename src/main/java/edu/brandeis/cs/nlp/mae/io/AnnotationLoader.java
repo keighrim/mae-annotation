@@ -32,9 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -94,7 +92,7 @@ public class AnnotationLoader {
 
     public static boolean isXml(File file) throws MaeIOException {
         try {
-            Scanner scanner = new Scanner(file);
+            Scanner scanner = new Scanner(new BufferedReader(new FileReader(file)));
             while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine().trim();
                 if (nextLine.length() > 1) {
