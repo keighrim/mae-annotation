@@ -82,6 +82,11 @@ public class MaeXMLParser {
         }
     }
 
+    public void readAnnotationPreamble(File file) throws IOException, SAXException {
+        this.xmlHandler = new MaeSAXSimpleHandler();
+        parse(file);
+    }
+
     private void parse(File file) throws IOException, SAXException  {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -120,7 +125,11 @@ public class MaeXMLParser {
         return xmlHandler.getPrimaryText();
     }
 
-    private class MaeSAXHandler extends DefaultHandler {
+    public MaeSAXHandler getParsed() {
+        return this.xmlHandler;
+    }
+
+    public class MaeSAXHandler extends DefaultHandler {
         private List<ParsedTag> tags;
         private List<ParsedAtt> atts;
         private List<ParsedArg> args;
@@ -129,18 +138,22 @@ public class MaeXMLParser {
         private String primaryText;
         private String taskName;
         private List<String> extTagTypeNames;
-        private List<String> linkTagTypeName;
+        private List<String> linkTagTypeNames;
         private MappedSet<String, String> argTypeMap;
 
         public MaeSAXHandler() {
             initParsedLists();
         }
 
-        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeName) throws MaeDBException {
+        public MaeSAXHandler(MaeSAXHandler handler) throws MaeDBException {
+
+        }
+
+        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeNames) throws MaeDBException {
             this.extTagTypeNames = extTagTypeNames;
-            this.linkTagTypeName = linkTagTypeName;
+            this.linkTagTypeNames = linkTagTypeNames;
             this.argTypeMap = new MappedSet<>();
-            for (String linkTypeName : linkTagTypeName) {
+            for (String linkTypeName : linkTagTypeNames) {
                 for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(driver.getTagTypeByName(linkTypeName))) {
                     argTypeMap.putItem(linkTypeName, argType.getName());
                 }
@@ -181,7 +194,7 @@ public class MaeXMLParser {
             if (extTagTypeNames.contains(tagTypeName)) {
                 logger.debug(String.format("found extent tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseExtentTag(tagTypeName, tag, attributes);
-            } else if (linkTagTypeName.contains(tagTypeName)) {
+            } else if (linkTagTypeNames.contains(tagTypeName)) {
                 logger.debug(String.format("found link tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseLinkTag(tagTypeName, tag, attributes);
             } else {
@@ -302,14 +315,16 @@ public class MaeXMLParser {
         }
 
         private void parseAttribute(String tagTypeName, String tid, String name, String value) {
-            if (value.length() > 0) {
-                ParsedAtt att = new ParsedAtt();
-                att.setTid(tid);
-                att.setTagTypeName(tagTypeName);
-                att.setAttTypeName(name);
-                att.setAttValue(value);
-                atts.add(att);
-            }
+            // used to filter null valued atts for DB insertion performance
+            // caused errors at computing IAA, so now keep null atts as well
+//            if (value.length() > 0) {
+            ParsedAtt att = new ParsedAtt();
+            att.setTid(tid);
+            att.setTagTypeName(tagTypeName);
+            att.setAttTypeName(name);
+            att.setAttValue(value);
+            atts.add(att);
+//            }
         }
 
 
@@ -350,6 +365,7 @@ public class MaeXMLParser {
         }
 
     }
+
     public class MaeSAXSimpleHandler extends MaeSAXHandler {
 
         public MaeSAXSimpleHandler() {

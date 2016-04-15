@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -57,7 +58,7 @@ public class FileHandler {
         if (directory.isDirectory()) {
             File[] files = directory.listFiles(XML_FILTER);
             if (files.length > 0) {
-                return Arrays.asList(files);
+                return new LinkedList<>(Arrays.asList(files));
             } else {
                 throw new MaeIOException("No XML found in the directory: " + directory.getName());
             }
