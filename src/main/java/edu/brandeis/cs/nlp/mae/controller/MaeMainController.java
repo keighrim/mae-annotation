@@ -500,6 +500,7 @@ public class MaeMainController extends JPanel {
                     getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
             if (fromNewTask) {
                 resetPaintableColors();
+                setAdjudicating(false);
                 getMenu().resetFileMenu();
                 getTextPanel().noDocumentGuide();
                 getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
