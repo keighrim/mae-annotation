@@ -508,7 +508,6 @@ public class MaeMainController extends JPanel {
                 if (fromNewTask) {
                     adjustUIPlusTaskMinusAnnotationMinusAdjudication();
                 }
-
             }
         };
 
@@ -625,6 +624,7 @@ public class MaeMainController extends JPanel {
     private void adjustUIPlusTaskMinusAnnotationMinusAdjudication() {
         try {
             resetPaintableColors();
+            setAdjudicating(false);
             getMenu().resetFileMenu();
             getTextPanel().noDocumentGuide();
             getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));

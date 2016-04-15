@@ -24,9 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created by krim on 2/18/2016.
@@ -38,9 +36,10 @@ public class FileWriter {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            FileOutputStream output = new FileOutputStream(file);
-            output.write(text.getBytes());
-            output.flush();
+            Writer output = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(
+                            file), "UTF-8"));
+            output.write(text);
             output.close();
         } catch (IOException e) {
             throw new MaeIOException("Cannot create a new file!", e);

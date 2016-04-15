@@ -91,8 +91,9 @@ public class AnnotationLoader {
 
 
     public static boolean isXml(File file) throws MaeIOException {
+        Scanner scanner = null;
         try {
-            Scanner scanner = new Scanner(new BufferedReader(new FileReader(file)));
+            scanner = new Scanner(new InputStreamReader(new FileInputStream(file), "UTF-8"));
             while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine().trim();
                 if (nextLine.length() > 1) {
@@ -102,6 +103,11 @@ public class AnnotationLoader {
         } catch (FileNotFoundException e) {
             throw new MaeIOException("file not found", e);
             // checked if file exists at the beginning
+        } catch (UnsupportedEncodingException e) {
+            throw new MaeIOException(e.getMessage());
+        } finally {
+            assert scanner != null;
+            scanner.close();
         }
         return false;
     }
@@ -193,12 +199,16 @@ public class AnnotationLoader {
     }
 
     private void readAsTxt(File file) throws MaeDBException, MaeIOTXTException {
+        Scanner scanner = null;
         try {
             if (fileName == null) fileName = file.getAbsolutePath();
-            Scanner scanner = new Scanner(file, "UTF-8");
-            String primaryText = scanner.useDelimiter("\\A").next();
+            scanner = new Scanner(file, "UTF-8");
+            scanner.useDelimiter("\\A");
+            String primaryText = "";
+            while (scanner.hasNext()) {
+                primaryText += scanner.next();
+            }
             driver.setPrimaryText(primaryText);
-            scanner.close(); // Put this call in a finally block
         } catch (NoSuchElementException ex) {
             String message = "failed to read the file, may be a binary file? " + file.getAbsolutePath();
             logger.error(message);
@@ -206,6 +216,9 @@ public class AnnotationLoader {
         } catch (FileNotFoundException ignored) {
         } catch (MaeDBException e) {
             throw e;
+        } finally {
+            assert scanner != null;
+            scanner.close();
         }
 
 

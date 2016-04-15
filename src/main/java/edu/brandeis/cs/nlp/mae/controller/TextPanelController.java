@@ -432,9 +432,17 @@ class TextPanelController extends MaeControllerI {
     }
 
     void unassignAllFGColor() throws MaeDBException {
+        int caretPos = getView().getDocumentPane().getCaretPosition();
         getView().getDocumentPane().setStyledDocument(
                 FontHandler.stringToSimpleStyledDocument(getDriver().getPrimaryText(), TextPanelView.DEFAULT_FONT_FAMILY, currentFontSize, Color.BLACK)
         );
+        getView().getDocumentPane().setCaretPosition(caretPos);
+        try {
+            getView().getDocumentPane().scrollRectToVisible(getView().getDocumentPane().modelToView(caretPos));
+        } catch (BadLocationException ignored) {
+        }
+
+
 
     }
 
