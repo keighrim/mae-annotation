@@ -35,10 +35,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -88,7 +85,7 @@ public class MaeAgreementCalcTest {
         sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
         sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
         sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.calcTagSpanAgreement(sample));
+        System.out.println(calc.computeAlphaU(sample));
     }
 
 }

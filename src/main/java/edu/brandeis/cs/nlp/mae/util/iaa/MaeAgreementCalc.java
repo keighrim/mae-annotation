@@ -124,7 +124,12 @@ public class MaeAgreementCalc {
         return seen;
     }
 
-    public Map<String, Map<String, Map<String, Double>>> calcTagSpanAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    public String agreementToString(Map<String, Map<String, Map<String, Double>>> agreement, String agreementType) {
+        String results = agreementType;
+        return results;
+    }
+
+    public Map<String, Map<String, Map<String, Double>>> computeAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
         Map<String, Map<String, Map<String, Double>>> agrPerDoc = new LinkedHashMap<>();
         for (String fileName : fileIdx.getDocuments()) {
 
@@ -142,11 +147,11 @@ public class MaeAgreementCalc {
                 attTypeNames.add(0, SPAN_ATT);
 
                 double[] iaas = new double[attTypeNames.size()];
-                agrPerAtt.put(SPAN_ATT, computeSpanAgreement(tagTypeName, parses, new UnitizingAnnotationStudy(countAnnotators, primaryText.length())));
+                agrPerAtt.put(SPAN_ATT, computeTagAlphaU(tagTypeName, parses, new UnitizingAnnotationStudy(countAnnotators, primaryText.length())));
                 for (int i = 1; i < iaas.length; i++) {
                     String attTypeName = attTypeNames.get(i);
                     UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(countAnnotators, primaryText.length());
-                    agrPerAtt.put(attTypeName, computeAttAgreement(tagTypeName, attTypeName, parses, study));
+                    agrPerAtt.put(attTypeName, computeAttAlphaU(tagTypeName, attTypeName, parses, study));
                 }
                 agrPerTag.put(tagTypeName, agrPerAtt);
             }
@@ -155,7 +160,7 @@ public class MaeAgreementCalc {
         return agrPerDoc;
     }
 
-    private double computeSpanAgreement(String tagTypeName, MaeXMLParser[] annotations, UnitizingAnnotationStudy study) {
+    private double computeTagAlphaU(String tagTypeName, MaeXMLParser[] annotations, UnitizingAnnotationStudy study) {
 
         int annotator = 0;
         for (int i = 0; i < annotations.length; i++) {
@@ -175,7 +180,7 @@ public class MaeAgreementCalc {
         return (new KrippendorffAlphaUnitizingAgreement(study)).calculateAgreement();
     }
 
-    private double computeAttAgreement(String tagTypeName, String attTypeName, MaeXMLParser[] annotations, UnitizingAnnotationStudy study) {
+    private double computeAttAlphaU(String tagTypeName, String attTypeName, MaeXMLParser[] annotations, UnitizingAnnotationStudy study) {
 
         int annotator = 0;
         for (int i = 0; i < annotations.length; i++) {
