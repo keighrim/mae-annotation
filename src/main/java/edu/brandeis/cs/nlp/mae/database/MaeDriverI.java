@@ -173,6 +173,8 @@ public interface MaeDriverI {
 
     List<AttributeType> getAttributeTypesOfTagType(TagType type) throws MaeDBException;
 
+    MappedSet<String, String> getTagTypesAndAttTypes() throws MaeDBException;
+
     void setAttributeTypeValueSet(AttributeType type, List<String> validValues) throws MaeDBException;
 
     void setAttributeTypeDefaultValue(AttributeType type, String defaultValue) throws MaeDBException;
