@@ -38,14 +38,13 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 
 /**
  * Created by krim on 4/14/2016.
  */
-public class MaeAgreementDialog extends JPanel {
+public class MaeAgreementDialog extends JDialog {
 
     JButton buttonOK;
     JButton buttonCancel;
@@ -70,18 +69,6 @@ public class MaeAgreementDialog extends JPanel {
     private List<TagTypePanel> agrTypeSelectionPanels;
     private AttTypePanel attTypeSelectionPanel;
 
-    public File getDatasetDir() {
-        return datasetDir;
-    }
-
-    public JButton getButtonOK() {
-        return buttonOK;
-    }
-
-    public JButton getButtonCancel() {
-        return buttonCancel;
-    }
-
     private File datasetDir;
     private File taskScheme;
 
@@ -89,6 +76,7 @@ public class MaeAgreementDialog extends JPanel {
     private MaeDriverI driver;
 
     public MaeAgreementDialog(String taskSchemeName) throws FileNotFoundException, MaeIOException, MaeDBException {
+        super(new JFrame(), "MAE IAA Calculator", true);
         this.taskScheme =  new File(taskSchemeName);
         setupDriver();
 
@@ -115,86 +103,32 @@ public class MaeAgreementDialog extends JPanel {
 
     private void initUI() {
 //        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setLayout(new BorderLayout());
+        JPanel contentPanel = new JPanel(new BorderLayout());
+
         JPanel topPanel = prepareFileSelector();
-
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
-        JPanel leftPanel = prepareLeftPane();
-        JPanel rightPanel = prepareRightPane();
-        leftPanel.setMinimumSize(new Dimension(450, 300));
-        leftPanel.setPreferredSize(new Dimension(450, 300));
-        leftPanel.setMaximumSize(new Dimension(450, 2000));
-        mainPanel.add(leftPanel);
-        mainPanel.add(Box.createHorizontalStrut(12));
-        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
-        mainPanel.add(Box.createHorizontalStrut(2));
-        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
-        mainPanel.add(Box.createHorizontalStrut(12));
-        mainPanel.add(rightPanel);
-
+        JPanel mainPanel = prepareMainPanel();
         JPanel bottomPanel = prepareButtons();
 
-        this.add(topPanel, BorderLayout.PAGE_START);
-        this.add(mainPanel, BorderLayout.CENTER);
-        this.add(bottomPanel, BorderLayout.PAGE_END);
-    }
+        contentPanel.add(topPanel, BorderLayout.PAGE_START);
+        contentPanel.add(mainPanel, BorderLayout.CENTER);
+        contentPanel.add(bottomPanel, BorderLayout.PAGE_END);
 
-    private JPanel prepareButtons() {
-        JPanel buttons = new JPanel();
-        buttons.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        buttonOK = new JButton("Continue");
-        buttonOK.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                onOk();
-            }
-        });
+        setContentPane(contentPanel);
+        setSize(new Dimension(800, 700));
+        getRootPane().setDefaultButton(buttonCancel);
 
-        buttonCancel = new JButton("Close");
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
                 onCancel();
             }
         });
-        buttons.add(buttonOK);
-        buttons.add(buttonCancel);
 
-        return buttons;
-    }
-
-    public void onOk() {
-        try {
-            computeAgreement();
-        } catch (IOException | MaeDBException | SAXException | MaeIOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void onCancel() {
-        try {
-            closeDriver();
-        } catch (MaeDBException e) {
-            e.printStackTrace();
-        }
-        Frame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        topFrame.dispose();
-    }
-
-    public void closeDriver() throws MaeDBException {
-        this.driver.destroy();
-    }
-
-    private JPanel prepareRightPane() {
-
-        this.attTypeSelectionPanel = new AttTypePanel(tagsAndAtts);
-        return this.attTypeSelectionPanel;
-    }
-
-    private JPanel prepareLeftPane() {
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
-        return leftPanel;
+        contentPanel.registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onCancel();
+            }
+        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     private JPanel prepareFileSelector() {
@@ -288,6 +222,59 @@ public class MaeAgreementDialog extends JPanel {
         return fileSelector;
     }
 
+    private JPanel prepareMainPanel() {
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
+        JPanel leftPanel = prepareLeftPane();
+        JPanel rightPanel = prepareRightPane();
+        leftPanel.setMinimumSize(new Dimension(450, 300));
+        leftPanel.setPreferredSize(new Dimension(450, 300));
+        leftPanel.setMaximumSize(new Dimension(450, 2000));
+        mainPanel.add(leftPanel);
+        mainPanel.add(Box.createHorizontalStrut(12));
+        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        mainPanel.add(Box.createHorizontalStrut(2));
+        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        mainPanel.add(Box.createHorizontalStrut(12));
+        mainPanel.add(rightPanel);
+        return mainPanel;
+    }
+
+    private JPanel prepareLeftPane() {
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
+        return leftPanel;
+    }
+
+    private JPanel prepareRightPane() {
+
+        this.attTypeSelectionPanel = new AttTypePanel(tagsAndAtts);
+        return this.attTypeSelectionPanel;
+    }
+
+    private JPanel prepareButtons() {
+        JPanel buttons = new JPanel();
+        buttons.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        buttonOK = new JButton("Continue");
+        buttonOK.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                onOk();
+            }
+        });
+
+        buttonCancel = new JButton("Close");
+        buttonCancel.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onCancel();
+            }
+        });
+        buttons.add(buttonOK);
+        buttons.add(buttonCancel);
+
+        return buttons;
+    }
+
     private JPanel prepareRightAlignedButtonPanel(JButton dirChooser) {
         JPanel dataDirButtonPanel = new JPanel();
         dataDirButtonPanel.setLayout(new BoxLayout(dataDirButtonPanel, BoxLayout.X_AXIS));
@@ -296,8 +283,33 @@ public class MaeAgreementDialog extends JPanel {
         return dataDirButtonPanel;
     }
 
+    public void onOk() {
+        try {
+            computeAgreement();
+        } catch (IOException | MaeDBException | SAXException | MaeIOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    private String truncate(String text, int truncate) {
+    public void onCancel() {
+        try {
+            closeDriver();
+        } catch (MaeDBException e) {
+            e.printStackTrace();
+        }
+//        Frame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        dispose();
+    }
+
+    public File getDatasetDir() {
+        return datasetDir;
+    }
+
+    public void closeDriver() throws MaeDBException {
+        this.driver.destroy();
+    }
+
+    private static String truncate(String text, int truncate) {
         int pathLen = text.length();
         if (pathLen > truncate) {
             String truncater = "...";
@@ -500,39 +512,6 @@ public class MaeAgreementDialog extends JPanel {
         public List<String> getSelectedAttTypes() {
             return this.getSelectedValuesList();
         }
-    }
-
-
-
-    public static void main(String[] args) throws FileNotFoundException, MaeDBException, MaeIOException {
-        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/sampleTask.dtd");
-        final MaeAgreementDialog dialog = new MaeAgreementDialog(sampleFileUrl.getPath());
-        JFrame frame = new JFrame("HA");
-        frame.setContentPane(dialog);
-        frame.pack();
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(800, 700));
-        frame.setVisible(true);
-
-        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-
-            @Override
-            public void windowClosing(WindowEvent winEvt) {
-                try {
-                    dialog.closeDriver();
-                } catch (MaeDBException e) {
-                    e.printStackTrace();
-                }
-                System.exit(0);
-            }
-        });
-        try {
-            dialog.computeAgreement();
-        } catch (IOException | SAXException | MaeIOException | MaeDBException e) {
-            e.printStackTrace();
-        }
-
     }
 
 }

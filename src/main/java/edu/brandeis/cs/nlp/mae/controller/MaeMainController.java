@@ -626,6 +626,7 @@ public class MaeMainController extends JPanel {
             resetPaintableColors();
             setAdjudicating(false);
             getMenu().resetFileMenu();
+            getMenu().resetModeMenu();
             getTextPanel().noDocumentGuide();
             getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
             getTablePanel().prepareAllTables();

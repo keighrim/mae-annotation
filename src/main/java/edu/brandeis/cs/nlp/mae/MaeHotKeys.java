@@ -244,7 +244,7 @@ public class MaeHotKeys {
     public final static KeyStroke ksCI
             = KeyStroke.getKeyStroke(KeyEvent.VK_I,
             Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-    public final static KeyStroke ksADDFILE = ksCI;
+    public final static KeyStroke ksIAAMODE = ksCI;
 
     public final static KeyStroke ksCR
             = KeyStroke.getKeyStroke(KeyEvent.VK_R, 

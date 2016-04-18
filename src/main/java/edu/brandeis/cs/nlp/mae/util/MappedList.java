@@ -155,7 +155,7 @@ public class MappedList<K,V> implements MappedCollection<K, V> {
         for (K key : keySet()) {
             string += String.format("%s : %s\n", key, get(key).toString());
         }
-        string += "\n}\n";
+        string += "}\n";
         return string;
     }
 }

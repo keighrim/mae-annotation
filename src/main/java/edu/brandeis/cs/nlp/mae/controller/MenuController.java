@@ -101,7 +101,6 @@ class MenuController extends MaeControllerI {
         menubarOrder[MENUBAR_DISPLAY] = displayMenu;
         menubarOrder[MENUBAR_HELP] = helpMenu;
 
-        boolean isDocumentOpen = getMainController().isDocumentOpen();
         for (JMenu menu : menubarOrder) {
             if (menu != null) {
                 menubar.add(menu);
@@ -110,8 +109,8 @@ class MenuController extends MaeControllerI {
             }
         }
 
-        tagsMenu.setEnabled(isDocumentOpen);
-        modeMenu.setEnabled(isDocumentOpen);
+        tagsMenu.setEnabled(getMainController().isDocumentOpen());
+        modeMenu.setEnabled(getMainController().isTaskLoaded());
         view.updateUI();
 
     }
@@ -224,38 +223,46 @@ class MenuController extends MaeControllerI {
         JMenu menu = new JMenu(MENU_MODE);
         menu.setMnemonic(MENU_MODE.charAt(0));
 
-        if (getMainController().isDocumentOpen()) {
-            MaeActionI multiSpanModeAction = new ModeSwitch(MENUITEM_MSPAN_MODE, null, ksMSPANMODE, null, getMainController());
-            MaeActionI argSelModeAction = new ModeSwitch(MENUITEM_ARGSEL_MODE, null, ksARGSMODE, null, getMainController());
-            MaeActionI normalModeAction = new ModeSwitch(MENUITEM_NORMAL_MODE, null, ksNORMALMODE, null, getMainController());
+        MaeActionI multiSpanModeAction = new ModeSwitch(MENUITEM_MSPAN_MODE, null, ksMSPANMODE, null, getMainController());
+        MaeActionI argSelModeAction = new ModeSwitch(MENUITEM_ARGSEL_MODE, null, ksARGSMODE, null, getMainController());
+        MaeActionI normalModeAction = new ModeSwitch(MENUITEM_NORMAL_MODE, null, ksNORMALMODE, null, getMainController());
+        MaeActionI iaaModeAction = new LaunchIAACalc(MENUITEM_IAA_MODE, null, ksIAAMODE, null, getMainController());
 
-            JMenuItem multiSpanMode = new JMenuItem(multiSpanModeAction);
-            multiSpanMode.setActionCommand(Integer.toString(MODE_MULTI_SPAN));
-            JMenuItem argSelMode = new JMenuItem(argSelModeAction);
-            argSelMode.setActionCommand(Integer.toString(MODE_ARG_SEL));
-            JMenuItem normalMode = new JMenuItem(normalModeAction);
-            normalMode.setActionCommand(Integer.toString(MODE_NORMAL));
-            switch (getMainController().getMode()) {
-                case MODE_NORMAL:
-                    normalMode.setEnabled(false);
-                    break;
-                case MODE_MULTI_SPAN:
-                    multiSpanMode.setEnabled(false);
-                    break;
-                case MODE_ARG_SEL:
-                    argSelMode.setEnabled(false);
-                    break;
-            }
-
-            menu.add(multiSpanMode);
-            menu.add(argSelMode);
-            menu.addSeparator();
-            menu.add(normalMode);
-        } else {
-            JMenuItem documentNotOpen = new JCheckBoxMenuItem("Modes ");
-            documentNotOpen.setEnabled(false);
-            menu.add(documentNotOpen);
+        JMenuItem multiSpanMode = new JMenuItem(multiSpanModeAction);
+        multiSpanMode.setActionCommand(Integer.toString(MODE_MULTI_SPAN));
+        JMenuItem argSelMode = new JMenuItem(argSelModeAction);
+        argSelMode.setActionCommand(Integer.toString(MODE_ARG_SEL));
+        JMenuItem normalMode = new JMenuItem(normalModeAction);
+        normalMode.setActionCommand(Integer.toString(MODE_NORMAL));
+        JMenuItem iaaMode = new JMenuItem(iaaModeAction);
+        switch (getMainController().getMode()) {
+            case MODE_NORMAL:
+                normalMode.setEnabled(false);
+                break;
+            case MODE_MULTI_SPAN:
+                multiSpanMode.setEnabled(false);
+                break;
+            case MODE_ARG_SEL:
+                argSelMode.setEnabled(false);
+                break;
         }
+        if (!getMainController().isTaskLoaded()) {
+            normalMode.setEnabled(false);
+            multiSpanMode.setEnabled(false);
+            argSelMode.setEnabled(false);
+            iaaMode.setEnabled(false);
+        } else if (!getMainController().isDocumentOpen()) {
+            normalMode.setEnabled(false);
+            multiSpanMode.setEnabled(false);
+            argSelMode.setEnabled(false);
+        }
+
+        menu.add(multiSpanMode);
+        menu.add(argSelMode);
+        menu.addSeparator();
+        menu.add(normalMode);
+        menu.addSeparator();
+        menu.add(iaaMode);
         logger.debug("mode menu is created: " + menu.getItemCount());
         return menu;
     }
