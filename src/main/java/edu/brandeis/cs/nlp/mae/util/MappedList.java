@@ -148,6 +148,16 @@ public class MappedList<K,V> implements MappedCollection<K, V> {
     public boolean containsKey(K key) {
         return(map.containsKey(key));
     }
+
+    @Override
+    public String toString() {
+        String string = "{\n";
+        for (K key : keySet()) {
+            string += String.format("%s : %s\n", key, get(key).toString());
+        }
+        string += "\n}\n";
+        return string;
+    }
 }
 
 

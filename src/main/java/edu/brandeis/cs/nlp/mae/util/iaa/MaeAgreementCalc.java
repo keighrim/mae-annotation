@@ -31,6 +31,7 @@ import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.io.ParsedAtt;
 import edu.brandeis.cs.nlp.mae.io.ParsedTag;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
@@ -39,6 +40,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,10 +126,46 @@ public class MaeAgreementCalc {
         return seen;
     }
 
-    public String agreementToString(Map<String, Map<String, Map<String, Double>>> agreement, String agreementType) {
-        String results = agreementType;
+    public String agreementToString(Map<String, Map<String, Map<String, Double>>> agreements, String agreementType) {
+        String results = agreementType + "\n\n";
+
+        MappedList<String, Double> agreementsOverDocs = new MappedList<>();
+        for (String docName : agreements.keySet()) {
+            Map<String, Map<String, Double>> tagAgreements = agreements.get(docName);
+            for (String tagName : tagAgreements.keySet()) {
+                Map<String, Double> attAgreements = tagAgreements.get(tagName);
+                for (String attName : attAgreements.keySet()) {
+                    if (attName.equalsIgnoreCase(SPAN_ATT)) {
+                        agreementsOverDocs.putItem(tagName, attAgreements.get(attName));
+                    } else {
+                        agreementsOverDocs.putItem(String.format("%s::%s", tagName, attName),
+                                attAgreements.get(attName));
+                    }
+                }
+            }
+        }
+        System.out.println(agreementsOverDocs);
+        for (String tagAndAttName : agreementsOverDocs.keySet()) {
+            results += String.format("%.4f (%s) %s\n",
+                    average(agreementsOverDocs.get(tagAndAttName)),
+                    agreementType, tagAndAttName
+            );
+        }
+
         return results;
     }
+
+    private double average(Collection<Double> items) {
+        Double sum = 0d;
+        if(!items.isEmpty()) {
+            for (Double item : items) {
+                sum += item;
+            }
+            return sum / items.size();
+        }
+        return sum;
+    }
+
 
     public Map<String, Map<String, Map<String, Double>>> computeAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
         Map<String, Map<String, Map<String, Double>>> agrPerDoc = new LinkedHashMap<>();

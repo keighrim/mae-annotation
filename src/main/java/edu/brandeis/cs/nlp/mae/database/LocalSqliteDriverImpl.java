@@ -638,7 +638,10 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public MappedSet<String, String> getTagTypesAndAttTypes() throws MaeDBException {
         MappedSet<String, String> tagsAndAtts = new MappedSet<>();
         for (TagType tagType : getAllTagTypes()) {
-            tagsAndAtts.putCollection(tagType.getName(), tagType.getAttributeTypesAsString());
+            // TODO: 2016-04-17 19:23:06EDT support link tags as well in the future
+            if (tagType.isExtent()) {
+                tagsAndAtts.putCollection(tagType.getName(), tagType.getAttributeTypesAsString());
+            }
         }
         return tagsAndAtts;
     }
