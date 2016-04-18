@@ -193,9 +193,11 @@ class MenuController extends MaeControllerI {
         menu.add(saveXML);
         menu.addSeparator();
         menu.add(closeFile);
-        if (!getMainController().isAdjudicating()) {
-            menu.addSeparator();
-            menu.add(adjudMode);
+        menu.addSeparator();
+        menu.add(adjudMode);
+        if (getMainController().isAdjudicating()
+                || !getMainController().isDocumentOpen()) {
+            adjudMode.setEnabled(false);
         }
         logger.debug("file menu is created: " + menu.getItemCount());
         return menu;
