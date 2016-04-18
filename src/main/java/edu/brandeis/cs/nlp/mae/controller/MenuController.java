@@ -659,7 +659,7 @@ class MenuController extends MaeControllerI {
             }
         } else { // multi row selection is disabled in adjudication
             String srcFileName = (String) table.getValueAt(selectedModelRow, TablePanelController.SRC_COL);
-            if (srcFileName.equals(getMainController().getDriver().getAnnotationFileBaseName())) {
+            if (srcFileName.equals(getMainController().getDriver().getAnnotationFileName())) {
                 prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
 
             } else {

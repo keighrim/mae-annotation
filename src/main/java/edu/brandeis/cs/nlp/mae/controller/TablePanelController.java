@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
+import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
@@ -320,7 +321,7 @@ class TablePanelController extends MaeControllerI {
     }
 
     private String[] convertTagIntoSimplifiedRow(ExtentTag tag) throws MaeDBException {
-        return new String[]{getDriver().getAnnotationFileBaseName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
+        return new String[]{getDriver().getAnnotationFileName(), tag.getId(), tag.getSpansAsString(), tag.getText()};
     }
 
     void selectTabOf(TagType type) {
@@ -459,6 +460,7 @@ class TablePanelController extends MaeControllerI {
 
     private JTable makeTagTable(TagType type, TagTableModel model) {
         JTable table = createMinimumTable(model, type.isExtent());
+        table.getTableHeader().setReorderingAllowed(false);
         indexTagTable(type, table);
         addAdditionalColumns(type, table);
         return table;
@@ -488,6 +490,7 @@ class TablePanelController extends MaeControllerI {
 
         }
 
+        table.getTableHeader().setReorderingAllowed(false);
         table.setAutoCreateRowSorter(true);
         table.setAutoCreateColumnsFromModel(false);
         if (!getMainController().isAdjudicating()) {
@@ -890,7 +893,7 @@ class TablePanelController extends MaeControllerI {
 
         @Override
         public void populateTable(Tag tag) throws MaeDBException {
-            String annotationFileName = getDriver().getAnnotationFileBaseName();
+            String annotationFileName = getDriver().getAnnotationFileName();
             if (!annotationFileName.equals(tag.getFilename())) {
                 addRow(convertTagIntoRow(tag, this));
             } else {
@@ -962,7 +965,7 @@ class TablePanelController extends MaeControllerI {
 
         @Override
         public void populateTable(Tag tag) throws MaeDBException {
-            String annotationFileName = getDriver().getAnnotationFileBaseName();
+            String annotationFileName = getDriver().getAnnotationFileName();
             if (annotationFileName.equals(tag.getFilename())) {
                 setRowAsGoldTag(getRowCount());
                 addRow(convertTagIntoRow(tag, this));
@@ -1000,7 +1003,7 @@ class TablePanelController extends MaeControllerI {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
             JTextComponent renderer;
 
-            if (col == TEXT_COL - 1) {
+            if (((TagTableModel) table.getModel()).isTextColum(col)) {
                 renderer = new JTextPane();
                 int fontSize = c.getFont().getSize();
                 ((JTextPane) renderer).setContentType("text/plain; charset=UTF-8");
@@ -1010,6 +1013,10 @@ class TablePanelController extends MaeControllerI {
             } else {
                 renderer = new JTextArea((String) value);
                 renderer.setFont(c.getFont());
+            }
+
+            if (col == SRC_COL) {
+                renderer.setText(FileHandler.getFileBaseName(getText()));
             }
 
             renderer.setMargin(new Insets(0,2,0,2));
