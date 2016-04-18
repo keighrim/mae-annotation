@@ -438,7 +438,10 @@ class TextPanelController extends MaeControllerI {
         );
         getView().getDocumentPane().setCaretPosition(caretPos);
         try {
-            getView().getDocumentPane().scrollRectToVisible(getView().getDocumentPane().modelToView(caretPos));
+            Rectangle rect = getView().getDocumentPane().modelToView(caretPos);
+            if (rect != null) {
+                getView().getDocumentPane().scrollRectToVisible(getView().getDocumentPane().modelToView(caretPos));
+            }
         } catch (BadLocationException ignored) {
         }
 

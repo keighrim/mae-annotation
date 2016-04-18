@@ -781,7 +781,7 @@ public class MaeMainController extends JPanel {
                 assignTextColorsOver(getAnchorsToRepaint());
                 storePaintedStates();
                 logger.info(String.format("switched to document \"%s\", using DB file at \"%s\"",
-                        getDriver().getAnnotationFileBaseName(), getDriver().getDBSourceName()));
+                        getDriver().getAnnotationFileName(), getDriver().getDBSourceName()));
                 updateNotificationArea();
             } catch (MaeException e) {
                 showError(e);
@@ -987,7 +987,7 @@ public class MaeMainController extends JPanel {
         try {
             for (int i = 1; i < getDrivers().size(); i++) {
                 MaeDriverI driver = getDriverAt(i);
-                if (driver.getAnnotationFileBaseName().equals(documentName)) {
+                if (driver.getAnnotationFileName().equals(documentName)) {
                     return getDocumentColor(i);
                 }
             }

@@ -668,7 +668,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     @Override
     public ExtentTag createExtentTag(String tid, TagType tagType, String text, int... spans) throws MaeDBException {
         try {
-            ExtentTag tag = new ExtentTag(tid, tagType, getAnnotationFileBaseName());
+            ExtentTag tag = new ExtentTag(tid, tagType, getAnnotationFileName());
             tag.setText(text);
             for (CharIndex ci: tag.setSpans(spans)) {
                 charIndexDao.create(ci);
@@ -695,7 +695,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     public LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException {
         try {
-            LinkTag link = new LinkTag(tid, tagType, getAnnotationFileBaseName());
+            LinkTag link = new LinkTag(tid, tagType, getAnnotationFileName());
             lTagDao.create(link);
             boolean added = idHandler.addId(tagType, tid);
             if (!added) {
