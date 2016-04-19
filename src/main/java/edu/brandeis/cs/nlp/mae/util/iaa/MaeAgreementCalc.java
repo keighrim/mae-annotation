@@ -135,6 +135,7 @@ public class MaeAgreementCalc {
             for (String tagName : tagAgreements.keySet()) {
                 Map<String, Double> attAgreements = tagAgreements.get(tagName);
                 for (String attName : attAgreements.keySet()) {
+                    if (attAgreements.get(attName).isNaN()) continue;
                     if (attName.equalsIgnoreCase(SPAN_ATT)) {
                         agreementsOverDocs.putItem(tagName, attAgreements.get(attName));
                     } else {
@@ -144,7 +145,6 @@ public class MaeAgreementCalc {
                 }
             }
         }
-        System.out.println(agreementsOverDocs);
         for (String tagAndAttName : agreementsOverDocs.keySet()) {
             results += String.format("%.4f (%s) %s\n",
                     average(agreementsOverDocs.get(tagAndAttName)),
