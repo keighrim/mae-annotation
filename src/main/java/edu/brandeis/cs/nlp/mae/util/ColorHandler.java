@@ -109,5 +109,8 @@ public class ColorHandler {
         return colors.get(i);
     }
 
+    public void setColor(Color color, int i) {
+        colors.set(i, color);
+    }
 
 }

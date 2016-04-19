@@ -51,13 +51,11 @@ import java.util.List;
  * Created by krim on 1/1/2016.
  */
 class DialogController {
-    JFrame parent;
-    MaeMainController mainController;
-    JFileChooser fileChooser;
+    private MaeMainController mainController;
+    private JFileChooser fileChooser;
 
     DialogController(MaeMainController mainController) {
         this.mainController = mainController;
-        this.parent = getMainController().getMainWindow();
 
         this.fileChooser = new JFileChooser(".");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -68,35 +66,31 @@ class DialogController {
         return fileChooser;
     }
 
-    JFrame getParent() {
-        return parent;
-    }
-
     MaeMainController getMainController() {
         return mainController;
     }
 
     int showWarning(String warnMessage) {
-        return JOptionPane.showConfirmDialog(getParent(), warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        return JOptionPane.showConfirmDialog(null, warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
     }
 
     void showError(Exception e) {
         // TODO: 1/1/2016 maybe can implement "send error log to dev" button
         String errorTitle = e.getClass().getName();
         String errorMessage = e.getMessage();
-        JOptionPane.showMessageDialog(getParent(), errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null, errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
 
     }
 
     void showError(String message, Exception e) {
         String errorTitle = e.getClass().getName();
         String errorMessage = String.format("%s: %s", message, e.getMessage());
-        JOptionPane.showMessageDialog(getParent(), errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null, errorMessage, errorTitle, JOptionPane.WARNING_MESSAGE);
 
     }
 
     void showError(String message) {
-        JOptionPane.showMessageDialog(getParent(), message, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null, message, MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
 
     }
 
@@ -106,11 +100,11 @@ class DialogController {
         }
 
         if (saveFile) {
-            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+            if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
                 return fileChooser.getSelectedFile();
             }
         } else {
-            if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 return fileChooser.getSelectedFile();
             }
         }
@@ -182,7 +176,7 @@ class DialogController {
 
     public File showStartAdjudicationDialog() throws MaeControlException, MaeDBException, MaeIOException {
         Object[] options = {"Yes", "No, Load Gold Standard file", "Cancel"};
-        int response = JOptionPane.showOptionDialog(getParent(),
+        int response = JOptionPane.showOptionDialog(null,
                 "Start adjudication with an empty Gold Standard file?",
                 "Start adjudication",
                 JOptionPane.YES_NO_CANCEL_OPTION,

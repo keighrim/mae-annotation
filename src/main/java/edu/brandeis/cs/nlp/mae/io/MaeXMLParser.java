@@ -28,8 +28,12 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.model.ArgumentType;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -47,6 +51,8 @@ import java.util.List;
  * Created by krim on 4/6/16.
  */
 public class MaeXMLParser {
+    private static final Logger logger = LoggerFactory.getLogger(MaeXMLParser.class.getName());
+
     private MaeDriverI driver;
     private MaeSAXHandler xmlHandler;
 
@@ -74,6 +80,11 @@ public class MaeXMLParser {
         } catch (MaeDBException e) {
             e.printStackTrace();
         }
+    }
+
+    public void readAnnotationPreamble(File file) throws IOException, SAXException {
+        this.xmlHandler = new MaeSAXSimpleHandler();
+        parse(file);
     }
 
     private void parse(File file) throws IOException, SAXException  {
@@ -114,7 +125,11 @@ public class MaeXMLParser {
         return xmlHandler.getPrimaryText();
     }
 
-    private class MaeSAXHandler extends DefaultHandler {
+    public MaeSAXHandler getParsed() {
+        return this.xmlHandler;
+    }
+
+    public class MaeSAXHandler extends DefaultHandler {
         private List<ParsedTag> tags;
         private List<ParsedAtt> atts;
         private List<ParsedArg> args;
@@ -123,15 +138,26 @@ public class MaeXMLParser {
         private String primaryText;
         private String taskName;
         private List<String> extTagTypeNames;
-        private List<String> linkTagTypeName;
+        private List<String> linkTagTypeNames;
+        private MappedSet<String, String> argTypeMap;
 
         public MaeSAXHandler() {
             initParsedLists();
         }
 
-        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeName) {
+        public MaeSAXHandler(MaeSAXHandler handler) throws MaeDBException {
+
+        }
+
+        public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeNames) throws MaeDBException {
             this.extTagTypeNames = extTagTypeNames;
-            this.linkTagTypeName = linkTagTypeName;
+            this.linkTagTypeNames = linkTagTypeNames;
+            this.argTypeMap = new MappedSet<>();
+            for (String linkTypeName : linkTagTypeNames) {
+                for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(driver.getTagTypeByName(linkTypeName))) {
+                    argTypeMap.putItem(linkTypeName, argType.getName());
+                }
+            }
             initParsedLists();
 
         }
@@ -147,6 +173,7 @@ public class MaeXMLParser {
                                  Attributes attributes) throws SAXException {
 
             if (!hasRootElem) {
+                logger.debug("found root node: " + qName);
                 if (qName.equalsIgnoreCase("text") || attributes.getLength() > 0) {
                     throw new SAXException("Root node should be the task name");
                 } else {
@@ -154,6 +181,7 @@ public class MaeXMLParser {
                     hasRootElem = true;
                 }
             } else if (qName.equalsIgnoreCase("text")) {
+                logger.debug("found text node: " + qName);
                 hasTextElem = true;
             } else if (qName.equalsIgnoreCase("tags")) {
             } else {
@@ -164,8 +192,10 @@ public class MaeXMLParser {
         private void parseTag(String tagTypeName, Attributes attributes) throws SAXException {
             ParsedTag tag = new ParsedTag();
             if (extTagTypeNames.contains(tagTypeName)) {
+                logger.debug(String.format("found extent tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseExtentTag(tagTypeName, tag, attributes);
-            } else if (linkTagTypeName.contains(tagTypeName)) {
+            } else if (linkTagTypeNames.contains(tagTypeName)) {
+                logger.debug(String.format("found link tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseLinkTag(tagTypeName, tag, attributes);
             } else {
                 throw new SAXException("unexpected tag type found: " + tagTypeName);
@@ -182,39 +212,46 @@ public class MaeXMLParser {
             for(int i = 0; i < attributes.getLength(); i++){
                 String attName = attributes.getQName(i);
                 String attValue = attributes.getValue(i);
-                if (attName.equalsIgnoreCase("id")) {
-                    tag.setTid(attValue);
-                    tid = attValue;
-                } else if (attName.equalsIgnoreCase("spans")) {
-                    try {
-                        int[] spans = SpanHandler.convertStringToArray(attValue);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } catch (MaeException e) {
-                        throw new SAXException(e.getMessage());
-                    }
-                } else if (attName.equalsIgnoreCase("start")) {
-                    if (tempEnd != null) {
-                        int[] spans = convertStartEndToSpansArray(attValue, tempEnd);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } else {
-                        tempStart = attValue;
-                    }
-                } else if (attName.equalsIgnoreCase("end")) {
-                    if (tempStart != null) {
-                        int[] spans = convertStartEndToSpansArray(tempStart, attValue);
-                        tag.setSpans(spans);
-                        tag.setText(getSubstringFromPrimaryText(spans));
-                    } else {
-                        tempEnd = attValue;
-                    }
-                } else if (attName.equalsIgnoreCase("text")) {
-//                tag.setText(value);
-                    // to avoid the bug in reading unicode high surrogates,
-                    // text fields are directly sliced from primary text that is on memory
-                } else {
-                    parseAttribute(tagTypeName, tid, attName, attValue);
+                switch (attName.toLowerCase()) {
+                    case "id":
+                        tag.setTid(attValue);
+                        tid = attValue;
+                        break;
+                    case "spans":
+                        try {
+                            int[] spans = SpanHandler.convertStringToArray(attValue);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } catch (MaeException e) {
+                            throw new SAXException(e.getMessage());
+                        }
+                        break;
+                    case "start":
+                        if (tempEnd != null) {
+                            int[] spans = convertStartEndToSpansArray(attValue, tempEnd);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } else {
+                            tempStart = attValue;
+                        }
+                        break;
+                    case "end":
+                        if (tempStart != null) {
+                            int[] spans = convertStartEndToSpansArray(tempStart, attValue);
+                            tag.setSpans(spans);
+                            tag.setText(getSubstringFromPrimaryText(spans));
+                        } else {
+                            tempEnd = attValue;
+                        }
+                        break;
+                    case "text":
+//                        tag.setText(value);
+                        // to avoid the bug in reading unicode high surrogates,
+                        // text fields are directly sliced from primary text that is on memory
+                        break;
+                    default:
+                        parseAttribute(tagTypeName, tid, attName, attValue);
+
                 }
             }
             tags.add(tag);
@@ -259,7 +296,9 @@ public class MaeXMLParser {
                 if (name.equalsIgnoreCase("id")) {
                     tag.setTid(value);
                     tid = value;
-                } else if (name.endsWith(MaeStrings.ARG_IDCOL_SUF) && value.length() > 0) {
+                } else if (name.endsWith(MaeStrings.ARG_IDCOL_SUF) && value.length() > 0
+                        && argTypeMap.get(tagTypeName).contains(name.substring(0, name.length() - MaeStrings.ARG_IDCOL_SUF.length()))) {
+
                     ParsedArg arg = new ParsedArg();
                     arg.setTid(tid);
                     arg.setTagTypeName(tagTypeName);
@@ -276,14 +315,16 @@ public class MaeXMLParser {
         }
 
         private void parseAttribute(String tagTypeName, String tid, String name, String value) {
-            if (value.length() > 0) {
-                ParsedAtt att = new ParsedAtt();
-                att.setTid(tid);
-                att.setTagTypeName(tagTypeName);
-                att.setAttTypeName(name);
-                att.setAttValue(value);
-                atts.add(att);
-            }
+            // used to filter null valued atts for DB insertion performance
+            // caused errors at computing IAA, so now keep null atts as well
+//            if (value.length() > 0) {
+            ParsedAtt att = new ParsedAtt();
+            att.setTid(tid);
+            att.setTagTypeName(tagTypeName);
+            att.setAttTypeName(name);
+            att.setAttValue(value);
+            atts.add(att);
+//            }
         }
 
 
@@ -324,6 +365,7 @@ public class MaeXMLParser {
         }
 
     }
+
     public class MaeSAXSimpleHandler extends MaeSAXHandler {
 
         public MaeSAXSimpleHandler() {

@@ -30,7 +30,7 @@
 
     <groupId>edu.brandeis.cs.nlp</groupId>
     <artifactId>mae</artifactId>
-    <version>2.0.9</version>
+    <version>2.1.0-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -94,6 +94,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.dkpro.statistics</groupId>
+            <artifactId>dkpro-statistics-agreement</artifactId>
+            <version>2.1.0</version>
         </dependency>
 
     </dependencies>

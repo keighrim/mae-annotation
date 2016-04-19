@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ MAE - Multi-purpose Annotation Environment
+  ~
+  ~ Copyright Keigh Rim (krim@brandeis.edu)
+  ~ Department of Computer Science, Brandeis University
+  ~ Original program by Amber Stubbs (astubbs@cs.brandeis.edu)
+  ~
+  ~ MAE is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, @see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
+  ~
+  ~ For feedback, reporting bugs, use the project on Github
+  ~ @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
+  -->
+
+<NounVerbTask>
+  <TEXT><![CDATA[
+Mrs Miller wants the entire house repainted.
+]]></TEXT>
+  <TAGS>
+    <NOUN id="N0" spans="1~11" text="Mrs Miller" type="other" comment="default value" />
+    <NOUN id="N1" spans="29~36" text="house" type="other" comment="default value" />
+    <NOUN id="N2" spans="-1~-1" text="" type="other" comment="default value" />
+    <VERB id="V0" spans="12~17" text="wants" tense="" aspect="perfect progressive" />
+    <ADJ_ADV id="A0" spans="35~44" text="repainted" type="" />
+    <ADJ_ADV id="A1" spans="22~28" text="entire" type="" />
+    <ACTION id="AC1" fromID="N2" fromText="" toID="A0" toText="repainted" relationship="performs" />
+    <DESCRIPTION id="D1" type="" arg0ID="N1" arg0Text="house" arg1ID="A1" arg1Text="entire" arg2ID="A0" arg2Text="repainted" arg3ID="" arg3Text="" arg4ID="" arg4Text="" relationship="described_by" />
+    <ARGUMENTS id="AR0" agentID="N0" agentText="Mrs Miller" patientID="N1" patientText="house" themeID="A0" themeText="repainted" predicateID="V0" predicateText="wants" has_gap="no" />
+  </TAGS>
+</NounVerbTask>
