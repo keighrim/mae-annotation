@@ -27,7 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller.action;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.util.iaa.MaeAgreementDialog;
+import edu.brandeis.cs.nlp.mae.util.iaa.MaeAgreementGUI;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -45,7 +45,7 @@ public class LaunchIAACalc extends MaeActionI {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         try {
-            MaeAgreementDialog iaaCalc = new MaeAgreementDialog(getMainController().getDriver().getTaskFileName());
+            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
             iaaCalc.pack();
             iaaCalc.setVisible(true);
 

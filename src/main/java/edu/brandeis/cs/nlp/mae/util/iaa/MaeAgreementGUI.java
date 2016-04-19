@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Created by krim on 4/14/2016.
  */
-public class MaeAgreementDialog extends JDialog {
+public class MaeAgreementGUI extends JFrame {
 
     JButton buttonOK;
     JButton buttonCancel;
@@ -75,8 +75,9 @@ public class MaeAgreementDialog extends JDialog {
     private MaeAgreementCalc calc;
     private MaeDriverI driver;
 
-    public MaeAgreementDialog(String taskSchemeName) throws FileNotFoundException, MaeIOException, MaeDBException {
-        super(new JFrame(), "MAE IAA Calculator", true);
+    public MaeAgreementGUI(String taskSchemeName) throws FileNotFoundException, MaeIOException, MaeDBException {
+        super("MAE IAA Calculator");
+//        super(new JFrame(), "MAE IAA Calculator", false);
         this.taskScheme =  new File(taskSchemeName);
         setupDriver();
 
