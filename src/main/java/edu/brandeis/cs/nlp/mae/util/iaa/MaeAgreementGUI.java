@@ -188,6 +188,7 @@ public class MaeAgreementGUI extends JFrame {
         selectedDir.setEditable(false);
         selectedDir.setBorder(BorderFactory.createLoweredSoftBevelBorder());
         JScrollPane selectedDirScroller = new JScrollPane(selectedDir);
+        selectedDirScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         JPanel dataDirPanel = new JPanel();
         dataDirPanel.setLayout(new BoxLayout(dataDirPanel, BoxLayout.X_AXIS));
@@ -204,7 +205,7 @@ public class MaeAgreementGUI extends JFrame {
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     datasetDir = fileChooser.getSelectedFile();
                     String selectedDirString = datasetDir.getAbsolutePath();
-                    selectedDir.setText(truncate(selectedDirString, 72));
+                    selectedDir.setText(selectedDirString);
                 }
             }
         });
@@ -298,7 +299,6 @@ public class MaeAgreementGUI extends JFrame {
         } catch (MaeDBException e) {
             e.printStackTrace();
         }
-//        Frame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         dispose();
     }
 
@@ -308,17 +308,6 @@ public class MaeAgreementGUI extends JFrame {
 
     public void closeDriver() throws MaeDBException {
         this.driver.destroy();
-    }
-
-    private static String truncate(String text, int truncate) {
-        int pathLen = text.length();
-        if (pathLen > truncate) {
-            String truncater = "...";
-            int truncatingAt = pathLen - (truncate - truncater.length());
-            text = truncater + text.substring(truncatingAt, pathLen);
-        }
-        return text;
-
     }
 
     private JScrollPane prepareAgrTypePanels() {
