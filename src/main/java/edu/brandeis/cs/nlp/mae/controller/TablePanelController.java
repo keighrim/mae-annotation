@@ -453,6 +453,7 @@ class TablePanelController extends MaeControllerI {
 
     private JComponent makeAdjudicationArea(TagType type) {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(type) : new AdjudicationLinkTableModel(type);
+        model.addTableModelListener(model);
         JTable table = makeTagTable(type, model);
         AdjudicationCellRenderer renderer = new AdjudicationCellRenderer(model);
         setColumnRenders(table, renderer);
