@@ -166,7 +166,7 @@ public class MaeXMLParser {
             if (extTagTypeNames.contains(tagTypeName)) {
                 parseExtentTag(tagTypeName, tag, attributes);
             } else if (linkTagTypeName.contains(tagTypeName)) {
-                parseLinkTak(tagTypeName, tag, attributes);
+                parseLinkTag(tagTypeName, tag, attributes);
             } else {
                 throw new SAXException("unexpected tag type found: " + tagTypeName);
             }
@@ -248,7 +248,7 @@ public class MaeXMLParser {
             }
         }
 
-        private void parseLinkTak(String tagTypeName, ParsedTag tag, Attributes attributes) throws SAXException {
+        private void parseLinkTag(String tagTypeName, ParsedTag tag, Attributes attributes) throws SAXException {
 
             tag.setTagTypeName(tagTypeName);
             tag.setLink(true);

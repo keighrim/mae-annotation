@@ -242,10 +242,10 @@ public class AnnotationLoader {
 
     private void insertTagsToDB(List<ParsedTag> parsedTags) throws MaeDBException {
         List<CharIndex> anchors = new ArrayList<>();
-        String fileBaseName = FileHandler.getFileBaseName(this.fileName);
+//        String fileBaseName = FileHandler.getFileBaseName(this.fileName);
         for (ParsedTag parsedTag : parsedTags) {
             if (!parsedTag.isLink()) {
-                ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileBaseName);
+                ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileName);
                 tag.setText(parsedTag.getText());
                 for (CharIndex ci : tag.setSpans(parsedTag.getSpans())) {
                     anchors.add(ci);
@@ -254,7 +254,7 @@ public class AnnotationLoader {
                 extTagMap.put(tid, tag);
                 extTidOrder.add(tid);
             } else {
-                LinkTag tag = new LinkTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileBaseName);
+                LinkTag tag = new LinkTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileName);
                 linkTagMap.put(parsedTag.getTid(), tag);
                 linkTidOrder.add(parsedTag.getTid());
             }
