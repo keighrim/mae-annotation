@@ -486,6 +486,7 @@ public class MaeMainController extends JPanel {
         // even with multi-file support, an instance of MAE requires all works share the same DB schema
         if (fromNewTask) {
             sendWaitMessage();
+            wipeDrivers();
         }
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
