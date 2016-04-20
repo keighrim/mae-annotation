@@ -30,6 +30,9 @@ import edu.brandeis.cs.nlp.mae.model.TagType;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 /**
  * Created by krim on 1/2/2016.
@@ -80,6 +83,7 @@ public class TablePanelView extends JPanel {
         private TagType tagType;
         private JCheckBox toggle;
         private JLabel titleLabel;
+        private Color color;
 
         /**
          * constructor for a link element tab note that this constructor accepts
@@ -101,11 +105,24 @@ public class TablePanelView extends JPanel {
          */
         public TogglingTabTitle(TagType tagType, Color color) {
             this.tagType = tagType;
-            Icon unselected = new BorderRect(color, 13);
-            Icon selected = new ColorRect(color, 13);
-            this.toggle = new JCheckBox(unselected);
-            this.toggle.setSelectedIcon(selected);
+            this.color = color;
+            this.toggle = new JCheckBox();
+            setColor(color);
             this.init();
+        }
+
+        public void setColor(Color c) {
+            Icon unselected = new BorderRect(c, 13);
+            Icon selected = new ColorRect(c, 13);
+            this.toggle.setIcon(unselected);
+            this.toggle.setSelectedIcon(selected);
+            this.toggle.updateUI();
+            this.updateUI();
+
+        }
+
+        public Color getColor() {
+            return this.color;
         }
 
         /**
@@ -129,6 +146,10 @@ public class TablePanelView extends JPanel {
 
         public void addToggleListener(ItemListener listener) {
             toggle.addItemListener(listener);
+        }
+
+        public void addMouseListener(MouseListener listener) {
+            toggle.addMouseListener(listener);
         }
 
         /**

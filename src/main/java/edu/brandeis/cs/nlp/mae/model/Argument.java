@@ -103,4 +103,10 @@ public class Argument implements ModelI {
     public String getName() {
         return this.getArgumentType().getName();
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s (%s), %s of %s", getArgumentId(), getArgumentText(),
+                getArgumentType(), getLinker().getTid() );
+    }
 }
