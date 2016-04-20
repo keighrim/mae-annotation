@@ -957,9 +957,7 @@ public class MaeMainController extends JPanel {
 
     void resetPaintableColors() {
         try {
-            if (getTextHighlightColors() == null) {
-                textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
-            }
+            textHighlighColors = new ColorHandler(getDriver().getExtentTagTypes().size());
             tagsForColor.clear();
         } catch (MaeDBException e) {
             showError(e);
