@@ -52,6 +52,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by krim on 12/30/2015.
@@ -486,27 +487,33 @@ public class MaeMainController extends JPanel {
         if (fromNewTask) {
             sendWaitMessage();
         }
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
-            protected Void doInBackground() {
+            protected Boolean doInBackground() {
                 try {
                     timeConsumingSetupScheme(taskFile);
+                    return true;
                 } catch (final MaeException e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            cancel(true);
                             showError(e);
                         }
                     });
+                    return false;
                 }
-                return null;
             }
 
             @Override
             protected void done() {
-                if (fromNewTask) {
-                    adjustUIPlusTaskMinusAnnotationMinusAdjudication();
+                try {
+                    if (get() && fromNewTask) {
+                        adjustUIPlusTaskMinusAnnotationMinusAdjudication();
+                    } else {
+                        mouseCursorToDefault();
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
                 }
             }
         };
@@ -528,6 +535,15 @@ public class MaeMainController extends JPanel {
         drivers.add(currentDriver);
         try {
             getDriver().readTask(taskFile);
+        } catch (MaeDBException e) {
+            if (drivers.size() > 1) {
+                destroyCurrentDriver();
+            } else {
+                getDriver().destroy();
+                drivers.clear();
+                getTextPanel().noTaskGuide();
+            }
+            throw e;
         } catch (MaeIOException e) {
             destroyCurrentDriver();
             throw e;
@@ -544,31 +560,39 @@ public class MaeMainController extends JPanel {
 
         final boolean firstDocument = getDrivers().size() > 0 && !getDriver().isAnnotationLoaded();
         sendWaitMessage();
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
-            protected Void doInBackground() {
+            protected Boolean doInBackground() {
                 try {
                     timeConsumingAddDocument(annotationFile, firstDocument);
+                    return true;
                 } catch (final MaeException e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            cancel(true);
                             showError(e);
                         }
                     });
+                    return false;
                 }
-                return null;
             }
 
             @Override
             protected void done() {
-                if (firstDocument) {
-                    getMenu().resetFileMenu();
-                    getMenu().resetTagsMenu();
-                    getMenu().resetModeMenu();
+                try {
+                    if (get()) {
+                        if (firstDocument) {
+                            getMenu().resetFileMenu();
+                            getMenu().resetTagsMenu();
+                            getMenu().resetModeMenu();
+                        }
+                        adjustUIPlusTaskAddAnnotation();
+                    } else {
+                        mouseCursorToDefault();
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
                 }
-                adjustUIPlusTaskAddAnnotation();
             }
         };
         worker.execute();
