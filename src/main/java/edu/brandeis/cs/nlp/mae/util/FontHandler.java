@@ -110,7 +110,7 @@ public class FontHandler {
                     Character c = plainText.charAt(offset);
                     if (Character.isHighSurrogate(c)) {
                         fontFam = getFontToDraw(plainText.codePointAt(offset)).getFontName();
-                        length = 2;
+                        length = plainText.length() > offset + 2 ? 2 : 1;
 
                     }
                     document.insertString(offset, plainText.substring(offset, offset + length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));

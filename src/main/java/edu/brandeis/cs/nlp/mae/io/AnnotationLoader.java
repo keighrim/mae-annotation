@@ -278,6 +278,9 @@ public class AnnotationLoader {
             for (ParsedAtt att : parsedAtts) {
                 Tag tag = extTagMap.get(att.getTid());
                 if (tag == null) tag = linkTagMap.get(att.getTid());
+                if (tag == null || att.getAttValue() == null || att.getAttValue().length() == 0) {
+                    continue;
+                }
                 String attTypeKey = String.format("%s-%s", att.getTagTypeName(), att.getAttTypeName());
                 attributes.add(new Attribute(tag, attTypeMap.get(attTypeKey), att.getAttValue()));
             }
