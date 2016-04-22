@@ -315,8 +315,8 @@ public class MaeXMLParser {
         }
 
         private void parseAttribute(String tagTypeName, String tid, String name, String value) {
-            // used to filter null valued atts for DB insertion performance
-            // caused errors at computing IAA, so now keep null atts as well
+            // used to filter null valued atts for DB insertion
+            // however this caused errors at computing IAA, so now keep null atts as well
 //            if (value.length() > 0) {
             ParsedAtt att = new ParsedAtt();
             att.setTid(tid);
