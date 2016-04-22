@@ -40,6 +40,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * Created by krim on 4/14/2016.
@@ -56,6 +57,9 @@ public class MaeAgreementCalc {
     private MaeAnnotationIndexer fileIdx;
     private MaeDriverI driver;
     private Map<String, MaeXMLParser[]> parseCache;
+    private int[] documentLength;
+    private int totalDocumentsLength;
+    private int numAnnotators;
 
     public MaeAgreementCalc(MaeDriverI driver) {
         this.fileIdx = new MaeAnnotationIndexer();
@@ -63,12 +67,19 @@ public class MaeAgreementCalc {
         this.parseCache = new HashMap<>();
     }
 
-    public void loadAnnotationFiles(File singleDir) throws MaeIOException {
+    public void loadAnnotationFiles(File singleDir) throws MaeIOException, IOException, SAXException, MaeDBException {
         fileIdx.getAnnotationMatrixFromFiles(FileHandler.getAllFileIn(singleDir));
+        validateTaskNames(driver.getTaskName());
+        validateTextSharing();
+
+        numAnnotators = fileIdx.getAnnotators().size();
+        totalDocumentsLength = IntStream.of(documentLength).reduce( 0,(a, b) -> a + b);
+
+
     }
 
-        MaeXMLParser parser = new MaeXMLParser();
     public boolean validateTaskNames(String taskName) throws IOException, SAXException {
+        MaeXMLParser parser = new MaeXMLParser();
         for (String docName : fileIdx.getDocuments()) {
             for (String fileName : fileIdx.getAnnotationsOfDocument(docName)) {
                 if (fileName != null && !parser.isTaskNameMatching(new File(fileName), taskName)) {
@@ -81,14 +92,14 @@ public class MaeAgreementCalc {
 
     public boolean validateTextSharing() throws IOException, SAXException {
         MaeXMLParser parser = new MaeXMLParser();
+        documentLength = new int[fileIdx.getDocuments().size()];
+        int curDoc = 0;
         for (String docName : fileIdx.getDocuments()) {
             String[] fileNames = fileIdx.getAnnotationsOfDocument(docName);
-            int seen = 0;
-            while (seen < fileNames.length && fileNames[seen] == null) {
-                seen++;
-            }
+            int seen = getFirstNonNullIndex(fileNames);
             parser.readAnnotationPreamble(new File(fileNames[seen++]));
             String primaryText = parser.getParsedPrimaryText();
+            documentLength[curDoc++] = primaryText.length();
             for (int i = seen; i < fileNames.length; i++) {
                 if (fileNames[i] != null && !parser.isPrimaryTextMatching(new File(fileNames[i]), primaryText)) {
                     return false;
@@ -150,11 +161,9 @@ public class MaeAgreementCalc {
         return String.format("% .4f (%s) %s\n", agr, agrType, agrKey );
     }
 
-    public Map<String, Double> calculateAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    public Map<String, Double> calculateLocalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
         Map<String, Double> alphaUs = new TreeMap<>();
 
-        int totalDocLength = sumDocumentsLength();
-        int countAnnotators = fileIdx.getAnnotators().size();
         Map<String, String> attFullNameMap = new HashMap<>();
         for (String tagTypeName : targetTagsAndAtts.keyList()) {
             Map<String, UnitizingAnnotationStudy> studyPerAtt = new LinkedHashMap<>();
@@ -162,19 +171,21 @@ public class MaeAgreementCalc {
             attTypeNames.add(0, SPAN_ATT);
             for (String attTypeName : attTypeNames) {
                 String attFullName = tagTypeName + TAG_ATT_DELIM + attTypeName;
-                studyPerAtt.put(attFullName, new UnitizingAnnotationStudy(countAnnotators, totalDocLength));
+                studyPerAtt.put(attFullName, new UnitizingAnnotationStudy(numAnnotators, totalDocumentsLength));
                 attFullNameMap.put(attTypeName, attFullName);
             }
             int curDocLength = 0;
-            for (String docName : fileIdx.getDocuments()) {
-                MaeXMLParser[] parses = getOrCacheXMLParse(docName);
+            List<String> documents = fileIdx.getDocuments();
+            for (int i = 0; i < documents.size(); i++) {
+                String document = documents.get(i);
+                MaeXMLParser[] parses = getOrCacheXMLParse(document);
 
-                addTagsAsUnits(tagTypeName, parses, curDocLength, studyPerAtt.get(attFullNameMap.get(SPAN_ATT)));
-                for (int i = 1; i < attTypeNames.size(); i++) {
-                    String attTypeName = attTypeNames.get(i);
-                    addAttsAsUnits(tagTypeName, attTypeName, parses, curDocLength, studyPerAtt.get(attFullNameMap.get(attTypeName)));
+                addTagAsUnits(tagTypeName, parses, curDocLength, studyPerAtt.get(attFullNameMap.get(SPAN_ATT)));
+                for (int j = 1; j < attTypeNames.size(); j++) {
+                    String attTypeName = attTypeNames.get(j);
+                    addAttAsUnits(tagTypeName, attTypeName, parses, curDocLength, studyPerAtt.get(attFullNameMap.get(attTypeName)));
                 }
-                curDocLength += parses[getFirstNonNullIndex(parses)].getParsedPrimaryText().length();
+                curDocLength += documentLength[i];
             }
             for (String attTypeName : attTypeNames) {
                 double agree = (new KrippendorffAlphaUnitizingAgreement(studyPerAtt.get(attFullNameMap.get(attTypeName)))).calculateAgreement();
@@ -184,47 +195,58 @@ public class MaeAgreementCalc {
         return alphaUs;
     }
 
-    int sumDocumentsLength() throws MaeDBException, IOException, SAXException {
-        int sumDocLength = 0;
-        for (String docName : fileIdx.getDocuments()) {
-            MaeXMLParser[] parses = getOrCacheXMLParse(docName);
-            sumDocLength += parses[getFirstNonNullIndex(parses)].getParsedPrimaryText().length();
+    public Map<String, Double> calculateGlobalAlphaU(List<String> targetTags) throws IOException, SAXException, MaeDBException {
+        Map<String, Double> globalAlphaU = new TreeMap<>();
+
+        UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(numAnnotators, totalDocumentsLength);
+        int curDocLength = 0;
+        List<String> documents = fileIdx.getDocuments();
+        for (int i = 0; i < documents.size(); i++) {
+            String document = documents.get(i);
+            MaeXMLParser[] parses = getOrCacheXMLParse(document);
+            for (String tagTypeName : targetTags) {
+                addTagAsUnits(tagTypeName, parses, curDocLength, study);
+            }
+            curDocLength += documentLength[i];
         }
-        return sumDocLength;
+        double agree = (new KrippendorffAlphaUnitizingAgreement(study)).calculateAgreement();
+        globalAlphaU.put("global_alpha_u", agree);
+        return globalAlphaU;
+
+
     }
 
-    private void addTagsAsUnits(String tagTypeName, MaeXMLParser[] annotations, int textOffset, UnitizingAnnotationStudy study) {
+    private void addTagAsUnits(String tagTypeName, MaeXMLParser[] annotations, int textOffset, UnitizingAnnotationStudy study) {
 
         int annotator = 0;
         for (MaeXMLParser parse : annotations) {
-            if (parse == null) {
-                continue;
-            }
-            for (ParsedTag tag : parse.getParsedTags()) {
-                if (tag.getTagTypeName().equals(tagTypeName) && tag.getSpans().length > 0) {
-                    for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
-                        study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, tagTypeName);
+            if (parse != null) {
+                for (ParsedTag tag : parse.getParsedTags()) {
+                    if (tag.getTagTypeName().equals(tagTypeName) && tag.getSpans().length > 0) {
+                        for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
+                            study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, tagTypeName);
+                        }
                     }
                 }
             }
             annotator++;
         }
+
     }
 
-    private void addAttsAsUnits(String tagTypeName, String attTypeName, MaeXMLParser[] annotations, int textOffset, UnitizingAnnotationStudy study) {
+    private void addAttAsUnits(String tagTypeName, String attTypeName, MaeXMLParser[] annotations, int textOffset, UnitizingAnnotationStudy study) {
 
         int annotator = 0;
         for (MaeXMLParser parse : annotations) {
-            if (parse == null) {
-                continue;
-            }
-            for (ParsedTag tag : parse.getParsedTags()) {
-                if (tag.getTagTypeName().equalsIgnoreCase(tagTypeName) && tag.getSpans().length > 0) {
-                    for (ParsedAtt att : parse.getParsedAtts()) {
-                        if (att.getTagTypeName().equalsIgnoreCase(tag.getTagTypeName()) &&
-                                att.getAttTypeName().equalsIgnoreCase(attTypeName)) {
-                            for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
-                                study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, att.getAttValue());
+            if (parse != null) {
+                for (ParsedTag tag : parse.getParsedTags()) {
+                    if (tag.getTagTypeName().equalsIgnoreCase(tagTypeName) && tag.getSpans().length > 0) {
+                        for (ParsedAtt att : parse.getParsedAtts()) {
+                            if (att.getTagTypeName().equalsIgnoreCase(tag.getTagTypeName()) &&
+                                    att.getAttTypeName().equalsIgnoreCase(attTypeName)) {
+                                for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
+                                    study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, att.getAttValue());
+                                }
                             }
                         }
                     }

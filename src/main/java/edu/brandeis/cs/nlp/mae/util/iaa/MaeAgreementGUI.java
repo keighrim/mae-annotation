@@ -355,7 +355,7 @@ public class MaeAgreementGUI extends JFrame {
                 }
             }
             String formatted = calc.agreementsToString(
-                    "Alpha_U+", calc.calculateAlphaU(alphaU));
+                    "Alpha_U+", calc.calculateLocalAlphaU(alphaU));
 
             JOptionPane.showMessageDialog(null, new JTextArea(formatted), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }

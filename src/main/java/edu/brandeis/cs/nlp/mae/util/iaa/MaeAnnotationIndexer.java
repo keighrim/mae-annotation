@@ -27,10 +27,7 @@ package edu.brandeis.cs.nlp.mae.util.iaa;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.*;
 
@@ -48,8 +45,8 @@ public class MaeAnnotationIndexer {
         documentFileMap = new TreeMap<>();
     }
 
-    public Collection<String> getAnnotators() {
-        return annotatorMap.keySet();
+    public List<String> getAnnotators() {
+        return new ArrayList<>(annotatorMap.keySet());
     }
 
     public Map<String, String[]> getDocumentFileMap() {
@@ -60,8 +57,8 @@ public class MaeAnnotationIndexer {
         return annotatorMap.get(annotatorSymbol);
     }
 
-    public Collection<String> getDocuments() {
-        return documentFileMap.keySet();
+    public List<String> getDocuments() {
+        return new ArrayList<>(documentFileMap.keySet());
     }
 
     public String[] getAnnotationsOfDocument(String docName) {

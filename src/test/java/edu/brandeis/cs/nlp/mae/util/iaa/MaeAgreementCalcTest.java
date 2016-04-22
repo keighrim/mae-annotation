@@ -31,11 +31,14 @@ import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -81,11 +84,20 @@ public class MaeAgreementCalcTest {
 
     @Test
     public void testTagSpanAgreement() throws Exception {
+
+    @Test
+    public void testLocalUnitizationAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
         sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
         sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
         sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.computeAlphaU(sample));
+        System.out.println(calc.agreementsToString("LocalUnitize", calc.calculateLocalAlphaU(sample)));
     }
 
+    @Test
+    public void testGlobalUnitizationAgreement() throws Exception {
+//        List<String> sample = Arrays.asList("NOUN", "VERB");
+        List<String> sample = Arrays.asList("VERB");
+        System.out.println(calc.agreementsToString("GlobalUnitize: " + sample, calc.calculateGlobalAlphaU(sample)));
+    }
 }
