@@ -57,7 +57,7 @@ public class MaeAgreementCalcTest {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
         driver.setAnnotationFileName("TEST_SAMPLE");
         DTDLoader dtdLoader = new DTDLoader(driver);
-        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/sampleTask.dtd");
+        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/iaaSample.dtd");
         File sampleFile = new File(sampleFileUrl.getPath());
         dtdLoader.read(sampleFile);
 

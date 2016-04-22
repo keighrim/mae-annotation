@@ -49,20 +49,20 @@ public class MaeAgreementGUI extends JFrame {
     JButton buttonOK;
     JButton buttonCancel;
 
-    private static int PARTIALMATCH_TYPE = 0;
-    private static String PARTIALMATCH_STRING = "partial match";
-    private static int FULLMATCH_TYPE = 1;
-    private static String FULLMATCH_STRING = "full match";
-    private static int CODEASSGNMENT_TYPE = 2;
-    private static String CODEASSGNMENT_STRING = "code assignment";
-    private static int IGNORE_TYPE = 3;
-    private static String IGNORE_STRING = "ignore this";
-    private String[] AGR_TYPES_GUIDE_STRINGS = new String[]
-            {PARTIALMATCH_STRING,
-                    FULLMATCH_STRING,
-                    CODEASSGNMENT_STRING,
-                    IGNORE_STRING
-            };
+    private int UNITIZING_TYPE = 0;
+    private String UNITIZING_TYPE_STR = "partial match";
+    private int FULLMATCH_TYPE = 1;
+    private String FULLMATCH_STRING = "full match";
+    private int CODEASSGNMENT_TYPE = 2;
+    private String CODEASSGNMENT_STRING = "code assignment";
+    private int IGNORE_TYPE = 3;
+    private String IGNORE_STRING = "ignore this";
+    private String[] AGR_TYPES_GUIDE_STRINGS = new String[] {
+            UNITIZING_TYPE_STR,
+            FULLMATCH_STRING,
+            CODEASSGNMENT_STRING,
+            IGNORE_STRING
+    };
 
 
     private MappedSet<String, String> tagsAndAtts;
@@ -348,14 +348,14 @@ public class MaeAgreementGUI extends JFrame {
             MappedSet<String, String> alphaU = new MappedSet<>();
             MappedSet<String, String> fleissKappa = new MappedSet<>();
             for (String tagTypeName : selectedAgrType.keySet()) {
-                if (selectedAgrType.get(tagTypeName) == PARTIALMATCH_TYPE) {
+                if (selectedAgrType.get(tagTypeName) == UNITIZING_TYPE) {
                     alphaU.putCollection(tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                 } else if (selectedAgrType.get(tagTypeName) == CODEASSGNMENT_TYPE) {
                     fleissKappa.putCollection(tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                 }
             }
-            String formatted = "";
-            formatted += calc.agreementToString(calc.computeAlphaU(alphaU), "Alpha_U");
+            String formatted = calc.agreementsToString(
+                    "Alpha_U+", calc.calculateAlphaU(alphaU));
 
             JOptionPane.showMessageDialog(null, new JTextArea(formatted), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }
