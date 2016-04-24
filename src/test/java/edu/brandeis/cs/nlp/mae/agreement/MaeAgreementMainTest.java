@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util.iaa;
+package edu.brandeis.cs.nlp.mae.agreement;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
@@ -45,8 +45,8 @@ import static org.junit.Assert.*;
 /**
  * Created by krim on 4/14/2016.
  */
-public class MaeAgreementCalcTest {
-    private MaeAgreementCalc calc;
+public class MaeAgreementMainTest {
+    private MaeAgreementMain calc;
     private MaeDriverI driver;
 
     @After
@@ -64,7 +64,7 @@ public class MaeAgreementCalcTest {
         File sampleFile = new File(sampleFileUrl.getPath());
         dtdLoader.read(sampleFile);
 
-        calc = new MaeAgreementCalc(driver);
+        calc = new MaeAgreementMain(driver);
 
         URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
         File exampleDir = new File(exmapleFileUrl.getPath());
@@ -83,7 +83,12 @@ public class MaeAgreementCalcTest {
     }
 
     @Test
-    public void testTagSpanAgreement() throws Exception {
+    @Ignore
+    public void testCodingAgreement() throws Exception {
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("CODE", new LinkedList<String>() {{add("type");}});
+//        System.out.println(calc.computeNominalAlpha(sample));
+    }
 
     @Test
     public void testLocalUnitizationAgreement() throws Exception {
@@ -96,8 +101,10 @@ public class MaeAgreementCalcTest {
 
     @Test
     public void testGlobalUnitizationAgreement() throws Exception {
-//        List<String> sample = Arrays.asList("NOUN", "VERB");
-        List<String> sample = Arrays.asList("VERB");
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
+        sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
+        sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
         System.out.println(calc.agreementsToString("GlobalUnitize: " + sample, calc.calculateGlobalAlphaU(sample)));
     }
 }

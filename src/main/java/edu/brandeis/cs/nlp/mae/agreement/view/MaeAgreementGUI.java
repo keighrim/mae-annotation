@@ -22,8 +22,9 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util.iaa;
+package edu.brandeis.cs.nlp.mae.agreement.view;
 
+import edu.brandeis.cs.nlp.mae.agreement.MaeAgreementMain;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
@@ -40,6 +41,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+
+import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
 /**
  * Created by krim on 4/14/2016.
@@ -72,7 +75,7 @@ public class MaeAgreementGUI extends JFrame {
     private File datasetDir;
     private File taskScheme;
 
-    private MaeAgreementCalc calc;
+    private MaeAgreementMain calc;
     private MaeDriverI driver;
 
     public MaeAgreementGUI(String taskSchemeName) throws FileNotFoundException, MaeIOException, MaeDBException {
@@ -339,7 +342,7 @@ public class MaeAgreementGUI extends JFrame {
     }
 
     public void computeAgreement() throws IOException, MaeDBException, MaeIOException, SAXException {
-        this.calc = new MaeAgreementCalc(this.driver);
+        this.calc = new MaeAgreementMain(this.driver);
         if (datasetDir == null) {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
@@ -355,7 +358,7 @@ public class MaeAgreementGUI extends JFrame {
                 }
             }
             String formatted = calc.agreementsToString(
-                    "Alpha_U+", calc.calculateLocalAlphaU(alphaU));
+                    LOCAL_ALPHAU_TITLE, calc.calculateLocalAlphaU(alphaU));
 
             JOptionPane.showMessageDialog(null, new JTextArea(formatted), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }
@@ -466,7 +469,7 @@ public class MaeAgreementGUI extends JFrame {
         }
 
         private JComponent prepareGuideTextArea() {
-            JTextArea guideText = new JTextArea("Select tag type first and select att type to calculate attribute types in the list. Use ctrl/cmd and/or shift keys to select multiple items.");
+            JTextArea guideText = new JTextArea(GUI_ATT_SELECT_GUIDE);
             guideText.setLineWrap(true);
             guideText.setWrapStyleWord(true);
             guideText.setEditable(false);
