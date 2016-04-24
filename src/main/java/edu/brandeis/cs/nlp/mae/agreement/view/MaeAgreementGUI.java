@@ -24,13 +24,13 @@
 
 package edu.brandeis.cs.nlp.mae.agreement.view;
 
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.agreement.MaeAgreementMain;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
-import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -52,25 +52,9 @@ public class MaeAgreementGUI extends JFrame {
     JButton buttonOK;
     JButton buttonCancel;
 
-    private int UNITIZING_TYPE = 0;
-    private String UNITIZING_TYPE_STR = "partial match";
-    private int FULLMATCH_TYPE = 1;
-    private String FULLMATCH_STRING = "full match";
-    private int CODEASSGNMENT_TYPE = 2;
-    private String CODEASSGNMENT_STRING = "code assignment";
-    private int IGNORE_TYPE = 3;
-    private String IGNORE_STRING = "ignore this";
-    private String[] AGR_TYPES_GUIDE_STRINGS = new String[] {
-            UNITIZING_TYPE_STR,
-            FULLMATCH_STRING,
-            CODEASSGNMENT_STRING,
-            IGNORE_STRING
-    };
-
-
     private MappedSet<String, String> tagsAndAtts;
-    private List<TagTypePanel> agrTypeSelectionPanels;
-    private AttTypePanel attTypeSelectionPanel;
+    private List<AgreementTypeSelectPanel> agrTypeSelectPanels;
+    private AttTypeSelectPanel attTypeSelectionPanel;
 
     private File datasetDir;
     private File taskScheme;
@@ -80,7 +64,6 @@ public class MaeAgreementGUI extends JFrame {
 
     public MaeAgreementGUI(String taskSchemeName) throws FileNotFoundException, MaeIOException, MaeDBException {
         super("MAE IAA Calculator");
-//        super(new JFrame(), "MAE IAA Calculator", false);
         this.taskScheme =  new File(taskSchemeName);
         setupDriver();
 
@@ -89,7 +72,7 @@ public class MaeAgreementGUI extends JFrame {
         this.tagsAndAtts = driver.getTagTypesAndAttTypes();
 
         this.datasetDir = null;
-        this.agrTypeSelectionPanels = new LinkedList<>();
+        this.agrTypeSelectPanels = new LinkedList<>();
         this.initUI();
     }
 
@@ -106,7 +89,6 @@ public class MaeAgreementGUI extends JFrame {
     }
 
     private void initUI() {
-//        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JPanel contentPanel = new JPanel(new BorderLayout());
 
         JPanel topPanel = prepareFileSelector();
@@ -128,11 +110,8 @@ public class MaeAgreementGUI extends JFrame {
             }
         });
 
-        contentPanel.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPanel.registerKeyboardAction(e -> onCancel(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     private JPanel prepareFileSelector() {
@@ -161,22 +140,20 @@ public class MaeAgreementGUI extends JFrame {
         taskNamePanel.add(selectedTask);
 
         JButton taskChooser = new JButton("Load DTD");
-        taskChooser.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                JFileChooser fileChooser = new JFileChooser(".");
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        taskChooser.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser(".");
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    taskScheme = fileChooser.getSelectedFile();
-                    try {
-                        if (driver != null) driver.destroy();
-                        setupDriver();
-                        selectedTask.setText(driver.getTaskName());
-                        // TODO: 2016-04-17 18:18:16EDT refresh UI based on new driver
-                    } catch (MaeIOException | MaeDBException | FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                taskScheme = fileChooser.getSelectedFile();
+                try {
+                    if (driver != null) driver.destroy();
+                    setupDriver();
+                    selectedTask.setText(driver.getTaskName());
+                    // TODO: 2016-04-17 18:18:16EDT refresh UI based on new driver
+                } catch (MaeIOException | MaeDBException | FileNotFoundException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+                    ex.printStackTrace();
                 }
             }
         });
@@ -199,17 +176,14 @@ public class MaeAgreementGUI extends JFrame {
         dataDirPanel.add(selectedDirScroller);
 
         JButton dirChooser = new JButton("Choose Annotation Location");
-        dirChooser.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                JFileChooser fileChooser = new JFileChooser(".");
-                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        dirChooser.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser(".");
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    datasetDir = fileChooser.getSelectedFile();
-                    String selectedDirString = datasetDir.getAbsolutePath();
-                    selectedDir.setText(selectedDirString);
-                }
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                datasetDir = fileChooser.getSelectedFile();
+                String selectedDirString = datasetDir.getAbsolutePath();
+                selectedDir.setText(selectedDirString);
             }
         });
 
@@ -253,7 +227,7 @@ public class MaeAgreementGUI extends JFrame {
 
     private JPanel prepareRightPane() {
 
-        this.attTypeSelectionPanel = new AttTypePanel(tagsAndAtts);
+        this.attTypeSelectionPanel = new AttTypeSelectPanel(tagsAndAtts);
         return this.attTypeSelectionPanel;
     }
 
@@ -261,19 +235,10 @@ public class MaeAgreementGUI extends JFrame {
         JPanel buttons = new JPanel();
         buttons.setLayout(new FlowLayout(FlowLayout.RIGHT));
         buttonOK = new JButton("Continue");
-        buttonOK.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                onOk();
-            }
-        });
+        buttonOK.addActionListener(e -> onOk());
 
         buttonCancel = new JButton("Close");
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel());
         buttons.add(buttonOK);
         buttons.add(buttonCancel);
 
@@ -292,6 +257,7 @@ public class MaeAgreementGUI extends JFrame {
         try {
             computeAgreement();
         } catch (IOException | MaeDBException | SAXException | MaeIOException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -299,10 +265,13 @@ public class MaeAgreementGUI extends JFrame {
     public void onCancel() {
         try {
             closeDriver();
+            dispose();
         } catch (MaeDBException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
             e.printStackTrace();
+        } finally {
+            dispose();
         }
-        dispose();
     }
 
     public File getDatasetDir() {
@@ -319,8 +288,8 @@ public class MaeAgreementGUI extends JFrame {
         agrTypeList.add(new JSeparator(SwingConstants.VERTICAL));
 
         for (String tagTypeName : tagsAndAtts.keyList()) {
-            TagTypePanel tagTypePanel = new TagTypePanel(tagTypeName);
-            agrTypeSelectionPanels.add(tagTypePanel);
+            AgreementTypeSelectPanel tagTypePanel = new AgreementTypeSelectPanel(tagTypeName);
+            agrTypeSelectPanels.add(tagTypePanel);
             agrTypeList.add(tagTypePanel);
             agrTypeList.add(Box.createVerticalStrut(8));
         }
@@ -334,8 +303,8 @@ public class MaeAgreementGUI extends JFrame {
 
     public Map<String, Integer> getAgrTypeSelection() {
         Map<String, Integer> selected = new TreeMap<>();
-        for (TagTypePanel selectionPanel : agrTypeSelectionPanels) {
-            selected.put(selectionPanel.getTagTypeName(), selectionPanel.getSelectedAgrType());
+        for (AgreementTypeSelectPanel selectPanel : agrTypeSelectPanels) {
+            selected.put(selectPanel.getTagTypeName(), selectPanel.getSelectedAgrType());
 
         }
         return selected;
@@ -347,163 +316,18 @@ public class MaeAgreementGUI extends JFrame {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
             calc.loadAnnotationFiles(datasetDir);
-            Map<String, Integer> selectedAgrType = getAgrTypeSelection();
-            MappedSet<String, String> alphaU = new MappedSet<>();
-            MappedSet<String, String> fleissKappa = new MappedSet<>();
-            for (String tagTypeName : selectedAgrType.keySet()) {
-                if (selectedAgrType.get(tagTypeName) == UNITIZING_TYPE) {
-                    alphaU.putCollection(tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
-                } else if (selectedAgrType.get(tagTypeName) == CODEASSGNMENT_TYPE) {
-                    fleissKappa.putCollection(tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
-                }
+            Map<String, Integer> selectedAgrTypes = getAgrTypeSelection();
+            List<MappedSet<String, String>> targets = new ArrayList<>();
+            for (int i = 1; i < AGR_TYPES_STRINGS.size(); i++) {
+                targets.add(new MappedSet<>());
             }
-            String formatted = calc.agreementsToString(
-                    LOCAL_ALPHAU_TITLE, calc.calculateLocalAlphaU(alphaU));
+            for (String tagTypeName : selectedAgrTypes.keySet()) {
+                targets.get(selectedAgrTypes.get(tagTypeName)).putCollection(
+                        tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
+            }
+            String formatted = calc.calcAllToString(targets);
 
             JOptionPane.showMessageDialog(null, new JTextArea(formatted), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
-        }
-    }
-
-    private class TagTypePanel extends JPanel {
-        private String tagTypeName;
-        private int selectedAgrType;
-
-        public TagTypePanel(String tagTypeName) {
-            this.tagTypeName = tagTypeName;
-            this.selectedAgrType = 0;
-            this.initUI();
-        }
-
-        private void initUI() {
-            this.setLayout(new GridLayout(1,2));
-
-            JLabel tagTypeNameLabel = new JLabel(this.tagTypeName);
-            tagTypeNameLabel.setHorizontalAlignment(JLabel.CENTER);
-            add(tagTypeNameLabel);
-            final JComboBox<String> selTypeCombo = new JComboBox<>();
-
-            for (int i = 0; i < AGR_TYPES_GUIDE_STRINGS.length; i++) {
-                selTypeCombo.addItem(AGR_TYPES_GUIDE_STRINGS[i]);
-            }
-            selTypeCombo.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    selectedAgrType = selTypeCombo.getSelectedIndex();
-                }
-            });
-            selTypeCombo.setSelectedIndex(0);
-            add(selTypeCombo);
-            setMaximumSize(new Dimension(400, 32));
-            setPreferredSize(new Dimension(400, 28));
-        }
-
-        public String getTagTypeName() {
-            return tagTypeName;
-        }
-
-        public int getSelectedAgrType() {
-            return selectedAgrType;
-            // TODO: 2016-04-15 09:33:46EDT expand this for different agr types
-        }
-    }
-
-    private class AttTypePanel extends JPanel {
-        private MappedSet<String, String> tagsAndAtts;
-        private Map<String, AttTypeList> listMap;
-
-        public AttTypePanel(MappedSet<String, String> tagsAndAtts) {
-            this.tagsAndAtts = tagsAndAtts;
-
-            prepareAttLists();
-            initUI();
-        }
-
-        void prepareAttLists() {
-            listMap = new LinkedHashMap<>();
-            listMap.put("-", new AttTypeList("-", new String[0]));
-
-            for (String tagTypeName : tagsAndAtts.keySet()) {
-                List<String> attTypeNamesList = tagsAndAtts.getAsList(tagTypeName);
-                String[] attTypeNames = new String[attTypeNamesList.size()];
-                attTypeNamesList.toArray(attTypeNames);
-                listMap.put(tagTypeName, new AttTypeList(tagTypeName, attTypeNames));
-            }
-        }
-
-        private void initUI() {
-
-            this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-            add(prepareGuideTextArea());
-
-            final JComboBox<String> tagTypeCombo = new JComboBox<>();
-            final JPanel listPanel = new JPanel(new CardLayout());
-            listPanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createRaisedBevelBorder(),
-                    BorderFactory.createLoweredBevelBorder()));
-
-            for (String tagTypeName : listMap.keySet()) {
-                tagTypeCombo.addItem(tagTypeName);
-                AttTypeList attList = listMap.get(tagTypeName);
-
-                JScrollPane listScroller = new JScrollPane(attList);
-                listScroller.setBorder(BorderFactory.createEmptyBorder());
-                listPanel.add(listScroller, tagTypeName);
-            }
-
-
-            tagTypeCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    ((CardLayout) listPanel.getLayout()).show(listPanel, (String) e.getItem());
-                }
-            });
-            tagTypeCombo.setSelectedIndex(0);
-            ((JLabel)tagTypeCombo.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
-
-            add(tagTypeCombo);
-            add(listPanel);
-            setBorder(BorderFactory.createEmptyBorder(0,0,12,12));
-
-
-        }
-
-        private JComponent prepareGuideTextArea() {
-            JTextArea guideText = new JTextArea(GUI_ATT_SELECT_GUIDE);
-            guideText.setLineWrap(true);
-            guideText.setWrapStyleWord(true);
-            guideText.setEditable(false);
-            guideText.setMargin(new Insets(4,4,4,4));
-
-            guideText.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
-            guideText.setBackground(UIManager.getColor("Panel.background"));
-
-            JScrollPane guideTextScroller = new JScrollPane(guideText);
-            guideTextScroller.setBorder(BorderFactory.createEmptyBorder());
-
-            return guideTextScroller;
-        }
-
-        public List<String> getSelectedAttTypes(String tagTypeName) {
-            return this.listMap.get(tagTypeName).getSelectedAttTypes();
-        }
-    }
-
-    private class AttTypeList extends JList<String> {
-        private String tagTypeName;
-
-        public AttTypeList(String tagTypeName, String[] attTypeNames) {
-            super(attTypeNames);
-            this.tagTypeName = tagTypeName;
-            this.setSelectedIndices(SpanHandler.range(0, attTypeNames.length));
-        }
-
-        public String getTagTypeName() {
-            return tagTypeName;
-        }
-
-        public List<String> getSelectedAttTypes() {
-            return this.getSelectedValuesList();
         }
     }
 

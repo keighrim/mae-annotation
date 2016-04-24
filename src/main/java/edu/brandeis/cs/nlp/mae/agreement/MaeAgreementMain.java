@@ -33,18 +33,14 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
-import edu.brandeis.cs.nlp.mae.io.ParsedAtt;
-import edu.brandeis.cs.nlp.mae.io.ParsedTag;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
-import edu.brandeis.cs.nlp.mae.util.SpanHandler;
-import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
-import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
@@ -54,16 +50,10 @@ import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
  */
 public class MaeAgreementMain {
 
-    private int KAPPA_COEFFICIENT = 0;
-    private int ALPHA_COEFFICIENT = 1;
-    private int ALPHAU_COEFFICIENT = 2;
-
     private AbstractAnnotationIndexer fileIdx;
     private MaeDriverI driver;
     private XMLParseCache parseCache;
     private int[] documentLength;
-    private int totalDocumentsLength;
-    private int numAnnotators;
 
     public MaeAgreementMain(MaeDriverI driver) {
         this.driver = driver;
@@ -81,9 +71,6 @@ public class MaeAgreementMain {
         validateTaskNames(driver.getTaskName());
         validateTextSharing();
         parseCache = new XMLParseCache(driver, fileIdx);
-
-        numAnnotators = fileIdx.getAnnotators().size();
-        totalDocumentsLength = IntStream.of(documentLength).reduce( 0,(a, b) -> a + b);
     }
 
     boolean validateTaskNames(String taskName) throws IOException, SAXException {
@@ -149,18 +136,30 @@ public class MaeAgreementMain {
         return String.format("% .4f (%s) %s\n", agr, agrType, agrKey );
     }
 
-    public Map<String, Double> calculateLocalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    Map<String, Double> calculateLocalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
         LocalAlphaUCalc calc = new LocalAlphaUCalc(fileIdx, parseCache, documentLength);
         return calc.calculateAgreement(targetTagsAndAtts);
     }
 
-    public Map<String, Double> calculateGlobalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    Map<String, Double> calculateGlobalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
         GlobalAlphaUCalc calc = new GlobalAlphaUCalc(fileIdx, parseCache, documentLength);
         return calc.calculateAgreement(targetTagsAndAtts);
     }
 
-   public boolean isIgnoreMissing() {
-        // TODO: 2016-04-20 00:06:05EDT implement this as an option, also amend code searchable by 'annotator++'
-        return false;
+    public String calcAllToString(List<MappedSet<String, String>> targets) throws MaeDBException, SAXException, IOException {
+        String result = "";
+        for (int i = 0; i < targets.size(); i++) {
+            MappedSet<String, String> targetTagsAndAtts = targets.get(i);
+            switch (i) {
+                case GLOBAL_ALPHAU_CALC_IDX:
+                    String agrTitle = String.format("%s  %s", AGR_TYPES_STRINGS.get(i), targetTagsAndAtts.keyList());
+                    result += agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts));
+                    break;
+                case LOCAL_ALPHAU_CALC_IDX:
+                    result += agreementsToString(AGR_TYPES_STRINGS.get(i), calculateLocalAlphaU(targetTagsAndAtts));
+                    break;
+            }
+        }
+        return result;
     }
 }
