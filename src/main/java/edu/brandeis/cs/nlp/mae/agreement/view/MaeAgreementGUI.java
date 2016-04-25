@@ -320,11 +320,9 @@ public class MaeAgreementGUI extends JFrame {
                 String tagTypeName = selectPanel.getTagTypeName();
                 if (!selectPanel.isIgnored()) {
                     if (selectPanel.isGlobalScope()) {
-                        System.out.println(tagTypeName + "GLOBAL");
                         global.get(selectPanel.getSelectedMetric()).putCollection(
                                 tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                     } else {
-                        System.out.println(tagTypeName + "LOCAL");
                         local.get(selectPanel.getSelectedMetric()).putCollection(
                                 tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                     }

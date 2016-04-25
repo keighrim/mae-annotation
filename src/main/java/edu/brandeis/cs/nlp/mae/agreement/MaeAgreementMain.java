@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalAlphaUCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalAlphaUCalc;
+import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationFilesIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
@@ -41,7 +42,6 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
@@ -146,6 +146,11 @@ public class MaeAgreementMain {
         return calc.calculateAgreement(targetTagsAndAtts);
     }
 
+    Map<String, Double> calculateLocalMultiPi(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        LocalMultiPiCalc calc = new LocalMultiPiCalc(fileIdx, parseCache);
+        return calc.calculateAgreement(targetTagsAndAtts);
+    }
+
     Map<String, Double> calculateGlobalMultiPi(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
         GlobalMultiPiCalc calc = new GlobalMultiPiCalc(fileIdx, parseCache);
         return calc.calculateAgreement(targetTagsAndAtts);
@@ -176,7 +181,7 @@ public class MaeAgreementMain {
         return result;
     }
 
-    public String calcLocalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeDBException, SAXException, IOException {
+    public String calcLocalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
         String result = "";
         for (String metricType : metricToTargetsMap.keySet()) {
             MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
@@ -193,6 +198,7 @@ public class MaeAgreementMain {
                 case MULTIKAPPA_CALC_STRING:
                     break;
                 case MULTIPI_CALC_STRING:
+                    result += agreementsToString(agrTitle, calculateLocalMultiPi(targetTagsAndAtts));
                     break;
             }
 

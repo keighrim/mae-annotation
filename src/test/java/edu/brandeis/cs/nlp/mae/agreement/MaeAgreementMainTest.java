@@ -83,12 +83,19 @@ public class MaeAgreementMainTest {
     }
 
     @Test
-    public void testGlobalMultiPIAgreement() throws Exception {
+    public void testGlobalMultiPiAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
         sample.putCollection("MOOD_DECL", new LinkedList<>());
         sample.putCollection("MOOD_IMPE", new LinkedList<>());
         sample.putCollection("MOOD_SUBJ", new LinkedList<>());
         System.out.println(calc.agreementsToString("GlobalMultiPi", calc.calculateGlobalMultiPi(sample)));
+    }
+
+    @Test
+    public void testLocalMultiPiAgreement() throws Exception {
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("NAMED_ENTITY", new LinkedList<String>() {{add("type");}});
+        System.out.println(calc.agreementsToString("LocalMultiPi", calc.calculateLocalMultiPi(sample)));
     }
 
     @Test
