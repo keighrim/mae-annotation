@@ -60,7 +60,7 @@ public class MaeAgreementMainTest {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
         driver.setAnnotationFileName("TEST_SAMPLE");
         DTDLoader dtdLoader = new DTDLoader(driver);
-        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/iaaSample.dtd");
+        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example/iaaSample.dtd");
         File sampleFile = new File(sampleFileUrl.getPath());
         dtdLoader.read(sampleFile);
 
@@ -85,8 +85,10 @@ public class MaeAgreementMainTest {
     @Test
     public void testGlobalMultiPIAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
-        sample.putCollection("CODE", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.agreementsToString("LocalCodingNominal", calc.calculateGlobalMultiPi(sample)));
+        sample.putCollection("MOOD_DECL", new LinkedList<>());
+        sample.putCollection("MOOD_IMPE", new LinkedList<>());
+        sample.putCollection("MOOD_SUBJ", new LinkedList<>());
+        System.out.println(calc.agreementsToString("GlobalMultiPi", calc.calculateGlobalMultiPi(sample)));
     }
 
     @Test

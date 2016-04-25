@@ -24,40 +24,39 @@
   ~ @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
   -->
 
-<!ELEMENT CODE ( #PCDATA ) >
-<!ATTLIST CODE spans #IMPLIED >
-<!ATTLIST CODE type ( FULL | HALF | NONE ) #REQUIRED "NONE" >
+<!ELEMENT MOOD_DECL ( #PCDATA ) >
+<!ATTLIST MOOD_DECL id ID prefix="DECL" >
+<!ATTLIST MOOD_DECL spans #IMPLIED >
 
-<!ELEMENT SOV ( #PCDATA ) >
-<!ATTLIST SOV spans #IMPLIED >
+<!ELEMENT MOOD_IMPE ( #PCDATA ) >
+<!ATTLIST MOOD_IMPE id ID prefix="IMPE" >
+<!ATTLIST MOOD_IMPE spans #IMPLIED >
 
-<!ELEMENT SVO ( #PCDATA ) >
-<!ATTLIST SVO spans #IMPLIED >
+<!ELEMENT MOOD_SUBJ ( #PCDATA ) >
+<!ATTLIST MOOD_SUBJ id ID prefix="SUBJ" >
+<!ATTLIST MOOD_SUBJ spans #IMPLIED >
 
-<!-- #PCDATA makes a extent tag-->
 <!ELEMENT NOUN ( #PCDATA ) >
-<!-- this can be non-consuming-->
 <!ATTLIST NOUN spans #IMPLIED >
-<!-- fixed value set with a default value-->
 <!ATTLIST NOUN type ( person | place | thing | other ) #IMPLIED "other" >
 <!ATTLIST NOUN comment CDATA "default value" >
 
+<!ELEMENT NAMED_ENTITY ( #PCDATA ) >
+<!ATTLIST NAMED_ENTITY id ID prefix="NE" >
+<!ATTLIST NAMED_ENTITY type ( person | place | other ) #REQUIRED "other" >
+
 <!ELEMENT VERB ( #PCDATA ) >
-<!-- fixed value set without default value-->
 <!ATTLIST VERB tense ( past | present | future | none ) #IMPLIED >
 <!ATTLIST VERB aspect ( simple | progressive | perfect | perfect progressive ) #IMPLIED "perfect progressive" >
 
 <!ELEMENT ADJ_ADV ( #PCDATA ) >
 <!ATTLIST ADJ_ADV type ( adjective | adverb ) #IMPLIED >
 
-<!-- no #PCDATA makes a link tag-->
 <!ELEMENT ACTION EMPTY >
-<!-- this will have default arguments "from" and "to"-->
 <!ATTLIST ACTION relationship ( performs | performed_by ) #IMPLIED >
 
 <!ELEMENT DESCRIPTION EMPTY >
 <!ATTLIST DESCRIPTION type CDATA #REQUIRED>
-<!-- adding custom arguments (more than bianry)-->
 <!ATTLIST DESCRIPTION arg0 IDREF #REQUIRED>
 <!ATTLIST DESCRIPTION arg1 IDREF >
 <!ATTLIST DESCRIPTION arg2 IDREF >
@@ -67,7 +66,6 @@
 
 
 <!ELEMENT ARGUMENTS EMPTY >
-<!-- adding custom arguments with custom names-->
 <!ATTLIST ARGUMENTS arg0 IDREF prefix="agent" #REQUIRED>
 <!ATTLIST ARGUMENTS arg1 IDREF prefix="patient" #REQUIRED>
 <!ATTLIST ARGUMENTS arg2 IDREF prefix="theme" #REQUIRED>

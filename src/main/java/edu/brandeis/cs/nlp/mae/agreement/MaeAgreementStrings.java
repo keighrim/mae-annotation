@@ -47,7 +47,7 @@ public class MaeAgreementStrings {
     public final static String SCOPE_LOCAL_LABELING_STRING = SCOPE_LOCAL_STRING + " " + SCOPE_LABELING_STRING;
     public final static String SCOPE_IGNORE_STRING = "Ignore this tag";
 
-    public final static String ALPHAU_CALC_STRING = "Alpha-U (Krippendorf's";
+    public final static String ALPHAU_CALC_STRING = "Alpha-U (Krippendorf's)";
     public final static String MULTIPI_CALC_STRING = "Multi-Pi (Fleiss' Kappa)";
     public final static String MULTIKAPPA_CALC_STRING = "Multi-Kappa (Huberts' Kappa)";
     public final static String ALPHA_CALC_STRING = "Alpha (Krippendorf's)";

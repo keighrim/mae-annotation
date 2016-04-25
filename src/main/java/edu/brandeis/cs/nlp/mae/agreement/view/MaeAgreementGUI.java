@@ -320,9 +320,11 @@ public class MaeAgreementGUI extends JFrame {
                 String tagTypeName = selectPanel.getTagTypeName();
                 if (!selectPanel.isIgnored()) {
                     if (selectPanel.isGlobalScope()) {
+                        System.out.println(tagTypeName + "GLOBAL");
                         global.get(selectPanel.getSelectedMetric()).putCollection(
                                 tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                     } else {
+                        System.out.println(tagTypeName + "LOCAL");
                         local.get(selectPanel.getSelectedMetric()).putCollection(
                                 tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
                     }
@@ -330,7 +332,7 @@ public class MaeAgreementGUI extends JFrame {
             }
             String result = "";
             result += calc.calcGlobalAgreementToString(global);
-            result += calc.calcLocalAgreementToString(global);
+            result += calc.calcLocalAgreementToString(local);
 
             JOptionPane.showMessageDialog(null, new JTextArea(result), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }

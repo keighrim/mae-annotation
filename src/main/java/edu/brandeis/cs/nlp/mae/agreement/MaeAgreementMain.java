@@ -124,7 +124,7 @@ public class MaeAgreementMain {
     }
 
     public String agreementsToString(String agreementType, Map<String, Double> agreements) {
-        String results = agreementType + "\n\n";
+        String results = String.format("== %s ==\n\n", agreementType);
         for (String agreementKey : agreements.keySet()) {
             results += agreementToString(agreementType, agreementKey, agreements.get(agreementKey));
         }
@@ -158,7 +158,7 @@ public class MaeAgreementMain {
             if (targetTagsAndAtts.size() == 0) {
                 continue;
             }
-            String agrTitle = String.format("==<%s> %s  %s==", SCOPE_CROSSTAG_STRING, metricType, targetTagsAndAtts.keyList());
+            String agrTitle = String.format("<%s> %s  %s", SCOPE_CROSSTAG_STRING, metricType, targetTagsAndAtts.keyList());
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
                     result += agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts));
@@ -183,7 +183,7 @@ public class MaeAgreementMain {
             if (targetTagsAndAtts.size() == 0) {
                 continue;
             }
-            String agrTitle = String.format("==<%s> %s==", SCOPE_LOCAL_STRING, metricType);
+            String agrTitle = String.format("<%s> %s", SCOPE_LOCAL_STRING, metricType);
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
                     result += agreementsToString(agrTitle, calculateLocalAlphaU(targetTagsAndAtts));
