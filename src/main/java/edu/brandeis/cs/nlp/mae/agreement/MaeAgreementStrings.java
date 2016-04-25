@@ -25,7 +25,6 @@
 package edu.brandeis.cs.nlp.mae.agreement;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by krim on 4/23/2016.
@@ -35,25 +34,45 @@ public class MaeAgreementStrings {
     public final static String SPAN_ATT = "-";
     public final static String UNMARKED_CAT = "#UNMARKED#";
     public final static String TAG_ATT_DELIM = "::";
-    public final static String GLOBAL_ALPHAU_CALC_STRING = "Cross-tag segmentation";
-    public final static String LOCAL_ALPHAU_CALC_STRING = "Tag-level segmentation";
-    public final static String GLOBAL_ALPHA_CALC_STRING = "Cross-tag labeling";
-    public final static String LOCAL_ALPHA_CALC_STRING = "Tag-level labeling";
-    public final static String IGNORE_CACL_CALC_STRING = "Ignore this tag";
-
     public final static String GUI_ATT_SELECT_GUIDE = "Select tag type first and select att type to calculate attribute types in the list. Use ctrl/cmd and/or shift keys to select multiple items.";
 
-    public final static ArrayList<String> AGR_TYPES_STRINGS = new ArrayList<String>() {{
-            add(GLOBAL_ALPHAU_CALC_STRING);
-            add(LOCAL_ALPHAU_CALC_STRING);
-            add(GLOBAL_ALPHA_CALC_STRING);
-            add(LOCAL_ALPHA_CALC_STRING);
-            add(IGNORE_CACL_CALC_STRING);
+
+    public final static String SCOPE_CROSSTAG_STRING = "Cross-tag";
+    public final static String SCOPE_LOCAL_STRING = "Tag-level";
+    public final static String SCOPE_UNITIZING_STRING = "segmentation";
+    public final static String SCOPE_LABELING_STRING = "labeling";
+    public final static String SCOPE_CROSSTAG_UNITIZING_STRING = SCOPE_CROSSTAG_STRING + " " + SCOPE_UNITIZING_STRING;
+    public final static String SCOPE_LOCAL_UNITIZING_STRING = SCOPE_LOCAL_STRING + " " + SCOPE_UNITIZING_STRING;
+    public final static String SCOPE_CROSSTAG_LABELING_STRING = SCOPE_CROSSTAG_STRING + " " + SCOPE_LABELING_STRING;
+    public final static String SCOPE_LOCAL_LABELING_STRING = SCOPE_LOCAL_STRING + " " + SCOPE_LABELING_STRING;
+    public final static String SCOPE_IGNORE_STRING = "Ignore this tag";
+
+    public final static String ALPHAU_CALC_STRING = "Alpha-U (Krippendorf's";
+    public final static String MULTIPI_CALC_STRING = "Multi-Pi (Fleiss' Kappa)";
+    public final static String MULTIKAPPA_CALC_STRING = "Multi-Kappa (Huberts' Kappa)";
+    public final static String ALPHA_CALC_STRING = "Alpha (Krippendorf's)";
+
+    public final static ArrayList<String> SCOPE_TYPE_STRINGS = new ArrayList<String>() { {
+        add(SCOPE_IGNORE_STRING);
+        add(SCOPE_CROSSTAG_LABELING_STRING);
+        add(SCOPE_LOCAL_LABELING_STRING);
+        add(SCOPE_CROSSTAG_UNITIZING_STRING);
+        add(SCOPE_LOCAL_UNITIZING_STRING);
     }};
-    public final static int GLOBAL_ALPHAU_CALC_IDX = 0;
-    public final static int LOCAL_ALPHAU_CALC_IDX = 1;
-    public final static int GLOBAL_ALPHA_CALC_IDX = 2;
-    public final static int LOCAL_ALPHA_CALC_IDX = 3;
 
 
+    public final static ArrayList<String> LABELING_METRIC_TYPES_STRINGS = new ArrayList<String>() {{
+        add(MULTIPI_CALC_STRING);
+        add(MULTIKAPPA_CALC_STRING);
+        add(ALPHA_CALC_STRING);
+    }};
+
+    public final static ArrayList<String> SEGMENTATION_METRIC_TYPES_STRINGS = new ArrayList<String>() {{
+        add(ALPHAU_CALC_STRING);
+    }};
+
+    public final static ArrayList<String> ALL_METRIC_TYPE_STRINGS = new ArrayList<String>() {{
+        addAll(LABELING_METRIC_TYPES_STRINGS);
+        addAll(SEGMENTATION_METRIC_TYPES_STRINGS);
+    }};
 }

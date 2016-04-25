@@ -24,6 +24,8 @@
 
 package edu.brandeis.cs.nlp.mae.agreement;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalAlphaUCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalAlphaUCalc;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
@@ -41,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
@@ -104,7 +105,6 @@ public class MaeAgreementMain {
         return true;
     }
 
-
     private static int countNonNull(Object[] array) {
         int countNonNull = 0;
         for (Object obj : array) {
@@ -146,19 +146,56 @@ public class MaeAgreementMain {
         return calc.calculateAgreement(targetTagsAndAtts);
     }
 
-    public String calcAllToString(List<MappedSet<String, String>> targets) throws MaeDBException, SAXException, IOException {
+    Map<String, Double> calculateGlobalMultiPi(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        GlobalMultiPiCalc calc = new GlobalMultiPiCalc(fileIdx, parseCache);
+        return calc.calculateAgreement(targetTagsAndAtts);
+    }
+
+    public String calcGlobalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
         String result = "";
-        for (int i = 0; i < targets.size(); i++) {
-            MappedSet<String, String> targetTagsAndAtts = targets.get(i);
-            switch (i) {
-                case GLOBAL_ALPHAU_CALC_IDX:
-                    String agrTitle = String.format("%s  %s", AGR_TYPES_STRINGS.get(i), targetTagsAndAtts.keyList());
+        for (String metricType : metricToTargetsMap.keySet()) {
+            MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
+            if (targetTagsAndAtts.size() == 0) {
+                continue;
+            }
+            String agrTitle = String.format("==<%s> %s  %s==", SCOPE_CROSSTAG_STRING, metricType, targetTagsAndAtts.keyList());
+            switch (metricType) {
+                case ALPHAU_CALC_STRING:
                     result += agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts));
                     break;
-                case LOCAL_ALPHAU_CALC_IDX:
-                    result += agreementsToString(AGR_TYPES_STRINGS.get(i), calculateLocalAlphaU(targetTagsAndAtts));
+                case ALPHA_CALC_STRING:
+                    break;
+                case MULTIKAPPA_CALC_STRING:
+                    break;
+                case MULTIPI_CALC_STRING:
+                    result += agreementsToString(agrTitle, calculateGlobalMultiPi(targetTagsAndAtts));
                     break;
             }
+
+        }
+        return result;
+    }
+
+    public String calcLocalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeDBException, SAXException, IOException {
+        String result = "";
+        for (String metricType : metricToTargetsMap.keySet()) {
+            MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
+            if (targetTagsAndAtts.size() == 0) {
+                continue;
+            }
+            String agrTitle = String.format("==<%s> %s==", SCOPE_LOCAL_STRING, metricType);
+            switch (metricType) {
+                case ALPHAU_CALC_STRING:
+                    result += agreementsToString(agrTitle, calculateLocalAlphaU(targetTagsAndAtts));
+                    break;
+                case ALPHA_CALC_STRING:
+                    break;
+                case MULTIKAPPA_CALC_STRING:
+                    break;
+                case MULTIPI_CALC_STRING:
+                    break;
+            }
+
         }
         return result;
     }

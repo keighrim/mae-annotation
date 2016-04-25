@@ -24,17 +24,20 @@
 
 package edu.brandeis.cs.nlp.mae.agreement.view;
 
+import java.awt.event.*;
+import java.util.List;
 import javax.swing.*;
 import java.awt.*;
 
-import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.AGR_TYPES_STRINGS;
+import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
 /**
  * Created by krim on 4/24/2016.
  */
 class AgreementTypeSelectPanel extends JPanel {
     private String tagTypeName;
-    private JComboBox<String> selTypeCombo;
+    private JComboBox<String> scopeCombo;
+    private JComboBox<String> metricTypeCombo;
 
     public AgreementTypeSelectPanel(String tagTypeName) {
         this.tagTypeName = tagTypeName;
@@ -47,21 +50,107 @@ class AgreementTypeSelectPanel extends JPanel {
         JLabel tagTypeNameLabel = new JLabel(this.tagTypeName);
         tagTypeNameLabel.setHorizontalAlignment(JLabel.CENTER);
         add(tagTypeNameLabel);
-        selTypeCombo = new JComboBox<>();
-        for (String AGR_TYPES_STRING : AGR_TYPES_STRINGS) {
-            selTypeCombo.addItem(AGR_TYPES_STRING);
+
+        prepareScopeCombobox();
+        prepareMetricsCombobox();
+        scopeCombo.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                Component component = e.getComponent();
+                scrollToComponent(component);
+            }
+        });
+
+        metricTypeCombo.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                Component component = e.getComponent();
+                scrollToComponent(component);
+            }
+        });
+
+        add(scopeCombo);
+        add(metricTypeCombo);
+        setMaximumSize(new Dimension(450, 32));
+        setPreferredSize(new Dimension(450, 28));
+    }
+
+    private void scrollToComponent(Component component) {
+        this.scrollRectToVisible(component.getBounds());
+    }
+
+    private void prepareLabelingMetricsCombobox() {
+        prepareMetricsCombobox(LABELING_METRIC_TYPES_STRINGS);
+    }
+
+    private void prepareSegmentationMetricsCombobox() {
+        prepareMetricsCombobox(SEGMENTATION_METRIC_TYPES_STRINGS);
+    }
+
+    private void prepareMetricsCombobox() {
+        if (metricTypeCombo == null) {
+            metricTypeCombo = new JComboBox<>();
         }
-        selTypeCombo.setSelectedIndex(0);
-        add(selTypeCombo);
-        setMaximumSize(new Dimension(400, 32));
-        setPreferredSize(new Dimension(400, 28));
+        metricTypeCombo.removeAllItems();
+        metricTypeCombo.setEnabled(false);
+    }
+
+    private void prepareMetricsCombobox(List<String> items) {
+        if (metricTypeCombo == null) {
+            metricTypeCombo = new JComboBox<>();
+        }
+        populateCombobox(metricTypeCombo, items);
+        metricTypeCombo.setEnabled(true);
+        metricTypeCombo.setSelectedIndex(0);
+    }
+
+    private static void populateCombobox(JComboBox<String> metricTypeCombo, List<String> items) {
+        metricTypeCombo.removeAllItems();
+        items.forEach(metricTypeCombo::addItem);
+    }
+
+    private void prepareScopeCombobox() {
+        scopeCombo = new JComboBox<>();
+        for (String SCOPE : SCOPE_TYPE_STRINGS) {
+            scopeCombo.addItem(SCOPE);
+        }
+        scopeCombo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_LABELING_STRING)) {
+                    prepareLabelingMetricsCombobox();
+                    updateUI();
+                } else if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_UNITIZING_STRING)) {
+                    prepareSegmentationMetricsCombobox();
+                    updateUI();
+                } else {
+                    prepareMetricsCombobox();
+                    updateUI();
+                }
+            }
+        });
+        scopeCombo.setSelectedIndex(0);
     }
 
     public String getTagTypeName() {
         return tagTypeName;
     }
 
-    public int getSelectedAgrType() {
-        return selTypeCombo.getSelectedIndex();
+    public String getSelectedScope() {
+        return (String) scopeCombo.getSelectedItem();
+    }
+
+    public String getSelectedMetric() {
+        return (String) metricTypeCombo.getSelectedItem();
+    }
+
+    public boolean isIgnored() {
+        return getSelectedScope().equals(SCOPE_IGNORE_STRING);
+    }
+
+    public boolean isGlobalScope() {
+        return !isIgnored() && (getSelectedScope().contains(SCOPE_CROSSTAG_STRING));
     }
 }

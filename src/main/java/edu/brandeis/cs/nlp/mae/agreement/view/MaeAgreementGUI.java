@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.agreement.view;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.agreement.MaeAgreementMain;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
@@ -253,16 +254,16 @@ public class MaeAgreementGUI extends JFrame {
         return dataDirButtonPanel;
     }
 
-    public void onOk() {
+    private void onOk() {
         try {
             computeAgreement();
-        } catch (IOException | MaeDBException | SAXException | MaeIOException e) {
+        } catch (IOException | MaeException | SAXException e) {
             JOptionPane.showMessageDialog(null, e.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
             e.printStackTrace();
         }
     }
 
-    public void onCancel() {
+    private void onCancel() {
         try {
             closeDriver();
             dispose();
@@ -278,7 +279,7 @@ public class MaeAgreementGUI extends JFrame {
         return datasetDir;
     }
 
-    public void closeDriver() throws MaeDBException {
+    private void closeDriver() throws MaeDBException {
         this.driver.destroy();
     }
 
@@ -300,35 +301,38 @@ public class MaeAgreementGUI extends JFrame {
         return agrTypeListScroller;
     }
 
-
-    public Map<String, Integer> getAgrTypeSelection() {
-        Map<String, Integer> selected = new TreeMap<>();
-        for (AgreementTypeSelectPanel selectPanel : agrTypeSelectPanels) {
-            selected.put(selectPanel.getTagTypeName(), selectPanel.getSelectedAgrType());
-
-        }
-        return selected;
-    }
-
-    public void computeAgreement() throws IOException, MaeDBException, MaeIOException, SAXException {
+    private void computeAgreement() throws IOException, MaeException, SAXException {
         this.calc = new MaeAgreementMain(this.driver);
         if (datasetDir == null) {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
             calc.loadAnnotationFiles(datasetDir);
-            Map<String, Integer> selectedAgrTypes = getAgrTypeSelection();
-            List<MappedSet<String, String>> targets = new ArrayList<>();
-            for (int i = 1; i < AGR_TYPES_STRINGS.size(); i++) {
-                targets.add(new MappedSet<>());
-            }
-            for (String tagTypeName : selectedAgrTypes.keySet()) {
-                targets.get(selectedAgrTypes.get(tagTypeName)).putCollection(
-                        tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
-            }
-            String formatted = calc.calcAllToString(targets);
 
-            JOptionPane.showMessageDialog(null, new JTextArea(formatted), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
+            Map<String, MappedSet<String, String>> global = new TreeMap<>();
+            Map<String, MappedSet<String, String>> local = new TreeMap<>();
+
+            for (String metric : ALL_METRIC_TYPE_STRINGS) {
+                global.put(metric, new MappedSet<>());
+                local.put(metric, new MappedSet<>());
+            }
+
+            for (AgreementTypeSelectPanel selectPanel : agrTypeSelectPanels) {
+                String tagTypeName = selectPanel.getTagTypeName();
+                if (!selectPanel.isIgnored()) {
+                    if (selectPanel.isGlobalScope()) {
+                        global.get(selectPanel.getSelectedMetric()).putCollection(
+                                tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
+                    } else {
+                        local.get(selectPanel.getSelectedMetric()).putCollection(
+                                tagTypeName, this.attTypeSelectionPanel.getSelectedAttTypes(tagTypeName));
+                    }
+                }
+            }
+            String result = "";
+            result += calc.calcGlobalAgreementToString(global);
+            result += calc.calcLocalAgreementToString(global);
+
+            JOptionPane.showMessageDialog(null, new JTextArea(result), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }
     }
-
 }
