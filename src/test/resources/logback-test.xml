@@ -61,9 +61,9 @@
         </encoder>
     </appender>
 
-    <logger name="com.j256.ormlite" level="debug"/>
+    <logger name="com.j256.ormlite" level="error"/>
 
-    <root level="debug">
+    <root level="error">
         <appender-ref ref="STDERR" />
     </root>
 </configuration>
