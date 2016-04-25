@@ -53,8 +53,8 @@ public class AnnotationFilesIndexerTest {
         assertEquals("Expected 5 annotators, found " + indexer.getAnnotators().size(),
                 5, indexer.getAnnotators().size());
         Map<String, String[]> map = (indexer.getDocumentFileMap());
-        assertEquals("Expected 2 documents, found " + map.keySet().size(),
-                2, map.keySet().size());
+        assertEquals("Expected 4 documents, found " + map.keySet().size(),
+                4, map.keySet().size());
         String[] doc1anns = map.get("doc1");
         int doc1nulls = countNull(doc1anns);
         assertEquals("Expected doc1 has 5 annotations, found " + (5 - doc1nulls),
