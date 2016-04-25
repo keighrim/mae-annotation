@@ -28,6 +28,8 @@
 Mrs Miller wants the entire house repainted.
 ]]></TEXT>
   <TAGS>
+<MOOD_IMPE id="IMPE0" spans="-1~-1" text=""  />
+<NAMED_ENTITY id="NE0" spans="1~11" text="Mrs Miller" type="person" />
     <NOUN id="N0" spans="1~11" text="Mrs Miller" type="other" comment="default value" />
     <NOUN id="N1" spans="29~34" text="house" type="other" comment="default value" />
     <NOUN id="N2" spans="-1~-1" text="" type="other" comment="default value" />

@@ -22,35 +22,10 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
-
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.FileNotFoundException;
+package org.ibex.nestedvm;
 
 /**
- * Created by krim on 4/18/2016.
+ * Created by krim on 4/25/2016.
  */
-public class LaunchIAACalc extends MaeActionI {
-
-    public LaunchIAACalc(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        try {
-            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
-            iaaCalc.pack();
-            iaaCalc.setVisible(true);
-
-        } catch (FileNotFoundException | MaeIOException | MaeDBException e) {
-            getMainController().showError(e);
-        }
-    }
+public class Interpreter {
 }

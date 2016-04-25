@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util.iaa;
+package edu.brandeis.cs.nlp.mae.agreement;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
@@ -31,19 +31,22 @@ import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
 /**
  * Created by krim on 4/14/2016.
  */
-public class MaeAgreementCalcTest {
-    private MaeAgreementCalc calc;
+public class MaeAgreementMainTest {
+    private MaeAgreementMain calc;
     private MaeDriverI driver;
 
     @After
@@ -57,11 +60,11 @@ public class MaeAgreementCalcTest {
         driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
         driver.setAnnotationFileName("TEST_SAMPLE");
         DTDLoader dtdLoader = new DTDLoader(driver);
-        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("xml_samples/sampleTask.dtd");
+        URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example/iaaSample.dtd");
         File sampleFile = new File(sampleFileUrl.getPath());
         dtdLoader.read(sampleFile);
 
-        calc = new MaeAgreementCalc(driver);
+        calc = new MaeAgreementMain(driver);
 
         URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
         File exampleDir = new File(exmapleFileUrl.getPath());
@@ -80,12 +83,36 @@ public class MaeAgreementCalcTest {
     }
 
     @Test
-    public void testTagSpanAgreement() throws Exception {
+    public void testGlobalMultiPiAgreement() throws Exception {
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("MOOD_DECL", new LinkedList<>());
+        sample.putCollection("MOOD_IMPE", new LinkedList<>());
+        sample.putCollection("MOOD_SUBJ", new LinkedList<>());
+        System.out.println(calc.agreementsToString("GlobalMultiPi", calc.calculateGlobalMultiPi(sample)));
+    }
+
+    @Test
+    public void testLocalMultiPiAgreement() throws Exception {
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("NAMED_ENTITY", new LinkedList<String>() {{add("type");}});
+        System.out.println(calc.agreementsToString("LocalMultiPi", calc.calculateLocalMultiPi(sample)));
+    }
+
+    @Test
+    public void testLocalUnitizationAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
         sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
         sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
         sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.computeAlphaU(sample));
+        System.out.println(calc.agreementsToString("LocalUnitize", calc.calculateLocalAlphaU(sample)));
     }
 
+    @Test
+    public void testGlobalUnitizationAgreement() throws Exception {
+        MappedSet<String, String> sample = new MappedSet<>();
+        sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
+        sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
+        sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
+        System.out.println(calc.agreementsToString("GlobalUnitize: " + sample, calc.calculateGlobalAlphaU(sample)));
+    }
 }

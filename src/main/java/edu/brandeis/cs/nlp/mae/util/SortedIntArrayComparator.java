@@ -22,35 +22,24 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.util;
 
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.FileNotFoundException;
+import java.util.Comparator;
 
 /**
- * Created by krim on 4/18/2016.
+ * Created by krim on 4/24/2016.
  */
-public class LaunchIAACalc extends MaeActionI {
-
-    public LaunchIAACalc(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
-    }
+public class SortedIntArrayComparator implements Comparator<int[]> {
 
     @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        try {
-            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
-            iaaCalc.pack();
-            iaaCalc.setVisible(true);
-
-        } catch (FileNotFoundException | MaeIOException | MaeDBException e) {
-            getMainController().showError(e);
+    public int compare(int[] o1, int[] o2) {
+        int toLook = Math.min(o1.length, o2.length);
+        for (int i = 0; i < toLook; i++) {
+            if (o1[i] != o2[i]) {
+                return o1[i] - o2[i];
+            }
         }
+        return o1.length - o2.length;
     }
+
 }
