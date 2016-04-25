@@ -32,7 +32,8 @@ import java.util.List;
  */
 public class MaeAgreementStrings {
 
-    public final static String SPAN_ATT = "#@!#!";
+    public final static String SPAN_ATT = "-";
+    public final static String UNMARKED_CAT = "#UNMARKED#";
     public final static String TAG_ATT_DELIM = "::";
     public final static String GLOBAL_ALPHAU_CALC_STRING = "Cross-tag segmentation";
     public final static String LOCAL_ALPHAU_CALC_STRING = "Tag-level segmentation";

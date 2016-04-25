@@ -27,44 +27,32 @@ package edu.brandeis.cs.nlp.mae.agreement.calculator;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
+import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
+import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
- * Created by krim on 4/23/2016.
+ * Created by krim on 4/24/2016.
  */
-abstract class AbstractMaeAgreementCalc {
+public class GlobalMultiPiCalc extends AbstractCodingAgreementCalc {
 
-    int numAnnotators;
-    AbstractAnnotationIndexer fileIdx;
-    XMLParseCache parseCache;
-
-    public AbstractMaeAgreementCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
-        this.fileIdx = fileIdx;
-        this.parseCache = parseCache;
-        this.numAnnotators = fileIdx.getAnnotators().size();
+    public GlobalMultiPiCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
+        super(fileIdx, parseCache);
     }
 
-    public int getNumAnnotators() {
-        return numAnnotators;
+    @Override
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        Map<String, Double> globalAlpha = new TreeMap<>();
+        CodingAnnotationStudy study = prepareCrosstagCodingStudy(targetTagsAndAtts);
+        double agreement = (new FleissKappaAgreement(study)).calculateAgreement();
+        globalAlpha.put("global_alpha", agreement);
+        return globalAlpha;
     }
-
-    public AbstractAnnotationIndexer getFileIdx() {
-        return fileIdx;
-    }
-
-    public XMLParseCache getParseCache() {
-        return parseCache;
-    }
-
-    public MaeXMLParser[] getParses(String docName) throws IOException, SAXException, MaeDBException {
-        return this.parseCache.getParses(docName);
-    }
-
-    public abstract Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException;
 }
+
+

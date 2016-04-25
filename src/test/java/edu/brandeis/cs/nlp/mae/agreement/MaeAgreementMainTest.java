@@ -83,11 +83,10 @@ public class MaeAgreementMainTest {
     }
 
     @Test
-    @Ignore
-    public void testCodingAgreement() throws Exception {
+    public void testGlobalMultiPIAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
         sample.putCollection("CODE", new LinkedList<String>() {{add("type");}});
-//        System.out.println(calc.computeNominalAlpha(sample));
+        System.out.println(calc.agreementsToString("LocalCodingNominal", calc.calculateGlobalMultiPi(sample)));
     }
 
     @Test

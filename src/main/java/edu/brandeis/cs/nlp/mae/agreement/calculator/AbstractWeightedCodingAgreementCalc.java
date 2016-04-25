@@ -27,44 +27,40 @@ package edu.brandeis.cs.nlp.mae.agreement.calculator;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
+import org.dkpro.statistics.agreement.distance.*;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
- * Created by krim on 4/23/2016.
+ * Created by krim on 4/25/2016.
  */
-abstract class AbstractMaeAgreementCalc {
+abstract public class AbstractWeightedCodingAgreementCalc extends AbstractCodingAgreementCalc {
 
-    int numAnnotators;
-    AbstractAnnotationIndexer fileIdx;
-    XMLParseCache parseCache;
+    ArrayList<IDistanceFunction> distanceFns;
 
-    public AbstractMaeAgreementCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
-        this.fileIdx = fileIdx;
-        this.parseCache = parseCache;
-        this.numAnnotators = fileIdx.getAnnotators().size();
+    public AbstractWeightedCodingAgreementCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
+        super(fileIdx, parseCache);
+        distanceFns = new ArrayList<IDistanceFunction>() {{
+            add(new NominalDistanceFunction());
+            add(new OrdinalDistanceFunction());
+            add(new IntervalDistanceFunction());
+            add(new RatioDistanceFunction());
+        }};
     }
 
-    public int getNumAnnotators() {
-        return numAnnotators;
+    @Override
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        return calculateAgreement(targetTagsAndAtts, 0);
     }
 
-    public AbstractAnnotationIndexer getFileIdx() {
-        return fileIdx;
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, int distanceFnType) throws IOException, SAXException, MaeException {
+        return calculateAgreement(targetTagsAndAtts, distanceFns.get(distanceFnType));
     }
 
-    public XMLParseCache getParseCache() {
-        return parseCache;
-    }
+    abstract public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, IDistanceFunction distanceFn) throws IOException, SAXException, MaeException;
 
-    public MaeXMLParser[] getParses(String docName) throws IOException, SAXException, MaeDBException {
-        return this.parseCache.getParses(docName);
-    }
-
-    public abstract Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException;
 }
