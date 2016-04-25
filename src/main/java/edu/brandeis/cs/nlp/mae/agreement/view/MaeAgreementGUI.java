@@ -101,7 +101,7 @@ public class MaeAgreementGUI extends JFrame {
         contentPanel.add(bottomPanel, BorderLayout.PAGE_END);
 
         setContentPane(contentPanel);
-        setSize(new Dimension(800, 700));
+        setSize(new Dimension(1000, 700));
         getRootPane().setDefaultButton(buttonCancel);
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -207,9 +207,9 @@ public class MaeAgreementGUI extends JFrame {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
         JPanel leftPanel = prepareLeftPane();
         JPanel rightPanel = prepareRightPane();
-        leftPanel.setMinimumSize(new Dimension(450, 300));
-        leftPanel.setPreferredSize(new Dimension(450, 300));
-        leftPanel.setMaximumSize(new Dimension(450, 2000));
+        leftPanel.setMinimumSize(new Dimension(600, 300));
+        leftPanel.setPreferredSize(new Dimension(600, 300));
+        leftPanel.setMaximumSize(new Dimension(600, 2000));
         mainPanel.add(leftPanel);
         mainPanel.add(Box.createHorizontalStrut(12));
         mainPanel.add(new JSeparator(SwingConstants.VERTICAL));

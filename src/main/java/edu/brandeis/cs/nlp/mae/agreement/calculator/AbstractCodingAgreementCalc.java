@@ -145,9 +145,10 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
         return studyPerAtt;
     }
 
-    void fillUnmarkednessOfAnnotator(Map<String, String[]> attMarkupMap, int annotatorIdx) {
-        for (String[] markups : attMarkupMap.values()) {
-            markups[annotatorIdx] = UNMARKED_CAT;
+    void fillUnmarkednessOfAnnotator(Map<String, String[]> attAnnotationMap, int annotatorIdx) {
+        for (String attTypeName : attAnnotationMap.keySet()) {
+            String[] markups = attAnnotationMap.get(attTypeName);
+            markups[annotatorIdx] = attTypeName.equals(SPAN_ATT)? Boolean.toString(false) : null;
         }
     }
 

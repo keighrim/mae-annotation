@@ -73,8 +73,8 @@ class AgreementTypeSelectPanel extends JPanel {
 
         add(scopeCombo);
         add(metricTypeCombo);
-        setMaximumSize(new Dimension(450, 32));
-        setPreferredSize(new Dimension(450, 28));
+        setMaximumSize(new Dimension(550, 32));
+        setPreferredSize(new Dimension(550, 28));
     }
 
     private void scrollToComponent(Component component) {
