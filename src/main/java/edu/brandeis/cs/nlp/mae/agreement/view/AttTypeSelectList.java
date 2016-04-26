@@ -22,36 +22,31 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.agreement.view;
 
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
+import java.util.List;
 
 /**
+ * Created by krim on 4/24/2016.
  */
-public class LoadTask extends MenuActionI {
+class AttTypeSelectList extends JList<String> {
 
-    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
+    private String tagTypeName;
+
+    AttTypeSelectList(String tagTypeName, String[] attTypeNames) {
+        super(attTypeNames);
+        this.tagTypeName = tagTypeName;
+        this.setSelectedIndices(SpanHandler.range(0, attTypeNames.length));
     }
 
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        if (getMainController().showAllUnsavedChangeWarning()) {
-            try {
-                File file = getMainController().selectSingleFile("", false);
-                if (file != null) {
-                    getMainController().setupScheme(file, true);
-                }
-
-            } catch (Exception e) {
-                catchException(e);
-            }
-        }
+    public String getTagTypeName() {
+        return tagTypeName;
     }
 
+    List<String> getSelectedAttTypes() {
+        return this.getSelectedValuesList();
+    }
 }
-

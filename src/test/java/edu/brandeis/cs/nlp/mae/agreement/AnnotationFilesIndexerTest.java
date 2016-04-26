@@ -22,14 +22,14 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util.iaa;
+package edu.brandeis.cs.nlp.mae.agreement;
 
+import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationFilesIndexer;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URL;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -37,32 +37,24 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by krim on 4/13/16.
  */
-public class MaeAnnotationIndexerTest {
-    MaeAnnotationIndexer calc;
-    List<File> files;
+public class AnnotationFilesIndexerTest {
+    AnnotationFilesIndexer indexer;
 
     @Before
     public void setUp() throws Exception {
-        calc = new MaeAnnotationIndexer();
-        files = new ArrayList<>();
-        String[] docs = new String[]{"doc1", "doc2", "doc3", "doc4", "doc5"};
-        String[] anns = new String[]{"a1", "a2", "a3", "a4", "a5"};
-        for (String doc: docs) {
-            for (String ann : anns) {
-                files.add(new File(calc.generateAnnotationFileName(doc, ann)));
-            }
-        }
+        indexer = new AnnotationFilesIndexer();
     }
 
     @Test
     public void testGetAnnotationMatrixFromFiles() throws Exception {
-        files.remove(new File("doc2_a2.xml"));
-        calc.getAnnotationMatrixFromFiles(files);
-        assertEquals("Expected 5 annotators, found " + calc.getAnnotators().size(),
-                5, calc.getAnnotators().size());
-        Map<String, String[]> map = (calc.getDocumentFileMap());
-        assertEquals("Expected 5 documents, found " + map.keySet().size(),
-                5, map.keySet().size());
+        URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
+        File exampleDir = new File(exmapleFileUrl.getPath());
+        indexer.indexAnnotations(exampleDir);
+        assertEquals("Expected 5 annotators, found " + indexer.getAnnotators().size(),
+                5, indexer.getAnnotators().size());
+        Map<String, String[]> map = (indexer.getDocumentFileMap());
+        assertEquals("Expected 4 documents, found " + map.keySet().size(),
+                4, map.keySet().size());
         String[] doc1anns = map.get("doc1");
         int doc1nulls = countNull(doc1anns);
         assertEquals("Expected doc1 has 5 annotations, found " + (5 - doc1nulls),

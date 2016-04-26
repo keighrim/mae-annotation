@@ -27,7 +27,7 @@ package edu.brandeis.cs.nlp.mae.controller.action;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.util.iaa.MaeAgreementGUI;
+import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

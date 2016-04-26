@@ -28,6 +28,8 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,10 +42,10 @@ public class FileHandler {
     public static String ANNOTATOR_SUFFIX_DELIM = "_";
     public static String XML_EXT = ".xml";
     public static FileFilter XML_FILTER  = new FileFilter() {
-                    @Override
-                    public boolean accept(File pathname) {
-                        return pathname.getName().toLowerCase().endsWith(".xml");
-                    } };
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.getName().toLowerCase().endsWith(".xml");
+        } };
 
     public static String getFileBaseName(File file) {
         return getFileBaseName(file.getAbsolutePath());
@@ -54,7 +56,25 @@ public class FileHandler {
         return pathTokens[pathTokens.length - 1];
     }
 
-    public static List<File> getAllFileIn(File directory) throws MaeIOException {
+    public static boolean containsDirsOnly(File directory) throws MaeIOException {
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files.length == 0) {
+                throw new MaeIOException("Directory is empty: " + directory.getName());
+            }
+            for (File file : files) {
+                if (!file.isDirectory()) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            throwNotDirectoryError(directory);
+            return false;
+        }
+    }
+
+    public static List<File> getAllXMLFilesIn(File directory) throws MaeIOException {
         if (directory.isDirectory()) {
             File[] files = directory.listFiles(XML_FILTER);
             if (files.length > 0) {
@@ -63,8 +83,13 @@ public class FileHandler {
                 throw new MaeIOException("No XML found in the directory: " + directory.getName());
             }
         } else {
-            throw new MaeIOException("Not a directory: " + directory.getName());
+            throwNotDirectoryError(directory);
+            return null;
         }
+    }
+
+    static boolean throwNotDirectoryError(File directory) throws MaeIOException {
+        throw new MaeIOException("Not a directory: " + directory.getName());
     }
 
 

@@ -22,54 +22,60 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.util.iaa;
+package edu.brandeis.cs.nlp.mae.agreement.io;
 
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
+import edu.brandeis.cs.nlp.mae.util.FileHandler;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.*;
 
-
 /**
- * Created by krim on 4/13/16.
+ * Created by krim on 4/23/2016.
  */
-public class MaeAnnotationIndexer {
+public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
 
-    private Map<String, Integer> annotatorMap;
-    private Map<String, String[]> documentFileMap;
+    private List<File> annotationFiles;
 
-    public MaeAnnotationIndexer() {
+    @Override
+    public int listupAnnotators(File datasetDirectory) throws MaeIOException {
+        if (annotationFiles == null) {
+            annotationFiles = FileHandler.getAllXMLFilesIn(datasetDirectory);
+        }
+        return listupAnnotators(annotationFiles);
+    }
+
+    private int listupAnnotators(List<File> annotationFiles) throws MaeIOException {
         annotatorMap = new TreeMap<>();
-        documentFileMap = new TreeMap<>();
+        int countSeen = 0;
+
+        for (File annotationFile : annotationFiles) {
+            String annotationBaseName = getFileBaseName(annotationFile).trim();
+            if (!annotationFile.getName().endsWith(XML_EXT)) {
+                throw new MaeIOException("An annotation should be an XML file: " + annotationFile.getName());
+            }
+
+            String annotationShortName = getFileNameWithoutExtension(annotationBaseName);
+            String annotatorSymbol = splitAnnotationAnnotator(annotationShortName)[1];
+            if (!annotatorMap.containsKey(annotatorSymbol)) {
+                annotatorMap.put(annotatorSymbol, countSeen++);
+            }
+        }
+        return annotatorMap.size();
     }
 
-    public Collection<String> getAnnotators() {
-        return annotatorMap.keySet();
+    @Override
+    public void indexAnnotations(File datasetDirectory) throws MaeIOException {
+        if (annotationFiles == null) {
+            annotationFiles = FileHandler.getAllXMLFilesIn(datasetDirectory);
+        }
+        indexAnnotationFiles(annotationFiles);
     }
 
-    public Map<String, String[]> getDocumentFileMap() {
-        return documentFileMap;
-    }
-
-    public int getAnnotatorIndex(String annotatorSymbol) {
-        return annotatorMap.get(annotatorSymbol);
-    }
-
-    public Collection<String> getDocuments() {
-        return documentFileMap.keySet();
-    }
-
-    public String[] getAnnotationsOfDocument(String docName) {
-        return documentFileMap.get(docName);
-    }
-
-
-    public void getAnnotationMatrixFromFiles(List<File> annotationFiles) throws MaeIOException {
+    private void indexAnnotationFiles(List<File> annotationFiles) throws MaeIOException {
         // takes a list of all relevant files (assume all files are .xml)
         // files need to end with annotator suffix, affixed with underscore('_')
         // also they should share the rest of their names
@@ -108,38 +114,4 @@ public class MaeAnnotationIndexer {
             documentFileMap.put(annotationName, indexedFileNames);
         }
     }
-
-    public String generateAnnotationFileName(String document, String annotator) {
-        return String.format("%s%s%s%s",
-                document, ANNOTATOR_SUFFIX_DELIM,
-                annotator, XML_EXT);
-    }
-
-
-    private int listupAnnotators(List<File> annotationFiles) throws MaeIOException {
-        annotatorMap = new TreeMap<>();
-        int countSeen = 0;
-
-        for (File annotationFile : annotationFiles) {
-            String annotationBaseName = getFileBaseName(annotationFile).trim();
-            if (!annotationFile.getName().endsWith(XML_EXT)) {
-                throw new MaeIOException("An annotation should be an XML file: " + annotationFile.getName());
-            }
-
-            String annotationShortName = getFileNameWithoutExtension(annotationBaseName);
-            String annotatorSymbol = splitAnnotationAnnotator(annotationShortName)[1];
-            if (!annotatorMap.containsKey(annotatorSymbol)) {
-                annotatorMap.put(annotatorSymbol, countSeen++);
-            }
-        }
-        return annotatorMap.size();
-    }
-
-    public void getAnnotationMatrixFromDirectories(List<File> annotationDirs) throws MaeIOException {
-        // TODO: 2016-04-13 20:41:43EDT implement this to take a set of dir names and treat each of them as an annotator
-
-    }
-
-
-
 }

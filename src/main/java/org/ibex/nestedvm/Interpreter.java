@@ -22,36 +22,10 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
-
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
+package org.ibex.nestedvm;
 
 /**
+ * Created by krim on 4/25/2016.
  */
-public class LoadTask extends MenuActionI {
-
-    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        if (getMainController().showAllUnsavedChangeWarning()) {
-            try {
-                File file = getMainController().selectSingleFile("", false);
-                if (file != null) {
-                    getMainController().setupScheme(file, true);
-                }
-
-            } catch (Exception e) {
-                catchException(e);
-            }
-        }
-    }
-
+public class Interpreter {
 }
-
