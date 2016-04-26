@@ -126,7 +126,7 @@ public class MaeMainController extends JPanel {
             @Override
             public void windowClosing(WindowEvent winEvt) {
                 if (isDocumentOpen()) {
-                    if (showUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
+                    if (showAllUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
                         wipeDrivers();
                         System.exit(0);
                     }
@@ -160,6 +160,20 @@ public class MaeMainController extends JPanel {
 
     }
 
+    public boolean showUnsavedChangeWarningAt(int tabIdx) {
+        if (getDriverAt(tabIdx).isAnnotationChanged()) {
+            String warning = null;
+            try {
+                warning = String.format(
+                        "Warning! You have unsaved changes. \n%s\n Are you sure to continue?"
+                        , getDriverAt(tabIdx).getAnnotationFileBaseName());
+            } catch (MaeDBException ignored) {
+            }
+            return showWarning(warning);
+        }
+        return true;
+    }
+
     public boolean showCurrentUnsavedChangeWarning() {
         if (getDriver().isAnnotationChanged()) {
             String warning = null;
@@ -174,7 +188,7 @@ public class MaeMainController extends JPanel {
         return true;
     }
 
-    public boolean showUnsavedChangeWarning() {
+    public boolean showAllUnsavedChangeWarning() {
         List<String> unsavedFiles = new LinkedList<>();
         for (MaeDriverI driver : getDrivers()) {
             if (driver.isAnnotationChanged()) {
@@ -431,7 +445,7 @@ public class MaeMainController extends JPanel {
             showError(message);
             return;
         }
-        if (!isAdjudicating() && showUnsavedChangeWarning()) {
+        if (!isAdjudicating() && showAllUnsavedChangeWarning()) {
             File goldstandard = null;
             try {
                 goldstandard = getDialogs().showStartAdjudicationDialog();
