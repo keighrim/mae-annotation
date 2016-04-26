@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ArgumentType;
+import edu.brandeis.cs.nlp.mae.model.AttributeType;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -139,6 +140,7 @@ public class MaeXMLParser {
         private String taskName;
         private List<String> extTagTypeNames;
         private List<String> linkTagTypeNames;
+        private MappedSet<String, String> attTypeMap;
         private MappedSet<String, String> argTypeMap;
 
         public MaeSAXHandler() {
@@ -152,6 +154,18 @@ public class MaeXMLParser {
         public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeNames) throws MaeDBException {
             this.extTagTypeNames = extTagTypeNames;
             this.linkTagTypeNames = linkTagTypeNames;
+            this.attTypeMap = new MappedSet<>();
+            for (String extTypeName : extTagTypeNames) {
+                for (AttributeType attType : driver.getAttributeTypesOfTagType(driver.getTagTypeByName(extTypeName))) {
+                    attTypeMap.putItem(extTypeName, attType.getName());
+                }
+            }
+            for (String linkTypeName : linkTagTypeNames) {
+                for (AttributeType attType : driver.getAttributeTypesOfTagType(driver.getTagTypeByName(linkTypeName))) {
+                    attTypeMap.putItem(linkTypeName, attType.getName());
+                }
+            }
+
             this.argTypeMap = new MappedSet<>();
             for (String linkTypeName : linkTagTypeNames) {
                 for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(driver.getTagTypeByName(linkTypeName))) {
@@ -198,7 +212,7 @@ public class MaeXMLParser {
                 logger.debug(String.format("found link tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseLinkTag(tagTypeName, tag, attributes);
             } else {
-                throw new SAXException("unexpected tag type found: " + tagTypeName);
+                throw new SAXException(String.format("unexpected tag type found: \"%s\"", tagTypeName));
             }
         }
 
@@ -305,7 +319,7 @@ public class MaeXMLParser {
                     arg.setArgTypeName(name.substring(0, name.length() - MaeStrings.ARG_IDCOL_SUF.length()));
                     arg.setArgTid(value);
                     args.add(arg);
-                } else if (name.endsWith(MaeStrings.ARG_TEXTCOL_SUF)) {
+                } else if (name.endsWith(MaeStrings.ARG_TEXTCOL_SUF) || value.length() < 1) {
                 } else {
                     parseAttribute(tagTypeName, tid, name, value);
                 }
@@ -314,10 +328,13 @@ public class MaeXMLParser {
 
         }
 
-        private void parseAttribute(String tagTypeName, String tid, String name, String value) {
+        private void parseAttribute(String tagTypeName, String tid, String name, String value) throws SAXException {
             // used to filter null valued atts for DB insertion
             // however this caused errors at computing IAA, so now keep null atts as well
 //            if (value.length() > 0) {
+            if (!attTypeMap.get(tagTypeName).contains(name)) {
+                throw new SAXException(String.format("unexpected attribute type found: \"%s\" of %s", name, tid));
+            }
             ParsedAtt att = new ParsedAtt();
             att.setTid(tid);
             att.setTagTypeName(tagTypeName);
