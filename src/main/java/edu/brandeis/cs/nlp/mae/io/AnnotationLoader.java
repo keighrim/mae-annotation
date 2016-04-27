@@ -308,13 +308,13 @@ public class AnnotationLoader {
     }
 
     private static void catchIOError(File file, IOException e) throws MaeIOException {
-        String message = "IO error while reading the file: " + file.getName();
+        String message = String.format("IO error while reading the file: %s, %s", file.getName(), e.getMessage());
         logger.error(message);
         throw new MaeIOException(message, e);
     }
 
     private static void catchSAXError(File file, SAXException e) throws MaeIOXMLException {
-        String message = "failed to parse XML: " + file.getName();
+        String message = String.format("failed to parse XML: %s, %s", file.getName(), e.getMessage());
         logger.error(message);
         throw new MaeIOXMLException(message, e);
     }

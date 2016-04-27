@@ -40,7 +40,7 @@ public class LoadTask extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showUnsavedChangeWarning()) {
+        if (getMainController().showAllUnsavedChangeWarning()) {
             try {
                 File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
