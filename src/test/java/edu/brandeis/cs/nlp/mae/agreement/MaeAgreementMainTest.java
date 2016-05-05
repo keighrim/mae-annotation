@@ -31,21 +31,20 @@ import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by krim on 4/14/2016.
  */
 public class MaeAgreementMainTest {
+    private final String SUCCESS = "%!$@#%!$%!";
+
     private MaeAgreementMain calc;
     private MaeDriverI driver;
 
@@ -73,13 +72,12 @@ public class MaeAgreementMainTest {
 
     @Test
     public void canValidateTaskNames() throws Exception {
-        assertTrue(calc.validateTaskNames("NounVerbTask"));
+        assertTrue(calc.validateTaskNames("NounVerbTask").equals(SUCCESS));
     }
 
     @Test
     public void canValidateTextSharing() throws Exception {
-        assertTrue(calc.validateTextSharing());
-
+        assertTrue(calc.validateTextSharing().equals(SUCCESS));
     }
 
     @Test

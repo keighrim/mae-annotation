@@ -83,8 +83,7 @@ public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
         listupAnnotators(annotationFiles);
         while (annotationFiles.size() > 0) {
             File annotationFile = annotationFiles.remove(0);
-            String[] split = splitAnnotationAnnotator(
-                    getFileNameWithoutExtension(
+            String[] split = splitAnnotationAnnotator(getFileNameWithoutExtension(
                             getFileBaseName(annotationFile).trim()));
             String annotationName = split[0];
             String annotatorName  = split[1];
