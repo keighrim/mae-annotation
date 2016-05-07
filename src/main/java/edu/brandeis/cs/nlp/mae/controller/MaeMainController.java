@@ -39,8 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.text.Highlighter;
 import javax.swing.Timer;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -131,6 +131,7 @@ public class MaeMainController extends JPanel {
                         System.exit(0);
                     }
                 } else {
+                    wipeDrivers();
                     System.exit(0);
                 }
             }
@@ -354,8 +355,7 @@ public class MaeMainController extends JPanel {
                 getTextPanel().closeDocumentTab(i);
             } else {
                 File taskFile = new File(getDriver().getTaskFileName());
-                timeConsumingSetupScheme(taskFile);
-                adjustUIPlusTaskMinusAnnotationMinusAdjudication();
+                setupScheme(taskFile, true);
             }
         } catch (MaeException e) {
             showError(e);
