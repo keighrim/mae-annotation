@@ -32,6 +32,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.util.FileHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -427,7 +428,8 @@ class MenuController extends MaeControllerI {
     }
 
     private JMenuItem getSingleCopy(Tag tag) {
-        return getCopyMenuItem(tag, String.format(MaeStrings.MENUITEM_COPY_TAG_SINGLE, tag.toString(), tag.getFilename()), cmnCOPY);
+        String shortFileName = FileHandler.getFileBaseName(tag.getFilename());
+        return getCopyMenuItem(tag, String.format(MaeStrings.MENUITEM_COPY_TAG_SINGLE, tag.toString(), shortFileName), cmnCOPY);
     }
 
     private JMenu getPluralCopy(List<ExtentTag> tags) {
@@ -667,12 +669,12 @@ class MenuController extends MaeControllerI {
                 }
             }
         } else { // multi row selection is disabled in adjudication
-            String srcFileName = (String) table.getValueAt(selectedModelRow, TablePanelController.SRC_COL);
+            String srcFileName = (String) model.getValueAt(selectedModelRow, TablePanelController.SRC_COL);
             if (srcFileName.equals(getMainController().getDriver().getAnnotationFileName())) {
                 prepareTableContextMenuForSingleSelection(contextMenu, model, selectedModelRow);
 
             } else {
-                String tid = (String) table.getValueAt(selectedModelRow, TablePanelController.ID_COL);
+                String tid = (String) model.getValueAt(selectedModelRow, TablePanelController.ID_COL);
                 MaeDriverI driver = getMainController().getDriverOf(srcFileName);
                 Tag tag = driver.getTagByTid(tid);
                 contextMenu.add(getSingleCopy(tag));
