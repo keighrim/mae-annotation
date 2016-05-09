@@ -25,8 +25,8 @@
 package edu.brandeis.cs.nlp.mae.agreement;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalAlphaUCalc;
+import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalAlphaUCalc;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalMultiPiCalc;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
@@ -51,6 +51,8 @@ import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
  */
 public class MaeAgreementMain {
 
+    private final String SUCCESS = "%!$@#%!$%!";
+
     private AbstractAnnotationIndexer fileIdx;
     private MaeDriverI driver;
     private XMLParseCache parseCache;
@@ -69,24 +71,30 @@ public class MaeAgreementMain {
 //            fileIdx = new AnnotationDirsIndexer();
         }
         fileIdx.indexAnnotations(singleDir);
-        validateTaskNames(driver.getTaskName());
-        validateTextSharing();
+        String invalidTaskNameFile = validateTaskNames(driver.getTaskName());
+        String invalidPrimaryTextFile = validateTextSharing();
+        if (!invalidTaskNameFile.equals(SUCCESS)) {
+            throw new MaeIOException("XML annotated with different DTD name: " + invalidTaskNameFile);
+        }
+        if (!invalidPrimaryTextFile.equals(SUCCESS)) {
+            throw new MaeIOException("XML file has different primary text: " + invalidPrimaryTextFile);
+        }
         parseCache = new XMLParseCache(driver, fileIdx);
     }
 
-    boolean validateTaskNames(String taskName) throws IOException, SAXException {
+    String validateTaskNames(String taskName) throws IOException, SAXException {
         MaeXMLParser parser = new MaeXMLParser();
         for (String docName : fileIdx.getDocumentNames()) {
             for (String fileName : fileIdx.getAnnotationsOfDocument(docName)) {
                 if (fileName != null && !parser.isTaskNameMatching(new File(fileName), taskName)) {
-                    return false;
+                    return fileName;
                 }
             }
         }
-        return true;
+        return SUCCESS;
     }
 
-    boolean validateTextSharing() throws IOException, SAXException {
+    String validateTextSharing() throws IOException, SAXException {
         MaeXMLParser parser = new MaeXMLParser();
         documentLength = new int[fileIdx.getDocumentNames().size()];
         int curDoc = 0;
@@ -98,11 +106,11 @@ public class MaeAgreementMain {
             documentLength[curDoc++] = primaryText.length();
             for (int i = seen; i < fileNames.length; i++) {
                 if (fileNames[i] != null && !parser.isPrimaryTextMatching(new File(fileNames[i]), primaryText)) {
-                    return false;
+                    return fileNames[i];
                 }
             }
         }
-        return true;
+        return SUCCESS;
     }
 
     private static int countNonNull(Object[] array) {
