@@ -74,6 +74,10 @@ class DialogController {
         return JOptionPane.showConfirmDialog(null, warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
     }
 
+    void popupMessage(String message) {
+        JOptionPane.showMessageDialog(null, new JTextArea(message), MaeStrings.INFO_POPUP_TITLE, JOptionPane.PLAIN_MESSAGE);
+    }
+
     void showError(Exception e) {
         // TODO: 1/1/2016 maybe can implement "send error log to dev" button
         String errorTitle = e.getClass().getName();

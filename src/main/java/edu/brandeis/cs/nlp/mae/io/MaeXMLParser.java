@@ -64,7 +64,7 @@ public class MaeXMLParser {
         this.driver = driver;
     }
 
-    public void readAnnotationFile(File file) throws SAXException, IOException  {
+    public void readAnnotationFile(File file) throws SAXException, IOException, MaeDBException {
         try {
             List<String> extTagTypeNames = new ArrayList<>();
             for (TagType type : driver.getExtentTagTypes()) {
@@ -78,7 +78,7 @@ public class MaeXMLParser {
             this.xmlHandler = new MaeSAXHandler(extTagTypeNames, linkTagTypeNames);
             parse(file);
         } catch (MaeDBException e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -87,6 +87,9 @@ public class MaeXMLParser {
     }
 
     public String getParseWarnings() {
+        if (parseWarnings.length() > 0) {
+            return parseWarnings.substring(0, parseWarnings.length() - 2);
+        }
         return parseWarnings;
     }
 

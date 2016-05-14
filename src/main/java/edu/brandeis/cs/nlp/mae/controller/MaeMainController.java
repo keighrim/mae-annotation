@@ -168,6 +168,11 @@ public class MaeMainController extends JPanel {
 
     }
 
+    public void popupMessage(String message) {
+        getDialogs().popupMessage(message);
+        logger.warn(message);
+    }
+
     public boolean showUnsavedChangeWarningAt(int tabIdx) {
         if (getDriverAt(tabIdx).isAnnotationChanged()) {
             String warning = null;
@@ -647,7 +652,7 @@ public class MaeMainController extends JPanel {
             logger.info("inserting is done");
         }
         if (xmlParseWarnings.length() > 0) {
-            showWarning(xmlParseWarnings);
+            popupMessage(xmlParseWarnings);
         }
 
     }
@@ -663,7 +668,7 @@ public class MaeMainController extends JPanel {
                 switchAdjudicationTag();
                 logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
                 if (xmlParseWarnings.length() > 0) {
-                    showWarning(xmlParseWarnings);
+                    popupMessage(xmlParseWarnings);
                 }
             } catch (MaeIOException e) {
                 showError(e);
@@ -1361,8 +1366,8 @@ public class MaeMainController extends JPanel {
 
     LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
         String warning = ("Copying a link tag will also copy its arguments,\n" +
-                "unless matching extent tags are found in GS.\n" +
-                "(matched by span AND non-consuming arguments are always copied!)" +
+                "unless an extent tag with the same spans is found in GS.\n" +
+                "(non-consuming arguments are always copied!)" +
                 "\nDo you want to continue?");
         if (showWarning(warning)) {
             MaeDriverI originalDriver = getDriverOf(original.getFilename());

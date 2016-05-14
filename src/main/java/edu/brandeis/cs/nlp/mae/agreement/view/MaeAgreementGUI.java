@@ -332,6 +332,16 @@ public class MaeAgreementGUI extends JFrame {
             result += calc.calcGlobalAgreementToString(global);
             result += calc.calcLocalAgreementToString(local);
 
+            Map<String, String> parseWarnings = calc.getParseWarnings();
+            if (parseWarnings.size() > 0) {
+                String warnings = "";
+                for (String fileName : parseWarnings.keySet()) {
+                    warnings += String.format("%s: \n %s\n  ===\n\n", fileName, parseWarnings.get(fileName));
+                }
+                JOptionPane.showMessageDialog(null, new JTextArea(warnings), "Some problems found in the dataset", JOptionPane.PLAIN_MESSAGE);
+
+            }
+
             JOptionPane.showMessageDialog(null, new JTextArea(result), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }
     }

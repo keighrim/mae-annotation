@@ -82,6 +82,10 @@ public class MaeAgreementMain {
         parseCache = new XMLParseCache(driver, fileIdx);
     }
 
+    public Map<String, String> getParseWarnings() {
+        return parseCache.getParseWarnings();
+    }
+
     String validateTaskNames(String taskName) throws IOException, SAXException {
         MaeXMLParser parser = new MaeXMLParser();
         for (String docName : fileIdx.getDocumentNames()) {
