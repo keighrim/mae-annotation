@@ -176,12 +176,16 @@ public class AnnotationLoader {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
                 fileParseWarning = readAsXml(file);
             } else {
-                logger.info("file does not match working DTD, reading as the primary text: " + file.getAbsolutePath());
                 readAsTxt(file);
+                String notXmlWarning = "file does not match working DTD, read as the primary text and a new XML file is generated:\n" + fileName;
+                logger.info(notXmlWarning);
+                fileParseWarning += notXmlWarning;
            }
         } else {
-            logger.info("file is not an XML, reading as the primary text: " + file.getAbsolutePath());
             readAsTxt(file);
+            String notXmlWarning = "file is not an XML, read as the primary text and a new XML file generated:\n" + fileName;
+            logger.info(notXmlWarning);
+            fileParseWarning += notXmlWarning;
         }
         insertFilenameToDB(fileName);
         return fileParseWarning;
@@ -212,17 +216,33 @@ public class AnnotationLoader {
 
     private void readAsTxt(File file) throws MaeException {
         Scanner scanner = null;
+        int suffix = 1;
+        String filePath = file.getAbsolutePath();
+        String fileExt = filePath.substring(filePath.length() - 4, filePath.length());
+        String xmlizeBaseName = fileExt.equalsIgnoreCase(".xml") ? filePath.substring(0, filePath.length() - 4) : filePath;
+
+        File xmlized = new File(xmlizeBaseName + ".xml");
+        while (xmlized.exists()) {
+            String xmlizeName = String.format("%s_%d.xml", xmlizeBaseName, suffix);
+            suffix++;
+            xmlized = new File(xmlizeName);
+        }
         try {
-            if (fileName == null) fileName = file.getAbsolutePath();
+            fileName = xmlized.getAbsolutePath();
             scanner = new Scanner(file, "UTF-8");
             scanner.useDelimiter("\\A");
             String primaryText = "";
             while (scanner.hasNext()) {
                 primaryText += scanner.next();
             }
-            driver.setPrimaryText(primaryText);
+            FileWriter.writeTextToEmptyXML(primaryText, driver.getTaskName(), xmlized);
+            try {
+                readAsXml(xmlized);
+            } catch (MaeIOException e) {
+                xmlized.delete();
+            }
         } catch (NoSuchElementException ex) {
-            String message = "failed to read the file, may be a binary file? " + file.getAbsolutePath();
+            String message = "failed to read the file, maybe a binary file? " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIOTXTException(message);
         } catch (FileNotFoundException ignored) {
