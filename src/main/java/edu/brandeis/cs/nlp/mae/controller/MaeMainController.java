@@ -615,13 +615,14 @@ public class MaeMainController extends JPanel {
 
     private void timeConsumingAddDocument(File annotationFile, boolean firstDocument) throws MaeException {
 
+        String xmlParseWarnings = "";
         try {
             // setting up the scheme will switch driver to the new one
             if (!firstDocument) {
                 timeConsumingSetupScheme(new File(getDriver().getTaskFileName()));
             }
 
-            getDriver().readAnnotation(annotationFile);
+            xmlParseWarnings = getDriver().readAnnotation(annotationFile);
             logger.info(String.format("document \"%s\" is loaded into DB.",
                     getDriver().getAnnotationFileBaseName()));
 
@@ -638,6 +639,9 @@ public class MaeMainController extends JPanel {
             }
             logger.info("inserting is done");
         }
+        if (xmlParseWarnings.length() > 0) {
+            showWarning(xmlParseWarnings);
+        }
 
     }
 
@@ -646,11 +650,14 @@ public class MaeMainController extends JPanel {
             try {
                 timeConsumingSetupScheme(new File(getDriver().getTaskFileName())); // will set up a new dirver for GS
                 getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
-                getDriver().readAnnotation(goldstandard);
+                String xmlParseWarnings = getDriver().readAnnotation(goldstandard);
                 getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
                 getTablePanel().prepareAllTables();
                 switchAdjudicationTag();
                 logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+                if (xmlParseWarnings.length() > 0) {
+                    showWarning(xmlParseWarnings);
+                }
             } catch (MaeIOException e) {
                 showError(e);
                 destroyCurrentDriver();

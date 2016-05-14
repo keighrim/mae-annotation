@@ -171,10 +171,11 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public void readAnnotation(File file) throws MaeIOException, MaeDBException {
+    public String readAnnotation(File file) throws MaeIOException, MaeDBException {
         AnnotationLoader xmll = new AnnotationLoader(this);
-        xmll.loadFile(file);
+        String xmlParseWarnings =  xmll.loadFile(file);
         setAnnotationChanged(false);
+        return xmlParseWarnings;
 
     }
 

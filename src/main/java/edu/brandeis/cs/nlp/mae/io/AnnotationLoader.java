@@ -27,7 +27,6 @@ package edu.brandeis.cs.nlp.mae.io;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -160,26 +159,27 @@ public class AnnotationLoader {
 
     }
 
-    public void loadFile(File file) throws MaeIOException,  MaeDBException {
+    public String loadFile(File file) throws MaeIOException,  MaeDBException {
+        String fileParseWarning = "";
         if (fileName == null) fileName = file.getAbsolutePath();
         if (isXml(file)) {
             if (isTaskNameMatching(file, taskName)) {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
-                readAsXml(file);
+                fileParseWarning = readAsXml(file);
             } else {
                 logger.info("file does not match working DTD, reading as the primary text: " + file.getAbsolutePath());
                 readAsTxt(file);
-//                throw new MaeIOXMLException("Does not match current DTD");
-            }
+           }
         } else {
             logger.info("file is not an XML, reading as the primary text: " + file.getAbsolutePath());
             readAsTxt(file);
         }
         insertFilenameToDB(fileName);
+        return fileParseWarning;
 
     }
 
-    public void readAsXml(File file) throws MaeDBException, MaeIOException {
+    public String readAsXml(File file) throws MaeDBException, MaeIOException {
         try {
             if (fileName == null) fileName = file.getAbsolutePath();
             MaeXMLParser parser = new MaeXMLParser(driver);
@@ -188,6 +188,7 @@ public class AnnotationLoader {
             insertTagsToDB(parser.getParsedTags());
             insertAttsToDB(parser.getParsedAtts());
             insertArgsToDB(parser.getParsedArgs());
+            return parser.getParseWarnings();
         } catch (MaeDBException e) {
             throw e;
         } catch (IOException e) {
@@ -195,7 +196,7 @@ public class AnnotationLoader {
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
-
+        return "";
     }
 
     private void readAsTxt(File file) throws MaeDBException, MaeIOTXTException {
@@ -273,21 +274,22 @@ public class AnnotationLoader {
     }
 
     private void insertAttsToDB(List<ParsedAtt> parsedAtts) throws MaeDBException {
-        try {
-            List<Attribute> attributes = new ArrayList<>();
-            for (ParsedAtt att : parsedAtts) {
-                Tag tag = extTagMap.get(att.getTid());
-                if (tag == null) tag = linkTagMap.get(att.getTid());
-                if (tag == null || att.getAttValue() == null || att.getAttValue().length() == 0) {
-                    continue;
-                }
-                String attTypeKey = String.format("%s-%s", att.getTagTypeName(), att.getAttTypeName());
-                attributes.add(new Attribute(tag, attTypeMap.get(attTypeKey), att.getAttValue()));
+        List<Attribute> attributes = new ArrayList<>();
+        for (ParsedAtt att : parsedAtts) {
+            Tag tag = extTagMap.get(att.getTid());
+            if (tag == null) tag = linkTagMap.get(att.getTid());
+            if (tag == null || att.getAttValue() == null || att.getAttValue().length() == 0) {
+                continue;
             }
-            driver.batchCreateAttributes(attributes);
-        } catch (MaeModelException e) {
-            e.printStackTrace();
+            String attTypeKey = String.format("%s-%s", att.getTagTypeName(), att.getAttTypeName());
+            try {
+                attributes.add(new Attribute(tag, attTypeMap.get(attTypeKey), att.getAttValue()));
+            } catch (MaeModelException ignored) {
+                // model exception is thrown when att value is invalid, which is already checked during XML parsing
+                // thus here, model exception is ignored.
+            }
         }
+        driver.batchCreateAttributes(attributes);
 
     }
 
