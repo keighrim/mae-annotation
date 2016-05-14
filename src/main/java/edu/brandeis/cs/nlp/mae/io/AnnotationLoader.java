@@ -24,12 +24,14 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.*;
 import java.util.*;
@@ -118,9 +120,12 @@ public class AnnotationLoader {
             return loader.isTaskNameMatching(file, taskName);
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
+
         return false;
 
     }
@@ -132,6 +137,8 @@ public class AnnotationLoader {
             return loader.isPrimaryTextMatching(file, primaryText);
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
 
@@ -150,6 +157,8 @@ public class AnnotationLoader {
 
         } catch (MaeDBException e) {
             throw e;
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         } catch (IOException e) {
@@ -159,7 +168,7 @@ public class AnnotationLoader {
 
     }
 
-    public String loadFile(File file) throws MaeIOException,  MaeDBException {
+    public String loadFile(File file) throws MaeException {
         String fileParseWarning = "";
         if (fileName == null) fileName = file.getAbsolutePath();
         if (isXml(file)) {
@@ -193,13 +202,15 @@ public class AnnotationLoader {
             throw e;
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
         return "";
     }
 
-    private void readAsTxt(File file) throws MaeDBException, MaeIOTXTException {
+    private void readAsTxt(File file) throws MaeException {
         Scanner scanner = null;
         try {
             if (fileName == null) fileName = file.getAbsolutePath();
@@ -215,7 +226,7 @@ public class AnnotationLoader {
             logger.error(message);
             throw new MaeIOTXTException(message);
         } catch (FileNotFoundException ignored) {
-        } catch (MaeDBException e) {
+        } catch (MaeException e) {
             throw e;
         } finally {
             assert scanner != null;
@@ -243,7 +254,6 @@ public class AnnotationLoader {
 
     private void insertTagsToDB(List<ParsedTag> parsedTags) throws MaeDBException {
         List<CharIndex> anchors = new ArrayList<>();
-//        String fileBaseName = FileHandler.getFileBaseName(this.fileName);
         for (ParsedTag parsedTag : parsedTags) {
             if (!parsedTag.isLink()) {
                 ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileName);
@@ -317,6 +327,12 @@ public class AnnotationLoader {
 
     private static void catchSAXError(File file, SAXException e) throws MaeIOXMLException {
         String message = String.format("failed to parse XML: %s, %s", file.getName(), e.getMessage());
+        logger.error(message);
+        throw new MaeIOXMLException(message, e);
+    }
+
+    private static void catchSAXParseError(File file, SAXParseException e) throws MaeIOXMLException {
+        String message = String.format("invalid XML string: %s, %s", file.getName(), e.getMessage());
         logger.error(message);
         throw new MaeIOXMLException(message, e);
     }

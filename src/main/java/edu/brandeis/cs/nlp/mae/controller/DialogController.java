@@ -210,8 +210,7 @@ class DialogController {
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
         File newGS = showFileChooseDialogAndSelect("goldstandard.xml", true);
         if (newGS != null) {
-            FileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
-                    getMainController().getDriver().getTaskName(), newGS);
+            FileWriter.writeTextOnEmptyFile(getMainController().getDriver().getPrimaryText(), newGS);
             return newGS;
         }
         return null;
