@@ -658,8 +658,9 @@ class TextPanelController extends MaeControllerI {
         public void actionPerformed(ActionEvent e) {
             TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
             if (title.isEnabled()) {
-                getView().getTabs().setSelectedIndex(title.getTabIndex());
-                if (getMainController().showUnsavedChangeWarningAt(title.getTabIndex())) {
+                int tabIdx = title.getTabIndex();
+                if (getMainController().showIncompleteTagsWarningAt(tabIdx, false) &&
+                        getMainController().showUnsavedChangeWarningAt(tabIdx)) {
                     getMainController().closeDocumentAt(title.getTabIndex());
                 }
             }

@@ -126,7 +126,14 @@ public class MaeMainController extends JPanel {
             @Override
             public void windowClosing(WindowEvent winEvt) {
                 if (isDocumentOpen()) {
-                    if (showAllUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
+                    boolean allChecked = true;
+                    for (int i = 0; i < getDrivers().size(); i++) {
+                        if (!showUnsavedChangeWarningAt(i) || !showIncompleteTagsWarningAt(i, false)) {
+                            allChecked = false;
+                            break;
+                        }
+                    }
+                    if (allChecked) {
                         wipeDrivers();
                         System.exit(0);
                     }
@@ -698,7 +705,7 @@ public class MaeMainController extends JPanel {
             } else {
                 assignAllFGColor();
                 logger.info("painting is done");
-                showIncompleteTagsWarning(true);
+                showCurrentDocumentIncompleteTagsWarning(true);
             }
 
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 4000);
@@ -1497,20 +1504,21 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public Set<Tag> getIncompleteTags() {
+    public Set<Tag> getIncompleteTagsAt(int tabIdx) {
         // TODO: 2016-04-05 15:58:18EDT optimized this method
         // TODO: 2016-04-05 15:59:10EDT add supplement for checking adjudication file
+        MaeDriverI driver = getDriverAt(tabIdx);
         try {
             Set<Tag> incomplete = new TreeSet<>();
-            for (TagType type : getDriver().getAllTagTypes()) {
+            for (TagType type : driver.getAllTagTypes()) {
                 if (type.isExtent()) {
-                    for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
+                    for (ExtentTag tag : driver.getAllExtentTagsOfType(type)) {
                         if (!tag.isComplete()) {
                             incomplete.add(tag);
                         }
                     }
                 } else {
-                    for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
+                    for (LinkTag tag : driver.getAllLinkTagsOfType(type)) {
                         if (!tag.isComplete()) {
                             incomplete.add(tag);
                         }
@@ -1522,10 +1530,24 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
         return null;
+
     }
 
-    public boolean showIncompleteTagsWarning(boolean simplyWarn) {
-        return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
+    public Set<Tag> getCurrentDocumentIncompleteTags() {
+        return getIncompleteTagsAt(getCurrentDocumentTabIndex());
+    }
+
+    public boolean showIncompleteTagsWarningAt(int tabIdx, boolean simplyWarn) {
+        Set<Tag> incompletes = getIncompleteTagsAt(tabIdx);
+        if (incompletes.size() > 0) {
+            getTextPanel().getView().selectTab(tabIdx);
+            return getDialogs().showIncompleteTagsWarning(incompletes, simplyWarn);
+        }
+        return true;
+    }
+
+    public boolean showCurrentDocumentIncompleteTagsWarning(boolean simplyWarn) {
+        return getDialogs().showIncompleteTagsWarning(getCurrentDocumentIncompleteTags(), simplyWarn);
     }
 
     public void presentation() {
