@@ -48,6 +48,7 @@ public class LocalSqliteDriverImplTest {
     TagType noun;
     TagType verb;
     TagType semanticRole;
+    AttributeType nounType;
     ArgumentType pred;
     ArgumentType agent;
 
@@ -60,6 +61,8 @@ public class LocalSqliteDriverImplTest {
         noun = driver.createTagType("NOUN", "N", false);
         verb = driver.createTagType("VERB", "V", false);
         semanticRole = driver.createTagType("SR", "S", true);
+        nounType = driver.createAttributeType(noun, "type");
+        driver.setAttributeTypeDefaultValue(nounType, "person");
 
         pred = driver.createArgumentType(semanticRole, "predicate");
         agent = driver.createArgumentType(semanticRole, "agent");
@@ -90,11 +93,20 @@ public class LocalSqliteDriverImplTest {
     public void canCreateTag() throws Exception {
         ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
         List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        ExtentTag retrievedTag = retrievedTags.get(0);
         assertEquals(
                 "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
-
-        ExtentTag retrievedTag = retrievedTags.get(0);
+        Map<String, String> retrievedAtts =  driver.getAttributeMapOfTag(retrievedTag);
+        assertEquals(
+                "Expected 1 attribute is automatically populated as a default, found: " + retrievedAtts.size(),
+                1, retrievedAtts.size());
+        assertEquals(
+                "Expected \"type\" attribute populated, found: " + retrievedAtts.keySet().iterator().next(),
+                "type",  retrievedAtts.keySet().iterator().next());
+        assertEquals(
+                "Expected \"type\" attribute is set to \"person\" by default, found: " + retrievedAtts.values().iterator().next(),
+                "person",  retrievedAtts.values().iterator().next());
         assertEquals(
                 "Expected Obj and Rel share the same ID, found: " + retrievedTag.getTid(),
                 tag.getTid(), retrievedTag.getTid()

@@ -62,7 +62,7 @@ public class IdHandler {
     }
 
     public boolean addId(TagType type, String tid) {
-        int id = Integer.parseInt(tid.substring(type.getPrefix().length(), tid.length()));
+        int id = Integer.parseInt(tid.substring(type.getPrefix().length()));
         return addId(type, id);
     }
 
@@ -72,7 +72,7 @@ public class IdHandler {
     public String getNextID(TagType type) {
 
         TreeSet<Integer> existingIds = tracker.get(type);
-        if (existingIds == null) {
+        if (existingIds == null || existingIds.size() == 0) {
             return type.getPrefix() + startFrom;
         }
 
@@ -86,8 +86,7 @@ public class IdHandler {
         int prev = startFrom;
 
         while (iter.hasNext()) {
-            int next = iter.next();
-            if (next >= prev + 1) {
+            if (iter.next() >= prev + 1) {
                 break;
             } else {
                 prev++;

@@ -28,8 +28,6 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -96,7 +94,7 @@ public class FileHandler {
     private static String[] splitSuffix(String string, String delimiter) {
         int splitPoint = string.lastIndexOf(delimiter);
         String rest = string.substring(0, splitPoint);
-        String suffix = string.substring(splitPoint + delimiter.length(), string.length());
+        String suffix = string.substring(splitPoint + delimiter.length());
         return new String[]{rest, suffix};
     }
 

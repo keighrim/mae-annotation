@@ -596,6 +596,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             attTypeDao.create(attType);
             logger.debug("a new attribute type is created: " + attTypeName);
             setAnnotationChanged(true);
+            tagTypeDao.refresh(tagType);
             return attType;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -662,6 +663,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             argTypeDao.create(argType);
             logger.debug("a new argument type is created: " + argTypeName);
             setAnnotationChanged(true);
+            tagTypeDao.refresh(tagType);
             return argType;
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -673,11 +675,21 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             ExtentTag tag = new ExtentTag(tid, tagType, getAnnotationFileName());
             tag.setText(text);
-            for (CharIndex ci: tag.setSpans(spans)) {
-                charIndexDao.create(ci);
-            }
+
+            // store anchors
+            Collection<CharIndex> anchors = tag.setSpans(spans);
+            charIndexDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (CharIndex anchor : anchors) {
+                        charIndexDao.create(anchor);
+                    }
+                    return null;
+                }
+            });
+
+            populateDefaultAttributes(tagType, tag);
             eTagDao.create(tag);
-            eTagDao.update(tag); //only after update(), all properties are saved
+            eTagDao.refresh(tag); //only after refresh(), all properties are saved
             boolean added = idHandler.addId(tagType, tid);
             if (!added) {
                 throw new MaeDBException("tag id is already in DB!: " + tid);
@@ -687,7 +699,20 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
             return tag;
         } catch (SQLException e) {
             throw catchSQLException(e);
+        } catch (Exception ignored) {
         }
+        return null;
+    }
+
+    void populateDefaultAttributes(TagType tagType, Tag tag) throws MaeDBException {
+        Map<AttributeType, String> defaultAttributes = new HashMap<>();
+        for (AttributeType attType : tagType.getAttributeTypes()) {
+            String defaultValue = attType.getDefaultValue();
+            if (defaultValue.length() > 0) {
+                defaultAttributes.put(attType, defaultValue);
+            }
+        }
+        batchAddAttributes(tag, defaultAttributes);
     }
 
     @Override
@@ -699,6 +724,7 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     public LinkTag createLinkTag(String tid, TagType tagType) throws MaeDBException {
         try {
             LinkTag link = new LinkTag(tid, tagType, getAnnotationFileName());
+            populateDefaultAttributes(tagType, link);
             lTagDao.create(link);
             boolean added = idHandler.addId(tagType, tid);
             if (!added) {
@@ -1178,6 +1204,8 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         try {
             attType.setDefaultValue(defaultValue);
             attTypeDao.update(attType);
+            // refresh relevant tables to propagate
+            tagTypeDao.refresh(attType.getTagType());
             logger.debug(String.format("assigned the default value \"%s\" to an attribute type: %s", defaultValue, attType.getName()));
         } catch (SQLException e) {
             throw catchSQLException(e);
@@ -1216,6 +1244,12 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    private MaeDBException catchGeneralException(Exception e) {
+        String message = "caught an error: " + e.getMessage();
+        logger.error(message);
+        return new MaeDBException(message, e);
     }
 
     private MaeDBException catchSQLException(SQLException e) {

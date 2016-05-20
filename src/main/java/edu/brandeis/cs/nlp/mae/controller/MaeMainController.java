@@ -1293,8 +1293,7 @@ public class MaeMainController extends JPanel {
             } else {
                 tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             }
-            populateDefaultAttributes(tag);
-            getTablePanel().insertTagIntoTable(tag, tagType);
+            getTablePanel().insertNewTagIntoTable(tag, tagType);
             if (isAdjudicating()) {
                 adjudicationStatUpdate();
             } else {
@@ -1416,19 +1415,6 @@ public class MaeMainController extends JPanel {
             propagateSelectionFromTablePanel(tag.getId());
         } catch (MaeDBException e) {
             showError(e);
-        }
-    }
-
-    void populateDefaultAttributes(Tag tag) {
-        for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
-            String defaultValue = attType.getDefaultValue();
-            if (defaultValue.length() > 0) {
-                try {
-                    getDriver().addAttribute(tag, attType, defaultValue);
-                } catch (MaeDBException e) {
-                    showError(e);
-                }
-            }
         }
     }
 

@@ -260,7 +260,7 @@ class TablePanelController extends MaeControllerI {
     void insertTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
-        insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel));
+        insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel, type.isLink()));
         if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
             insertTagToAllTagsTable(tag);
         }
@@ -268,9 +268,9 @@ class TablePanelController extends MaeControllerI {
 
     void insertNewTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
-        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoRow(tag, tableModel));
+        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoRow(tag, tableModel, type.isLink()));
         if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
-            insertTagToAllTagsTable(tag);
+            insertNewTagToAllTagsTable(tag);
         }
 
     }
@@ -298,27 +298,32 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
-    private String[] convertTagIntoRow(Tag tag, TagTableModel tableModel) throws MaeDBException {
+    private String[] convertTagIntoRow(Tag tag, TagTableModel tableModel, boolean isLink) throws MaeDBException {
         String[] newRow = new String[tableModel.getColumnCount()];
         Map<String, String> attMap = tag.getAttributesWithNames();
         for (int i = 0; i < tableModel.getColumnCount(); i++) {
-            String colName = tableModel.getColumnName(i);
-            switch (colName) {
-                case MaeStrings.SRC_COL_NAME:
+            switch (i) {
+                // source and id columns are always there
+                case SRC_COL:
                     newRow[i] = tag.getFilename();
                     break;
-                case MaeStrings.ID_COL_NAME:
+                case ID_COL:
                     newRow[i] = tag.getId();
                     break;
-                case MaeStrings.SPANS_COL_NAME:
-                    newRow[i] = ((ExtentTag) tag).getSpansAsString();
-                    break;
-                case MaeStrings.TEXT_COL_NAME:
-                    newRow[i] = ((ExtentTag) tag).getText();
-                    break;
+                case SPANS_COL:
+                    if (!isLink) {
+                        newRow[i] = ((ExtentTag) tag).getSpansAsString();
+                        break;
+                    }
+                case TEXT_COL:
+                    if (!isLink) {
+                        newRow[i] = ((ExtentTag) tag).getText();
+                        break;
+                    }
                 default:
+                    String colName = tableModel.getColumnName(i);
                     newRow[i] = attMap.get(colName);
-                    break;
+
             }
         }
         return newRow;
@@ -327,6 +332,11 @@ class TablePanelController extends MaeControllerI {
     private void insertTagToAllTagsTable(Tag tag) throws MaeControlException, MaeDBException {
         UneditableTableModel tableModel = (UneditableTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
         insertRowData(tableModel, tableModel.searchForRowByTid(tag.getId()), convertTagIntoSimplifiedRow((ExtentTag) tag));
+    }
+
+    private void insertNewTagToAllTagsTable(Tag tag) throws MaeControlException, MaeDBException {
+        UneditableTableModel tableModel = (UneditableTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel();
+        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoSimplifiedRow((ExtentTag) tag));
     }
 
     private String[] convertTagIntoSimplifiedRow(ExtentTag tag) throws MaeDBException {
@@ -905,10 +915,10 @@ class TablePanelController extends MaeControllerI {
         public void populateTable(Tag tag) throws MaeDBException {
             String annotationFileName = getDriver().getAnnotationFileName();
             if (!annotationFileName.equals(tag.getFilename())) {
-                addRow(convertTagIntoRow(tag, this));
+                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
             } else {
                 setRowAsGoldTag(getRowCount());
-                addRow(convertTagIntoRow(tag, this));
+                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
             }
         }
 
@@ -978,9 +988,9 @@ class TablePanelController extends MaeControllerI {
             String annotationFileName = getDriver().getAnnotationFileName();
             if (annotationFileName.equals(tag.getFilename())) {
                 setRowAsGoldTag(getRowCount());
-                addRow(convertTagIntoRow(tag, this));
+                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
             } else {
-                addRow(convertTagIntoRow(tag, this));
+                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
 
             }
         }

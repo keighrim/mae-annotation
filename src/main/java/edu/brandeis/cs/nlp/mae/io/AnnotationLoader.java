@@ -218,7 +218,7 @@ public class AnnotationLoader {
         Scanner scanner = null;
         int suffix = 1;
         String filePath = file.getAbsolutePath();
-        String fileExt = filePath.substring(filePath.length() - 4, filePath.length());
+        String fileExt = filePath.substring(filePath.length() - 4);
         String xmlizeBaseName = fileExt.equalsIgnoreCase(".xml") ? filePath.substring(0, filePath.length() - 4) : filePath;
 
         File xmlized = new File(xmlizeBaseName + ".xml");
