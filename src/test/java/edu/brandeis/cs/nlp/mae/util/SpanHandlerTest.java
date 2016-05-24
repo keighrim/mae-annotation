@@ -215,6 +215,19 @@ public class SpanHandlerTest {
     }
 
     @Test
+    public void measureMatchConvertArrayToString() throws Exception {
+        int[] array = new int[]{11,12,13,18,19,20,31,32,33};
+        long begin = System.nanoTime();
+
+        for (int i = 0; i < 1000; i++) {
+            String string = SpanHandler.convertArrayToString(array);
+        }
+        long end = System.nanoTime();
+        System.out.println("Arraycopy: " + (end - begin) / 1e9 + " s");
+
+    }
+
+    @Test
     public void testConvertArrayToString() throws Exception {
         int[] array = new int[0];
         String string = SpanHandler.convertArrayToString(array);

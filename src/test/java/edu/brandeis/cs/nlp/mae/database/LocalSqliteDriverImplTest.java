@@ -263,19 +263,19 @@ public class LocalSqliteDriverImplTest {
         driver.addAttribute(nTag, proper, "true");
 
         assertTrue(
-                "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),
-                nTag.getAttributes().size() == 1
-                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
-                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("true")
+                "Expected an attribute and its type are created, found: " + nTag.getAttributesWithNames().toString(),
+                nTag.getAttributes().size() == 2
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(1).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(1).equals("true")
         );
 
         driver.updateAttribute(nTag, proper, "false");
 
         assertTrue(
                 "Expected an attribute is updated, found: " + nTag.getAttributesWithNames().toString(),
-                nTag.getAttributes().size() == 1
-                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
-                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("false")
+                nTag.getAttributes().size() == 2
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(1).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(1).equals("false")
         );
 
     }
@@ -327,9 +327,9 @@ public class LocalSqliteDriverImplTest {
 
         assertTrue(
                 "Expected an attribute and it type are created, found: " + nTag.getAttributesWithNames().toString(),
-                nTag.getAttributes().size() == 1
-                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(0).equals("proper")
-                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(0).equals("true")
+                nTag.getAttributes().size() == 2
+                        && (new ArrayList<>(nTag.getAttributesWithNames().keySet())).get(1).equals("proper")
+                        && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(1).equals("true")
         );
 
         LinkTag retrievedTag = driver.getAllLinkTagsOfType(semanticRole).get(0);
@@ -347,5 +347,98 @@ public class LocalSqliteDriverImplTest {
                 nouns.size() + verbs.size() + roles.size() == 0);
         // cannot continue test on atts/args, because of lack of methods in driver to get atts/args without referencing tag
 
+    }
+
+    @Test
+    public void canRetriveTagWithNullAttributes() throws Exception {
+        ExtentTag vTag = driver.createExtentTag("V01", verb, "loves", 11, 12, 13, 14, 15);
+        assertTrue(vTag != null);
+
+        assertTrue(
+                "Expected no attributes are associated, found something. ",
+                vTag.getAttributesWithNames().size() == 0
+        );
+
+        ExtentTag retrievedTag = (ExtentTag) driver.getTagByTid("V01");
+        Map<String, String> retrievedAttMap = retrievedTag.getAttributesWithNamesWithoutChecking();
+        assertTrue(
+                "Expected no attributes are associated, found: " + retrievedAttMap.toString(),
+                retrievedAttMap.size() == 0
+        );
+
+    }
+
+    @Test
+    public void measureGetAttributesWithName() throws Exception {
+        AttributeType properNoun1 = driver.createAttributeType(noun, "isProper1");        
+        AttributeType properNoun2 = driver.createAttributeType(noun, "isProper2");        
+        AttributeType properNoun3 = driver.createAttributeType(noun, "isProper3");        
+        AttributeType properNoun4 = driver.createAttributeType(noun, "isProper4");        
+        AttributeType properNoun5 = driver.createAttributeType(noun, "isProper5");        
+        AttributeType properNoun6 = driver.createAttributeType(noun, "isProper6");        
+        AttributeType properNoun7 = driver.createAttributeType(noun, "isProper7");        
+        AttributeType properNoun8 = driver.createAttributeType(noun, "isProper8");        
+        AttributeType properNoun9 = driver.createAttributeType(noun, "isProper9");        
+        AttributeType properNouna = driver.createAttributeType(noun, "isPropera");        
+        AttributeType properNounb = driver.createAttributeType(noun, "isProperb");        
+        AttributeType properNounc = driver.createAttributeType(noun, "isProperc");        
+        AttributeType properNound = driver.createAttributeType(noun, "isProperd");        
+        AttributeType properNoune = driver.createAttributeType(noun, "isPropere");        
+        AttributeType properNounf = driver.createAttributeType(noun, "isProperf");        
+        AttributeType properNoung = driver.createAttributeType(noun, "isProperg");        
+        AttributeType properNounh = driver.createAttributeType(noun, "isProperh");        
+        AttributeType properNouni = driver.createAttributeType(noun, "isProperi");        
+        AttributeType properNounj = driver.createAttributeType(noun, "isProperj");        
+        AttributeType properNounk = driver.createAttributeType(noun, "isProperk");        
+        AttributeType properNounl = driver.createAttributeType(noun, "isProperl");        
+        AttributeType properNounm = driver.createAttributeType(noun, "isProperm");        
+        AttributeType properNounn = driver.createAttributeType(noun, "isPropern");        
+        AttributeType properNouno = driver.createAttributeType(noun, "isPropero");        
+        AttributeType properNounp = driver.createAttributeType(noun, "isProperp");        
+        AttributeType properNounq = driver.createAttributeType(noun, "isProperq");        
+        AttributeType properNounr = driver.createAttributeType(noun, "isProperr");        
+        AttributeType properNouns = driver.createAttributeType(noun, "isPropers");        
+        AttributeType properNount = driver.createAttributeType(noun, "isPropert");        
+        AttributeType properNounu = driver.createAttributeType(noun, "isProperu");        
+        AttributeType properNounv = driver.createAttributeType(noun, "isProperv");        
+        AttributeType properNounw = driver.createAttributeType(noun, "isProperw");        
+        AttributeType properNounx = driver.createAttributeType(noun, "isProperx");        
+        AttributeType properNouny = driver.createAttributeType(noun, "isPropery");        
+        AttributeType properNounz = driver.createAttributeType(noun, "isProperz");        
+        ExtentTag nTag = driver.createExtentTag("N01", noun, "John", new int[]{0,1,2,3,4});
+        for (AttributeType type : new AttributeType[]{properNoun1,
+                properNoun2, properNoun3, properNoun4, properNoun5, properNoun6,
+                properNoun7, properNoun8, properNoun9}) {
+            driver.addAttribute(nTag, type, Boolean.toString(true));
+        }
+
+        for (AttributeType type : new AttributeType[]{properNounb,
+                properNound, properNoune, properNoung, properNounh, properNounl,
+                properNounn, properNounr, properNounw}) {
+            driver.addAttribute(nTag, type, Boolean.toString(false));
+        }
+
+        long begin = System.nanoTime();
+        ExtentTag tag = (ExtentTag) driver.getTagByTid("N01");
+        int repeat = 100;
+        for (int i=0; i<repeat; i++) {
+            tag.getAttributesWithNames();
+        }
+        long end = System.nanoTime();
+        System.out.println("Tag::getAttributesWithNames repeated " + repeat + " getting: " + (end - begin) / 1e9 + " s");
+
+        begin = System.nanoTime();
+        for (int i=0; i<repeat; i++) {
+            tag.getAttributesWithNamesWithoutChecking();
+        }
+        end = System.nanoTime();
+        System.out.println("Tag::getAttributesWithNamesWithoutChecking repeated " + repeat + " getting: " + (end - begin) / 1e9 + " s");
+
+        begin = System.nanoTime();
+        for (int i=0; i<repeat; i++) {
+            driver.getAttributeMapOfTag(tag);
+        }
+        end = System.nanoTime();
+        System.out.println("DriverI::getAttributeMapOfTag repeated " + repeat + " getting: " + (end - begin) / 1e9 + " s");
     }
 }

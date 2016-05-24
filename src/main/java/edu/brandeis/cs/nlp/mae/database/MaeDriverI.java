@@ -196,6 +196,8 @@ public interface MaeDriverI {
 
     void deleteAttribute(Tag tag, AttributeType attType) throws MaeDBException;
 
+    Map<Tag, Map<String, String>> getAttributeMapsOfTagType(TagType type) throws MaeDBException;
+
     Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException;
 
     // arg types

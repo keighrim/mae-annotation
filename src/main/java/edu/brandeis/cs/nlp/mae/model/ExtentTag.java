@@ -114,7 +114,7 @@ public class ExtentTag extends Tag implements ModelI {
     }
 
     public String getSpansAsString() {
-        return SpanHandler.convertPairsToString(SpanHandler.convertArrayToPairs(this.getSpansAsArray()));
+        return SpanHandler.convertArrayToString(this.getSpansAsArray());
     }
 
     public String getText() {

@@ -206,16 +206,43 @@ class TablePanelController extends MaeControllerI {
             throw new MaeControlException("Cannot populate tables without a document open!");
         }
         for (TagType type : tabOrder) {
-            if (type.equals(dummyForAllTagsTab)) {
+            String tagTypeName = type.getName();
+            TagTableModel tagTypeTableModel = (TagTableModel) tableMap.get(tagTypeName).getModel();
+            if (!type.equals(dummyForAllTagsTab) && type.isExtent()) {
                 // ignore insertions occurred on all-tags table
-            } else if (type.isExtent()) {
-                for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
-                    insertNewTagIntoTable(tag, type);
+
+                // old tag-by-tag conversion was fastest
+                List<String[]> tagsToRows = new LinkedList<>();
+                List<String[]> tagsToSimpleRows = new LinkedList<>();
+                Collection<ExtentTag> tags = getDriver().getAllExtentTagsOfType(type);
+                for (ExtentTag tag : tags) {
+                    String[] rowRepresentation = convertTagIntoTableRow(tag,
+                            tagTypeTableModel, false);
+                    tagsToRows.add(rowRepresentation);
+                    tagsToSimpleRows.add(Arrays.copyOfRange(rowRepresentation, SRC_COL, TEXT_COL));
                 }
-            } else {
+                TableBatchInsertSwingWorker swingWorker
+                        = new TableBatchInsertSwingWorker(tagTypeTableModel, tagsToRows);
+                swingWorker.execute();
+                swingWorker
+                        = new TableBatchInsertSwingWorker(
+                        (TagTableModel) tableMap.get(MaeStrings.ALL_TABLE_TAB_BACK_NAME).getModel(),
+                        tagsToSimpleRows);
+                swingWorker.execute();
+            } else if (type.isLink()) {
+
+                // old tag-by-tag conversion
+                List<String[]> tagsToRows = new LinkedList<>();
                 for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
-                    insertNewTagIntoTable(tag, type);
+                    String[] rowRepresentation = convertTagIntoTableRow(tag,
+                            tagTypeTableModel, true);
+                    tagsToRows.add(rowRepresentation);
                 }
+
+//                String[][] tagsToRows = convertAllTagsOfTagTypeIntoTableRows(type, tagTypeTableModel);
+                TableBatchInsertSwingWorker swingWorker
+                        = new TableBatchInsertSwingWorker(tagTypeTableModel, tagsToRows);
+                swingWorker.execute();
             }
         }
         addMouseListeners();
@@ -260,7 +287,7 @@ class TablePanelController extends MaeControllerI {
     void insertTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
         int newRowNum = tableModel.searchForRowByTid(tag.getId());
-        insertRowData(tableModel, newRowNum, convertTagIntoRow(tag, tableModel, type.isLink()));
+        insertRowData(tableModel, newRowNum, convertTagIntoTableRow(tag, tableModel, type.isLink()));
         if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
             insertTagToAllTagsTable(tag);
         }
@@ -268,7 +295,7 @@ class TablePanelController extends MaeControllerI {
 
     void insertNewTagIntoTable(Tag tag, TagType type) throws MaeDBException, MaeControlException {
         TagTableModel tableModel = (TagTableModel) tableMap.get(type.getName()).getModel();
-        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoRow(tag, tableModel, type.isLink()));
+        insertRowData(tableModel, tableModel.getRowCount(), convertTagIntoTableRow(tag, tableModel, type.isLink()));
         if (tag.getTagtype().isExtent() && !getMainController().isAdjudicating()) {
             insertNewTagToAllTagsTable(tag);
         }
@@ -298,9 +325,28 @@ class TablePanelController extends MaeControllerI {
         }
     }
 
-    private String[] convertTagIntoRow(Tag tag, TagTableModel tableModel, boolean isLink) throws MaeDBException {
+    private String[][] convertAllTagsOfTagTypeIntoTableRows(
+            TagType tagType, TagTableModel tableModel) throws MaeDBException {
+        Map<Tag, Map<String, String>> attsByTags = getDriver().getAttributeMapsOfTagType(tagType);
+        String[][] tableRows = new String[attsByTags.size()][tableModel.getColumnCount()];
+        int row = 0;
+        for (Tag tag : attsByTags.keySet()) {
+            tableRows[row++] = convertAttMapToTableRow(tag, tableModel, tagType.isLink(), attsByTags.get(tag));
+
+        }
+        return tableRows;
+    }
+
+    private String[] convertTagIntoTableRow(Tag tag, TagTableModel tableModel, boolean isLink) throws MaeDBException {
+        Map<String, String> attMap = tag.getAttributesWithNamesWithoutChecking();
+//        Map<String, String> attMap = getDriver().getAttributeMapOfTag(tag);
+
+        String[] newRow = convertAttMapToTableRow(tag, tableModel, isLink, attMap);
+        return newRow;
+    }
+
+    private String[] convertAttMapToTableRow(Tag tag, TagTableModel tableModel, boolean isLink, Map<String, String> attMap) {
         String[] newRow = new String[tableModel.getColumnCount()];
-        Map<String, String> attMap = tag.getAttributesWithNames();
         for (int i = 0; i < tableModel.getColumnCount(); i++) {
             switch (i) {
                 // source and id columns are always there
@@ -915,10 +961,10 @@ class TablePanelController extends MaeControllerI {
         public void populateTable(Tag tag) throws MaeDBException {
             String annotationFileName = getDriver().getAnnotationFileName();
             if (!annotationFileName.equals(tag.getFilename())) {
-                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
+                addRow(convertTagIntoTableRow(tag, this, this.getAssociatedTagType().isLink()));
             } else {
                 setRowAsGoldTag(getRowCount());
-                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
+                addRow(convertTagIntoTableRow(tag, this, this.getAssociatedTagType().isLink()));
             }
         }
 
@@ -988,9 +1034,9 @@ class TablePanelController extends MaeControllerI {
             String annotationFileName = getDriver().getAnnotationFileName();
             if (annotationFileName.equals(tag.getFilename())) {
                 setRowAsGoldTag(getRowCount());
-                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
+                addRow(convertTagIntoTableRow(tag, this, this.getAssociatedTagType().isLink()));
             } else {
-                addRow(convertTagIntoRow(tag, this, this.getAssociatedTagType().isLink()));
+                addRow(convertTagIntoTableRow(tag, this, this.getAssociatedTagType().isLink()));
 
             }
         }
@@ -1397,6 +1443,42 @@ class TablePanelController extends MaeControllerI {
                 getMainController().showError(ex);
             }
 
+        }
+    }
+
+    public class TableBatchInsertSwingWorker extends SwingWorker<TagTableModel, String[]> {
+
+        private final TagTableModel tableModel;
+        private final List<String[]> tagsToInsert;
+
+        public TableBatchInsertSwingWorker(TagTableModel tableModel, List<String[]> tagsToInsert) {
+            this.tableModel = tableModel;
+            this.tagsToInsert = tagsToInsert;
+
+        }
+
+        public TableBatchInsertSwingWorker(TagTableModel tableModel, String[][] tagsToInsert) {
+            this(tableModel, Arrays.asList(tagsToInsert));
+        }
+
+        @Override
+        protected TagTableModel doInBackground() {
+
+            // This is a deliberate pause to allow the UI time to render
+//            Thread.sleep(500);
+
+            for (String[] tag : tagsToInsert) {
+                publish(tag);
+                Thread.yield();
+            }
+            return tableModel;
+        }
+
+        @Override
+        protected void process(List<String[]> chunks) {
+            for (String[] row : chunks) {
+                tableModel.addRow(row);
+            }
         }
     }
 

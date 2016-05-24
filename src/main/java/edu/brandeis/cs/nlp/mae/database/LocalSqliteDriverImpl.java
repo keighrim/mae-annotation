@@ -33,6 +33,7 @@ import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
@@ -651,9 +652,113 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException {
-        return tag.getAttributesWithNames();
+    public Map<Tag, Map<String, String>> getAttributeMapsOfTagType(TagType type) throws MaeDBException {
+        // this turned out to be slower than calling individual Tag::getAttributesWithNames(),
+        // not used anymore
+        if (type.isExtent()) {
+            return getAttributeMapsOfExtentTagType(type);
 
+        } else {
+            return getAttributeMapsOfLinkTagType(type);
+        }
+    }
+
+    private Map<Tag, Map<String, String>> getAttributeMapsOfExtentTagType(TagType type) throws MaeDBException {
+        Map<Tag, Map<String, String>> attByTags = new HashMap<>();
+        try {
+            eTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
+            List<Attribute> allAtts = attQuery.join(eTagQuery).query();
+            for (int i = 0; i < allAtts.size(); i++)  {
+                Attribute att = allAtts.get(i);
+                if (!attByTags.containsKey(att.getTid())) {
+                    attByTags.put(att.getExtentTag(), new HashMap<>());
+                }
+                attByTags.get(att.getExtentTag()).put(att.getName(), att.getValue());
+
+            }
+            resetQueryBuilders();
+            return attByTags;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private Map<Tag, Map<String, String>> getAttributeMapsOfLinkTagType(TagType type) throws MaeDBException {
+        Map<Tag, Map<String, String>> attByTags = new HashMap<>();
+        try {
+            lTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
+            List<Attribute> allAtts = attQuery.join(lTagQuery).query();
+            for (int i = 0; i < allAtts.size(); i++)  {
+                Attribute att = allAtts.get(i);
+                if (!attByTags.containsKey(att.getLinkTag())) {
+                    attByTags.put(att.getLinkTag(), new HashMap<>());
+                }
+                attByTags.get(att.getLinkTag()).put(att.getName(), att.getValue());
+
+            }
+            List<Argument> allArgs = argQuery.join(lTagQuery).query();
+            for (int i = 0; i < allArgs.size(); i++)  {
+                Argument arg = allArgs.get(i);
+                if (!attByTags.containsKey(arg.getLinker())) {
+                    attByTags.put(arg.getLinker(), new HashMap<>());
+                }
+                Map<String, String> attMap = attByTags.get(arg.getLinker());
+                attMap.put(arg.getName() + MaeStrings.ARG_IDCOL_SUF, arg.getArgumentId());
+                attMap.put(arg.getName() + MaeStrings.ARG_TEXTCOL_SUF, arg.getArgumentText());
+            }
+            resetQueryBuilders();
+            return attByTags;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    @Override
+    public Map<String, String> getAttributeMapOfTag(Tag tag) throws MaeDBException {
+        // this turned out to be slower than Tag::getAttributesWithNames(), not used anymore
+        if (tag.getTagtype().isExtent()) {
+            return getAttributeMapOfExtentTag(tag);
+
+        } else {
+            return getAttributeMapOfLinkTag(tag);
+        }
+    }
+
+    private Map<String, String> getAttributeMapOfExtentTag(Tag tag) throws MaeDBException {
+        Map<String, String> attMap = new HashMap<>();
+        try {
+            List<Attribute> retrievedAtts
+                    = attDao.queryForEq(DBSchema.TAB_ATT_FCOL_ETAG, tag.getId());
+            for (int i = 0; i < retrievedAtts.size(); i++) {
+                Attribute att = retrievedAtts.get(i);
+                attMap.put(att.getName(), att.getValue());
+            }
+            return attMap;
+        } catch (SQLException e) {
+            catchSQLException(e);
+            return null;
+        }
+    }
+
+    private Map<String, String> getAttributeMapOfLinkTag(Tag tag) throws MaeDBException {
+        try {
+            Map<String, String> attMap = getAttributeMapOfExtentTag(tag);
+            List<Argument> retrievedArgs
+                    = argDao.queryForEq(DBSchema.TAB_ARG_FCOL_ETAG, tag.getId());
+            for (int i = 0; i < retrievedArgs.size(); i++) {
+                Argument arg = retrievedArgs.get(i);
+                attMap.put(arg.getName() + MaeStrings.ARG_IDCOL_SUF, arg.getArgumentId());
+                attMap.put(arg.getName() + MaeStrings.ARG_TEXTCOL_SUF, arg.getArgumentText());
+            }
+            return attMap;
+        } catch (SQLException e) {
+            catchSQLException(e);
+            return null;
+        }
     }
 
     @Override
@@ -700,19 +805,22 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         } catch (SQLException e) {
             throw catchSQLException(e);
         } catch (Exception ignored) {
+            ignored.printStackTrace();
         }
         return null;
     }
 
     void populateDefaultAttributes(TagType tagType, Tag tag) throws MaeDBException {
         Map<AttributeType, String> defaultAttributes = new HashMap<>();
-        for (AttributeType attType : tagType.getAttributeTypes()) {
-            String defaultValue = attType.getDefaultValue();
-            if (defaultValue.length() > 0) {
-                defaultAttributes.put(attType, defaultValue);
+        if (tagType.getAttributeTypes() != null) {
+            for (AttributeType attType : tagType.getAttributeTypes()) {
+                String defaultValue = attType.getDefaultValue();
+                if (defaultValue.length() > 0) {
+                    defaultAttributes.put(attType, defaultValue);
+                }
             }
+            batchAddAttributes(tag, defaultAttributes);
         }
-        batchAddAttributes(tag, defaultAttributes);
     }
 
     @Override
