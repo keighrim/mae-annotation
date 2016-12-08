@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
@@ -520,7 +521,7 @@ public class MaeMainController extends JPanel {
                 try {
                     timeConsumingSetupScheme(taskFile);
                     return true;
-                } catch (final MaeException e) {
+                } catch (final Exception e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -537,7 +538,7 @@ public class MaeMainController extends JPanel {
                     if (get() && fromNewTask) {
                         adjustUIPlusTaskMinusAnnotationMinusAdjudication();
                     } else {
-                        mouseCursorToDefault();
+                        updateNotificationArea();
                     }
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -562,7 +563,7 @@ public class MaeMainController extends JPanel {
         drivers.add(currentDriver);
         try {
             getDriver().readTask(taskFile);
-        } catch (MaeDBException e) {
+        } catch (MaeDBException | MaeIODTDException e) {
             if (drivers.size() > 1) {
                 destroyCurrentDriver();
             } else {
@@ -571,12 +572,14 @@ public class MaeMainController extends JPanel {
                 getTextPanel().noTaskGuide();
             }
             throw e;
-        } catch (MaeIOException e) {
-            destroyCurrentDriver();
-            throw e;
         } catch (IOException e) {
+            // then catch general IO error with specific message
             destroyCurrentDriver();
             throw new MaeIOException("Could not open the task definition file: ", e);
+        } catch (Exception e) {
+            // finally catch all the rest
+            destroyCurrentDriver();
+            throw e;
         }
         logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
                 getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
@@ -593,7 +596,7 @@ public class MaeMainController extends JPanel {
                 try {
                     timeConsumingAddDocument(annotationFile, firstDocument);
                     return true;
-                } catch (final MaeException e) {
+                } catch (final Exception e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -615,7 +618,7 @@ public class MaeMainController extends JPanel {
                         }
                         adjustUIPlusTaskAddAnnotation();
                     } else {
-                        mouseCursorToDefault();
+                        updateNotificationArea();
                     }
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -638,7 +641,7 @@ public class MaeMainController extends JPanel {
             logger.info(String.format("document \"%s\" is loaded into DB.",
                     getDriver().getAnnotationFileBaseName()));
 
-        } catch (MaeDBException | MaeIOException e) {
+        } catch (Exception e) {
             destroyCurrentDriver(); // this includes resetting statBar
             throw e;
         }

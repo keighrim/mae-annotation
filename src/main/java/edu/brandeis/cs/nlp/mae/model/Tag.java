@@ -26,6 +26,7 @@ package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -44,6 +45,9 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
 
     @DatabaseField(columnName = DBSchema.TAB_TAG_COL_FN)
     protected String filename;
+
+    @ForeignCollectionField(eager = true)
+    protected ForeignCollection<Attribute> attributes;
 
     public Tag() {
 
@@ -125,7 +129,9 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
         return underspec;
     }
 
-    public abstract ForeignCollection<Attribute> getAttributes();
+    public ForeignCollection<Attribute> getAttributes() {
+        return attributes;
+    }
 
     @Override
     public int hashCode() {

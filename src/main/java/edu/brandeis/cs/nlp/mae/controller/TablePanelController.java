@@ -1344,7 +1344,8 @@ class TablePanelController extends MaeControllerI {
             } else if (e.getClickCount() == 2) {
                 JTable table = (JTable) e.getSource();
                 TableModel tableModel = table.getModel();
-                String tid = (String) tableModel.getValueAt(table.getSelectedRow(), ID_COL);
+                String tid = (String) tableModel.getValueAt(
+                        table.convertRowIndexToModel(table.getSelectedRow()), ID_COL);
                 getMainController().propagateSelectionFromTablePanel(tid);
             }
         }

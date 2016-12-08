@@ -41,9 +41,6 @@ import java.util.*;
 public class LinkTag extends Tag implements ModelI {
 
     @ForeignCollectionField(eager = true)
-    protected ForeignCollection<Attribute> attributes;
-
-    @ForeignCollectionField(eager = true)
     private ForeignCollection<Argument> arguments;
 
     public LinkTag() {
@@ -81,11 +78,6 @@ public class LinkTag extends Tag implements ModelI {
         Set<String> underpec = checkRequiredAtts();
         underpec.addAll(checkRequiredArgs());
         return underpec;
-    }
-
-    @Override
-    public ForeignCollection<Attribute> getAttributes() {
-        return attributes;
     }
 
     private Set<String> checkRequiredArgs() {

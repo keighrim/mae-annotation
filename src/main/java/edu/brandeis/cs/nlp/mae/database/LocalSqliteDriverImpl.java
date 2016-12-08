@@ -166,7 +166,9 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         DTDLoader dtdl = new DTDLoader(this);
         dropAllTables(cs);
         createAllTables(cs);
-        dtdl.read(file);
+        if (!dtdl.read(file)) {
+            throw new MaeIODTDException("DTD does not contain any definition, maybe not a DTD file? " + file.getAbsolutePath());
+        }
 
     }
 

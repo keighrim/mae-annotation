@@ -61,11 +61,11 @@ public class DTDLoader {
         this.loadedTagTypes = new ArrayList<>();
     }
 
-    public void read(File file) throws MaeIODTDException, MaeDBException {
+    public boolean read(File file) throws MaeIODTDException, MaeDBException {
         try {
-            logger.debug("reading annotation scheme from: " + file.getAbsolutePath());
+            logger.info("reading annotation scheme from: " + file.getAbsolutePath());
             driver.setTaskFileName(file.getAbsolutePath());
-            this.read(new FileInputStream(file));
+            return this.read(new FileInputStream(file));
         } catch (FileNotFoundException e) {
             String message = "file not found: " + file.getAbsolutePath();
             logger.error(message);
@@ -73,12 +73,12 @@ public class DTDLoader {
         }
     }
 
-    public void read(String string) throws MaeIODTDException, MaeDBException {
+    public boolean read(String string) throws MaeIODTDException, MaeDBException {
         logger.debug("reading annotation scheme from plain JAVA string");
-        this.read(IOUtils.toInputStream(string));
+        return this.read(IOUtils.toInputStream(string));
 
     }
-    public void read(InputStream stream) throws MaeIODTDException, MaeDBException {
+    public boolean read(InputStream stream) throws MaeIODTDException, MaeDBException {
         Scanner sc = new Scanner(stream, "UTF-8");
         int lineNum = 1;
         while (sc.hasNextLine()) {
@@ -108,6 +108,11 @@ public class DTDLoader {
             process(element, lineNum);
         }
         validateLinkTagTypes();
+        return validateReadTask();
+    }
+
+    private boolean validateReadTask() throws MaeDBException {
+        return driver.getAllTagTypes().size() > 1;
     }
 
     private void validateLinkTagTypes() throws MaeDBException {
