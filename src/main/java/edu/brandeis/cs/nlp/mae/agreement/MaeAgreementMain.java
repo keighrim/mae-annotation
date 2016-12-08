@@ -25,20 +25,19 @@
 package edu.brandeis.cs.nlp.mae.agreement;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalAlphaUCalc;
-import edu.brandeis.cs.nlp.mae.agreement.calculator.GlobalMultiPiCalc;
-import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalAlphaUCalc;
-import edu.brandeis.cs.nlp.mae.agreement.calculator.LocalMultiPiCalc;
+import edu.brandeis.cs.nlp.mae.agreement.calculator.*;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationFilesIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
+import edu.brandeis.cs.nlp.mae.io.MaeIOXMLException;
 import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,19 +81,27 @@ public class MaeAgreementMain {
         parseCache = new XMLParseCache(driver, fileIdx);
     }
 
-    String validateTaskNames(String taskName) throws IOException, SAXException {
+    public Map<String, String> getParseWarnings() {
+        return parseCache.getParseWarnings();
+    }
+
+    String validateTaskNames(String taskName) throws IOException, SAXException, MaeIOXMLException {
         MaeXMLParser parser = new MaeXMLParser();
         for (String docName : fileIdx.getDocumentNames()) {
             for (String fileName : fileIdx.getAnnotationsOfDocument(docName)) {
-                if (fileName != null && !parser.isTaskNameMatching(new File(fileName), taskName)) {
-                    return fileName;
+                try {
+                    if (fileName != null && !parser.isTaskNameMatching(new File(fileName), taskName)) {
+                        return fileName;
+                    }
+                } catch (SAXParseException e) {
+                    throw new MaeIOXMLException(String.format("Invalid XML string (%s): %s", e.getMessage(), fileName));
                 }
             }
         }
         return SUCCESS;
     }
 
-    String validateTextSharing() throws IOException, SAXException {
+    String validateTextSharing() throws IOException, SAXException, MaeIOXMLException {
         MaeXMLParser parser = new MaeXMLParser();
         documentLength = new int[fileIdx.getDocumentNames().size()];
         int curDoc = 0;
@@ -105,8 +112,12 @@ public class MaeAgreementMain {
             String primaryText = parser.getParsedPrimaryText();
             documentLength[curDoc++] = primaryText.length();
             for (int i = seen; i < fileNames.length; i++) {
-                if (fileNames[i] != null && !parser.isPrimaryTextMatching(new File(fileNames[i]), primaryText)) {
-                    return fileNames[i];
+                try {
+                    if (fileNames[i] != null && !parser.isPrimaryTextMatching(new File(fileNames[i]), primaryText)) {
+                        return fileNames[i];
+                    }
+                } catch (SAXParseException e) {
+                    throw new MaeIOXMLException(String.format("Invalid XML string (%s): %s", e.getMessage(), fileNames[i]));
                 }
             }
         }
@@ -164,6 +175,16 @@ public class MaeAgreementMain {
         return calc.calculateAgreement(targetTagsAndAtts);
     }
 
+     Map<String, Double> calculateLocalMultiKappa(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        LocalMultiKappaCalc calc = new LocalMultiKappaCalc(fileIdx, parseCache);
+        return calc.calculateAgreement(targetTagsAndAtts);
+    }
+
+    Map<String, Double> calculateGlobalMultiKappa(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+        GlobalMultiKappaCalc calc = new GlobalMultiKappaCalc(fileIdx, parseCache);
+        return calc.calculateAgreement(targetTagsAndAtts);
+    }
+
     public String calcGlobalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
         String result = "";
         for (String metricType : metricToTargetsMap.keySet()) {
@@ -179,6 +200,7 @@ public class MaeAgreementMain {
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
+                    result += agreementsToString(agrTitle, calculateGlobalMultiKappa(targetTagsAndAtts));
                     break;
                 case MULTIPI_CALC_STRING:
                     result += agreementsToString(agrTitle, calculateGlobalMultiPi(targetTagsAndAtts));
@@ -204,6 +226,7 @@ public class MaeAgreementMain {
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
+                    result += agreementsToString(agrTitle, calculateLocalMultiKappa(targetTagsAndAtts));
                     break;
                 case MULTIPI_CALC_STRING:
                     result += agreementsToString(agrTitle, calculateLocalMultiPi(targetTagsAndAtts));

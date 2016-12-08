@@ -36,14 +36,18 @@ import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
+import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.ALL_METRIC_TYPE_STRINGS;
 
 /**
  * Created by krim on 4/14/2016.
@@ -257,7 +261,7 @@ public class MaeAgreementGUI extends JFrame {
     private void onOk() {
         try {
             computeAgreement();
-        } catch (IOException | MaeException | SAXException e) {
+        } catch (IOException | MaeException | SAXException | RuntimeException e) {
             JOptionPane.showMessageDialog(null, e.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
             e.printStackTrace();
         }
@@ -331,6 +335,16 @@ public class MaeAgreementGUI extends JFrame {
             String result = "";
             result += calc.calcGlobalAgreementToString(global);
             result += calc.calcLocalAgreementToString(local);
+
+            Map<String, String> parseWarnings = calc.getParseWarnings();
+            if (parseWarnings.size() > 0) {
+                String warnings = "";
+                for (String fileName : parseWarnings.keySet()) {
+                    warnings += String.format("%s: \n %s\n  ===\n\n", fileName, parseWarnings.get(fileName));
+                }
+                JOptionPane.showMessageDialog(null, new JTextArea(warnings), "Some problems found in the dataset", JOptionPane.PLAIN_MESSAGE);
+
+            }
 
             JOptionPane.showMessageDialog(null, new JTextArea(result), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
         }

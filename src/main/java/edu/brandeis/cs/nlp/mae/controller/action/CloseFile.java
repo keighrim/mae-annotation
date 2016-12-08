@@ -41,7 +41,8 @@ public class CloseFile extends MenuActionI {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (getMainController().showCurrentUnsavedChangeWarning()) {
+        if (getMainController().showCurrentUnsavedChangeWarning() &&
+                getMainController().showCurrentDocumentIncompleteTagsWarning(false)) {
             getMainController().closeCurrentDocument();
         }
     }

@@ -31,7 +31,7 @@ import java.io.*;
  */
 public class FileWriter {
 
-    public static void writeTextOnEmptyFile(String text, File file) throws MaeIOException {
+    public static void writeTextToEmptyXML(String text, String task, File file) throws MaeIOException {
         try {
             if (!file.exists()) {
                 file.createNewFile();
@@ -39,7 +39,9 @@ public class FileWriter {
             Writer output = new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(
                             file), "UTF-8"));
-            output.write(text);
+            output.write(String.format(
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<%s>\n<TEXT><![CDATA[%s]]></TEXT>\n</%s>",
+                            task, text, task));
             output.close();
         } catch (IOException e) {
             throw new MaeIOException("Cannot create a new file!", e);

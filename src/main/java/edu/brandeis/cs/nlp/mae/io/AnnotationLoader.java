@@ -24,13 +24,14 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
-import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.*;
 import java.util.*;
@@ -119,9 +120,12 @@ public class AnnotationLoader {
             return loader.isTaskNameMatching(file, taskName);
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
+
         return false;
 
     }
@@ -133,6 +137,8 @@ public class AnnotationLoader {
             return loader.isPrimaryTextMatching(file, primaryText);
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
 
@@ -151,6 +157,8 @@ public class AnnotationLoader {
 
         } catch (MaeDBException e) {
             throw e;
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         } catch (IOException e) {
@@ -160,26 +168,31 @@ public class AnnotationLoader {
 
     }
 
-    public void loadFile(File file) throws MaeIOException,  MaeDBException {
+    public String loadFile(File file) throws MaeException {
+        String fileParseWarning = "";
         if (fileName == null) fileName = file.getAbsolutePath();
         if (isXml(file)) {
             if (isTaskNameMatching(file, taskName)) {
                 logger.info("reading annotations from file: " + file.getAbsolutePath());
-                readAsXml(file);
+                fileParseWarning = readAsXml(file);
             } else {
-                logger.info("file does not match working DTD, reading as the primary text: " + file.getAbsolutePath());
                 readAsTxt(file);
-//                throw new MaeIOXMLException("Does not match current DTD");
-            }
+                String notXmlWarning = "file does not match working DTD, read as the primary text and a new XML file is generated:\n" + fileName;
+                logger.info(notXmlWarning);
+                fileParseWarning += notXmlWarning;
+           }
         } else {
-            logger.info("file is not an XML, reading as the primary text: " + file.getAbsolutePath());
             readAsTxt(file);
+            String notXmlWarning = "file is not an XML, read as the primary text and a new XML file generated:\n" + fileName;
+            logger.info(notXmlWarning);
+            fileParseWarning += notXmlWarning;
         }
         insertFilenameToDB(fileName);
+        return fileParseWarning;
 
     }
 
-    public void readAsXml(File file) throws MaeDBException, MaeIOException {
+    public String readAsXml(File file) throws MaeDBException, MaeIOException {
         try {
             if (fileName == null) fileName = file.getAbsolutePath();
             MaeXMLParser parser = new MaeXMLParser(driver);
@@ -188,33 +201,52 @@ public class AnnotationLoader {
             insertTagsToDB(parser.getParsedTags());
             insertAttsToDB(parser.getParsedAtts());
             insertArgsToDB(parser.getParsedArgs());
+            return parser.getParseWarnings();
         } catch (MaeDBException e) {
             throw e;
         } catch (IOException e) {
             catchIOError(file, e);
+        } catch (SAXParseException e) {
+            catchSAXParseError(file, e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
-
+        return "";
     }
 
-    private void readAsTxt(File file) throws MaeDBException, MaeIOTXTException {
+    private void readAsTxt(File file) throws MaeException {
         Scanner scanner = null;
+        int suffix = 1;
+        String filePath = file.getAbsolutePath();
+        String fileExt = filePath.substring(filePath.length() - 4, filePath.length());
+        String xmlizeBaseName = fileExt.equalsIgnoreCase(".xml") ? filePath.substring(0, filePath.length() - 4) : filePath;
+
+        File xmlized = new File(xmlizeBaseName + ".xml");
+        while (xmlized.exists()) {
+            String xmlizeName = String.format("%s_%d.xml", xmlizeBaseName, suffix);
+            suffix++;
+            xmlized = new File(xmlizeName);
+        }
         try {
-            if (fileName == null) fileName = file.getAbsolutePath();
+            fileName = xmlized.getAbsolutePath();
             scanner = new Scanner(file, "UTF-8");
             scanner.useDelimiter("\\A");
             String primaryText = "";
             while (scanner.hasNext()) {
                 primaryText += scanner.next();
             }
-            driver.setPrimaryText(primaryText);
+            FileWriter.writeTextToEmptyXML(primaryText, driver.getTaskName(), xmlized);
+            try {
+                readAsXml(xmlized);
+            } catch (MaeIOException e) {
+                xmlized.delete();
+            }
         } catch (NoSuchElementException ex) {
-            String message = "failed to read the file, may be a binary file? " + file.getAbsolutePath();
+            String message = "failed to read the file, maybe a binary file? " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIOTXTException(message);
         } catch (FileNotFoundException ignored) {
-        } catch (MaeDBException e) {
+        } catch (MaeException e) {
             throw e;
         } finally {
             assert scanner != null;
@@ -242,7 +274,6 @@ public class AnnotationLoader {
 
     private void insertTagsToDB(List<ParsedTag> parsedTags) throws MaeDBException {
         List<CharIndex> anchors = new ArrayList<>();
-//        String fileBaseName = FileHandler.getFileBaseName(this.fileName);
         for (ParsedTag parsedTag : parsedTags) {
             if (!parsedTag.isLink()) {
                 ExtentTag tag = new ExtentTag(parsedTag.getTid(), tagTypeMap.get(parsedTag.getTagTypeName()), fileName);
@@ -273,21 +304,22 @@ public class AnnotationLoader {
     }
 
     private void insertAttsToDB(List<ParsedAtt> parsedAtts) throws MaeDBException {
-        try {
-            List<Attribute> attributes = new ArrayList<>();
-            for (ParsedAtt att : parsedAtts) {
-                Tag tag = extTagMap.get(att.getTid());
-                if (tag == null) tag = linkTagMap.get(att.getTid());
-                if (tag == null || att.getAttValue() == null || att.getAttValue().length() == 0) {
-                    continue;
-                }
-                String attTypeKey = String.format("%s-%s", att.getTagTypeName(), att.getAttTypeName());
-                attributes.add(new Attribute(tag, attTypeMap.get(attTypeKey), att.getAttValue()));
+        List<Attribute> attributes = new ArrayList<>();
+        for (ParsedAtt att : parsedAtts) {
+            Tag tag = extTagMap.get(att.getTid());
+            if (tag == null) tag = linkTagMap.get(att.getTid());
+            if (tag == null || att.getAttValue() == null || att.getAttValue().length() == 0) {
+                continue;
             }
-            driver.batchCreateAttributes(attributes);
-        } catch (MaeModelException e) {
-            e.printStackTrace();
+            String attTypeKey = String.format("%s-%s", att.getTagTypeName(), att.getAttTypeName());
+            try {
+                attributes.add(new Attribute(tag, attTypeMap.get(attTypeKey), att.getAttValue()));
+            } catch (MaeModelException ignored) {
+                // model exception is thrown when att value is invalid, which is already checked during XML parsing
+                // thus here, model exception is ignored.
+            }
         }
+        driver.batchCreateAttributes(attributes);
 
     }
 
@@ -315,6 +347,12 @@ public class AnnotationLoader {
 
     private static void catchSAXError(File file, SAXException e) throws MaeIOXMLException {
         String message = String.format("failed to parse XML: %s, %s", file.getName(), e.getMessage());
+        logger.error(message);
+        throw new MaeIOXMLException(message, e);
+    }
+
+    private static void catchSAXParseError(File file, SAXParseException e) throws MaeIOXMLException {
+        String message = String.format("invalid XML string: %s, %s", file.getName(), e.getMessage());
         logger.error(message);
         throw new MaeIOXMLException(message, e);
     }

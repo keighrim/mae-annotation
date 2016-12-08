@@ -28,9 +28,9 @@ import edu.brandeis.cs.nlp.mae.MaeHotKeys;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.io.FileWriter;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.model.*;
 
 import javax.swing.*;
@@ -72,6 +72,10 @@ class DialogController {
 
     int showWarning(String warnMessage) {
         return JOptionPane.showConfirmDialog(null, warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+    }
+
+    void popupMessage(String message) {
+        JOptionPane.showMessageDialog(null, message, MaeStrings.INFO_POPUP_TITLE, JOptionPane.PLAIN_MESSAGE);
     }
 
     void showError(Exception e) {
@@ -206,7 +210,8 @@ class DialogController {
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
         File newGS = showFileChooseDialogAndSelect("goldstandard.xml", true);
         if (newGS != null) {
-            FileWriter.writeTextOnEmptyFile(getMainController().getDriver().getPrimaryText(), newGS);
+            FileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
+                    getMainController().getDriver().getTaskName(), newGS);
             return newGS;
         }
         return null;
