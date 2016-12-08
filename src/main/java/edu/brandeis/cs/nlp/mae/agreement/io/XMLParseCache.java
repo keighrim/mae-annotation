@@ -41,11 +41,13 @@ public class XMLParseCache {
     private Map<String, MaeXMLParser[]> parseCache;
     private MaeDriverI driver;
     private AbstractAnnotationIndexer fileIdx;
+    private Map<String, String> parseWarnings;
 
     public XMLParseCache(MaeDriverI driver, AbstractAnnotationIndexer fileIdx) {
         this.driver = driver;
         this.fileIdx = fileIdx;
         this.parseCache = new HashMap<>();
+        this.parseWarnings = new HashMap<>();
     }
 
     public MaeXMLParser[] getParses(String docName) throws IOException, SAXException, MaeDBException {
@@ -68,8 +70,15 @@ public class XMLParseCache {
                 MaeXMLParser parser = new MaeXMLParser(driver);
                 parser.readAnnotationFile(new File(fileName));
                 parses[i] = parser;
+                if (parser.getParseWarnings().length() > 0) {
+                    this.parseWarnings.put(fileName, parser.getParseWarnings());
+                }
             }
         }
         return parses;
+    }
+
+    public Map<String, String> getParseWarnings() {
+        return this.parseWarnings;
     }
 }

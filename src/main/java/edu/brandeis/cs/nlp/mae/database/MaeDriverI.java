@@ -25,8 +25,8 @@
 package edu.brandeis.cs.nlp.mae.database;
 
 import com.j256.ormlite.support.ConnectionSource;
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 
@@ -55,7 +55,7 @@ public interface MaeDriverI {
 
     void setTaskName(String value) throws MaeDBException;
 
-    void readAnnotation(File file) throws MaeDBException, MaeIOException;
+    String readAnnotation(File file) throws MaeException;
 
     String getTaskFileName() throws MaeDBException;
 

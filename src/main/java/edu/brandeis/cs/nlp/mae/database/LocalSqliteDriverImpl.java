@@ -32,10 +32,10 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
 import edu.brandeis.cs.nlp.mae.io.DTDLoader;
 import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
@@ -166,15 +166,18 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         DTDLoader dtdl = new DTDLoader(this);
         dropAllTables(cs);
         createAllTables(cs);
-        dtdl.read(file);
+        if (!dtdl.read(file)) {
+            throw new MaeIODTDException("DTD does not contain any definition, maybe not a DTD file? " + file.getAbsolutePath());
+        }
 
     }
 
     @Override
-    public void readAnnotation(File file) throws MaeIOException, MaeDBException {
+    public String readAnnotation(File file) throws MaeException {
         AnnotationLoader xmll = new AnnotationLoader(this);
-        xmll.loadFile(file);
+        String xmlParseWarnings =  xmll.loadFile(file);
         setAnnotationChanged(false);
+        return xmlParseWarnings;
 
     }
 

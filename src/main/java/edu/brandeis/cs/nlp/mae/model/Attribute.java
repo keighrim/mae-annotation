@@ -130,9 +130,11 @@ public class Attribute implements ModelI {
                 this.value = value;
             } else {
                 throw new MaeModelException(String.format(
-                        "%s: \"%s\" is not a valid value for \"%s\" (%s), valid values are %s",
-                        this.getClass().getSimpleName(), value, this.getName(),
-                        getAttributeType().getTagType().getName(), validValues.toString()));
+                        "\"%s\" is not a valid value for \"%s-%s\", valid values are %s",
+                        value,
+                        getAttributeType().getTagType().getName(),
+                        this.getName(),
+                        validValues.toString()));
             }
         }
     }

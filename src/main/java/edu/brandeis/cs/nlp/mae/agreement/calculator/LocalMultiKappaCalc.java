@@ -29,7 +29,7 @@ import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
-import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
+import org.dkpro.statistics.agreement.coding.HubertKappaAgreement;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -37,22 +37,21 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Created by krim on 4/24/2016.
+ * Created by krim on 4/25/2016.
  */
-public class GlobalMultiPiCalc extends AbstractCodingAgreementCalc {
+public class LocalMultiKappaCalc extends AbstractCodingAgreementCalc {
 
-    public GlobalMultiPiCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
+    public LocalMultiKappaCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
         super(fileIdx, parseCache);
     }
 
     @Override
     public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
-        Map<String, Double> globalMultiPi = new TreeMap<>();
-        CodingAnnotationStudy study = prepareGlobalCodingStudy(targetTagsAndAtts);
-        double agreement = (new FleissKappaAgreement(study)).calculateAgreement();
-        globalMultiPi.put("cross-tag_multi_pi", agreement);
-        return globalMultiPi;
+        Map<String, Double> localMultiKappa = new TreeMap<>();
+        Map<String, CodingAnnotationStudy> studies = prepareLocalCodingStudies(targetTagsAndAtts);
+        for (String attFullName : studies.keySet()) {
+            localMultiKappa.put(attFullName, (new HubertKappaAgreement(studies.get(attFullName))).calculateAgreement());
+        }
+        return localMultiKappa;
     }
 }
-
-

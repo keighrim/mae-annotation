@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
+import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
@@ -126,7 +127,14 @@ public class MaeMainController extends JPanel {
             @Override
             public void windowClosing(WindowEvent winEvt) {
                 if (isDocumentOpen()) {
-                    if (showAllUnsavedChangeWarning() && showIncompleteTagsWarning(false)) {
+                    boolean allChecked = true;
+                    for (int i = 0; i < getDrivers().size(); i++) {
+                        if (!showUnsavedChangeWarningAt(i) || !showIncompleteTagsWarningAt(i, false)) {
+                            allChecked = false;
+                            break;
+                        }
+                    }
+                    if (allChecked) {
                         wipeDrivers();
                         System.exit(0);
                     }
@@ -159,6 +167,11 @@ public class MaeMainController extends JPanel {
         logger.warn(message + ": " + response);
         return response;
 
+    }
+
+    public void popupMessage(String message) {
+        getDialogs().popupMessage(message);
+        logger.warn(message);
     }
 
     public boolean showUnsavedChangeWarningAt(int tabIdx) {
@@ -508,7 +521,7 @@ public class MaeMainController extends JPanel {
                 try {
                     timeConsumingSetupScheme(taskFile);
                     return true;
-                } catch (final MaeException e) {
+                } catch (final Exception e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -525,7 +538,7 @@ public class MaeMainController extends JPanel {
                     if (get() && fromNewTask) {
                         adjustUIPlusTaskMinusAnnotationMinusAdjudication();
                     } else {
-                        mouseCursorToDefault();
+                        updateNotificationArea();
                     }
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -550,7 +563,7 @@ public class MaeMainController extends JPanel {
         drivers.add(currentDriver);
         try {
             getDriver().readTask(taskFile);
-        } catch (MaeDBException e) {
+        } catch (MaeDBException | MaeIODTDException e) {
             if (drivers.size() > 1) {
                 destroyCurrentDriver();
             } else {
@@ -559,12 +572,14 @@ public class MaeMainController extends JPanel {
                 getTextPanel().noTaskGuide();
             }
             throw e;
-        } catch (MaeIOException e) {
-            destroyCurrentDriver();
-            throw e;
         } catch (IOException e) {
+            // then catch general IO error with specific message
             destroyCurrentDriver();
             throw new MaeIOException("Could not open the task definition file: ", e);
+        } catch (Exception e) {
+            // finally catch all the rest
+            destroyCurrentDriver();
+            throw e;
         }
         logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
                 getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
@@ -581,7 +596,7 @@ public class MaeMainController extends JPanel {
                 try {
                     timeConsumingAddDocument(annotationFile, firstDocument);
                     return true;
-                } catch (final MaeException e) {
+                } catch (final Exception e) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -603,7 +618,7 @@ public class MaeMainController extends JPanel {
                         }
                         adjustUIPlusTaskAddAnnotation();
                     } else {
-                        mouseCursorToDefault();
+                        updateNotificationArea();
                     }
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -615,17 +630,18 @@ public class MaeMainController extends JPanel {
 
     private void timeConsumingAddDocument(File annotationFile, boolean firstDocument) throws MaeException {
 
+        String xmlParseWarnings = "";
         try {
             // setting up the scheme will switch driver to the new one
             if (!firstDocument) {
                 timeConsumingSetupScheme(new File(getDriver().getTaskFileName()));
             }
 
-            getDriver().readAnnotation(annotationFile);
+            xmlParseWarnings = getDriver().readAnnotation(annotationFile);
             logger.info(String.format("document \"%s\" is loaded into DB.",
                     getDriver().getAnnotationFileBaseName()));
 
-        } catch (MaeDBException | MaeIOException e) {
+        } catch (Exception e) {
             destroyCurrentDriver(); // this includes resetting statBar
             throw e;
         }
@@ -638,6 +654,9 @@ public class MaeMainController extends JPanel {
             }
             logger.info("inserting is done");
         }
+        if (xmlParseWarnings.length() > 0) {
+            popupMessage(xmlParseWarnings);
+        }
 
     }
 
@@ -646,11 +665,14 @@ public class MaeMainController extends JPanel {
             try {
                 timeConsumingSetupScheme(new File(getDriver().getTaskFileName())); // will set up a new dirver for GS
                 getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
-                getDriver().readAnnotation(goldstandard);
+                String xmlParseWarnings = getDriver().readAnnotation(goldstandard);
                 getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
                 getTablePanel().prepareAllTables();
                 switchAdjudicationTag();
                 logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
+                if (xmlParseWarnings.length() > 0) {
+                    popupMessage(xmlParseWarnings);
+                }
             } catch (MaeIOException e) {
                 showError(e);
                 destroyCurrentDriver();
@@ -691,7 +713,7 @@ public class MaeMainController extends JPanel {
             } else {
                 assignAllFGColor();
                 logger.info("painting is done");
-                showIncompleteTagsWarning(true);
+                showCurrentDocumentIncompleteTagsWarning(true);
             }
 
             sendTemporaryNotification(MaeStrings.SB_FILEOPEN, 4000);
@@ -1347,8 +1369,8 @@ public class MaeMainController extends JPanel {
 
     LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
         String warning = ("Copying a link tag will also copy its arguments,\n" +
-                "unless matching extent tags are found in GS.\n" +
-                "(matched by span AND non-consuming arguments are always copied!)" +
+                "unless an extent tag with the same spans is found in GS.\n" +
+                "(non-consuming arguments are always copied!)" +
                 "\nDo you want to continue?");
         if (showWarning(warning)) {
             MaeDriverI originalDriver = getDriverOf(original.getFilename());
@@ -1490,20 +1512,21 @@ public class MaeMainController extends JPanel {
         return null;
     }
 
-    public Set<Tag> getIncompleteTags() {
+    public Set<Tag> getIncompleteTagsAt(int tabIdx) {
         // TODO: 2016-04-05 15:58:18EDT optimized this method
         // TODO: 2016-04-05 15:59:10EDT add supplement for checking adjudication file
+        MaeDriverI driver = getDriverAt(tabIdx);
         try {
             Set<Tag> incomplete = new TreeSet<>();
-            for (TagType type : getDriver().getAllTagTypes()) {
+            for (TagType type : driver.getAllTagTypes()) {
                 if (type.isExtent()) {
-                    for (ExtentTag tag : getDriver().getAllExtentTagsOfType(type)) {
+                    for (ExtentTag tag : driver.getAllExtentTagsOfType(type)) {
                         if (!tag.isComplete()) {
                             incomplete.add(tag);
                         }
                     }
                 } else {
-                    for (LinkTag tag : getDriver().getAllLinkTagsOfType(type)) {
+                    for (LinkTag tag : driver.getAllLinkTagsOfType(type)) {
                         if (!tag.isComplete()) {
                             incomplete.add(tag);
                         }
@@ -1515,10 +1538,24 @@ public class MaeMainController extends JPanel {
             showError(e);
         }
         return null;
+
     }
 
-    public boolean showIncompleteTagsWarning(boolean simplyWarn) {
-        return getDialogs().showIncompleteTagsWarning(getIncompleteTags(), simplyWarn);
+    public Set<Tag> getCurrentDocumentIncompleteTags() {
+        return getIncompleteTagsAt(getCurrentDocumentTabIndex());
+    }
+
+    public boolean showIncompleteTagsWarningAt(int tabIdx, boolean simplyWarn) {
+        Set<Tag> incompletes = getIncompleteTagsAt(tabIdx);
+        if (incompletes.size() > 0) {
+            getTextPanel().getView().selectTab(tabIdx);
+            return getDialogs().showIncompleteTagsWarning(incompletes, simplyWarn);
+        }
+        return true;
+    }
+
+    public boolean showCurrentDocumentIncompleteTagsWarning(boolean simplyWarn) {
+        return getDialogs().showIncompleteTagsWarning(getCurrentDocumentIncompleteTags(), simplyWarn);
     }
 
     public void presentation() {

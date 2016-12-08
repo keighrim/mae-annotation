@@ -64,7 +64,7 @@ public class GlobalAlphaUCalc extends AbstractUnitizationAgreementCalc {
             curDocLength += documentLength[i];
         }
         double agree = (new KrippendorffAlphaUnitizingAgreement(study)).calculateAgreement();
-        globalAlphaU.put("global_alpha_u", agree);
+        globalAlphaU.put("cross-tag_alpha_u", agree);
         return globalAlphaU;
 
     }

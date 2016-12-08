@@ -178,6 +178,7 @@ public class MaeStrings {
     public static final String UNSAVED_INDICATOR = "*";
 
     /* popup messages */
+    public static final String INFO_POPUP_TITLE = "You need to know...";
     public static final String WARN_POPUP_TITLE = "Attention, Please";
     public static final String ERROR_POPUP_TITLE = "This is embarrassing ...";
 

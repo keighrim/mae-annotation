@@ -49,9 +49,6 @@ public class ExtentTag extends Tag implements ModelI {
     private String text;
 
     @ForeignCollectionField(eager = true)
-    protected ForeignCollection<Attribute> attributes;
-
-    @ForeignCollectionField(eager = true)
     private ForeignCollection<CharIndex> spans;
 
     public ExtentTag() {
@@ -63,11 +60,6 @@ public class ExtentTag extends Tag implements ModelI {
         this.spans = null;
         this.text = null;
 
-    }
-
-    @Override
-    public ForeignCollection<Attribute> getAttributes() {
-        return attributes;
     }
 
     public List<CharIndex> setSpans(int...locations) {

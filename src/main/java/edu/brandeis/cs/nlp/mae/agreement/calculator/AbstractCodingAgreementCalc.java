@@ -131,7 +131,10 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                     fillAllAttValueOfTid(parse, j, tid, attAnnotationsMap);
                                     break;
                                 default:
-                                    throw new MaeException("Error occurred while calculating local labeling agreement: duplicate tagging over a single span is not allowed.");
+                                    throw new MaeException(
+                                            String.format("Error occurred while calculating local labeling agreement:" +
+                                                    " an annotator marked the same range with two or more times - \"%s\", \"%s\"",
+                                                    document, fileIdx.getAnnotators().get(j)));
                             }
                         }
                     }
@@ -200,7 +203,10 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 annotations[i] = relevantTags.get(0).getTagTypeName();
                                 break;
                             default:
-                                throw new MaeException("Error occurred while calculating global labeling agreement: duplicate tagging over a single span is not allowed.");
+                                throw new MaeException(
+                                String.format("Error occurred while calculating global labeling agreement:" +
+                                                " an annotator marked the same range with two or labels - \"%s\", \"%s\"",
+                                        document, fileIdx.getAnnotators().get(i)));
                         }
                     }
                     study.addItem(annotations);

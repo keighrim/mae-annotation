@@ -44,9 +44,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by krim on 4/6/16.
@@ -56,6 +54,7 @@ public class MaeXMLParser {
 
     private MaeDriverI driver;
     private MaeSAXHandler xmlHandler;
+    private String parseWarnings = "";
 
     public MaeXMLParser() {
 
@@ -65,7 +64,7 @@ public class MaeXMLParser {
         this.driver = driver;
     }
 
-    public void readAnnotationFile(File file) throws SAXException, IOException  {
+    public void readAnnotationFile(File file) throws SAXException, IOException, MaeDBException {
         try {
             List<String> extTagTypeNames = new ArrayList<>();
             for (TagType type : driver.getExtentTagTypes()) {
@@ -79,8 +78,19 @@ public class MaeXMLParser {
             this.xmlHandler = new MaeSAXHandler(extTagTypeNames, linkTagTypeNames);
             parse(file);
         } catch (MaeDBException e) {
-            e.printStackTrace();
+            throw e;
         }
+    }
+
+    public boolean hasParWarnings() {
+        return parseWarnings.length() > 0;
+    }
+
+    public String getParseWarnings() {
+        if (parseWarnings.length() > 0) {
+            return parseWarnings.substring(0, parseWarnings.length() - 2);
+        }
+        return parseWarnings;
     }
 
     public void readAnnotationPreamble(File file) throws IOException, SAXException {
@@ -141,39 +151,52 @@ public class MaeXMLParser {
         private List<String> extTagTypeNames;
         private List<String> linkTagTypeNames;
         private MappedSet<String, String> attTypeMap;
+        private Map<String, List<String>> attValueMap;
+        private Map<String, String> attDefValueMap;
         private MappedSet<String, String> argTypeMap;
 
         public MaeSAXHandler() {
             initParsedLists();
         }
 
-        public MaeSAXHandler(MaeSAXHandler handler) throws MaeDBException {
-
-        }
-
         public MaeSAXHandler(List<String> extTagTypeNames, List<String> linkTagTypeNames) throws MaeDBException {
             this.extTagTypeNames = extTagTypeNames;
             this.linkTagTypeNames = linkTagTypeNames;
-            this.attTypeMap = new MappedSet<>();
-            for (String extTypeName : extTagTypeNames) {
-                for (AttributeType attType : driver.getAttributeTypesOfTagType(driver.getTagTypeByName(extTypeName))) {
-                    attTypeMap.putItem(extTypeName, attType.getName());
-                }
-            }
-            for (String linkTypeName : linkTagTypeNames) {
-                for (AttributeType attType : driver.getAttributeTypesOfTagType(driver.getTagTypeByName(linkTypeName))) {
-                    attTypeMap.putItem(linkTypeName, attType.getName());
-                }
-            }
+            cacheAttMaps();
+            cacheArgMap();
+            initParsedLists();
 
+        }
+
+        private void cacheArgMap() throws MaeDBException {
             this.argTypeMap = new MappedSet<>();
             for (String linkTypeName : linkTagTypeNames) {
                 for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(driver.getTagTypeByName(linkTypeName))) {
                     argTypeMap.putItem(linkTypeName, argType.getName());
                 }
             }
-            initParsedLists();
+        }
 
+        private void cacheAttMaps() throws MaeDBException {
+            this.attTypeMap = new MappedSet<>();
+            this.attValueMap = new HashMap<>();
+            this.attDefValueMap = new HashMap<>();
+            cacheAttMapsFromTagTypes(extTagTypeNames);
+            cacheAttMapsFromTagTypes(linkTagTypeNames);
+        }
+
+        private void cacheAttMapsFromTagTypes(List<String> tagTypeNames) throws MaeDBException {
+            for (String tagTypeName : tagTypeNames) {
+                for (AttributeType attType : driver.getAttributeTypesOfTagType(driver.getTagTypeByName(tagTypeName))) {
+                    String attTypeName = attType.getName();
+                    attTypeMap.putItem(tagTypeName, attTypeName);
+                    if (attType.isFiniteValueset()) {
+                        String attValuesKey = String.format("%s-%s", tagTypeName, attTypeName);
+                        attValueMap.put(attValuesKey, attType.getValuesetAsList());
+                        attDefValueMap.put(attValuesKey, attType.getDefaultValue());
+                    }
+                }
+            }
         }
 
         private void initParsedLists() {
@@ -212,7 +235,7 @@ public class MaeXMLParser {
                 logger.debug(String.format("found link tag: %s(%s)", attributes.getValue("id"), tagTypeName));
                 parseLinkTag(tagTypeName, tag, attributes);
             } else {
-                throw new SAXException(String.format("unexpected tag type found: \"%s\"", tagTypeName));
+                parseWarnings += String.format("unexpected tag type found: \"%s\"\nIgnored. \n\n", tagTypeName);
             }
         }
 
@@ -237,7 +260,7 @@ public class MaeXMLParser {
                             tag.setSpans(spans);
                             tag.setText(getSubstringFromPrimaryText(spans));
                         } catch (MaeException e) {
-                            throw new SAXException(e.getMessage());
+                            throw new SAXException(tid + ": " + e.getMessage());
                         }
                         break;
                     case "start":
@@ -331,17 +354,28 @@ public class MaeXMLParser {
         private void parseAttribute(String tagTypeName, String tid, String name, String value) throws SAXException {
             // used to filter null valued atts for DB insertion
             // however this caused errors at computing IAA, so now keep null atts as well
-//            if (value.length() > 0) {
             if (!attTypeMap.get(tagTypeName).contains(name)) {
-                throw new SAXException(String.format("unexpected attribute type found: \"%s\" of %s", name, tid));
+                parseWarnings += String.format("unexpected attribute type found: \"%s\" of %s\nIgnored. \n\n", name, tid);
+                return;
             }
             ParsedAtt att = new ParsedAtt();
+
+            String attValuesKey = String.format("%s-%s", tagTypeName, name);
+            if (attValueMap.containsKey(attValuesKey)) {
+                if (!attValueMap.get(attValuesKey).contains(value) && value.length() > 0) {
+                    parseWarnings += String.format(
+                            "\"%s\" is not a valid value for \"%s\", valid values are %s\nSet to its default value. \n\n",
+                            value,
+                            attValuesKey,
+                            attValueMap.get(attValuesKey));
+                    value = attDefValueMap.get(attValuesKey);
+                }
+            }
             att.setTid(tid);
             att.setTagTypeName(tagTypeName);
             att.setAttTypeName(name);
             att.setAttValue(value);
             atts.add(att);
-//            }
         }
 
 
