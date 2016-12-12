@@ -30,10 +30,10 @@ import javax.swing.*;
 
 /**
  * Created by krim on 12/30/2015.
+ * Provide interface for actions associated to menu items.
  */
 public abstract class MaeActionI extends AbstractAction {
 
-    protected static final String CONTROLLER = "MAE_main_controller";
     protected MaeMainController mainController;
 
     public MaeActionI(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController mainController) {
@@ -44,7 +44,6 @@ public abstract class MaeActionI extends AbstractAction {
         if (mnemonic != null) {
             putValue(MNEMONIC_KEY, mnemonic);
         }
-        putValue(CONTROLLER, mainController);
         this.mainController = mainController;
     }
 

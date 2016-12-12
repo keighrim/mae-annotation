@@ -24,10 +24,10 @@
 
 package edu.brandeis.cs.nlp.mae.controller.action;
 
+import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 
 /**
  * Created by krim on 4/18/2016.
+ * Launches a separate IAA calculator window, using current loaded DTD.
  */
 public class LaunchIAACalc extends MaeActionI {
 

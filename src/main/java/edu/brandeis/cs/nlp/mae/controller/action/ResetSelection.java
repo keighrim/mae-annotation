@@ -30,10 +30,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Un-select all text. Used in arg-select or discont-tagging mode
  */
-public class ResetSelection extends MenuActionI {
+public class ResetSelection extends MaeActionI {
 
     public ResetSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

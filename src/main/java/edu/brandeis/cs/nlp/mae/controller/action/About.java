@@ -31,10 +31,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Created by krim on 1/27/2016.
+ * Pops up 'about' dialog.
  */
-public class About extends MenuActionI {
+public class About extends MaeActionI {
 
     public About(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

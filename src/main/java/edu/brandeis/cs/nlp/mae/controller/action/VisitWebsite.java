@@ -35,10 +35,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Opens a new web browser tab of the project website. The address is kept in string
+ * registry class.
  */
-public class VisitWebsite extends MenuActionI {
+public class VisitWebsite extends MaeActionI {
 
     public VisitWebsite(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

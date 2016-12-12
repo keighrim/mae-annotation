@@ -285,10 +285,10 @@ class MenuController extends MaeControllerI {
     }
 
     private JMenu prepareDisplayMenu() {
-        MaeActionI increaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
-        MaeActionI decreaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
-        MaeActionI resetFontSizeAction = new ChangeFontsize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
-        MaeActionI presentation = new ChangeFontsize(MENUITEM_BIGFONT, null, null, null, getMainController());
+        MaeActionI increaseFontSizeAction = new ChangeFontSize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
+        MaeActionI decreaseFontSizeAction = new ChangeFontSize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
+        MaeActionI resetFontSizeAction = new ChangeFontSize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
+        MaeActionI presentation = new ChangeFontSize(MENUITEM_BIGFONT, null, null, null, getMainController());
 
         JMenu menu = new JMenu(MENU_DISPLAY);
         menu.setMnemonic(MENU_DISPLAY.charAt(0));

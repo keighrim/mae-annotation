@@ -31,8 +31,10 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 /**
+ * Loads a new DTD definition. This will wipe out all open documents, so users are
+ * warning with unsaved-changes.
  */
-public class LoadTask extends MenuActionI {
+public class LoadTask extends MaeActionI {
 
     public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

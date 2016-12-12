@@ -30,10 +30,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Pops up a dialog to set an argument to a link tag.
  */
-public class SetArgument extends MenuActionI {
+public class SetArgument extends MaeActionI {
 
     public SetArgument(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

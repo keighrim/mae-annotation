@@ -33,10 +33,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Copies a selected tag from a raw annotation to gold standard.
+ * Can be an extent tag or a link.
  */
-public class CopyTag extends MenuActionI {
+public class CopyTag extends MaeActionI {
 
     public CopyTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

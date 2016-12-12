@@ -30,10 +30,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Listener for the File menu; determines what action to take for loading/saving
- * documents.
+ * Closes current document.
  */
-public class CloseFile extends MenuActionI {
+public class CloseFile extends MaeActionI {
 
     public CloseFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

@@ -31,10 +31,10 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 /**
- * Listener for the File menu; determines what action to take for loading/saving
- * documents.
+ * Opens a new document file (not DTD definition). File name is passed by the action
+ * command.
  */
-public class OpenFile extends MenuActionI {
+public class OpenFile extends MaeActionI {
 
     public OpenFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

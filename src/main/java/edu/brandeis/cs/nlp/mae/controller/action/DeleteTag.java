@@ -32,10 +32,11 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Deletes one or more tags. Deleting an extent tag will also delete all link tags
+ * using that extent tag as their arguments. Thus users are warned before performing
+ * any deletions.
  */
-public class DeleteTag extends MenuActionI {
+public class DeleteTag extends MaeActionI {
 
     public DeleteTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

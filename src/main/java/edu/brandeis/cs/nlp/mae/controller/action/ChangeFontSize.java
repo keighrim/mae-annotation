@@ -27,14 +27,34 @@ package edu.brandeis.cs.nlp.mae.controller.action;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 /**
- * Created by krim on 12/31/2015.
+ * Change size of fonts in main window panels.
  */
-public abstract class MenuActionI extends MaeActionI {
+public class ChangeFontSize extends MaeActionI {
 
-    public MenuActionI(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public ChangeFontSize(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        switch (event.getActionCommand()) {
+            case "+":
+                getMainController().increaseTextFontSize();
+                break;
+            case "-":
+                getMainController().decreaseTextFontSize();
+                break;
+            case "0":
+                getMainController().resetFontSize();
+                break;
+            case "++":
+                getMainController().presentation();
+
+        }
+    }
 }
+
+

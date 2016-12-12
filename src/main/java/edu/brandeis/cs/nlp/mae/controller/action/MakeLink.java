@@ -32,10 +32,11 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Creates a new link tag with selected arguments. Selected arguments are not passed
+ * as arguments, but provided from main controller. That being said, this action is
+ * called from text pane context menu in arg-select mode.
  */
-public class MakeLink extends MenuActionI {
+public class MakeLink extends MaeActionI {
 
     public MakeLink(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

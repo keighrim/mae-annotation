@@ -30,10 +30,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Deselects last text selection. Used in arg-select and discont-tagging modes.
  */
-public class UndoLastSelection extends MenuActionI {
+public class UndoLastSelection extends MaeActionI {
 
     public UndoLastSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);

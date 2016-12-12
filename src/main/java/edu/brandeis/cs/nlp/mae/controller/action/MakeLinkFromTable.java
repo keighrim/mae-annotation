@@ -32,11 +32,14 @@ import edu.brandeis.cs.nlp.mae.model.TagType;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by krim on 1/23/2016.
+ * Creates a new link tag with selected rows from main table pane. Rows are passed
+ * by the action command - main controller does not keep the selection.
  */
 public class MakeLinkFromTable extends MakeLink {
      public MakeLinkFromTable(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
@@ -47,15 +50,8 @@ public class MakeLinkFromTable extends MakeLink {
     public void actionPerformed(ActionEvent event) {
         try {
             String[] commands = event.getActionCommand().split(MaeStrings.SEP);
-            TagType linkType = null;
-            List<String> tids = new LinkedList<>();
-            for (int i = 0; i < commands.length; i++ ) {
-                if (i == 0) {
-                    linkType = getMainController().getDriver().getTagTypeByName(commands[i]);
-                } else {
-                    tids.add(commands[i]);
-                }
-            }
+            TagType linkType = getMainController().getDriver().getTagTypeByName(commands[0]);
+            List<String> tids = Arrays.asList(commands).subList(1, commands.length);
 
             List<ExtentTag> tags = new LinkedList<>();
             for (String tid : tids) {

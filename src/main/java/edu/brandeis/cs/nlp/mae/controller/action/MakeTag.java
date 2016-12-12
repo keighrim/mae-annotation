@@ -31,10 +31,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Called when the user selects the option to delete the highlighted rows from
- * the table in view.  Rows are removed both from the database and the table.
+ * Creates an extent tags. The tag type to create is passed by the action command.
  */
-public class MakeTag extends MenuActionI {
+public class MakeTag extends MaeActionI {
 
     public MakeTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
