@@ -40,7 +40,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * Created by krim on 12/15/2015.
+ * Accessor for Extent Tag DB table
  */
 public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
 
@@ -83,24 +83,18 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
         refresh(tag);
         final Collection<Attribute> atts = tag.getAttributes();
         final Collection<CharIndex> anchors = tag.getSpans();
-        super.callBatchTasks(new Callable<Void>() {
-            public Void call() throws Exception {
-                atts.forEach(attDao::createOrUpdate);
-                anchors.forEach(charIndexDao::createOrUpdate);
-                /*
-                if (atts != null) {
-                    for (Attribute att : atts) {
-                        attDao.createOrUpdate(att);
-                    }
+        super.callBatchTasks((Callable<Void>) () -> {
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.createOrUpdate(att);
                 }
-                if (anchors != null) {
-                    for (CharIndex anchor : anchors) {
-                        charIndexDao.createOrUpdate(anchor);
-                    }
-                }
-                */
-                return null;
             }
+            if (anchors != null) {
+                for (CharIndex anchor : anchors) {
+                    charIndexDao.createOrUpdate(anchor);
+                }
+            }
+            return null;
         });
         return super.update(tag);
     }
@@ -110,16 +104,14 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
         refresh(tag);
         final Collection<Attribute> atts = tag.getAttributes();
         final Collection<CharIndex> anchors = tag.getSpans();
-        super.callBatchTasks(new Callable<Void>() {
-            public Void call() throws Exception {
-                for (Attribute att : atts) {
-                    attDao.delete(att);
-                }
-                for (CharIndex anchor : anchors) {
-                    charIndexDao.delete(anchor);
-                }
-                return null;
+        super.callBatchTasks((Callable<Void>) () -> {
+            for (Attribute att : atts) {
+                attDao.delete(att);
             }
+            for (CharIndex anchor : anchors) {
+                charIndexDao.delete(anchor);
+            }
+            return null;
         });
         return super.delete(tag);
     }
