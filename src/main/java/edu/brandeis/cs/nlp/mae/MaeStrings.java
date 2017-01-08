@@ -66,6 +66,7 @@ public class MaeStrings {
     public final static String ADJ_DB_URL = DB_DRIVER + ADJ_DB_FILE;
     public final static String TEST_DB_FILE = "test.db";
     public final static String TEST_DB_URL = DB_DRIVER + TEST_DB_FILE;
+    public final static String DEF_GS_FILE = "goldstandard.xml";
 
     /* Internal data structures and actionEvents */
     public final static String COMBO_DELIMITER = " - ";
@@ -95,7 +96,6 @@ public class MaeStrings {
     public final static String ARG_IDCOL_SUF = "ID";
     public final static String ARG_TEXTCOL_SUF = "Text";
 
-
     /* Status bar messages */
     public static final String WAIT_MESSAGE = "Processing...";
     public final static String SB_NODTD = "No DTD loaded.";
@@ -117,7 +117,6 @@ public class MaeStrings {
     public final static String SB_MARGS_NOTAG = SB_NOTAG;
     public final static String SB_ADJUD_PREFIX = "ADJUDICATING!";
     public final static String SB_ADJUD_TAG = " %d %s Tags Selected.";
-
 
     /* main menus */
     public final static String MENU_FILE = "File";
@@ -169,6 +168,12 @@ public class MaeStrings {
     public final static String SETARG_SEL_TAGTYPE = "Select Link Type";
     public final static String SETARG_SEL_ARGTYPE = "Select Argument Type";
     public final static String SETARG_SEL_TAG = "Select Link Tag";
+    public final static String ADJUD_DIALOG_TITLE = "Start Adjudication";
+    public final static String START_ADJUD = "This will start an adjudication.";
+    public final static String START_ADJUD_NEW_GS_OPTION = "Start with an empty gold-standard";
+    public final static String START_ADJUD_LOAD_GS_OPTION = "Load a gold-standard file";
+    public final static String UNDERSPEC_TITLE = "Missing Something";
+    public final static String UNDERSPEC_MSG = "<html><p align=\"center\">You have %d underspecified %s! <br/> Continue?</p></html>";
 
     /* general messages */
     public final static String NO_TASK_IND = "No DTD";
@@ -176,6 +181,7 @@ public class MaeStrings {
     public final static String NO_TASK_GUIDE = "Start a new task by loading a DTD.";
     public final static String NO_FILE_GUIDE = "Start a new annotation by opening a file. \n\nFile can be a plain text file that contains the primary document, or an XML document with stand-alone annotations.";
     public static final String UNSAVED_INDICATOR = "*";
+    public static final String CANCEL = "Cancel";
 
     /* popup messages */
     public static final String INFO_POPUP_TITLE = "You need to know...";

@@ -1126,7 +1126,7 @@ public class MaeMainController extends JPanel {
 
     public void setAsArgumentFromDialog(String argumentTid) {
         try {
-            getDialogs().setAsArgument(argumentTid);
+            getDialogs().setAsArgumentDialog(argumentTid);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -1135,7 +1135,7 @@ public class MaeMainController extends JPanel {
 
     public LinkTag createLinkFromDialog(TagType linkType, List<ExtentTag> candidates) {
         try {
-            LinkTag link = getDialogs().createLink(linkType, candidates);
+            LinkTag link = getDialogs().createLinkDialog(linkType, candidates);
             return link;
         } catch (MaeDBException e) {
             showError(e);
