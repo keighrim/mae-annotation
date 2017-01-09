@@ -45,7 +45,8 @@ import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
 import static edu.brandeis.cs.nlp.mae.controller.MaeMainController.*;
 
 /**
- * Created by krim on 1/2/2016.
+ * MenuController handles items in the main menu bar as well as context menu.
+ * All action events are wrapped into menu items via MaeActionI classes
  */
 class MenuController extends MaeControllerI {
 
@@ -180,7 +181,7 @@ class MenuController extends MaeControllerI {
         JMenuItem saveXML = new JMenuItem(saveXMLAction);
         JMenuItem closeFile = new JMenuItem(closeFileAction);
         JMenuItem adjudMode = new JMenuItem(adjudModeAction);
-        adjudMode.setActionCommand(Integer.toString(START_ADJUD));
+        adjudMode.setActionCommand(Integer.toString(MODE_ADJUD));
         boolean taskLoaded = getMainController().isTaskLoaded();
         boolean fileLoaded = getMainController().isDocumentOpen();
         openFile.setEnabled(taskLoaded);

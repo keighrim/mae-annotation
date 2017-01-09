@@ -52,7 +52,7 @@ public class ModeSwitch extends MaeActionI {
             case MaeMainController.MODE_NORMAL:
                 getMainController().switchToNormalMode();
                 break;
-            case MaeMainController.START_ADJUD:
+            case MaeMainController.MODE_ADJUD:
                 getMainController().switchToAdjudMode();
                 break;
         }

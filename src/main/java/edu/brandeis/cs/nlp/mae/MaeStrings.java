@@ -31,9 +31,7 @@ import java.util.Calendar;
 import java.util.Properties;
 
 /**
- * Contains string resources for MAE main
- * Created by krim on 2/17/2015.
- * @author Keigh Rim
+ * Contains string resources for MAE
  *
  */
 public class MaeStrings {
@@ -169,7 +167,7 @@ public class MaeStrings {
     public final static String SETARG_SEL_ARGTYPE = "Select Argument Type";
     public final static String SETARG_SEL_TAG = "Select Link Tag";
     public final static String ADJUD_DIALOG_TITLE = "Start Adjudication";
-    public final static String START_ADJUD = "This will start an adjudication.";
+    public final static String START_ADJUD_MSG = "This will start an adjudication.";
     public final static String START_ADJUD_NEW_GS_OPTION = "Start with an empty gold-standard";
     public final static String START_ADJUD_LOAD_GS_OPTION = "Load a gold-standard file";
     public final static String UNDERSPEC_TITLE = "Missing Something";

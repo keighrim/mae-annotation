@@ -56,14 +56,19 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Created by krim on 12/30/2015.
+ * MainController handles user interactions by coordinates all GUI controllers.
+ * GUI is mainly made of two parts: <b>TextPanel</b> (at the top half), <b>TablePanel</b> (at the bottom half).
+ * As well as miscellaneous componenets such as <b>Menu bar</b>, <b>Status bar</b> and <b>Dialogs/Popups</b>.
+ * All GUI controllers subclasse from MaeControllerI which has their own "view" associated.
+ * However, MainController directly subclasses JPanel to be initiated and embedded into JFrame when the program starts.
+ * Also note that DialogController does not subclass MaeControllerI, since it doesn't need a "view".
  */
 public class MaeMainController extends JPanel {
 
     public static final int MODE_NORMAL = 0;
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
-    public static final int START_ADJUD = 9;
+    public static final int MODE_ADJUD = 9;
     private static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
     private int mode;
 
@@ -126,19 +131,16 @@ public class MaeMainController extends JPanel {
 
             @Override
             public void windowClosing(WindowEvent winEvt) {
+                boolean allChecked = true;
                 if (isDocumentOpen()) {
-                    boolean allChecked = true;
                     for (int i = 0; i < getDrivers().size(); i++) {
-                        if (!showUnsavedChangeWarningAt(i) || !showIncompleteTagsWarningAt(i, false)) {
+                        if (!showUnsavedChangeWarningAt(i)) {
                             allChecked = false;
                             break;
                         }
                     }
-                    if (allChecked) {
-                        wipeDrivers();
-                        System.exit(0);
-                    }
-                } else {
+                }
+                if (allChecked) {
                     wipeDrivers();
                     System.exit(0);
                 }

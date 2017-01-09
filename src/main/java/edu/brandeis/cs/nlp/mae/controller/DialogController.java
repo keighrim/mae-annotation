@@ -45,8 +45,6 @@ import java.util.List;
 
 /**
  * All popups and supplement sub windows are managed within this class
- *
- * Created by krim on 1/1/2016.
  */
 class DialogController {
     private MaeMainController mainController;
@@ -181,7 +179,7 @@ class DialogController {
                 MaeStrings.START_ADJUD_LOAD_GS_OPTION,
                 MaeStrings.CANCEL};
         int response = JOptionPane.showOptionDialog(null,
-                MaeStrings.START_ADJUD,
+                MaeStrings.START_ADJUD_MSG,
                 MaeStrings.ADJUD_DIALOG_TITLE,
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
