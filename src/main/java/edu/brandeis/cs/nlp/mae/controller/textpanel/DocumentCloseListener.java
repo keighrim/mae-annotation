@@ -22,38 +22,43 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.textpanel;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.view.TextPanelView;
 
-import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.File;
+import java.awt.event.ActionListener;
 
 /**
- * Loads a new DTD definition. This will wipe out all open documents, so users are
- * warning with unsaved-changes.
+ * Created by krim on 1/9/2017.
  */
-public class LoadTask extends MaeActionI {
+class DocumentCloseListener implements ActionListener {
+    private MaeMainController mainController;
 
-    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
+    DocumentCloseListener(MaeMainController mainController) {
+        this.mainController = mainController;
     }
 
     @Override
-    public void actionPerformed(ActionEvent event) {
-        if (getMainController().showAllUnsavedChangeWarning()) {
-            try {
-                File file = getMainController().selectSingleFile("", false);
-                if (file != null) {
-                    getMainController().setupScheme(file, true);
-                }
-
-            } catch (Exception e) {
-                catchException(e);
+    public void actionPerformed(ActionEvent e) {
+        TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
+        if (title.isEnabled()) {
+            int tabIdx = title.getTabIndex();
+            if (mainController.showIncompleteTagsWarningAt(tabIdx, false) &&
+                    mainController.showUnsavedChangeWarningAt(tabIdx)) {
+                mainController.closeDocumentAt(title.getTabIndex());
             }
         }
+
     }
 
+    TextPanelView.DocumentTabTitle getProperParent(Component component) {
+        if (component instanceof TextPanelView.DocumentTabTitle) {
+            return (TextPanelView.DocumentTabTitle) component;
+        } else {
+            return getProperParent(component.getParent());
+        }
+    }
 }
-

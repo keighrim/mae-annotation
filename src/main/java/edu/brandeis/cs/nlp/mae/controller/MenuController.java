@@ -26,7 +26,9 @@ package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.controller.action.*;
+import edu.brandeis.cs.nlp.mae.controller.menuaction.*;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TablePanelController;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TagTableModel;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
@@ -118,7 +120,7 @@ class MenuController extends MaeControllerI {
     }
 
     @Override
-    void addListeners() throws MaeException {
+    protected void addListeners() throws MaeException {
         // no listeners involved
 
     }
@@ -656,7 +658,7 @@ class MenuController extends MaeControllerI {
 
         String rowS = selected == 1 ? "row" : "rows";
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
-        TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
+        TagTableModel model = (TagTableModel) table.getModel();
 
         int selectedModelRow = table.convertRowIndexToModel(table.getSelectedRow());
         if (!getMainController().isAdjudicating()) {
@@ -694,20 +696,20 @@ class MenuController extends MaeControllerI {
         return modelIndices;
     }
 
-    private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TagTableModel model, int selectedRow) throws MaeDBException {
         contextMenu.add(getSingleDelete(model, selectedRow));
         if (model.getAssociatedTagType().isExtent()) {
             contextMenu.add(getSingleSetArg(model, selectedRow));
         }
     }
 
-    private JMenuItem getSingleDelete(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private JMenuItem getSingleDelete(TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return getSingleDelete(tag);
     }
 
-    private JMenu getPluralDelete(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
+    private JMenu getPluralDelete(TagTableModel model, int[] selectedRows) throws MaeDBException {
         List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
             tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
@@ -715,7 +717,7 @@ class MenuController extends MaeControllerI {
         return getPluralDelete(tags);
     }
 
-    private JMenu createMakeLinkFromTableMenu(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
+    private JMenu createMakeLinkFromTableMenu(TagTableModel model, int[] selectedRows) throws MaeDBException {
         JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
         makeLinkFromTableMenu.setMnemonic(getMakeTagMenuMnemonic(CAT_LTAG_FROM_TABLE));
         String tids = MaeStrings.SEP;
@@ -732,7 +734,7 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem getSingleSetArg(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private JMenuItem getSingleSetArg(TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return getSingleSetArg((ExtentTag) tag);

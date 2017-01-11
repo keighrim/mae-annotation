@@ -22,9 +22,12 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.textpanel;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.MaeControlException;
+import edu.brandeis.cs.nlp.mae.controller.MaeControllerI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
@@ -38,23 +41,16 @@ import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TextPanelView;
 
 import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
 /**
  * Created by krim on 12/31/2015.
  */
-class TextPanelController extends MaeControllerI {
+public class TextPanelController extends MaeControllerI {
 
     TextPanelView view;
 
@@ -65,7 +61,7 @@ class TextPanelController extends MaeControllerI {
     private int currentFontSize = DEFAULT_FONT_SIZE;
 
 
-    TextPanelController(MaeMainController mainController) throws MaeDBException {
+    public TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
@@ -75,7 +71,7 @@ class TextPanelController extends MaeControllerI {
     }
 
     @Override
-    protected TextPanelView getView() {
+    public TextPanelView getView() {
         return view;
     }
 
@@ -93,7 +89,7 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    void repaintFGColor(Tag tag) throws MaeDBException {
+    public void repaintFGColor(Tag tag) throws MaeDBException {
         if (tag.getTagtype().isExtent()) {
             assignFGColorOver(((ExtentTag) tag).getSpansAsList());
         } else {
@@ -118,9 +114,11 @@ class TextPanelController extends MaeControllerI {
     }
 
     @Override
-    void addListeners() {
-        getView().getDocumentPane().addCaretListener(new TextPanelCaretListener());
-        getView().getDocumentPane().addMouseListener(new TextPanelMouseListener());
+    protected void addListeners() {
+        getView().getDocumentPane().addCaretListener(
+                new TextPanelCaretListener(this, this.getMainController()));
+        getView().getDocumentPane().addMouseListener(
+                new TextPanelMouseListener(this.getMainController()));
     }
 
     void disableTabSwitchListener() {
@@ -138,13 +136,13 @@ class TextPanelController extends MaeControllerI {
         selected = spans;
     }
 
-    void clearSelection() {
+    public void clearSelection() {
         selectionHistory.clear();
         setSelection(new int[0]);
         removeAllBGColors();
     }
 
-    void clearCaret() {
+    public void clearCaret() {
         getView().getDocumentPane().setCaretPosition(0);
 
     }
@@ -193,7 +191,7 @@ class TextPanelController extends MaeControllerI {
         return SpanHandler.range(latest[0], latest[1]);
     }
 
-    int[] undoSelection() {
+    public int[] undoSelection() {
         if (selectionHistory.size() > 0) {
             int[] undoed = selectionHistory.remove(0);
             setSelection(SpanHandler.convertPairsToArray(selectionHistory));
@@ -203,17 +201,17 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    void addDocumentTab(String documentTitle, String documentText) throws MaeDBException {
+    public void addDocumentTab(String documentTitle, String documentText) throws MaeDBException {
         if (!getView().isAnyDocumentOpen()) {
             getView().initTabs();
         }
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
-        title.addCloseListener(new DocumentCloseListener());
+        title.addCloseListener(new DocumentCloseListener(this.getMainController()));
         getView().addTextTab(title, documentText, currentFontSize, !getMainController().isAdjudicating());
         addListeners();
         if (!getView().isAnyDocumentOpen()) {
-            getView().getTabs().addChangeListener(new TextPanelTabSwitchListener());
+            getView().getTabs().addChangeListener(new TextPanelTabSwitchListener(this.getMainController()));
             getView().setDocumentOpen(true);
         }
         if (getMainController().isAdjudicating()) {
@@ -225,10 +223,10 @@ class TextPanelController extends MaeControllerI {
 
     }
 
-    void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
+    public void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
-        title.addCloseListener(new DocumentCloseListener());
+        title.addCloseListener(new DocumentCloseListener(this.getMainController()));
         getView().addAdjudicationTab(title, goldText, currentFontSize);
         addListeners();
         for (int i = 1; i < tabs.getTabCount(); i++) {
@@ -240,7 +238,7 @@ class TextPanelController extends MaeControllerI {
 
     }
 
-    void removeAdjudicationTab() throws MaeDBException {
+    public void removeAdjudicationTab() throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         tabs.remove(0);
 
@@ -256,11 +254,11 @@ class TextPanelController extends MaeControllerI {
         return getView().getDocument();
     }
 
-    void closeDocumentTab(int i) {
+    public void closeDocumentTab(int i) {
         getView().getTabs().remove(i);
     }
 
-    void resetFontSize() {
+    public void resetFontSize() {
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setFontSize(attributeSet, DEFAULT_FONT_SIZE);
         currentFontSize = DEFAULT_FONT_SIZE;
@@ -268,21 +266,21 @@ class TextPanelController extends MaeControllerI {
 
     }
 
-    void increaseFontSize() {
+    public void increaseFontSize() {
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setFontSize(attributeSet, ++currentFontSize);
         getView().setTextFont(attributeSet);
 
     }
 
-    void decreaseFontSize() {
+    public void decreaseFontSize() {
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setFontSize(attributeSet, --currentFontSize);
         getView().setTextFont(attributeSet);
 
     }
 
-    void bigFontSize() {
+    public void bigFontSize() {
         SimpleAttributeSet attributeSet = new SimpleAttributeSet();
         StyleConstants.setFontSize(attributeSet, 36);
         getView().setTextFont(attributeSet);
@@ -300,7 +298,7 @@ class TextPanelController extends MaeControllerI {
     /**
      * add asterisk to windows title when file is changed
      */
-    void updateTabTitles(boolean colorToo) throws MaeDBException {
+    public void updateTabTitles(boolean colorToo) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
@@ -320,11 +318,11 @@ class TextPanelController extends MaeControllerI {
         return getView().getTabs().getSelectedIndex();
     }
 
-    Boolean isTextSelected() {
+    public Boolean isTextSelected() {
         return this.selected.length > 0;
     }
 
-    int[] getSelected() {
+    public int[] getSelected() {
         return selected;
     }
 
@@ -336,7 +334,7 @@ class TextPanelController extends MaeControllerI {
         return getView().getDocumentPane().getText();
     }
 
-    String getSelectedText() throws MaeControlException {
+    public String getSelectedText() throws MaeControlException {
         if (selected.length > 0) {
             return getTextIn(selected, false).replace("\n", " ");
         } else {
@@ -344,7 +342,7 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
+    public List<ExtentTag> getSelectedArgumentsInOrder() throws MaeDBException {
         LinkedList<ExtentTag> argsInOrder = new LinkedList<>();
         List<ExtentTag> surplusArgs = new LinkedList<>();
 
@@ -369,7 +367,7 @@ class TextPanelController extends MaeControllerI {
 
     }
 
-    String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
+    public String getTextIn(int[] spans, boolean trimWhitespaces) throws MaeControlException {
         if (spans != null && spans.length > 0) {
             return getTextIn(SpanHandler.convertArrayToPairs(spans), trimWhitespaces);
         }
@@ -418,7 +416,7 @@ class TextPanelController extends MaeControllerI {
         return text;
     }
 
-    void removeAllBGColors() {
+    public void removeAllBGColors() {
         getView().getHighlighter().removeAllHighlights();
 
     }
@@ -471,7 +469,7 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    void assignOverlappingColorAt(Integer location, Color srcColor, boolean fullOverlap) {
+    public void assignOverlappingColorAt(Integer location, Color srcColor, boolean fullOverlap) {
         DefaultStyledDocument styleDoc = getDocument();
         try {
             if (location == 0 || !Character.isHighSurrogate(styleDoc.getText(location - 1, 1).charAt(0))) {
@@ -481,7 +479,7 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    void assignAllFGColor() throws MaeDBException {
+    public void assignAllFGColor() throws MaeDBException {
         massivelyAssignFGColors(getDriver().getAllAnchors());
 
     }
@@ -490,7 +488,7 @@ class TextPanelController extends MaeControllerI {
         massivelyAssignFGColors(getDriver().getAllAnchorsOfTagType(type));
     }
 
-    void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
+    public void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
         int locIndex = 0;
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
         Set<TagType> activeLinks = getMainController().getActiveLinkTags();
@@ -533,7 +531,7 @@ class TextPanelController extends MaeControllerI {
     }
 
 
-    void assignFGColorOver(List<Integer> locations) throws MaeDBException {
+    public void assignFGColorOver(List<Integer> locations) throws MaeDBException {
         int locIndex = 0;
         while (locIndex < locations.size()) {
             locIndex += assignFGColorAt(locations.get(locIndex));
@@ -574,7 +572,7 @@ class TextPanelController extends MaeControllerI {
         return setFGColorAtLocation(c, location, plural, argument);
     }
 
-    void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
+    public void addBGColorOver(int[] spans, Highlighter.HighlightPainter painter) throws MaeControlException {
         if (spans.length == 0) {
             return;
         }
@@ -589,100 +587,5 @@ class TextPanelController extends MaeControllerI {
         }
     }
 
-    private class TextPanelMouseListener extends MouseAdapter {
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                createAndShowContextMenu(e);
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                createAndShowContextMenu(e);
-            }
-        }
-
-        void createAndShowContextMenu(MouseEvent e) {
-            getMainController().createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
-
-        }
-
-    }
-
-    private class TextPanelCaretListener implements CaretListener {
-
-        boolean acceptingSingleClick() {
-            return getMainController().getMode() == MaeMainController.MODE_ARG_SEL;
-
-        }
-
-        @Override
-        public void caretUpdate(CaretEvent e) {
-
-            try {
-                if (e.getDot() != e.getMark()) { // that is, mouse is dragged and text is selected
-                    addDraggedSelection(e.getDot(), e.getMark());
-                } else if (getMainController().getMode() == MaeMainController.MODE_MULTI_SPAN) {
-                    // MSPAN mode always ignore single click
-                } else {
-                    if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                        clearSelection(); // single click will clear out prev selection
-                    }
-                    if (acceptingSingleClick()) {
-                        addSelection(new int[]{e.getDot(), e.getDot() + 1});
-                    }
-                }
-            } catch (MaeDBException ex) {
-                getMainController().showError(ex);
-            }
-            repaintBGColor();
-            getMainController().propagateSelectionFromTextPanel();
-        }
-
-        void addDraggedSelection(int dot, int mark) throws MaeDBException {
-            int start = Math.min(dot, mark);
-            int end = Math.max(dot, mark);
-            if (getMainController().getMode() == MaeMainController.MODE_NORMAL) {
-                // in normal mode, clear selection before adding a new selection
-                clearSelection();
-            }
-            addSelection(new int[]{start, end});
-        }
-    }
-
-    private class DocumentCloseListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
-            if (title.isEnabled()) {
-                int tabIdx = title.getTabIndex();
-                if (getMainController().showIncompleteTagsWarningAt(tabIdx, false) &&
-                        getMainController().showUnsavedChangeWarningAt(tabIdx)) {
-                    getMainController().closeDocumentAt(title.getTabIndex());
-                }
-            }
-
-        }
-        TextPanelView.DocumentTabTitle getProperParent(Component component) {
-            if (component instanceof TextPanelView.DocumentTabTitle) {
-                return (TextPanelView.DocumentTabTitle) component;
-            } else {
-                return getProperParent(component.getParent());
-            }
-        }
-    }
-
-    private class TextPanelTabSwitchListener implements ChangeListener {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            if (!getMainController().isAdjudicating()) {
-                getMainController().switchAnnotationDocument(((JTabbedPane) e.getSource()).getSelectedIndex());
-            }
-
-        }
-    }
 }
 

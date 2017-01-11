@@ -22,25 +22,38 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 
 /**
- * Deselects last text selection. Used in arg-select and discont-tagging modes.
+ * Loads a new DTD definition. This will wipe out all open documents, so users are
+ * warning with unsaved-changes.
  */
-public class UndoLastSelection extends MaeActionI {
+public class LoadTask extends MaeActionI {
 
-    public UndoLastSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        getMainController().undoLastSelection();
+    public void actionPerformed(ActionEvent event) {
+        if (getMainController().showAllUnsavedChangeWarning()) {
+            try {
+                File file = getMainController().selectSingleFile("", false);
+                if (file != null) {
+                    getMainController().setupScheme(file, true);
+                }
+
+            } catch (Exception e) {
+                catchException(e);
+            }
+        }
     }
+
 }
 

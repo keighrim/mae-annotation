@@ -22,36 +22,22 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeIOException;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.FileNotFoundException;
+import edu.brandeis.cs.nlp.mae.model.TagType;
 
 /**
- * Created by krim on 4/18/2016.
- * Launches a separate IAA calculator window, using current loaded DTD.
+ * Creates a table model that is not editable at all.
+ * This is only used to create the tab for all extent tags during annotation.
  */
-public class LaunchIAACalc extends MaeActionI {
+class UneditableTableModel extends TagTableModel {
 
-    public LaunchIAACalc(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
+    UneditableTableModel(TablePanelController tablePanelController, TagType tagType) {
+        super(tablePanelController, tagType);
     }
 
     @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        try {
-            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
-            iaaCalc.pack();
-            iaaCalc.setVisible(true);
-
-        } catch (FileNotFoundException | MaeIOException | MaeDBException e) {
-            getMainController().showError(e);
-        }
+    public boolean isCellEditable(int row, int col) {
+        return false;
     }
 }

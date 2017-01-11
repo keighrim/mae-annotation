@@ -22,39 +22,36 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 
 /**
- * Change size of fonts in main window panels.
+ * Created by krim on 12/30/2015.
+ * Provide interface for actions associated to menu items.
  */
-public class ChangeFontSize extends MaeActionI {
+public abstract class MaeActionI extends AbstractAction {
 
-    public ChangeFontSize(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
+    protected MaeMainController mainController;
+
+    public MaeActionI(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController mainController) {
+        super(text, icon);
+        if (hotkey != null) {
+            putValue(ACCELERATOR_KEY, hotkey);
+        }
+        if (mnemonic != null) {
+            putValue(MNEMONIC_KEY, mnemonic);
+        }
+        this.mainController = mainController;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        switch (event.getActionCommand()) {
-            case "+":
-                getMainController().increaseTextFontSize();
-                break;
-            case "-":
-                getMainController().decreaseTextFontSize();
-                break;
-            case "0":
-                getMainController().resetFontSize();
-                break;
-            case "++":
-                getMainController().presentation();
+    protected MaeMainController getMainController() {
+        return mainController;
+    }
 
-        }
+    protected void catchException(Exception e) {
+        getMainController().showError(e);
     }
 }
-
-

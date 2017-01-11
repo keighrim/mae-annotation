@@ -26,6 +26,8 @@ package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TablePanelController;
+import edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
@@ -395,7 +397,7 @@ public class MaeMainController extends JPanel {
 
     }
 
-    synchronized void updateNotificationArea() {
+    public synchronized void updateNotificationArea() {
         if (temporaryNotificationTimer != null && temporaryNotificationTimer.isRunning()) {
             temporaryNotificationTimer.stop();
         }

@@ -22,35 +22,35 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.TagType;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.io.File;
 
 /**
- * Opens a new document file (not DTD definition). File name is passed by the action
- * command.
+ * Creates a new link tag with selected arguments. Selected arguments are not passed
+ * as arguments, but provided from main controller. That being said, this action is
+ * called from text pane context menu in arg-select mode.
  */
-public class OpenFile extends MaeActionI {
+public class MakeLink extends MaeActionI {
 
-    public OpenFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public MakeLink(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
         try {
-            File file = getMainController().selectSingleFile("", false);
-            if (file != null) {
-                getMainController().addDocument(file);
-            }
-
-        } catch (Exception e) {
+            TagType linkType = getMainController().getDriver().getTagTypeByName(event.getActionCommand());
+            getMainController().createLinkFromDialog(linkType, getMainController().getSelectedArguments());
+        } catch (MaeDBException e) {
             catchException(e);
         }
+
     }
 
 }

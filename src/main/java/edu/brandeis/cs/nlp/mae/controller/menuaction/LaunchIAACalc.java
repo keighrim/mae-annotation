@@ -22,25 +22,36 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
+import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.io.FileNotFoundException;
 
 /**
- * Pops up a dialog to set an argument to a link tag.
+ * Created by krim on 4/18/2016.
+ * Launches a separate IAA calculator window, using current loaded DTD.
  */
-public class SetArgument extends MaeActionI {
+public class LaunchIAACalc extends MaeActionI {
 
-    public SetArgument(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public LaunchIAACalc(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
-    public void actionPerformed(ActionEvent event) {
-        getMainController().setAsArgumentFromDialog(event.getActionCommand());
+    public void actionPerformed(ActionEvent actionEvent) {
+        try {
+            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
+            iaaCalc.pack();
+            iaaCalc.setVisible(true);
+
+        } catch (FileNotFoundException | MaeIOException | MaeDBException e) {
+            getMainController().showError(e);
+        }
     }
 }
-

@@ -22,40 +22,30 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.model.Tag;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
- * Copies a selected tag from a raw annotation to gold standard.
- * Can be an extent tag or a link.
+ * Created by krim on 1/11/2017.
  */
-public class CopyTag extends MaeActionI {
+class AdjudicationTabSwitchListener implements ChangeListener {
+    private TablePanelController tablePanelController;
 
-    public CopyTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
+    public AdjudicationTabSwitchListener(TablePanelController tablePanelController) {
+        this.tablePanelController = tablePanelController;
     }
 
     @Override
-    public void actionPerformed(ActionEvent event) {
+    public void stateChanged(ChangeEvent e) {
         try {
-            String[] srcAndTid = event.getActionCommand().split(MaeStrings.SEP);
-            if (getMainController().getDriver().getAnnotationFileName().endsWith(srcAndTid[0])) {
-                getMainController().showError("Cannot copy a tag from itself!");
-                return;
-            }
-            Tag original = getMainController().getTagBySourceAndTid(srcAndTid[0], srcAndTid[1]);
-            getMainController().copyTag(original);
-        } catch (MaeDBException e) {
-            catchException(e);
+            tablePanelController.getMainController().switchAdjudicationTag();
+        } catch (MaeDBException ex) {
+            tablePanelController.getMainController().showError(ex);
         }
+
     }
-
 }
-

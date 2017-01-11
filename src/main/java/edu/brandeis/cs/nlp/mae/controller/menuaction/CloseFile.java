@@ -22,29 +22,27 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Creates an extent tags. The tag type to create is passed by the action command.
+ * Closes current document.
  */
-public class MakeTag extends MaeActionI {
+public class CloseFile extends MaeActionI {
 
-    public MakeTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public CloseFile(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        try {
-            getMainController().createTagFromMenu(getMainController().getDriver().getTagTypeByName(event.getActionCommand()));
-        } catch (MaeDBException e) {
-            catchException(e);
+        if (getMainController().showCurrentUnsavedChangeWarning() &&
+                getMainController().showCurrentDocumentIncompleteTagsWarning(false)) {
+            getMainController().closeCurrentDocument();
         }
     }
 

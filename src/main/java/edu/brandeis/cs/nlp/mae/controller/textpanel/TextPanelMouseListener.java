@@ -22,36 +22,41 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.textpanel;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
-import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
- * Created by krim on 12/30/2015.
- * Provide interface for actions associated to menu items.
+ * Created by krim on 1/9/2017.
  */
-public abstract class MaeActionI extends AbstractAction {
+class TextPanelMouseListener extends MouseAdapter {
 
-    protected MaeMainController mainController;
+    private MaeMainController mainController;
 
-    public MaeActionI(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController mainController) {
-        super(text, icon);
-        if (hotkey != null) {
-            putValue(ACCELERATOR_KEY, hotkey);
-        }
-        if (mnemonic != null) {
-            putValue(MNEMONIC_KEY, mnemonic);
-        }
+    TextPanelMouseListener(MaeMainController mainController) {
         this.mainController = mainController;
     }
 
-    protected MaeMainController getMainController() {
-        return mainController;
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            createAndShowContextMenu(e);
+        }
     }
 
-    protected void catchException(Exception e) {
-        getMainController().showError(e);
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            createAndShowContextMenu(e);
+        }
     }
+
+    private void createAndShowContextMenu(MouseEvent e) {
+        mainController.createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
+
+    }
+
 }

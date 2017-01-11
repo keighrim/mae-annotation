@@ -54,7 +54,7 @@ class StatusBarController extends MaeControllerI {
     }
 
     @Override
-    void addListeners() {
+    protected void addListeners() {
         // no listeners involved
 
     }

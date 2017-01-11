@@ -22,36 +22,45 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
+import edu.brandeis.cs.nlp.mae.MaeException;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Creates a new link tag with selected arguments. Selected arguments are not passed
- * as arguments, but provided from main controller. That being said, this action is
- * called from text pane context menu in arg-select mode.
+ * Created by krim on 1/23/2016.
+ * Creates a new link tag with selected rows from main table pane. Rows are passed
+ * by the action command - main controller does not keep the selection.
  */
-public class MakeLink extends MaeActionI {
-
-    public MakeLink(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+public class MakeLinkFromTable extends MakeLink {
+     public MakeLinkFromTable(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
         try {
-            TagType linkType = getMainController().getDriver().getTagTypeByName(event.getActionCommand());
-            getMainController().createLinkFromDialog(linkType, getMainController().getSelectedArguments());
-        } catch (MaeDBException e) {
+            String[] commands = event.getActionCommand().split(MaeStrings.SEP);
+            TagType linkType = getMainController().getDriver().getTagTypeByName(commands[0]);
+            List<String> tids = Arrays.asList(commands).subList(1, commands.length);
+
+            List<ExtentTag> tags = new LinkedList<>();
+            for (String tid : tids) {
+                tags.add((ExtentTag) getMainController().getTagByTid(tid));
+            }
+            getMainController().createLinkFromDialog(linkType, tags);
+        } catch (MaeException e) {
             catchException(e);
         }
 
     }
-
 }
-

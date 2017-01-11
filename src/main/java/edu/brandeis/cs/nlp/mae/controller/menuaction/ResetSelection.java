@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
@@ -30,34 +30,17 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Switches between annotation modes. Simply calls main controller's switch methods.
+ * Un-select all text. Used in arg-select or discont-tagging mode
  */
-public class ModeSwitch extends MaeActionI {
+public class ResetSelection extends MaeActionI {
 
-    public ModeSwitch(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public ResetSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
-    public void actionPerformed(ActionEvent event) {
-        int mode = Integer.parseInt(event.getActionCommand());
-        // TODO: 12/12/2016 will be more efficient to capsulate these in main controller?
-        switch (mode) {
-            case MaeMainController.MODE_ARG_SEL:
-                getMainController().switchToArgSelMode();
-                break;
-            case MaeMainController.MODE_MULTI_SPAN:
-                getMainController().switchToMSpanMode();
-                break;
-            case MaeMainController.MODE_NORMAL:
-                getMainController().switchToNormalMode();
-                break;
-            case MaeMainController.MODE_ADJUD:
-                getMainController().switchToAdjudMode();
-                break;
-        }
+    public void actionPerformed(ActionEvent actionEvent) {
+        getMainController().clearTextSelection();
     }
-
 }
-
 

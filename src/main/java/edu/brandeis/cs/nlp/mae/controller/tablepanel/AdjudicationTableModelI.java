@@ -22,40 +22,26 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
+import javax.swing.table.TableModel;
 
 /**
- * Deletes one or more tags. Deleting an extent tag will also delete all link tags
- * using that extent tag as their arguments. Thus users are warned before performing
- * any deletions.
+ * Interface for adjudication table models.
  */
-public class DeleteTag extends MaeActionI {
+interface AdjudicationTableModelI extends TableModel {
 
-    public DeleteTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
-        super(text, icon, hotkey, mnemonic, controller);
-    }
+    void setRowAsGoldTag(int row);
 
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        if (getMainController().showBatchDeletionWarning()) {
-            String[] tids = event.getActionCommand().split(MaeStrings.SEP);
-            for (String tid : tids) {
-                deleteTag(tid);
-            }
-        }
-    }
+    boolean isGoldTagRow(int row);
 
-    void deleteTag(String tid) {
-        Tag tag = getMainController().getTagByTid(tid);
-        getMainController().deleteTag(tag);
-    }
+    int getNonGoldRowCount();
+
+    void clearTable();
+
+    void populateTable(Tag tag) throws MaeDBException;
+
 }
-
-

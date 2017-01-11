@@ -22,45 +22,40 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.model.ExtentTag;
-import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
- * Created by krim on 1/23/2016.
- * Creates a new link tag with selected rows from main table pane. Rows are passed
- * by the action command - main controller does not keep the selection.
+ * Deletes one or more tags. Deleting an extent tag will also delete all link tags
+ * using that extent tag as their arguments. Thus users are warned before performing
+ * any deletions.
  */
-public class MakeLinkFromTable extends MakeLink {
-     public MakeLinkFromTable(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+public class DeleteTag extends MaeActionI {
+
+    public DeleteTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        try {
-            String[] commands = event.getActionCommand().split(MaeStrings.SEP);
-            TagType linkType = getMainController().getDriver().getTagTypeByName(commands[0]);
-            List<String> tids = Arrays.asList(commands).subList(1, commands.length);
-
-            List<ExtentTag> tags = new LinkedList<>();
+        if (getMainController().showBatchDeletionWarning()) {
+            String[] tids = event.getActionCommand().split(MaeStrings.SEP);
             for (String tid : tids) {
-                tags.add((ExtentTag) getMainController().getTagByTid(tid));
+                deleteTag(tid);
             }
-            getMainController().createLinkFromDialog(linkType, tags);
-        } catch (MaeException e) {
-            catchException(e);
         }
+    }
 
+    void deleteTag(String tid) {
+        Tag tag = getMainController().getTagByTid(tid);
+        getMainController().deleteTag(tag);
     }
 }
+
+

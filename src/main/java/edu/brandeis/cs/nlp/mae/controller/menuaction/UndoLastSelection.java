@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
@@ -30,17 +30,17 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Un-select all text. Used in arg-select or discont-tagging mode
+ * Deselects last text selection. Used in arg-select and discont-tagging modes.
  */
-public class ResetSelection extends MaeActionI {
+public class UndoLastSelection extends MaeActionI {
 
-    public ResetSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public UndoLastSelection(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        getMainController().clearTextSelection();
+        getMainController().undoLastSelection();
     }
 }
 

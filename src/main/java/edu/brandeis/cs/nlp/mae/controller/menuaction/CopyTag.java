@@ -22,40 +22,40 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 /**
- * Created by krim on 1/27/2016.
- * Pops up 'about' dialog.
+ * Copies a selected tag from a raw annotation to gold standard.
+ * Can be an extent tag or a link.
  */
-public class About extends MaeActionI {
+public class CopyTag extends MaeActionI {
 
-    public About(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public CopyTag(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        Object[] options = {"Close", "Visit website"};
-        int choice = JOptionPane.showOptionDialog(getMainController().getMainWindow(),
-                MaeStrings.ABOUT_MESSAGE,
-                MaeStrings.ABOUT_TITLE,
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]
-                );
-        if (choice == 1) {
-            VisitWebsite.visitWebsite();
+        try {
+            String[] srcAndTid = event.getActionCommand().split(MaeStrings.SEP);
+            if (getMainController().getDriver().getAnnotationFileName().endsWith(srcAndTid[0])) {
+                getMainController().showError("Cannot copy a tag from itself!");
+                return;
+            }
+            Tag original = getMainController().getTagBySourceAndTid(srcAndTid[0], srcAndTid[1]);
+            getMainController().copyTag(original);
+        } catch (MaeDBException e) {
+            catchException(e);
         }
     }
-}
 
+}
 

@@ -22,45 +22,39 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller.action;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
-import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
- * Opens a new web browser tab of the project website. The address is kept in string
- * registry class.
+ * Change size of fonts in main window panels.
  */
-public class VisitWebsite extends MaeActionI {
+public class ChangeFontSize extends MaeActionI {
 
-    public VisitWebsite(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+    public ChangeFontSize(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
         super(text, icon, hotkey, mnemonic, controller);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        visitWebsite();
-    }
+        switch (event.getActionCommand()) {
+            case "+":
+                getMainController().increaseTextFontSize();
+                break;
+            case "-":
+                getMainController().decreaseTextFontSize();
+                break;
+            case "0":
+                getMainController().resetFontSize();
+                break;
+            case "++":
+                getMainController().presentation();
 
-    static void visitWebsite() {
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().browse(
-                        new URI(MaeStrings.PROJECT_WEBPAGE));
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (URISyntaxException ignored) {
-            }
         }
     }
-
 }
 
 
