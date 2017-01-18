@@ -29,6 +29,7 @@ import edu.brandeis.cs.nlp.mae.controller.MaeControlException;
 import edu.brandeis.cs.nlp.mae.controller.MaeControllerI;
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 
@@ -92,7 +93,7 @@ public class TablePanelController extends MaeControllerI {
         return view;
     }
 
-    void emptyTagTables() {
+    public void emptyTagTables() throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
         for (ChangeListener listen : tabs.getChangeListeners()) {
             if (listen instanceof AdjudicationTabSwitchListener) {
@@ -104,7 +105,13 @@ public class TablePanelController extends MaeControllerI {
         activeLinkTags = new HashSet<>();
         tabOrder = new ArrayList<>();
         tableMap = new TreeMap<>();
-
+        MaeDriverI driver = getMainController().getDriver();
+        if (getMainController().isAdjudicating() ||
+                (driver != null && driver.getAllTagTypes().size() > 20)) {
+            getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        } else {
+            getView().getTabs().setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+        }
     }
 
     public void prepareAllTables() throws MaeDBException, MaeControlException {
@@ -113,8 +120,6 @@ public class TablePanelController extends MaeControllerI {
         }
 
         emptyTagTables();
-        getActiveLinkTags().clear();
-        getActiveExtentTags().clear();
 
         if (getMainController().isAdjudicating()) {
             prepareAdjudicationTables();
@@ -127,7 +132,6 @@ public class TablePanelController extends MaeControllerI {
 
     private void prepareAdjudicationTables() throws MaeDBException {
         List<TagType> types = getDriver().getAllTagTypes();
-        getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         for (TagType type : types) {
             String name = type.getName();
             JLabel title = new JLabel(name);
@@ -139,12 +143,6 @@ public class TablePanelController extends MaeControllerI {
     private void prepareAnnotationTables() throws MaeDBException {
         List<TagType> types = getDriver().getAllTagTypes();
         logger.debug(String.format("start creating tables for %d tag types", types.size()));
-
-        if (types.size() > 20) {
-            getView().getTabs().setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        } else {
-            getView().getTabs().setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
-        }
 
         // create a tab for all extents and place it at first
         TablePanelView.TogglingTabTitle allTagsTabTitle = new TablePanelView.TogglingTabTitle(dummyForAllTagsTab);
