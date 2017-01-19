@@ -38,16 +38,16 @@ import java.awt.event.MouseEvent;
 /**
  * Created by krim on 1/11/2017.
  */
-class HighlightToggleListener extends MouseAdapter implements ItemListener {
+public class HighlightToggleListener extends MouseAdapter implements ItemListener {
 
     private TablePanelController tablePanelController;
     private TagType tagType;
     private boolean forAllTagsTable;
     private TablePanelView.TogglingTabTitle toggle;
 
-    HighlightToggleListener(TablePanelController tablePanelController, TagType tagType, boolean forAllTagsTable, TablePanelView.TogglingTabTitle toggle) {
+    public HighlightToggleListener(TablePanelController tablePanelController, boolean forAllTagsTable, TablePanelView.TogglingTabTitle toggle) {
         this.tablePanelController = tablePanelController;
-        this.tagType = tagType;
+        this.tagType = toggle.getTagType();
         this.forAllTagsTable = forAllTagsTable;
         this.toggle = toggle;
 
@@ -55,14 +55,14 @@ class HighlightToggleListener extends MouseAdapter implements ItemListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.isPopupTrigger() && tagType != tablePanelController.dummyForAllTagsTab) {
+        if (e.isPopupTrigger() && tagType != TablePanelController.dummyForAllTagsTab) {
             callColorSetter();
         }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.isPopupTrigger() && tagType != tablePanelController.dummyForAllTagsTab) {
+        if (e.isPopupTrigger() && tagType != TablePanelController.dummyForAllTagsTab) {
             callColorSetter();
         }
     }

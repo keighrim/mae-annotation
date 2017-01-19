@@ -46,7 +46,7 @@ public class LoadTask extends MaeActionI {
             try {
                 File file = getMainController().selectSingleFile("", false);
                 if (file != null) {
-                    getMainController().setupScheme(file, true);
+                    getMainController().setUpNewTask(file);
                 }
 
             } catch (Exception e) {

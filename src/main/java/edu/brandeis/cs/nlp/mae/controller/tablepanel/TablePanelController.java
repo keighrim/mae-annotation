@@ -56,9 +56,9 @@ public class TablePanelController extends MaeControllerI {
     public static final int ID_COL = 1;
     public static final int SPANS_COL = 2;
     public static final int TEXT_COL = 3;
+    public static final TagType dummyForAllTagsTab = new TagType(MaeStrings.ALL_TABLE_TAB_BACK_NAME, MaeStrings.ALL_TABLE_TAB_PREFIX, false);
 
     TablePanelView view;
-    TagType dummyForAllTagsTab;
     Set<TagType> activeLinkTags;
     Set<TagType> activeExtentTags;
     List<TagType> tabOrder;
@@ -66,7 +66,6 @@ public class TablePanelController extends MaeControllerI {
 
     public TablePanelController(MaeMainController mainController) throws MaeControlException, MaeDBException {
         super(mainController);
-        dummyForAllTagsTab = new TagType(MaeStrings.ALL_TABLE_TAB_BACK_NAME, MaeStrings.ALL_TABLE_TAB_PREFIX, false);
         view = new TablePanelView();
         emptyTagTables();
 
@@ -152,7 +151,7 @@ public class TablePanelController extends MaeControllerI {
             String name = type.getName();
             TablePanelView.TogglingTabTitle title = createTogglingTabTitle(type);
             getView().addTab(name, title, makeAnnotationArea(type));
-            HighlightToggleListener toggleListener = new HighlightToggleListener(this, title.getTagType(), false, title);
+            HighlightToggleListener toggleListener = new HighlightToggleListener(this, false, title);
             title.addToggleListener(toggleListener);
             if (type.isExtent()) {
                 title.addMouseListener(toggleListener);
@@ -160,7 +159,7 @@ public class TablePanelController extends MaeControllerI {
 
         }
 
-        allTagsTabTitle.addToggleListener(new HighlightToggleListener(this, dummyForAllTagsTab, true, allTagsTabTitle));
+        allTagsTabTitle.addToggleListener(new HighlightToggleListener(this, true, allTagsTabTitle));
         // this will turn on each extent tag title
         allTagsTabTitle.setHighlighted(true);
     }
@@ -478,7 +477,7 @@ public class TablePanelController extends MaeControllerI {
 
     }
 
-    private JComponent makeAllExtentTagsArea() {
+    public JComponent makeAllExtentTagsArea() {
         UneditableTableModel model = new UneditableTableModel(this, dummyForAllTagsTab);
         JTable table = createMinimumTable(model, true);
         tabOrder.add(dummyForAllTagsTab);
@@ -489,7 +488,7 @@ public class TablePanelController extends MaeControllerI {
         return new JScrollPane(table);
     }
 
-    private JComponent makeAnnotationArea(TagType type) {
+    public JComponent makeAnnotationArea(TagType type) {
         TagTableModel model = type.isExtent()? new TagTableModel(this, type) : new LinkTagTableModel(this, type);
         JTable table = makeTagTable(type, model);
         AnnotationCellRenderer renderer = new AnnotationCellRenderer();
@@ -498,7 +497,7 @@ public class TablePanelController extends MaeControllerI {
         return new JScrollPane(table);
     }
 
-    private JComponent makeAdjudicationArea(TagType type) {
+    public JComponent makeAdjudicationArea(TagType type) {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(this, type) : new AdjudicationLinkTableModel(this, type);
         model.addTableModelListener(model);
         JTable table = makeTagTable(type, model);

@@ -94,7 +94,7 @@ class StatusBarController extends MaeControllerI {
             setText(MaeStrings.SB_NODTD);
         } else if (!getMainController().isDocumentOpen()) {
             setText(MaeStrings.SB_NOFILE);
-            getMainController().mouseCursorToDefault();
+            getMainController().unblockGUI();
         } else {
             if (!getMainController().isTextSelected()) {
                 setEmptySelectionText();
@@ -116,7 +116,7 @@ class StatusBarController extends MaeControllerI {
                     setText(String.format(MaeStrings.SB_MARGS_TAG, potentialArguments.size(), potentialArguments));
                     break;
             }
-            getMainController().mouseCursorToDefault();
+            getMainController().unblockGUI();
         }
     }
 

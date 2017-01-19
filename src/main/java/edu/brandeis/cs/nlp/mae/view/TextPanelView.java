@@ -46,12 +46,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
+import static edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController.*;
+
 /**
  * Created by krim on 1/2/2016.
  */
 public class TextPanelView extends JPanel {
 
-    public static final String DEFAULT_FONT_FAMILY = Font.MONOSPACED;
     private JTabbedPane documentTabs;
     private boolean documentOpen;
 
@@ -99,6 +100,10 @@ public class TextPanelView extends JPanel {
         if (switchToNewTab) {
             selectTab(getTabs().getTabCount() - 1);
         }
+    }
+
+    public void addTextTab(String title, String text) {
+        addTextTab(title, text, DEFAULT_FONT_SIZE);
     }
 
     public void addTextTab(String title, String text, int fontSize) {

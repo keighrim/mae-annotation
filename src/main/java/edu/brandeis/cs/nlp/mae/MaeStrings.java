@@ -115,6 +115,7 @@ public class MaeStrings {
     public final static String SB_MARGS_NOTAG = SB_NOTAG;
     public final static String SB_ADJUD_PREFIX = "ADJUDICATING!";
     public final static String SB_ADJUD_TAG = " %d %s Tags Selected.";
+    public final static String SB_BG_WIPING = "Closing: %1$10s";
 
     /* main menus */
     public final static String MENU_FILE = "File";

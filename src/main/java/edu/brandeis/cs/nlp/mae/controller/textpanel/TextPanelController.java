@@ -58,6 +58,7 @@ public class TextPanelController extends MaeControllerI {
     private List<int[]> selectionHistory;
     public static final int DEFAULT_FONT_SIZE = 14;
     public static final Color DEFAULT_FONT_COLOR = Color.BLACK;
+    public static final String DEFAULT_FONT_FAMILY = Font.MONOSPACED;
     private int currentFontSize = DEFAULT_FONT_SIZE;
 
 
@@ -66,8 +67,7 @@ public class TextPanelController extends MaeControllerI {
         view = new TextPanelView();
         selectionHistory = new LinkedList<>();
         selected = new int[0];
-        noTaskGuide();
-//        reset();
+        addGuideTab();
     }
 
     @Override
@@ -99,18 +99,16 @@ public class TextPanelController extends MaeControllerI {
         }
     }
 
-    private void addGuideTab(String guideTitle, String guideText) {
-        disableTabSwitchListener();
-        getView().initTabs();
-        getView().addTextTab(guideTitle, guideText, DEFAULT_FONT_SIZE);
-    }
-
-    public void noTaskGuide() {
-        addGuideTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
-    }
-
-    public void noDocumentGuide() {
-        addGuideTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
+    public void addGuideTab() {
+        if (!getMainController().isDocumentOpen()) {
+            disableTabSwitchListener();
+            getView().initTabs();
+            if (!getMainController().isTaskLoaded()) {
+                getView().addTextTab(MaeStrings.NO_TASK_IND, MaeStrings.NO_TASK_GUIDE);
+            } else {
+                getView().addTextTab(MaeStrings.NO_FILE_IND, MaeStrings.NO_FILE_GUIDE);
+            }
+        }
     }
 
     @Override
@@ -432,7 +430,7 @@ public class TextPanelController extends MaeControllerI {
     void unassignAllFGColor() throws MaeDBException {
         int caretPos = getView().getDocumentPane().getCaretPosition();
         getView().getDocumentPane().setStyledDocument(
-                FontHandler.stringToSimpleStyledDocument(getDriver().getPrimaryText(), TextPanelView.DEFAULT_FONT_FAMILY, currentFontSize, Color.BLACK)
+                FontHandler.stringToSimpleStyledDocument(getDriver().getPrimaryText(), DEFAULT_FONT_FAMILY, currentFontSize, Color.BLACK)
         );
         getView().getDocumentPane().setCaretPosition(caretPos);
         try {

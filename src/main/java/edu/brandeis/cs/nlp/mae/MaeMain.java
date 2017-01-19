@@ -106,13 +106,14 @@ public class MaeMain {
                 }
 
                 if (tFilename != null) {
-                    controller.setupScheme(new File(tFilename), true);
+                    controller.setUpNewTask(new File(tFilename));
                     if (dFilename != null) {
                         for (String fileName : dFilename.split(",")) {
                             controller.addDocument(new File((fileName)));
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
                                 e.printStackTrace();
                             }
                         }
