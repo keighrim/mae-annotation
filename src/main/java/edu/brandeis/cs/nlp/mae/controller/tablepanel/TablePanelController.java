@@ -210,7 +210,7 @@ public class TablePanelController extends MaeControllerI {
                     String[] rowRepresentation = convertTagIntoTableRow(tag,
                             tagTypeTableModel, false);
                     tagsToRows.add(rowRepresentation);
-                    tagsToSimpleRows.add(Arrays.copyOfRange(rowRepresentation, SRC_COL, TEXT_COL));
+                    tagsToSimpleRows.add(Arrays.copyOfRange(rowRepresentation, SRC_COL, TEXT_COL+1));
                 }
                 TableBatchInsertSwingWorker swingWorker
                         = new TableBatchInsertSwingWorker(tagTypeTableModel, tagsToRows);
@@ -329,8 +329,8 @@ public class TablePanelController extends MaeControllerI {
     }
 
     protected String[] convertTagIntoTableRow(Tag tag, TagTableModel tableModel, boolean isLink) throws MaeDBException {
-        Map<String, String> attMap = tag.getAttributesWithNamesWithoutChecking();
-//        Map<String, String> attMap = getDriver().getAttributeMapOfTag(tag);
+        Map<String, String> attMap = tag.getAttributesWithNames();
+//        Map<String, String> attMap = tag.getAttributesWithNamesWithoutChecking();
 
         String[] newRow = convertAttMapToTableRow(tag, tableModel, isLink, attMap);
         return newRow;
