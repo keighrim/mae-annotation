@@ -32,7 +32,6 @@ import edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
@@ -47,8 +46,6 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.text.Highlighter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -435,7 +432,7 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             mode = MODE_ARG_SEL;
             sendNotification(MaeStrings.SB_ARGSEL_MODE_NOTI);
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
@@ -445,7 +442,7 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             mode = MODE_MULTI_SPAN;
             sendNotification(MaeStrings.SB_MSPAN_MODE_NOTI);
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
@@ -476,8 +473,7 @@ public class MaeMainController extends JPanel {
             addAdjudication(goldstandard);
 
             removeAllBGColors();
-            getMenu().resetFileMenu();
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
             sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
         }
     }
@@ -493,7 +489,7 @@ public class MaeMainController extends JPanel {
                 getTablePanel().insertAllTags();
                 assignAllFGColor();
                 sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
-                getMenu().resetFileMenu();
+                getMenu().resetMenus(MaeStrings.MENU_FILE);
             } catch (MaeException e) {
                 showError(e);
             }
@@ -507,7 +503,7 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
             removeAllBGColors();
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
@@ -572,9 +568,9 @@ public class MaeMainController extends JPanel {
                 try {
                     if (get()) {
                         if (firstDocument) {
-                            getMenu().resetFileMenu();
-                            getMenu().resetTagsMenu();
-                            getMenu().resetModeMenu();
+                            getMenu().resetMenus(MaeStrings.MENU_FILE,
+                                    MaeStrings.MENU_TAGS,
+                                    MaeStrings.MENU_MODE);
                         }
                         adjustUIForNewDocument();
                     } else {
@@ -648,8 +644,7 @@ public class MaeMainController extends JPanel {
         try {
             resetPaintableColors();
             setAdjudicating(false);
-            getMenu().resetFileMenu();
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
             getTextPanel().addGuideTab();
             getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
             getTablePanel().prepareAllTables();
@@ -1606,11 +1601,9 @@ public class MaeMainController extends JPanel {
                 addAndSwitchDriver(setUpNewDriver(taskFile));
                 resetPaintableColors();
                 setAdjudicating(false);
+                getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
                 SwingUtilities.invokeLater(() -> {
                             getTextPanel().addGuideTab();
-                            getMenu().resetFileMenu();
-                            getMenu().resetModeMenu();
-
                         }
                 );
                 PrepareAllTablesWorker worker = new PrepareAllTablesWorker();
