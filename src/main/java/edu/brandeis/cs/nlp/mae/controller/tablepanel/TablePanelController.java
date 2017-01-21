@@ -477,7 +477,7 @@ public class TablePanelController extends MaeControllerI {
 
     }
 
-    public JComponent makeAllExtentTagsArea() {
+    public JScrollPane makeAllExtentTagsArea() {
         UneditableTableModel model = new UneditableTableModel(this, dummyForAllTagsTab);
         JTable table = createMinimumTable(model, true);
         tabOrder.add(dummyForAllTagsTab);
@@ -488,7 +488,7 @@ public class TablePanelController extends MaeControllerI {
         return new JScrollPane(table);
     }
 
-    public JComponent makeAnnotationArea(TagType type) {
+    public JScrollPane makeAnnotationArea(TagType type) {
         TagTableModel model = type.isExtent()? new TagTableModel(this, type) : new LinkTagTableModel(this, type);
         JTable table = makeTagTable(type, model);
         AnnotationCellRenderer renderer = new AnnotationCellRenderer();
@@ -497,7 +497,7 @@ public class TablePanelController extends MaeControllerI {
         return new JScrollPane(table);
     }
 
-    public JComponent makeAdjudicationArea(TagType type) {
+    public JScrollPane makeAdjudicationArea(TagType type) {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(this, type) : new AdjudicationLinkTableModel(this, type);
         model.addTableModelListener(model);
         JTable table = makeTagTable(type, model);

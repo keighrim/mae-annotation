@@ -416,12 +416,12 @@ public class MaeMainController extends JPanel {
         blockGUI();
     }
 
-    public void unblockGUI() {
+    void unblockGUI() {
         getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         view.hideWait();
     }
 
-    public void blockGUI() {
+    private void blockGUI() {
         getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         view.showWait();
     }
@@ -1573,17 +1573,26 @@ public class MaeMainController extends JPanel {
                             getTablePanel().makeAnnotationArea(type)});
                     logger.info(String.format("created annotation table for \"%s\"", name));
                 }
-                allTagsTabTitle.addToggleListener(new HighlightToggleListener(getTablePanel(), true, allTagsTabTitle));
-                // this will turn on each extent tag title
-                allTagsTabTitle.setHighlighted(true);
             }
-            return null;
+            return true;
         }
 
         @Override
         protected void process(List<Object[]> list) {
             for (Object[] o : list) {
                 getTablePanel().getView().addTab((String) o[0], (JComponent) o[1], (JComponent) o[2]);
+            }
+        }
+
+        @Override
+        protected void done() {
+            if (!isAdjudicating()) {
+                TablePanelView.TogglingTabTitle allTagsTabTitle =
+                        (TablePanelView.TogglingTabTitle) getTablePanel().getView().getTabs().getTabComponentAt(0);
+                allTagsTabTitle.addToggleListener(new HighlightToggleListener(getTablePanel(), true, allTagsTabTitle));
+                // this will turn on each extent tag title
+                allTagsTabTitle.setHighlighted(true);
+
             }
         }
     }
@@ -1608,7 +1617,9 @@ public class MaeMainController extends JPanel {
                 );
                 PrepareAllTablesWorker worker = new PrepareAllTablesWorker();
                 worker.execute();
-                while (!worker.isDone()) {
+                boolean tableDone = worker.get();
+                if (tableDone) {
+                    logger.info("All tables are prepared");
                 }
                 return true;
             } catch (final Exception e) {
