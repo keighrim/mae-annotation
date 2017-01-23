@@ -25,9 +25,12 @@
 package edu.brandeis.cs.nlp.mae.util;
 
 import javax.swing.text.*;
+import javax.xml.stream.events.Characters;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by krim on 2/17/16.
@@ -37,7 +40,7 @@ public class FontHandler {
     private static Font[] fontCache = new Font[10];
     private static final Map<Integer, Font> codepointCache = new HashMap<>();
 
-    public static Font getFontToRender(int codepoint) {
+    private static Font getFontToRenderSurrogateCode(int codepoint) {
         if (codepoint >= '\uFE00' && codepoint <= '\uFE0F') {
             return new Font("", 0, 0);
         }
@@ -96,32 +99,49 @@ public class FontHandler {
     }
 
     public static StyledDocument stringToSimpleStyledDocument(String plainText, String defaultFontName, int fontSize, Color fontColor) {
-        StyledDocument document = new DefaultStyledDocument();
-        try {
-            int offset = 0;
-            if (plainText != null) {
-                while (offset < plainText.length()) {
+        return stringToSimpleStyledDocumentConcurrently(plainText, defaultFontName, fontSize, fontColor);
+    }
 
+
+    private static StyledDocument stringToSimpleStyledDocumentConcurrently(String plainText, String defaultFontName, int fontSize, Color fontColor) {
+        StyledDocument document = new DefaultStyledDocument();
+        ExecutorService unicodeRenderService = Executors.newCachedThreadPool();
+
+        try {
+            if (!(plainText == null || plainText.length() == 0)) {
+                document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
+
+                SimpleAttributeSet aSet = new SimpleAttributeSet();
+                StyleConstants.setFontFamily(aSet, defaultFontName);
+                StyleConstants.setFontSize(aSet, fontSize);
+                StyleConstants.setForeground(aSet, fontColor);
+
+                document.setCharacterAttributes(0, plainText.length(), aSet, false);
+
+                int offset = 0;
+                while (offset < plainText.length()) {
                     int length = 1;
-                    SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-                    String fontFam = defaultFontName;
                     Character c = plainText.charAt(offset);
                     if (Character.isHighSurrogate(c)) {
-                        fontFam = getFontToRender(plainText.codePointAt(offset)).getFontName();
                         length = plainText.length() > offset + 2 ? 2 : 1;
+                        int finalOffset = offset;
+                        int finalLength = length;
+                        Thread thread = new Thread(() -> {
+                            SimpleAttributeSet unicodeASet = new SimpleAttributeSet();
+                            StyleConstants.setFontFamily(unicodeASet,
+                                    getFontToRenderSurrogateCode(plainText.codePointAt(finalOffset)).getFontName());
+                            document.setCharacterAttributes(finalOffset, finalLength, unicodeASet, false);
 
+                        });
+                        unicodeRenderService.submit(thread);
                     }
-                    document.insertString(offset, plainText.substring(offset, offset + length), StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
-                    StyleConstants.setFontFamily(attributeSet, fontFam);
-                    StyleConstants.setFontSize(attributeSet, fontSize);
-                    StyleConstants.setForeground(attributeSet, fontColor);
-                    document.setCharacterAttributes(offset, length, attributeSet, false);
-
                     offset += length;
                 }
             }
         } catch (BadLocationException ignored) {
         }
+        // TODO: 1/23/17 send secondary msg to user that unicode rendering is happening in BG
+        unicodeRenderService.shutdown();
         return document;
     }
 }
