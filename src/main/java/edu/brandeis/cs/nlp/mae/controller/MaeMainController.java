@@ -589,11 +589,11 @@ public class MaeMainController extends JPanel {
     private void timeConsumingAddDocument(File annotationFile, boolean firstDocument) throws MaeException {
 
         String xmlParseWarnings;
+        if (!firstDocument) {
+            addAndSwitchDriver(setUpNewDriver(new File(getDriver().getTaskFileName())));
+        }
         try {
             // setting up the scheme will switch driver to the new one
-            if (!firstDocument) {
-                addAndSwitchDriver(setUpNewDriver(new File(getDriver().getTaskFileName())));
-            }
 
             xmlParseWarnings = getDriver().readAnnotation(annotationFile);
             logger.info(String.format("document \"%s\" is loaded into DB.",
