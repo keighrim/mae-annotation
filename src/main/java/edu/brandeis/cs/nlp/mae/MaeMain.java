@@ -106,7 +106,7 @@ public class MaeMain {
                 }
 
                 if (tFilename != null) {
-                    controller.setUpNewTask(new File(tFilename));
+                    controller.setUpTask(new File(tFilename));
                     if (dFilename != null) {
                         for (String fileName : dFilename.split(",")) {
                             controller.addDocument(new File((fileName)));

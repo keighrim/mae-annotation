@@ -36,8 +36,8 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
-import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -373,7 +373,7 @@ public class MaeMainController extends JPanel {
                 getTextPanel().closeDocumentTab(i);
             } else {
                 File taskFile = new File(getDriver().getTaskFileName());
-                setUpNewTask(taskFile);
+                setUpTask(taskFile);
             }
         } catch (MaeException e) {
             showError(e);
@@ -507,7 +507,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public void setUpNewTask(final File taskFile) {
+    public void setUpTask(final File taskFile) {
         // This always wipes out on-going annotation works, even when multiple
         // files are open.
         // Since an instance of MAE requires all works share the same DB schema
@@ -523,7 +523,7 @@ public class MaeMainController extends JPanel {
         drivers.add(currentDriver);
     }
 
-    private MaeDriverI setUpNewDriver(File taskFile) throws MaeException {
+    private MaeDriverI setUpDriver(File taskFile) throws MaeException {
         String dbFilename = String.format("mae-%d", System.currentTimeMillis());
         File dbFile;
         try {
@@ -590,7 +590,7 @@ public class MaeMainController extends JPanel {
 
         String xmlParseWarnings;
         if (!firstDocument) {
-            addAndSwitchDriver(setUpNewDriver(new File(getDriver().getTaskFileName())));
+            addAndSwitchDriver(setUpDriver(new File(getDriver().getTaskFileName())));
         }
         try {
             // setting up the scheme will switch driver to the new one
@@ -621,7 +621,7 @@ public class MaeMainController extends JPanel {
     public void addAdjudication(File goldstandard) {
         try {
             try {
-                addAndSwitchDriver(setUpNewDriver(new File(getDriver().getTaskFileName()))); // will set up a new dirver for GS
+                addAndSwitchDriver(setUpDriver(new File(getDriver().getTaskFileName()))); // will set up a new dirver for GS
                 getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
                 String xmlParseWarnings = getDriver().readAnnotation(goldstandard);
                 getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
@@ -638,26 +638,6 @@ public class MaeMainController extends JPanel {
         } catch (MaeException e) {
             showError(e);
         }
-    }
-
-    private void adjustUIForNewTask() {
-        try {
-            resetPaintableColors();
-            setAdjudicating(false);
-            getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
-            getTextPanel().addGuideTab();
-            getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
-            getTablePanel().prepareAllTables();
-            storePaintedStates();
-            sendTemporaryNotification(MaeStrings.SB_NEWTASK, 4000);
-        } catch (MaeDBException e) {
-            showError("Found an error in DB!", e);
-            updateNotificationArea();
-        } catch (MaeControlException e) {
-            showError("Failed to sort out tag tables!", e);
-            updateNotificationArea();
-        }
-
     }
 
     private void adjustUIForNewDocument() {
@@ -689,7 +669,7 @@ public class MaeMainController extends JPanel {
                 String taskFileName = getDriver().getTaskFileName();
                 getDriver().destroy();
                 drivers.clear();
-                addAndSwitchDriver(setUpNewDriver(new File(taskFileName)));
+                addAndSwitchDriver(setUpDriver(new File(taskFileName)));
             } else {
                 getDriver().destroy();
                 drivers.remove(drivers.size() - 1);
@@ -1607,7 +1587,7 @@ public class MaeMainController extends JPanel {
         @Override
         protected Boolean doInBackground() {
             try {
-                addAndSwitchDriver(setUpNewDriver(taskFile));
+                addAndSwitchDriver(setUpDriver(taskFile));
                 resetPaintableColors();
                 setAdjudicating(false);
                 getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
