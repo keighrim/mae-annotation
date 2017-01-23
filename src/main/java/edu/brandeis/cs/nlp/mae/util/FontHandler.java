@@ -37,9 +37,7 @@ public class FontHandler {
     private static Font[] fontCache = new Font[10];
     private static final Map<Integer, Font> codepointCache = new HashMap<>();
 
-
-    public static Font getFontToDraw(int codepoint) {
-        // Variation Selectors
+    public static Font getFontToRender(int codepoint) {
         if (codepoint >= '\uFE00' && codepoint <= '\uFE0F') {
             return new Font("", 0, 0);
         }
@@ -109,7 +107,7 @@ public class FontHandler {
                     String fontFam = defaultFontName;
                     Character c = plainText.charAt(offset);
                     if (Character.isHighSurrogate(c)) {
-                        fontFam = getFontToDraw(plainText.codePointAt(offset)).getFontName();
+                        fontFam = getFontToRender(plainText.codePointAt(offset)).getFontName();
                         length = plainText.length() > offset + 2 ? 2 : 1;
 
                     }

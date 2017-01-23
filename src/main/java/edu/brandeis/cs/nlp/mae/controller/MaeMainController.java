@@ -36,8 +36,8 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
-import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.MaeMainView;
+import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -748,7 +748,7 @@ public class MaeMainController extends JPanel {
         getTextPanel().clearColoring();
         getTextPanel().clearSelection();
         TagType type = getAdjudicatingTagType();
-        Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorsOfTagType(type));
+        Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorLocationsOfTagType(type));
         paintOverlappingStat(type, goldAnchors);
         paintGoldTags(goldAnchors);
     }
@@ -765,7 +765,7 @@ public class MaeMainController extends JPanel {
         // 0th is the driver for gold, skipping.
         for (int i = 1; i < getDrivers().size(); i++) {
             MaeDriverI driver = getDriverAt(i);
-            List<Integer> anchors = driver.getAllAnchorsOfTagType(type);
+            List<Integer> anchors = driver.getAllAnchorLocationsOfTagType(type);
             for (Integer anchor : anchors) {
                 if (!goldAnchors.contains(anchor)) {
                     anchorToDriverIndex.putItem(anchor, i);
@@ -980,7 +980,7 @@ public class MaeMainController extends JPanel {
             if ((currentlyActivated.contains(type) && !coloredTagsInLastDocument.get(type))
                     || (!currentlyActivated.contains(type) && coloredTagsInLastDocument.get(type))) {
                 try {
-                    toRepaint.addAll(getDriver().getAllAnchorsOfTagType(type));
+                    toRepaint.addAll(getDriver().getAllAnchorLocationsOfTagType(type));
                 } catch (MaeDBException e) {
                     showError(e);
                 }
@@ -1028,7 +1028,7 @@ public class MaeMainController extends JPanel {
         getTextHighlightColors().setColor(newColor, tagsForColor.indexOf(tagType));
         if (getTablePanel().getActiveExtentTags().contains(tagType)) {
             try {
-                assignTextColorsOver(getDriver().getAllAnchorsOfTagType(tagType));
+                assignTextColorsOver(getDriver().getAllAnchorLocationsOfTagType(tagType));
             } catch (MaeDBException e) {
                 showError(e);
             }
@@ -1163,7 +1163,7 @@ public class MaeMainController extends JPanel {
     public void propagateSelectionFromTablePanel(String tid) {
         removeAllBGColors();
         try {
-            addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
+            addBGColorOver(getDriver().getAnchorLocationsByTid(tid), ColorHandler.getVividHighliter());
         } catch (Exception e) {
             showError(e);
         }

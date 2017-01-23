@@ -85,7 +85,7 @@ class LinkTagTableModel extends TagTableModel {
             }
             tablePanelController.getMainController().removeAllBGColors();
             try {
-                List<Integer> newSpans = tablePanelController.getDriver().getAnchorsByTid(tid);
+                List<Integer> newSpans = tablePanelController.getDriver().getAnchorLocationsByTid(tid);
                 tablePanelController.getMainController().assignTextColorsOver(oldSpans);
                 tablePanelController.getMainController().assignTextColorsOver(newSpans);
                 tablePanelController.getMainController().removeAllBGColors();

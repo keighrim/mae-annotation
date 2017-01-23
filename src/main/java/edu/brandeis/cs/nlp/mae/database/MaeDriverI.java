@@ -86,18 +86,24 @@ public interface MaeDriverI {
     // character index (anchor)
     void batchCreateAnchors(Collection<CharIndex> anchors) throws MaeDBException;
 
-    List<Integer> getAllAnchors() throws MaeDBException;
+    Collection<CharIndex> getAllAnchors() throws MaeDBException;
 
-    List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException;
+    Collection<CharIndex> getAllAnchorsOfTagType(TagType type) throws MaeDBException;
 
-    List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException;
+    List<Integer> getAllAnchorLocations() throws MaeDBException;
 
-    List<Integer> getAnchorsByTid(String tid) throws MaeDBException;
+    List<Integer> getAllAnchorLocationsOfTagType(TagType type) throws MaeDBException;
+
+    List<Integer> getAllAnchorLocationsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException;
+
+    Collection<CharIndex> getAnchorsByTid(String tid) throws MaeDBException;
+
+    List<Integer> getAnchorLocationsByTid(String tid) throws MaeDBException;
 
     // tag types
     TagType createTagType(String name, String prefix, boolean isLink) throws MaeDBException;
 
-    List<TagType> getAllTagTypes() throws MaeDBException; // return list to keep inserted order (when read DTD, tagtypes are inserted to DB in order of their appearence in DTD)
+    List<TagType> getAllTagTypes() throws MaeDBException; // return list to keep inserted order (when read DTD, tagtypes are inserted to DB in order of their appearances in DTD)
 
     List<TagType> getExtentTagTypes() throws MaeDBException;
 

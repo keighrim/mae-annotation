@@ -38,6 +38,7 @@ import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
+import edu.brandeis.cs.nlp.mae.view.DocumentTabTitle;
 import edu.brandeis.cs.nlp.mae.view.TextPanelView;
 
 import javax.swing.*;
@@ -204,7 +205,7 @@ public class TextPanelController extends MaeControllerI {
             getView().initTabs();
         }
         JTabbedPane tabs = getView().getTabs();
-        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(documentTitle, tabs);
+        DocumentTabTitle title = new DocumentTabTitle(documentTitle, tabs);
         title.addCloseListener(new DocumentCloseListener(this.getMainController()));
         getView().addTextTab(title, documentText, currentFontSize, !getMainController().isAdjudicating());
         addListeners();
@@ -223,7 +224,7 @@ public class TextPanelController extends MaeControllerI {
 
     public void addAdjudicationTab(String goldTitle, String goldText) throws MaeDBException {
         JTabbedPane tabs = getView().getTabs();
-        TextPanelView.DocumentTabTitle title = new TextPanelView.DocumentTabTitle(goldTitle, tabs);
+        DocumentTabTitle title = new DocumentTabTitle(goldTitle, tabs);
         title.addCloseListener(new DocumentCloseListener(this.getMainController()));
         getView().addAdjudicationTab(title, goldText, currentFontSize);
         addListeners();
@@ -300,7 +301,7 @@ public class TextPanelController extends MaeControllerI {
         JTabbedPane tabs = getView().getTabs();
         for (int i = 0; i <tabs.getTabCount(); i++) {
             MaeDriverI driver = getMainController().getDriverAt(i);
-            TextPanelView.DocumentTabTitle title = (TextPanelView.DocumentTabTitle) tabs.getTabComponentAt(i);
+            DocumentTabTitle title = (DocumentTabTitle) tabs.getTabComponentAt(i);
             title.setLabel(driver.getAnnotationFileBaseName());
             title.setChanged(driver.isAnnotationChanged());
             if (colorToo) {
@@ -420,7 +421,7 @@ public class TextPanelController extends MaeControllerI {
     }
 
     void unassignAnchoredFGColors() throws MaeDBException {
-        List<Integer> anchorLocations = getDriver().getAllAnchors();
+        List<Integer> anchorLocations = getDriver().getAllAnchorLocations();
         int anchorIndex = 0;
         while (anchorIndex < anchorLocations.size()) {
             anchorIndex += setFGColorAtLocation(DEFAULT_FONT_COLOR, anchorLocations.get(anchorIndex), false, false);
@@ -440,18 +441,15 @@ public class TextPanelController extends MaeControllerI {
             }
         } catch (BadLocationException ignored) {
         }
-
-
-
     }
 
-    private int setFGColorAtLocation(Color color, int location, boolean underline, boolean italic) {
-        DefaultStyledDocument styleDoc = getDocument();
-        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-        StyleConstants.setForeground(attributeSet, color);
-        StyleConstants.setUnderline(attributeSet, underline);
-        StyleConstants.setItalic(attributeSet, italic);
+    private int setFGColorAtLocation(Color color, int location, boolean fullOverlap, boolean partialOverlap) {
         try {
+            DefaultStyledDocument styleDoc = getDocument();
+            SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+            StyleConstants.setForeground(attributeSet, color);
+            StyleConstants.setUnderline(attributeSet, fullOverlap);
+            StyleConstants.setItalic(attributeSet, partialOverlap);
             int length = Character.isHighSurrogate(styleDoc.getText(location, 1).charAt(0)) ? 2 : 1;
             styleDoc.setCharacterAttributes(location, length, attributeSet, false);
             return length;
@@ -478,12 +476,12 @@ public class TextPanelController extends MaeControllerI {
     }
 
     public void assignAllFGColor() throws MaeDBException {
-        massivelyAssignFGColors(getDriver().getAllAnchors());
+        massivelyAssignFGColors(getDriver().getAllAnchorLocations());
 
     }
 
     void assignFGColorOf(TagType type) throws MaeDBException {
-        massivelyAssignFGColors(getDriver().getAllAnchorsOfTagType(type));
+        massivelyAssignFGColors(getDriver().getAllAnchorLocationsOfTagType(type));
     }
 
     public void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
@@ -493,14 +491,14 @@ public class TextPanelController extends MaeControllerI {
 
         MappedSet<Integer, TagType> existingAnchors = new MappedSet<>();
         for (TagType tagType : activeTags) {
-            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+            for (Integer anchor : getDriver().getAllAnchorLocationsOfTagType(tagType)) {
                 existingAnchors.putItem(anchor, tagType);
             }
         }
 
         MappedSet<Integer, TagType> existingArgumentAnchors = new MappedSet<>();
         for (TagType tagType : activeLinks) {
-            for (Integer anchor : getDriver().getAllAnchorsOfTagType(tagType)) {
+            for (Integer anchor : getDriver().getAllAnchorLocationsOfTagType(tagType)) {
                 existingArgumentAnchors.putItem(anchor, tagType);
             }
         }

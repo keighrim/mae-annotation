@@ -25,14 +25,15 @@
 package edu.brandeis.cs.nlp.mae.controller.textpanel;
 
 import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
-import edu.brandeis.cs.nlp.mae.view.TextPanelView;
+import edu.brandeis.cs.nlp.mae.view.DocumentTabTitle;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Created by krim on 1/9/2017.
+ * Listener for close buttons in the document text tabs that used to close a single
+ * document.
  */
 class DocumentCloseListener implements ActionListener {
     private MaeMainController mainController;
@@ -43,7 +44,7 @@ class DocumentCloseListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        TextPanelView.DocumentTabTitle title = getProperParent((Component) e.getSource());
+        DocumentTabTitle title = getProperParent((Component) e.getSource());
         if (title.isEnabled()) {
             int tabIdx = title.getTabIndex();
             if (mainController.showIncompleteTagsWarningAt(tabIdx, false) &&
@@ -54,9 +55,9 @@ class DocumentCloseListener implements ActionListener {
 
     }
 
-    TextPanelView.DocumentTabTitle getProperParent(Component component) {
-        if (component instanceof TextPanelView.DocumentTabTitle) {
-            return (TextPanelView.DocumentTabTitle) component;
+    private DocumentTabTitle getProperParent(Component component) {
+        if (component instanceof DocumentTabTitle) {
+            return (DocumentTabTitle) component;
         } else {
             return getProperParent(component.getParent());
         }

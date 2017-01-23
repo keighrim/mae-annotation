@@ -124,7 +124,7 @@ public class HighlightToggleListener extends MouseAdapter implements ItemListene
     }
 
     private java.util.List<Integer> getRelevantAnchors() throws MaeDBException {
-        return tablePanelController.getDriver().getAllAnchorsOfTagType(tagType);
+        return tablePanelController.getDriver().getAllAnchorLocationsOfTagType(tagType);
 
     }
 

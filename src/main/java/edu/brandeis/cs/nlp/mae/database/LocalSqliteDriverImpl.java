@@ -346,15 +346,10 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         }
         return new ArrayList<>(tags);
     }
-
     @Override
-    public List<Integer> getAllAnchors() throws MaeDBException{
-        List<Integer> anchors = new ArrayList<>();
+    public Collection<CharIndex> getAllAnchors() throws MaeDBException {
         try {
-            for (CharIndex location : charIndexDao.queryForAll()) {
-                anchors.add(location.getLocation());
-            }
-            return anchors;
+            return charIndexDao.queryForAll();
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
@@ -362,40 +357,49 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public List<Integer> getAllAnchorsOfTagType(TagType type) throws MaeDBException{
-
+    public Collection<CharIndex> getAllAnchorsOfTagType(TagType type) throws MaeDBException{
         try {
-            List<CharIndex> locations;
-
+            Collection<CharIndex> indices;
             if (type.isExtent()) {
                 eTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
-                locations = charIndexQuery.join(eTagQuery).query();
-
+                indices = charIndexQuery.join(eTagQuery).query();
             } else {
                 lTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
                 argQuery.join(lTagQuery).selectColumns(TAB_ARG_FCOL_ETAG).distinct();
                 eTagQuery.join(argQuery);
-                locations = charIndexQuery.join(eTagQuery).query();
-
-            }
-
-            ArrayList<Integer> locationList = new ArrayList<>();
-            for (CharIndex ci : locations) {
-                locationList.add(ci.getLocation());
+                indices = charIndexQuery.join(eTagQuery).query();
             }
             resetQueryBuilders();
-            return locationList;
+            return indices;
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
+    }
+
+    @Override
+    public List<Integer> getAllAnchorLocations() throws MaeDBException{
+        List<Integer> anchorLocations = new ArrayList<>();
+        for (CharIndex anchor : getAllAnchors()) {
+            anchorLocations.add(anchor.getLocation());
+        }
+        return anchorLocations;
 
     }
 
     @Override
-    public List<Integer> getAllAnchorsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException{
-        List<Integer> targetSpans = getAllAnchorsOfTagType(type);
+    public List<Integer> getAllAnchorLocationsOfTagType(TagType type) throws MaeDBException{
+        List<Integer> anchorLocations = new ArrayList<>();
+        for (CharIndex anchor : getAllAnchorsOfTagType(type)) {
+            anchorLocations.add(anchor.getLocation());
+        }
+        return anchorLocations;
+    }
+
+    @Override
+    public List<Integer> getAllAnchorLocationsOfTagType(TagType type, List<TagType> exculdes) throws MaeDBException{
+        List<Integer> targetSpans = getAllAnchorLocationsOfTagType(type);
         for (TagType exclude : exculdes) {
-            targetSpans.removeAll(getAllAnchorsOfTagType(exclude));
+            targetSpans.removeAll(getAllAnchorLocationsOfTagType(exclude));
         }
         return targetSpans;
 
@@ -406,7 +410,23 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-    public List<Integer> getAnchorsByTid(String tid) throws MaeDBException {
+    public Collection<CharIndex> getAnchorsByTid(String tid) throws MaeDBException {
+        Tag tag = getTagByTid(tid);
+        if (tag.getTagtype().isExtent()) {
+            return ((ExtentTag) tag).getSpans();
+        } else {
+
+            Set<CharIndex> argSpans = new TreeSet<>();
+            for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                argSpans.addAll(arg.getSpans());
+            }
+            return argSpans;
+        }
+
+    }
+
+    @Override
+    public List<Integer> getAnchorLocationsByTid(String tid) throws MaeDBException {
         Tag tag = getTagByTid(tid);
         if (tag.getTagtype().isExtent()) {
             return ((ExtentTag) tag).getSpansAsList();

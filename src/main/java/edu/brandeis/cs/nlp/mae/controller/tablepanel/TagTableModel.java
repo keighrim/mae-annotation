@@ -131,7 +131,7 @@ public class TagTableModel extends DefaultTableModel implements TableModelListen
             String tid = (String) getValueAt(event.getFirstRow(), TablePanelController.ID_COL);
             List<Integer> oldSpans = Collections.emptyList();
             try {
-                oldSpans = tablePanelController.getDriver().getAnchorsByTid(tid);
+                oldSpans = tablePanelController.getDriver().getAnchorLocationsByTid(tid);
             } catch (MaeDBException e) {
                 tablePanelController.getMainController().showError(e);
             }
