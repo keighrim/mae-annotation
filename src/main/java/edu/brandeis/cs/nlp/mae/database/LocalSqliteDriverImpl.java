@@ -27,6 +27,8 @@ package edu.brandeis.cs.nlp.mae.database;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.dao.ForeignCollection;
+import com.j256.ormlite.dao.LazyForeignCollection;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
@@ -563,19 +565,29 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
         return tags;
     }
 
-    public List<? extends Tag> getAllTagsOfType(TagType type) throws MaeDBException {
+    private Collection<? extends Tag> lazilyGetAllTagsOfType(TagType type) throws MaeDBException {
         try {
             tagTypeDao.refresh(type);
-            return new ArrayList<>(type.getTags());
+            return type.getTags();
         } catch (SQLException e) {
             throw catchSQLException(e);
         }
     }
 
+    public Collection<? extends Tag> getAllTagsOfType(TagType type) throws MaeDBException {
+        return lazilyGetAllTagsOfType(type);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
-    public List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException {
-        return (List<ExtentTag>) getAllTagsOfType(type);
+    public Collection<ExtentTag> lazilyGetAllExtentTagsOfType(TagType type) throws MaeDBException {
+        return (Collection<ExtentTag>) lazilyGetAllTagsOfType(type);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException {
+        return (Collection<ExtentTag>) getAllTagsOfType(type);
     }
 
     @Override
@@ -592,8 +604,14 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException {
-        return (List<LinkTag>) getAllTagsOfType(type);
+    public Collection<LinkTag> lazilyGetAllLinkTagsOfType(TagType type) throws MaeDBException {
+        return (Collection<LinkTag>) lazilyGetAllTagsOfType(type);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException {
+        return (Collection<LinkTag>) getAllTagsOfType(type);
 
     }
 

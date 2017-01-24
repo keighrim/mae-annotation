@@ -32,9 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -165,7 +163,7 @@ public class LocalSqliteDriverImplTest {
     public void canRetrieveExtentTagsByType() throws Exception {
         driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
 
-        List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        Collection<ExtentTag> retrievedTags = (Collection<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
                 "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
@@ -290,7 +288,7 @@ public class LocalSqliteDriverImplTest {
         driver.addArgument(link, pred, vTag);
 
 
-        List<LinkTag> retrievedTags = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);
+        Collection<LinkTag> retrievedTags = (Collection<LinkTag>) driver.getAllTagsOfType(semanticRole);
         assertEquals(
                 "Expected 1 link tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
@@ -300,7 +298,7 @@ public class LocalSqliteDriverImplTest {
                 "Expected 1 link tag is retrieved by link-only query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
 
-        LinkTag retrievedTag = retrievedTags.get(0);
+        LinkTag retrievedTag = retrievedTags.iterator().next();
         assertEquals(
                 "Expected 2 arguments associated with the link, found: " + retrievedTag.getArguments().size(),
                 2, retrievedTag.getArguments().size());
@@ -332,7 +330,7 @@ public class LocalSqliteDriverImplTest {
                         && (new ArrayList<>(nTag.getAttributesWithNames().values())).get(1).equals("true")
         );
 
-        LinkTag retrievedTag = driver.getAllLinkTagsOfType(semanticRole).get(0);
+        LinkTag retrievedTag = driver.getAllLinkTagsOfType(semanticRole).iterator().next();
         assertEquals(
                 "Expected 2 arguments associated with the link, found: " + retrievedTag.getArguments().size(),
                 2, retrievedTag.getArguments().size());

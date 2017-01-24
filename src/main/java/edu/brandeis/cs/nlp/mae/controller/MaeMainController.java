@@ -550,7 +550,7 @@ public class MaeMainController extends JPanel {
     public void addDocument(final File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
 
-        final boolean firstDocument = getDrivers().size() > 0 && !getDriver().isAnnotationLoaded();
+        final boolean firstDocument = !isDocumentOpen();
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {

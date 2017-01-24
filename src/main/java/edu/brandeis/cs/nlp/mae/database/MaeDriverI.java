@@ -153,7 +153,9 @@ public interface MaeDriverI {
 
     List<ExtentTag> getAllExtentTagsOfAllTypes(boolean consumingOnly) throws MaeDBException;
 
-    List<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException;
+    Collection<ExtentTag> lazilyGetAllExtentTagsOfType(TagType type) throws MaeDBException;
+
+    Collection<ExtentTag> getAllExtentTagsOfType(TagType type) throws MaeDBException;
 
     List<ExtentTag> getAllNCTagsOfType(TagType type) throws MaeDBException;
 
@@ -166,7 +168,9 @@ public interface MaeDriverI {
 
     List<LinkTag> getAllLinkTagsOfAllTypes() throws MaeDBException;
 
-    List<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException;
+    Collection<LinkTag> lazilyGetAllLinkTagsOfType(TagType type) throws MaeDBException;
+
+    Collection<LinkTag> getAllLinkTagsOfType(TagType type) throws MaeDBException;
 
     void deleteTag(Tag tag) throws MaeDBException;
 

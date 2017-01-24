@@ -105,11 +105,15 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
         final Collection<Attribute> atts = tag.getAttributes();
         final Collection<CharIndex> anchors = tag.getSpans();
         super.callBatchTasks((Callable<Void>) () -> {
-            for (Attribute att : atts) {
-                attDao.delete(att);
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.delete(att);
+                }
             }
-            for (CharIndex anchor : anchors) {
-                charIndexDao.delete(anchor);
+            if (anchors != null) {
+                for (CharIndex anchor : anchors) {
+                    charIndexDao.delete(anchor);
+                }
             }
             return null;
         });

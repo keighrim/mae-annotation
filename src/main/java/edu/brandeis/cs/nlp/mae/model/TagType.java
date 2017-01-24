@@ -30,6 +30,7 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -58,10 +59,10 @@ public class TagType implements ModelI, Comparable<TagType> {
     @ForeignCollectionField(eager = true)
     private ForeignCollection<ArgumentType> argumentTypes;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = false)
     private ForeignCollection<ExtentTag> extentTags;
 
-    @ForeignCollectionField(eager = true)
+    @ForeignCollectionField(eager = false)
     private ForeignCollection<LinkTag> linkTags;
 
     public TagType() {
@@ -123,15 +124,15 @@ public class TagType implements ModelI, Comparable<TagType> {
         setLink(false);
     }
 
-    public ForeignCollection<AttributeType> getAttributeTypes() {
+    public Collection<AttributeType> getAttributeTypes() {
         return attributeTypes;
     }
 
-    public ForeignCollection<ArgumentType> getArgumentTypes() {
+    public Collection<ArgumentType> getArgumentTypes() {
         return argumentTypes;
     }
 
-    public ForeignCollection<ExtentTag> getExtentTags() {
+    public Collection<ExtentTag> getExtentTags() {
         return this.extentTags;
     }
 
@@ -145,20 +146,16 @@ public class TagType implements ModelI, Comparable<TagType> {
         return tags;
     }
 
-    public ForeignCollection<LinkTag> getLinkTags() {
+    public Collection<LinkTag> getLinkTags() {
         return this.linkTags;
     }
 
-    public ForeignCollection<? extends Tag> getTags() {
+    public Collection<? extends Tag> getTags() {
         if (isExtent()) {
             return getExtentTags();
         } else {
             return getLinkTags();
         }
-    }
-
-    public int getNumInstances() {
-        return getTags().size();
     }
 
     @Override

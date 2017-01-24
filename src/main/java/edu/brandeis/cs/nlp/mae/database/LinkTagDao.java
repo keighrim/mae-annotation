@@ -74,11 +74,15 @@ public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
         final Collection<Attribute> atts = tag.getAttributes();
         final Collection<Argument> args = tag.getArguments();
         callBatchTasks((Callable<Void>) () -> {
-            for (Attribute att : atts) {
-                attDao.createOrUpdate(att);
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.createOrUpdate(att);
+                }
             }
-            for (Argument arg : args) {
-                argDao.createOrUpdate(arg);
+            if (args != null) {
+                for (Argument arg : args) {
+                    argDao.createOrUpdate(arg);
+                }
             }
             return null;
         });
@@ -91,11 +95,15 @@ public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
         final Collection<Attribute> atts = tag.getAttributes();
         final Collection<Argument> args = tag.getArguments();
         callBatchTasks((Callable<Void>) () -> {
-            for (Attribute att : atts) {
-                attDao.delete(att);
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.delete(att);
+                }
             }
-            for (Argument arg : args) {
-                argDao.delete(arg);
+            if (args != null) {
+                for (Argument arg : args) {
+                    argDao.delete(arg);
+                }
             }
             return null;
         });
