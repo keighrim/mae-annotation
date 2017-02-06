@@ -57,6 +57,9 @@ public class MaeMainView extends JFrame {
         JSplitPane main = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
         main.setDividerLocation(350);
 
+        // ##ES: keep bottom fixed during resize
+        main.setResizeWeight(1.0);
+
         root.add(menuBarView, BorderLayout.NORTH);
         root.add(main, BorderLayout.CENTER);
 
