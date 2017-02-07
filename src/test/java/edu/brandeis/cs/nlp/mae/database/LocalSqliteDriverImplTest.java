@@ -32,7 +32,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -90,8 +93,8 @@ public class LocalSqliteDriverImplTest {
     @Test
     public void canCreateTag() throws Exception {
         ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
-        List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
-        ExtentTag retrievedTag = retrievedTags.get(0);
+        Collection<ExtentTag> retrievedTags = (Collection<ExtentTag>) driver.getAllTagsOfType(noun);
+        ExtentTag retrievedTag = retrievedTags.iterator().next();
         assertEquals(
                 "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
@@ -147,13 +150,13 @@ public class LocalSqliteDriverImplTest {
     @Test
     public void canDeleteTag() throws Exception {
         ExtentTag tag = driver.createExtentTag("N01", noun, "jenny", 5,6,7,8,9);
-        List<ExtentTag> retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        Collection<ExtentTag> retrievedTags = (Collection<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
                 "Expected 1 extent tag is retrieved by generic query, found: " + retrievedTags.size(),
                 1, retrievedTags.size());
 
         driver.deleteTag(tag);
-        retrievedTags = (List<ExtentTag>) driver.getAllTagsOfType(noun);
+        retrievedTags = (Collection<ExtentTag>) driver.getAllTagsOfType(noun);
         assertEquals(
                 "Expected 1 extent tag is successfully deleted, found: " + retrievedTags.size(),
                 0, retrievedTags.size());
@@ -337,9 +340,9 @@ public class LocalSqliteDriverImplTest {
 
         driver.emptyAnnotations();
 
-        List<ExtentTag> nouns = (List<ExtentTag>) driver.getAllTagsOfType(noun);
-        List<ExtentTag> verbs = (List<ExtentTag>) driver.getAllTagsOfType(verb);
-        List<LinkTag> roles = (List<LinkTag>) driver.getAllTagsOfType(semanticRole);
+        Collection<ExtentTag> nouns = (Collection<ExtentTag>) driver.getAllTagsOfType(noun);
+        Collection<ExtentTag> verbs = (Collection<ExtentTag>) driver.getAllTagsOfType(verb);
+        Collection<LinkTag> roles = (Collection<LinkTag>) driver.getAllTagsOfType(semanticRole);
         assertTrue(
                 "Expected all tags are wiped out, found tags: " + (nouns.size() + verbs.size() + roles.size()),
                 nouns.size() + verbs.size() + roles.size() == 0);
