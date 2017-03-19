@@ -22,44 +22,38 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
 
 /**
- * Created by krim on 1/2/2016.
+ * Loads a new DTD definition. This will wipe out all open documents, so users are
+ * warning with unsaved-changes.
  */
-public abstract class MaeControllerI {
+public class LoadTask extends MaeActionI {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
-
-    protected JPanel view;
-    protected MaeMainController mainController;
-
-    public MaeControllerI(MaeMainController mainController) {
-        this.mainController = mainController;
+    public LoadTask(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+        super(text, icon, hotkey, mnemonic, controller);
     }
 
-    public MaeMainController getMainController() {
-        return mainController;
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        if (getMainController().showAllUnsavedChangeWarning()) {
+            try {
+                File file = getMainController().selectSingleFile("", false);
+                if (file != null) {
+                    getMainController().setUpTask(file);
+                }
+
+            } catch (Exception e) {
+                catchException(e);
+            }
+        }
     }
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
-    }
-
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }
+

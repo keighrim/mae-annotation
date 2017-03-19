@@ -32,11 +32,15 @@ import com.j256.ormlite.table.DatabaseTableConfig;
 import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.CharIndex;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
+import edu.brandeis.cs.nlp.mae.model.ModelI;
 
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
- * Created by krim on 12/15/2015.
+ * Accessor for Extent Tag DB table
  */
 public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
 
@@ -66,27 +70,53 @@ public class ExtentTagDao extends BaseDaoImpl<ExtentTag, String> {
 
     }
 
+    private void consumeForeignCollection(Collection<ModelI> collection,
+                                          Consumer<ModelI> consumer) throws Exception {
+        if (collection != null) {
+            collection.forEach(consumer);
+        }
+
+    }
+
     @Override
     public int update(ExtentTag tag) throws SQLException {
         refresh(tag);
-        for (Attribute att : tag.getAttributes()) {
-            attDao.createOrUpdate(att);
-        }
-        for (CharIndex ci : tag.getSpans()) {
-            charIndexDao.createOrUpdate(ci);
-        }
+        final Collection<Attribute> atts = tag.getAttributes();
+        final Collection<CharIndex> anchors = tag.getSpans();
+        super.callBatchTasks((Callable<Void>) () -> {
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.createOrUpdate(att);
+                }
+            }
+            if (anchors != null) {
+                for (CharIndex anchor : anchors) {
+                    charIndexDao.createOrUpdate(anchor);
+                }
+            }
+            return null;
+        });
         return super.update(tag);
     }
 
     @Override
     public int delete(ExtentTag tag) throws SQLException {
         refresh(tag);
-        for (Attribute att : tag.getAttributes()) {
-            attDao.delete(att);
-        }
-        for (CharIndex ci : tag.getSpans()) {
-            charIndexDao.delete(ci);
-        }
+        final Collection<Attribute> atts = tag.getAttributes();
+        final Collection<CharIndex> anchors = tag.getSpans();
+        super.callBatchTasks((Callable<Void>) () -> {
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.delete(att);
+                }
+            }
+            if (anchors != null) {
+                for (CharIndex anchor : anchors) {
+                    charIndexDao.delete(anchor);
+                }
+            }
+            return null;
+        });
         return super.delete(tag);
     }
 }

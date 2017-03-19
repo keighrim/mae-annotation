@@ -22,44 +22,30 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 
-import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
- * Created by krim on 1/2/2016.
+ * Created by krim on 1/11/2017.
  */
-public abstract class MaeControllerI {
+class AdjudicationTabSwitchListener implements ChangeListener {
+    private TablePanelController tablePanelController;
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
-
-    protected JPanel view;
-    protected MaeMainController mainController;
-
-    public MaeControllerI(MaeMainController mainController) {
-        this.mainController = mainController;
+    public AdjudicationTabSwitchListener(TablePanelController tablePanelController) {
+        this.tablePanelController = tablePanelController;
     }
 
-    public MaeMainController getMainController() {
-        return mainController;
-    }
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        try {
+            tablePanelController.getMainController().switchAdjudicationTag();
+        } catch (MaeDBException ex) {
+            tablePanelController.getMainController().showError(ex);
+        }
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
     }
-
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

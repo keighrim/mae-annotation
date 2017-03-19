@@ -29,7 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
-import edu.brandeis.cs.nlp.mae.io.FileWriter;
+import edu.brandeis.cs.nlp.mae.io.MaeFileWriter;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 
@@ -37,8 +37,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -47,8 +45,6 @@ import java.util.List;
 
 /**
  * All popups and supplement sub windows are managed within this class
- *
- * Created by krim on 1/1/2016.
  */
 class DialogController {
     private MaeMainController mainController;
@@ -115,7 +111,7 @@ class DialogController {
         return null;
     }
 
-    void setAsArgument(String argumentTid) throws MaeDBException {
+    void setAsArgumentDialog(String argumentTid) throws MaeDBException {
         if (getMainController().getDriver().getAllLinkTagsOfAllTypes().size() == 0) {
             showWarning("No link tags are found.");
         } else {
@@ -134,7 +130,7 @@ class DialogController {
 
     }
 
-    LinkTag createLink(TagType linkType, List<ExtentTag> candidates) throws MaeDBException {
+    LinkTag createLinkDialog(TagType linkType, List<ExtentTag> candidates) throws MaeDBException {
         CreateLinkOptionPanel options = new CreateLinkOptionPanel(linkType, candidates);
         int result = JOptionPane.showConfirmDialog(getMainController().getMainWindow(),
                 options,
@@ -164,7 +160,7 @@ class DialogController {
         if (incomplete == null || incomplete.size() < 1) {
             return true;
         }
-        IncompleteTagsWarningOptionPanel options = new IncompleteTagsWarningOptionPanel(incomplete, simplyWarn);
+        UnderspecifiedTagsWarningOptionPanel options = new UnderspecifiedTagsWarningOptionPanel(incomplete, simplyWarn);
         options.setVisible(true);
         switch (options.getResponse()) {
             case JOptionPane.YES_OPTION:
@@ -179,10 +175,12 @@ class DialogController {
     }
 
     public File showStartAdjudicationDialog() throws MaeControlException, MaeDBException, MaeIOException {
-        Object[] options = {"Yes", "No, Load Gold Standard file", "Cancel"};
+        Object[] options = {MaeStrings.START_ADJUD_NEW_GS_OPTION,
+                MaeStrings.START_ADJUD_LOAD_GS_OPTION,
+                MaeStrings.CANCEL};
         int response = JOptionPane.showOptionDialog(null,
-                "Start adjudication with an empty Gold Standard file?",
-                "Start adjudication",
+                MaeStrings.START_ADJUD_MSG,
+                MaeStrings.ADJUD_DIALOG_TITLE,
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -199,7 +197,7 @@ class DialogController {
     }
 
     File getExistingGoldstandardFile() throws MaeIOException, MaeDBException {
-        File existingGS = showFileChooseDialogAndSelect("goldstandard.xml", false);
+        File existingGS = showFileChooseDialogAndSelect(MaeStrings.DEF_GS_FILE, false);
         AnnotationLoader xmlLoader = new AnnotationLoader(getMainController().getDriver());
         if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
             return existingGS;
@@ -208,21 +206,22 @@ class DialogController {
     }
 
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
-        File newGS = showFileChooseDialogAndSelect("goldstandard.xml", true);
+        File newGS = showFileChooseDialogAndSelect(MaeStrings.DEF_GS_FILE, true);
         if (newGS != null) {
-            FileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
+            MaeFileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
                     getMainController().getDriver().getTaskName(), newGS);
             return newGS;
         }
         return null;
     }
 
-    class IncompleteTagsWarningOptionPanel extends JDialog {
+    class UnderspecifiedTagsWarningOptionPanel extends JDialog {
+        private final String tidSep = " - ";
         JList<String> incompleteTags;
         int response;
 
-        IncompleteTagsWarningOptionPanel(Set<Tag> incomplete, boolean simplyWarn) {
-            super(getMainController().getMainWindow(), "Missing Something", true);
+        UnderspecifiedTagsWarningOptionPanel(Set<Tag> incomplete, boolean simplyWarn) {
+            super(getMainController().getMainWindow(), MaeStrings.UNDERSPEC_TITLE, true);
             setSize(100, 200);
 
             final JButton yes = makeYesButton();
@@ -240,8 +239,8 @@ class DialogController {
             buttons.add(see);
 
             String tag = incomplete.size() == 1? "tag" : "tags";
-            add(new JLabel(String.format(
-                    "<html><p align=\"center\">You have %d underspecified %s! <br/> Continue?</p></html>", incomplete.size(), tag), SwingConstants.CENTER),
+            add(new JLabel(String.format(MaeStrings.UNDERSPEC_MSG, incomplete.size(), tag),
+                            SwingConstants.CENTER),
                     BorderLayout.NORTH);
             add(new JScrollPane(incompleteTags), BorderLayout.CENTER);
             add(buttons, BorderLayout.SOUTH);
@@ -258,12 +257,8 @@ class DialogController {
             });
             KeyStroke stroke   = MaeHotKeys.ksESC;
 
-            getRootPane().registerKeyboardAction(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    no();
-                }
-            }, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+            getRootPane().registerKeyboardAction(e -> no(),
+                    stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
             getRootPane().setDefaultButton(yes);
 
         }
@@ -283,12 +278,9 @@ class DialogController {
         }
 
         private void addListenersToList(final JButton see) {
-            incompleteTags.addListSelectionListener(new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    see.setEnabled(true);
-                    see.requestFocusInWindow();
-                }
+            incompleteTags.addListSelectionListener(e -> {
+                see.setEnabled(true);
+                see.requestFocusInWindow();
             });
             incompleteTags.addMouseListener(new MouseAdapter() {
                 @Override
@@ -305,7 +297,10 @@ class DialogController {
             String[] incompleteTagsDetail = new String[incomplete.size()];
             int i = 0;
             for (Tag tag : incomplete) {
-                incompleteTagsDetail[i++] = String.format("%s - missing: %s", tag.getId(), tag.getUnderspec());
+                incompleteTagsDetail[i++] = String.format("%s%smissing: %s",
+                        tag.getId(),
+                        tidSep,
+                        tag.getUnderspec());
             }
             return incompleteTagsDetail;
         }
@@ -325,18 +320,15 @@ class DialogController {
         private JButton makeButton(String label, int mnemonic, final int responsevalue) {
             final JButton button = new JButton(label);
             button.setMnemonic(mnemonic);
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    response = responsevalue;
-                    setVisible(false);
-                }
+            button.addActionListener(e -> {
+                response = responsevalue;
+                setVisible(false);
             });
             return button;
         }
 
         public Tag getSelectedTag() {
-            String tid = incompleteTags.getSelectedValue().split(" - ")[0];
+            String tid = incompleteTags.getSelectedValue().split(tidSep)[0];
             return getMainController().getTagByTid(tid);
         }
 
@@ -390,21 +382,18 @@ class DialogController {
                 }
             });
 
-            linkTypes.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    TagType type = (TagType) linkTypes.getSelectedItem();
+            linkTypes.addActionListener(e -> {
+                TagType type = (TagType) linkTypes.getSelectedItem();
 
-                    try {
-                        argTypes.removeAllItems();
-                        for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(type)) {
-                            argTypes.addItem(argType);
-                        }
-                    } catch (MaeDBException ex) {
-                        getMainController().showError(ex);
+                try {
+                    argTypes.removeAllItems();
+                    for (ArgumentType argType : driver.getArgumentTypesOfLinkTagType(type)) {
+                        argTypes.addItem(argType);
                     }
-
+                } catch (MaeDBException ex) {
+                    getMainController().showError(ex);
                 }
+
             });
 
             for (TagType type : driver.getLinkTagTypes()) {
@@ -454,12 +443,8 @@ class DialogController {
                 for (ExtentTag tag : argumentCandidates) {
                     candidates.addItem(tag);
                 }
-                candidates.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        argumentsMap.put(type, (ExtentTag) candidates.getSelectedItem());
-                    }
-                });
+                candidates.addActionListener(event ->
+                        argumentsMap.put(type, (ExtentTag) candidates.getSelectedItem()));
                 candidates.setSelectedIndex((typeNum++ % argumentCandidates.size()) + 1);
                 JPanel comboPanel = new JPanel();
                 comboPanel.add(candidates);

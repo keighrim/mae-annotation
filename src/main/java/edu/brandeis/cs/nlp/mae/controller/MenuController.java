@@ -26,7 +26,9 @@ package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
-import edu.brandeis.cs.nlp.mae.controller.action.*;
+import edu.brandeis.cs.nlp.mae.controller.menuaction.*;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TablePanelController;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TagTableModel;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
@@ -36,8 +38,7 @@ import edu.brandeis.cs.nlp.mae.util.FileHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
 
 import static edu.brandeis.cs.nlp.mae.MaeHotKeys.*;
@@ -45,7 +46,8 @@ import static edu.brandeis.cs.nlp.mae.MaeStrings.*;
 import static edu.brandeis.cs.nlp.mae.controller.MaeMainController.*;
 
 /**
- * Created by krim on 1/2/2016.
+ * MenuController handles items in the main menu bar as well as context menu.
+ * All action events are wrapped into menu items via MaeActionI classes
  */
 class MenuController extends MaeControllerI {
 
@@ -59,102 +61,102 @@ class MenuController extends MaeControllerI {
     private static final int SETARG_MENU = 1;
     private static final int COPY_MENU = 2;
 
-    private static final int MENUBAR_FILE = 0;
-    private static final int MENUBAR_TAGS = 1;
-    private static final int MENUBAR_MODE = 2;
-    private static final int MENUBAR_DISPLAY = 3;
-    private static final int MENUBAR_HELP = 4;
+    private static final int MENU_FILE_POSITION = 0;
+    private static final int MENU_TAGS_POSITOIN = 1;
+    private static final int MENU_MODE_POSITION = 2;
+    private static final int MENU_DISPLAY_POSITION = 3;
+    private static final int MENU_HELP_POSITION = 4;
 
-    // this controller is responsible for all these menus
-    JMenu fileMenu;
-    JMenu tagsMenu;
-    JMenu displayMenu;
-    JMenu helpMenu;
-    JMenu modeMenu;
+    private static final Map<String , Integer> menuOrder;
+    static {
+        menuOrder = new HashMap<>();
+        menuOrder.put(MaeStrings.MENU_FILE, MENU_FILE_POSITION);
+        menuOrder.put(MaeStrings.MENU_TAGS, MENU_TAGS_POSITOIN);
+        menuOrder.put(MaeStrings.MENU_MODE, MENU_MODE_POSITION);
+        menuOrder.put(MaeStrings.MENU_DISPLAY, MENU_DISPLAY_POSITION);
+        menuOrder.put(MaeStrings.MENU_HELP, MENU_HELP_POSITION);
+    }
 
-    JMenu[] menubarOrder = new JMenu[10];
-
-    // and this view for top main menu
+    // this view for top main menu
     private JMenuBar menubar;
 
     MenuController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
         view = new JPanel(new BorderLayout());
         menubar = new JMenuBar();
-        initMenubar();
+        // JMenuBar does not have a method to set its capacity, so add dummies first.
+        Set<String> menuItems = menuOrder.keySet();
+        for (int i = 0; i < menuItems.size(); i++) {
+            menubar.add(new JMenu(Integer.toString(i)));
+        }
+        resetMenus(new ArrayList<>(menuItems));
         view.add(menubar, BorderLayout.CENTER);
 
     }
 
-    void initMenubar() throws MaeDBException {
+    @Override
+    protected void addListeners() throws MaeException {
+        // no listeners involved
+    }
 
-        menubar.removeAll();
 
-        fileMenu = prepareFileMenu();
-        tagsMenu = prepareTagsMenu();
-        modeMenu = prepareModeMenu();
-        displayMenu = prepareDisplayMenu();
-        helpMenu = prepareHelpMenu();
+    class ResetMenuWorker extends SwingWorker<Boolean, Object[]> {
+        private List<String> menuItems;
 
-        menubarOrder[MENUBAR_FILE] = fileMenu;
-        menubarOrder[MENUBAR_TAGS] = tagsMenu;
-        menubarOrder[MENUBAR_MODE] = modeMenu;
-        menubarOrder[MENUBAR_DISPLAY] = displayMenu;
-        menubarOrder[MENUBAR_HELP] = helpMenu;
+        ResetMenuWorker(List<String> menuItems) {
+            this.menuItems = menuItems;
+        }
 
-        for (JMenu menu : menubarOrder) {
-            if (menu != null) {
-                menubar.add(menu);
-            } else {
-                break;
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            for (String item: this.menuItems) {
+                Integer position = menuOrder.get(item);
+                publish(new Object[]{prepareAMenu(position), position});
+            }
+            return true;
+        }
+
+        @Override
+        protected void process(List<Object[]> list) {
+            for (Object[] menuAndPosition : list) {
+                menubar.add((JMenu) menuAndPosition[0], (Integer)menuAndPosition[1]+1);
+                menubar.remove((Integer) menuAndPosition[1]);
             }
         }
 
-        tagsMenu.setEnabled(getMainController().isDocumentOpen());
-        modeMenu.setEnabled(getMainController().isTaskLoaded());
-        view.updateUI();
+        @Override
+        protected void done() {
+            menubar.updateUI();
 
+        }
     }
 
-    @Override
-    void addListeners() throws MaeException {
-        // no listeners involved
-
+    private void resetMenus(List<String> menuItems) {
+        ResetMenuWorker worker = new ResetMenuWorker(menuItems);
+        worker.execute();
     }
 
-    private void resetAMenu(int menuIndex) {
-        JMenu menu = menubarOrder[menuIndex];
-        menubar.remove(menu);
-        menu = prepareAMenu(menuIndex);
-        menubarOrder[menuIndex] = menu;
-        menubar.add(menu, menuIndex);
-        view.updateUI();
-
-    }
-    void resetFileMenu() {
-        resetAMenu(MENUBAR_FILE);
-    }
-
-    void resetTagsMenu() {
-        resetAMenu(MENUBAR_TAGS);
-    }
-
-    void resetModeMenu() {
-        resetAMenu(MENUBAR_MODE);
+    void resetMenus(String...menuItems) {
+        resetMenus(Arrays.asList(menuItems));
     }
 
     private JMenu prepareAMenu(int menuIndex) {
+        JMenu menu;
         switch (menuIndex) {
-            case MENUBAR_FILE:
+            case MENU_FILE_POSITION:
                 return prepareFileMenu();
-            case MENUBAR_MODE:
-                return prepareModeMenu();
-            case MENUBAR_DISPLAY:
+            case MENU_MODE_POSITION:
+                menu = prepareModeMenu();
+                menu.setEnabled(getMainController().isTaskLoaded());
+                return menu;
+            case MENU_DISPLAY_POSITION:
                 return prepareDisplayMenu();
-            case MENUBAR_HELP:
+            case MENU_HELP_POSITION:
                 return prepareHelpMenu();
-            case MENUBAR_TAGS:
-                return prepareTagsMenu();
+            case MENU_TAGS_POSITOIN:
+                menu = prepareTagsMenu();
+                menu.setEnabled(getMainController().isDocumentOpen());
+                return menu;
             default:
                 logger.warn("not defined menu number: " + menuIndex);
                 return null;
@@ -180,7 +182,7 @@ class MenuController extends MaeControllerI {
         JMenuItem saveXML = new JMenuItem(saveXMLAction);
         JMenuItem closeFile = new JMenuItem(closeFileAction);
         JMenuItem adjudMode = new JMenuItem(adjudModeAction);
-        adjudMode.setActionCommand(Integer.toString(START_ADJUD));
+        adjudMode.setActionCommand(Integer.toString(MODE_ADJUD));
         boolean taskLoaded = getMainController().isTaskLoaded();
         boolean fileLoaded = getMainController().isDocumentOpen();
         openFile.setEnabled(taskLoaded);
@@ -285,10 +287,10 @@ class MenuController extends MaeControllerI {
     }
 
     private JMenu prepareDisplayMenu() {
-        MaeActionI increaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
-        MaeActionI decreaseFontSizeAction = new ChangeFontsize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
-        MaeActionI resetFontSizeAction = new ChangeFontsize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
-        MaeActionI presentation = new ChangeFontsize(MENUITEM_BIGFONT, null, null, null, getMainController());
+        MaeActionI increaseFontSizeAction = new ChangeFontSize(MENUITEM_ZOOMIN, null, ksZOOMIN, null, getMainController());
+        MaeActionI decreaseFontSizeAction = new ChangeFontSize(MENUITEM_ZOOMOUT, null, ksZOOMOUT, null, getMainController());
+        MaeActionI resetFontSizeAction = new ChangeFontSize(MENUITEM_RESET_ZOOM, null, ksRESETZOOM, null, getMainController());
+        MaeActionI presentation = new ChangeFontSize(MENUITEM_BIGFONT, null, null, null, getMainController());
 
         JMenu menu = new JMenu(MENU_DISPLAY);
         menu.setMnemonic(MENU_DISPLAY.charAt(0));
@@ -555,11 +557,11 @@ class MenuController extends MaeControllerI {
         }
     }
 
-    JMenuItem getSingleDelete(Tag tag) throws MaeDBException {
+    private JMenuItem getSingleDelete(Tag tag) throws MaeDBException {
         return getDeleteMenuItem(tag, String.format(MENUITEM_DELETE_TAG_SINGLE, tag.toString()), cmnDELETE);
     }
 
-    JMenu getPluralDelete(List<? extends Tag> tags) throws MaeDBException {
+    private JMenu getPluralDelete(List<? extends Tag> tags) throws MaeDBException {
         JMenu deleteMenu = new JMenu(MENU_DELETE_TAG);
         deleteMenu.setMnemonic(cmnDELETE);
         deleteMenu.add(getTotalDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size()), n0));
@@ -655,7 +657,7 @@ class MenuController extends MaeControllerI {
 
         String rowS = selected == 1 ? "row" : "rows";
         JPopupMenu contextMenu = new JPopupMenu(String.format("%d %s selected", selected, rowS));
-        TablePanelController.TagTableModel model = (TablePanelController.TagTableModel) table.getModel();
+        TagTableModel model = (TagTableModel) table.getModel();
 
         int selectedModelRow = table.convertRowIndexToModel(table.getSelectedRow());
         if (!getMainController().isAdjudicating()) {
@@ -685,7 +687,7 @@ class MenuController extends MaeControllerI {
 
     }
 
-    static int[] convertRowIndicesToModel(JTable table, int[] viewIndices) {
+    private static int[] convertRowIndicesToModel(JTable table, int[] viewIndices) {
         int[] modelIndices = new int[viewIndices.length];
         for (int i = 0; i < viewIndices.length; i++) {
             modelIndices[i] = table.convertRowIndexToModel(viewIndices[i]);
@@ -693,20 +695,20 @@ class MenuController extends MaeControllerI {
         return modelIndices;
     }
 
-    private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private void prepareTableContextMenuForSingleSelection(JPopupMenu contextMenu, TagTableModel model, int selectedRow) throws MaeDBException {
         contextMenu.add(getSingleDelete(model, selectedRow));
         if (model.getAssociatedTagType().isExtent()) {
             contextMenu.add(getSingleSetArg(model, selectedRow));
         }
     }
 
-    private JMenuItem getSingleDelete(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private JMenuItem getSingleDelete(TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return getSingleDelete(tag);
     }
 
-    private JMenu getPluralDelete(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
+    private JMenu getPluralDelete(TagTableModel model, int[] selectedRows) throws MaeDBException {
         List<Tag> tags = new LinkedList<>();
         for (int row : selectedRows) {
             tags.add(getDriver().getTagByTid((String) model.getValueAt(row, TablePanelController.ID_COL)));
@@ -714,7 +716,7 @@ class MenuController extends MaeControllerI {
         return getPluralDelete(tags);
     }
 
-    private JMenu createMakeLinkFromTableMenu(TablePanelController.TagTableModel model, int[] selectedRows) throws MaeDBException {
+    private JMenu createMakeLinkFromTableMenu(TagTableModel model, int[] selectedRows) throws MaeDBException {
         JMenu makeLinkFromTableMenu = new JMenu(MENUITEM_CREATE_LTAG_FROM_SEL);
         makeLinkFromTableMenu.setMnemonic(getMakeTagMenuMnemonic(CAT_LTAG_FROM_TABLE));
         String tids = MaeStrings.SEP;
@@ -731,7 +733,7 @@ class MenuController extends MaeControllerI {
 
     }
 
-    private JMenuItem getSingleSetArg(TablePanelController.TagTableModel model, int selectedRow) throws MaeDBException {
+    private JMenuItem getSingleSetArg(TagTableModel model, int selectedRow) throws MaeDBException {
         String tid = (String) model.getValueAt(selectedRow, TablePanelController.ID_COL);
         Tag tag = getDriver().getTagByTid(tid);
         return getSingleSetArg((ExtentTag) tag);

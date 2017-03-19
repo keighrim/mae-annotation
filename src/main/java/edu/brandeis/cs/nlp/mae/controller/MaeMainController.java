@@ -26,16 +26,19 @@ package edu.brandeis.cs.nlp.mae.controller;
 
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.HighlightToggleListener;
+import edu.brandeis.cs.nlp.mae.controller.tablepanel.TablePanelController;
+import edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import edu.brandeis.cs.nlp.mae.io.MaeIODTDException;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import edu.brandeis.cs.nlp.mae.view.MaeMainView;
+import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,27 +46,27 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.text.Highlighter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Created by krim on 12/30/2015.
+ * MainController handles user interactions by coordinates all GUI controllers.
+ * GUI is mainly made of two parts: <b>TextPanel</b> (at the top half), <b>TablePanel</b> (at the bottom half).
+ * As well as miscellaneous componenets such as <b>Menu bar</b>, <b>Status bar</b> and <b>Dialogs/Popups</b>.
+ * All GUI controllers subclasse from MaeControllerI which has their own "view" associated.
+ * However, MainController directly subclasses JPanel to be initiated and embedded into JFrame when the program starts.
+ * Also note that DialogController does not subclass MaeControllerI, since it doesn't need a "view".
  */
 public class MaeMainController extends JPanel {
 
     public static final int MODE_NORMAL = 0;
     public static final int MODE_MULTI_SPAN = 1;
     public static final int MODE_ARG_SEL = 2;
-    public static final int START_ADJUD = 9;
+    public static final int MODE_ADJUD = 9;
     private static final Logger logger = LoggerFactory.getLogger(MaeMainController.class.getName());
     private int mode;
 
@@ -126,20 +129,22 @@ public class MaeMainController extends JPanel {
 
             @Override
             public void windowClosing(WindowEvent winEvt) {
+                boolean allChecked = true;
                 if (isDocumentOpen()) {
-                    boolean allChecked = true;
                     for (int i = 0; i < getDrivers().size(); i++) {
-                        if (!showUnsavedChangeWarningAt(i) || !showIncompleteTagsWarningAt(i, false)) {
+                        if (!showUnsavedChangeWarningAt(i)) {
                             allChecked = false;
                             break;
                         }
                     }
-                    if (allChecked) {
-                        wipeDrivers();
-                        System.exit(0);
+                }
+                if (allChecked) {
+                    sendWaitMessage();
+                    SwingWorker<Boolean, String> wiper = new WipeDriversWorker(drivers);
+                    wiper.execute();
+                    while (!wiper.isDone()) {
+                        // wait until wiper finishes its job
                     }
-                } else {
-                    wipeDrivers();
                     System.exit(0);
                 }
             }
@@ -230,13 +235,13 @@ public class MaeMainController extends JPanel {
 
     public void showError(Exception e) {
         logException(e);
-        getDialogs().showError(e);
+        SwingUtilities.invokeLater(() -> getDialogs().showError(e));
     }
 
     public void showError(String message, Exception e) {
         logException(e);
         logger.error(message);
-        getDialogs().showError(message, e);
+        SwingUtilities.invokeLater(() -> getDialogs().showError(message, e));
     }
 
     void logException(Exception e) {
@@ -248,7 +253,7 @@ public class MaeMainController extends JPanel {
 
     public void showError(String message) {
         logger.error(message);
-        getDialogs().showError(message);
+        SwingUtilities.invokeLater(() -> getDialogs().showError(message));
     }
 
     public boolean isTaskLoaded() {
@@ -368,7 +373,7 @@ public class MaeMainController extends JPanel {
                 getTextPanel().closeDocumentTab(i);
             } else {
                 File taskFile = new File(getDriver().getTaskFileName());
-                setupScheme(taskFile, true);
+                setUpTask(taskFile);
             }
         } catch (MaeException e) {
             showError(e);
@@ -377,28 +382,23 @@ public class MaeMainController extends JPanel {
 
     public void sendNotification(String message) {
         getStatusBar().setText(message);
-        mouseCursorToDefault();
+        unblockGUI();
         logger.debug(message);
     }
 
     public void updateNotificationAreaIn(int millisecond) {
-        this.temporaryNotificationTimer = new Timer(0, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateNotificationArea();
-            }
-        });
+        this.temporaryNotificationTimer = new Timer(0, e -> updateNotificationArea());
         temporaryNotificationTimer.setInitialDelay(millisecond);
         temporaryNotificationTimer.start();
 
     }
 
-    synchronized void updateNotificationArea() {
+    public synchronized void updateNotificationArea() {
         if (temporaryNotificationTimer != null && temporaryNotificationTimer.isRunning()) {
             temporaryNotificationTimer.stop();
         }
         getStatusBar().refresh();
-        mouseCursorToDefault();
+        unblockGUI();
 
     }
 
@@ -413,15 +413,15 @@ public class MaeMainController extends JPanel {
             temporaryNotificationTimer.stop();
         }
         getStatusBar().setText(MaeStrings.WAIT_MESSAGE);
-        mouseCursorToWait();
+        blockGUI();
     }
 
-    public void mouseCursorToDefault() {
+    void unblockGUI() {
         getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         view.hideWait();
     }
 
-    public void mouseCursorToWait() {
+    private void blockGUI() {
         getMainWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         view.showWait();
     }
@@ -432,7 +432,7 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             mode = MODE_ARG_SEL;
             sendNotification(MaeStrings.SB_ARGSEL_MODE_NOTI);
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
@@ -442,7 +442,7 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             mode = MODE_MULTI_SPAN;
             sendNotification(MaeStrings.SB_MSPAN_MODE_NOTI);
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
@@ -473,8 +473,7 @@ public class MaeMainController extends JPanel {
             addAdjudication(goldstandard);
 
             removeAllBGColors();
-            getMenu().resetFileMenu();
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
             sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
         }
     }
@@ -490,7 +489,7 @@ public class MaeMainController extends JPanel {
                 getTablePanel().insertAllTags();
                 assignAllFGColor();
                 sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
-                getMenu().resetFileMenu();
+                getMenu().resetMenus(MaeStrings.MENU_FILE);
             } catch (MaeException e) {
                 showError(e);
             }
@@ -504,53 +503,27 @@ public class MaeMainController extends JPanel {
             clearTextSelection();
             sendNotification(MaeStrings.SB_NORM_MODE_NOTI);
             removeAllBGColors();
-            getMenu().resetModeMenu();
+            getMenu().resetMenus(MaeStrings.MENU_MODE);
         }
     }
 
-    public void setupScheme(final File taskFile, final boolean fromNewTask) {
-        // this always wipes out on-going annotation works,
-        // even with multi-file support, an instance of MAE requires all works share the same DB schema
-        if (fromNewTask) {
-            sendWaitMessage();
-            wipeDrivers();
-        }
-        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
-            @Override
-            protected Boolean doInBackground() {
-                try {
-                    timeConsumingSetupScheme(taskFile);
-                    return true;
-                } catch (final Exception e) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            showError(e);
-                        }
-                    });
-                    return false;
-                }
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    if (get() && fromNewTask) {
-                        adjustUIPlusTaskMinusAnnotationMinusAdjudication();
-                    } else {
-                        updateNotificationArea();
-                    }
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        worker.execute();
+    public void setUpTask(final File taskFile) {
+        // This always wipes out on-going annotation works, even when multiple
+        // files are open.
+        // Since an instance of MAE requires all works share the same DB schema
+        sendWaitMessage();
+        new WipeDriversWorker(drivers).execute(); // destroy existing drivers in BG
+        drivers = new ArrayList<>();
+        new SetUpTaskWorker(taskFile).execute();
 
     }
 
-    private void timeConsumingSetupScheme(File taskFile) throws MaeException {
+    private void addAndSwitchDriver(MaeDriverI driver) {
+        currentDriver = driver;
+        drivers.add(currentDriver);
+    }
+
+    private MaeDriverI setUpDriver(File taskFile) throws MaeException {
         String dbFilename = String.format("mae-%d", System.currentTimeMillis());
         File dbFile;
         try {
@@ -559,37 +532,25 @@ public class MaeMainController extends JPanel {
             throw new MaeIOException("Could not generate DB file:", e);
         }
         MaeDriverI driver = new LocalSqliteDriverImpl(dbFile.getAbsolutePath());
-        currentDriver = driver;
-        drivers.add(currentDriver);
         try {
-            getDriver().readTask(taskFile);
-        } catch (MaeDBException | MaeIODTDException e) {
-            if (drivers.size() > 1) {
-                destroyCurrentDriver();
-            } else {
-                getDriver().destroy();
-                drivers.clear();
-                getTextPanel().noTaskGuide();
-            }
-            throw e;
-        } catch (IOException e) {
-            // then catch general IO error with specific message
-            destroyCurrentDriver();
+            driver.readTask(taskFile);
+            logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
+                    driver.getTaskName(), driver.getExtentTagTypes().size(), driver.getLinkTagTypes().size()));
+            return driver;
+        } catch (FileNotFoundException e) {
+            driver.destroy();
+            // wrap NotFoundError into a MaeException
             throw new MaeIOException("Could not open the task definition file: ", e);
-        } catch (Exception e) {
-            // finally catch all the rest
-            destroyCurrentDriver();
+        } catch (MaeException e) {
+            driver.destroy();
             throw e;
         }
-        logger.info(String.format("task \"%s\" is loaded, has %d extent tag definitions and %d link tag definitions",
-                getDriver().getTaskName(), getDriver().getExtentTagTypes().size(), getDriver().getLinkTagTypes().size()));
     }
 
     public void addDocument(final File annotationFile) {
         if (checkDuplicateDocs(annotationFile)) return;
 
-        final boolean firstDocument = getDrivers().size() > 0 && !getDriver().isAnnotationLoaded();
-        sendWaitMessage();
+        final boolean firstDocument = !isDocumentOpen();
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
@@ -597,12 +558,7 @@ public class MaeMainController extends JPanel {
                     timeConsumingAddDocument(annotationFile, firstDocument);
                     return true;
                 } catch (final Exception e) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            showError(e);
-                        }
-                    });
+                    showError(e);
                     return false;
                 }
             }
@@ -612,37 +568,39 @@ public class MaeMainController extends JPanel {
                 try {
                     if (get()) {
                         if (firstDocument) {
-                            getMenu().resetFileMenu();
-                            getMenu().resetTagsMenu();
-                            getMenu().resetModeMenu();
+                            getMenu().resetMenus(MaeStrings.MENU_FILE,
+                                    MaeStrings.MENU_TAGS,
+                                    MaeStrings.MENU_MODE);
                         }
-                        adjustUIPlusTaskAddAnnotation();
+                        adjustUIForNewDocument();
                     } else {
                         updateNotificationArea();
                     }
                 } catch (InterruptedException | ExecutionException e) {
+                    Thread.currentThread().interrupt();
                     e.printStackTrace();
                 }
             }
         };
+        sendWaitMessage();
         worker.execute();
     }
 
     private void timeConsumingAddDocument(File annotationFile, boolean firstDocument) throws MaeException {
 
-        String xmlParseWarnings = "";
+        String xmlParseWarnings;
+        if (!firstDocument) {
+            addAndSwitchDriver(setUpDriver(new File(getDriver().getTaskFileName())));
+        }
         try {
             // setting up the scheme will switch driver to the new one
-            if (!firstDocument) {
-                timeConsumingSetupScheme(new File(getDriver().getTaskFileName()));
-            }
 
             xmlParseWarnings = getDriver().readAnnotation(annotationFile);
             logger.info(String.format("document \"%s\" is loaded into DB.",
                     getDriver().getAnnotationFileBaseName()));
 
         } catch (Exception e) {
-            destroyCurrentDriver(); // this includes resetting statBar
+            destroyIncompleteDriver(); // this includes resetting statBar
             throw e;
         }
         if (firstDocument) {
@@ -663,7 +621,7 @@ public class MaeMainController extends JPanel {
     public void addAdjudication(File goldstandard) {
         try {
             try {
-                timeConsumingSetupScheme(new File(getDriver().getTaskFileName())); // will set up a new dirver for GS
+                addAndSwitchDriver(setUpDriver(new File(getDriver().getTaskFileName()))); // will set up a new dirver for GS
                 getDrivers().add(adjudDriverIndex, getDrivers().remove(getDrivers().size() - 1)); // move gold driver to the front
                 String xmlParseWarnings = getDriver().readAnnotation(goldstandard);
                 getTextPanel().addAdjudicationTab(goldstandard.getName(), getDriver().getPrimaryText());
@@ -675,35 +633,14 @@ public class MaeMainController extends JPanel {
                 }
             } catch (MaeIOException e) {
                 showError(e);
-                destroyCurrentDriver();
+                destroyIncompleteDriver();
             }
         } catch (MaeException e) {
             showError(e);
         }
     }
 
-    private void adjustUIPlusTaskMinusAnnotationMinusAdjudication() {
-        try {
-            resetPaintableColors();
-            setAdjudicating(false);
-            getMenu().resetFileMenu();
-            getMenu().resetModeMenu();
-            getTextPanel().noDocumentGuide();
-            getMainWindow().setTitle(String.format("%s :: %s", MaeStrings.TITLE_PREFIX, getDriver().getTaskName()));
-            getTablePanel().prepareAllTables();
-            storePaintedStates();
-            sendTemporaryNotification(MaeStrings.SB_NEWTASK, 4000);
-        } catch (MaeDBException e) {
-            showError("Found an error in DB!", e);
-            updateNotificationArea();
-        } catch (MaeControlException e) {
-            showError("Failed to sort out tag tables!", e);
-            updateNotificationArea();
-        }
-
-    }
-
-    private void adjustUIPlusTaskAddAnnotation() {
+    private void adjustUIForNewDocument() {
         try {
             getTextPanel().addDocumentTab(getDriver().getAnnotationFileBaseName(), getDriver().getPrimaryText());
 
@@ -724,14 +661,15 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    private void destroyCurrentDriver() {
+    // TODO: 1/16/2017 delete this method
+    private void destroyIncompleteDriver() {
         logger.error("Failed to load file due to an error in DB; destroying incomplete DB");
         try {
             if (drivers.size() == 1) { // means no annotation file is open (only task file open)
                 String taskFileName = getDriver().getTaskFileName();
                 getDriver().destroy();
                 drivers.clear();
-                timeConsumingSetupScheme(new File(taskFileName));
+                addAndSwitchDriver(setUpDriver(new File(taskFileName)));
             } else {
                 getDriver().destroy();
                 drivers.remove(drivers.size() - 1);
@@ -790,7 +728,7 @@ public class MaeMainController extends JPanel {
         getTextPanel().clearColoring();
         getTextPanel().clearSelection();
         TagType type = getAdjudicatingTagType();
-        Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorsOfTagType(type));
+        Set<Integer> goldAnchors = new HashSet<>(getDriver().getAllAnchorLocationsOfTagType(type));
         paintOverlappingStat(type, goldAnchors);
         paintGoldTags(goldAnchors);
     }
@@ -807,7 +745,7 @@ public class MaeMainController extends JPanel {
         // 0th is the driver for gold, skipping.
         for (int i = 1; i < getDrivers().size(); i++) {
             MaeDriverI driver = getDriverAt(i);
-            List<Integer> anchors = driver.getAllAnchorsOfTagType(type);
+            List<Integer> anchors = driver.getAllAnchorLocationsOfTagType(type);
             for (Integer anchor : anchors) {
                 if (!goldAnchors.contains(anchor)) {
                     anchorToDriverIndex.putItem(anchor, i);
@@ -1022,24 +960,13 @@ public class MaeMainController extends JPanel {
             if ((currentlyActivated.contains(type) && !coloredTagsInLastDocument.get(type))
                     || (!currentlyActivated.contains(type) && coloredTagsInLastDocument.get(type))) {
                 try {
-                    toRepaint.addAll(getDriver().getAllAnchorsOfTagType(type));
+                    toRepaint.addAll(getDriver().getAllAnchorLocationsOfTagType(type));
                 } catch (MaeDBException e) {
                     showError(e);
                 }
             }
         }
         return new ArrayList<>(toRepaint);
-    }
-
-    private void wipeDrivers() {
-        for (MaeDriverI driver : getDrivers()) {
-            try {
-                driver.destroy();
-            } catch (Exception e) {
-                showError(e);
-            }
-        }
-        getDrivers().clear();
     }
 
     public Color getDocumentColor(String documentName) {
@@ -1081,7 +1008,7 @@ public class MaeMainController extends JPanel {
         getTextHighlightColors().setColor(newColor, tagsForColor.indexOf(tagType));
         if (getTablePanel().getActiveExtentTags().contains(tagType)) {
             try {
-                assignTextColorsOver(getDriver().getAllAnchorsOfTagType(tagType));
+                assignTextColorsOver(getDriver().getAllAnchorLocationsOfTagType(tagType));
             } catch (MaeDBException e) {
                 showError(e);
             }
@@ -1126,7 +1053,7 @@ public class MaeMainController extends JPanel {
 
     public void setAsArgumentFromDialog(String argumentTid) {
         try {
-            getDialogs().setAsArgument(argumentTid);
+            getDialogs().setAsArgumentDialog(argumentTid);
         } catch (MaeDBException e) {
             showError(e);
         }
@@ -1135,7 +1062,7 @@ public class MaeMainController extends JPanel {
 
     public LinkTag createLinkFromDialog(TagType linkType, List<ExtentTag> candidates) {
         try {
-            LinkTag link = getDialogs().createLink(linkType, candidates);
+            LinkTag link = getDialogs().createLinkDialog(linkType, candidates);
             return link;
         } catch (MaeDBException e) {
             showError(e);
@@ -1216,7 +1143,7 @@ public class MaeMainController extends JPanel {
     public void propagateSelectionFromTablePanel(String tid) {
         removeAllBGColors();
         try {
-            addBGColorOver(getDriver().getAnchorsByTid(tid), ColorHandler.getVividHighliter());
+            addBGColorOver(getDriver().getAnchorLocationsByTid(tid), ColorHandler.getVividHighliter());
         } catch (Exception e) {
             showError(e);
         }
@@ -1293,8 +1220,7 @@ public class MaeMainController extends JPanel {
             } else {
                 tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             }
-            populateDefaultAttributes(tag);
-            getTablePanel().insertTagIntoTable(tag, tagType);
+            getTablePanel().insertNewTagIntoTable(tag, tagType);
             if (isAdjudicating()) {
                 adjudicationStatUpdate();
             } else {
@@ -1416,19 +1342,6 @@ public class MaeMainController extends JPanel {
             propagateSelectionFromTablePanel(tag.getId());
         } catch (MaeDBException e) {
             showError(e);
-        }
-    }
-
-    void populateDefaultAttributes(Tag tag) {
-        for (AttributeType attType : tag.getTagtype().getAttributeTypes()) {
-            String defaultValue = attType.getDefaultValue();
-            if (defaultValue.length() > 0) {
-                try {
-                    getDriver().addAttribute(tag, attType, defaultValue);
-                } catch (MaeDBException e) {
-                    showError(e);
-                }
-            }
         }
     }
 
@@ -1561,6 +1474,153 @@ public class MaeMainController extends JPanel {
     public void presentation() {
         getTextPanel().bigFontSize();
         getTablePanel().bigFontSize();
+    }
+
+    private class WipeDriversWorker extends SwingWorker<Boolean, String> {
+        private final Collection<MaeDriverI> driversToDelete;
+
+        WipeDriversWorker(Collection<MaeDriverI> driversToDelete) {
+            this.driversToDelete = driversToDelete;
+        }
+
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            int totalDrivers = driversToDelete.size();
+            int driversLeft = 0;
+            for (MaeDriverI driver : driversToDelete) {
+                try {
+                    driver.destroy();
+                    publish(String.format("%d/%d", ++driversLeft, totalDrivers));
+                } catch (Exception e) {
+                    showError(e);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        protected void process(List<String> list) {
+            getStatusBar().setText(String.format(
+                    MaeStrings.SB_BG_WIPING, list.get(list.size() - 1)));
+        }
+    }
+
+    private class PrepareAllTablesWorker extends SwingWorker<Boolean, Object[]> {
+
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            SwingUtilities.invokeAndWait(() -> {
+                try {
+                    if (!isTaskLoaded()) {
+                        throw new MaeControlException("Cannot make tables without a task definition!");
+                    }
+                    getTablePanel().emptyTagTables();
+                } catch (MaeDBException e) {
+                    showError("Found an error in DB!", e);
+                } catch (MaeControlException e) {
+                    showError("Failed to sort out tag tables!", e);
+                }
+            });
+            List<TagType> types = getDriver().getAllTagTypes();
+            logger.debug(String.format("start creating tables for %d tag types", types.size()));
+            if (isAdjudicating()) {
+                for (TagType type : types) {
+                    String name = type.getName();
+                    JLabel title = new JLabel(name);
+                    publish(new Object[]{name, title,
+                            getTablePanel().makeAdjudicationArea(type)});
+                    logger.info(String.format("created adjudication table for \"%s\"", name));
+                }
+            } else {
+                TablePanelView.TogglingTabTitle allTagsTabTitle
+                        = new TablePanelView.TogglingTabTitle(TablePanelController.dummyForAllTagsTab);
+                publish(new Object[]{MaeStrings.ALL_TABLE_TAB_BACK_NAME, allTagsTabTitle,
+                        getTablePanel().makeAllExtentTagsArea()});
+                logger.info("created annotation table for ALL extent tags");
+                for (TagType type : types) {
+                    String name = type.getName();
+                    TablePanelView.TogglingTabTitle title = type.isExtent() ?
+                            new TablePanelView.TogglingTabTitle(type, getFGColor(type)) :
+                            new TablePanelView.TogglingTabTitle(type);
+                    HighlightToggleListener toggleListener
+                            = new HighlightToggleListener(getTablePanel(), false, title);
+                    if (type.isExtent()) {
+                        title.addMouseListener(toggleListener);
+                        title.addToggleListener(toggleListener);
+                    }
+                    publish(new Object[]{name, title,
+                            getTablePanel().makeAnnotationArea(type)});
+                    logger.info(String.format("created annotation table for \"%s\"", name));
+                }
+            }
+            return true;
+        }
+
+        @Override
+        protected void process(List<Object[]> list) {
+            for (Object[] o : list) {
+                getTablePanel().getView().addTab((String) o[0], (JComponent) o[1], (JComponent) o[2]);
+            }
+        }
+
+        @Override
+        protected void done() {
+            if (!isAdjudicating()) {
+                TablePanelView.TogglingTabTitle allTagsTabTitle =
+                        (TablePanelView.TogglingTabTitle) getTablePanel().getView().getTabs().getTabComponentAt(0);
+                allTagsTabTitle.addToggleListener(new HighlightToggleListener(getTablePanel(), true, allTagsTabTitle));
+                // this will turn on each extent tag title
+                allTagsTabTitle.setHighlighted(true);
+
+            }
+        }
+    }
+
+    private class SetUpTaskWorker extends SwingWorker<Boolean, Void> {
+        private final File taskFile;
+
+        SetUpTaskWorker(File taskFile) {
+            this.taskFile = taskFile;
+        }
+
+        @Override
+        protected Boolean doInBackground() {
+            try {
+                addAndSwitchDriver(setUpDriver(taskFile));
+                resetPaintableColors();
+                setAdjudicating(false);
+                getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
+                SwingUtilities.invokeLater(() -> {
+                            getTextPanel().addGuideTab();
+                        }
+                );
+                PrepareAllTablesWorker worker = new PrepareAllTablesWorker();
+                worker.execute();
+                boolean tableDone = worker.get();
+                if (tableDone) {
+                    logger.info("All tables are prepared");
+                }
+                return true;
+            } catch (final Exception e) {
+                showError(e);
+                return false;
+            }
+        }
+
+        @Override
+        protected void done() {
+            try {
+                if (get())
+                    sendTemporaryNotification(MaeStrings.SB_NEWTASK, 4000);
+                else {
+                    updateNotificationArea();
+                }
+            } catch (ExecutionException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                showError(e);
+            }
+        }
     }
 }
 

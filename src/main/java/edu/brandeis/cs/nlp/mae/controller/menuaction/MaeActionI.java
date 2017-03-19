@@ -22,44 +22,36 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
 import javax.swing.*;
 
 /**
- * Created by krim on 1/2/2016.
+ * Created by krim on 12/30/2015.
+ * Provide interface for actions associated to menu items.
  */
-public abstract class MaeControllerI {
+public abstract class MaeActionI extends AbstractAction {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
-
-    protected JPanel view;
     protected MaeMainController mainController;
 
-    public MaeControllerI(MaeMainController mainController) {
+    public MaeActionI(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController mainController) {
+        super(text, icon);
+        if (hotkey != null) {
+            putValue(ACCELERATOR_KEY, hotkey);
+        }
+        if (mnemonic != null) {
+            putValue(MNEMONIC_KEY, mnemonic);
+        }
         this.mainController = mainController;
     }
 
-    public MaeMainController getMainController() {
+    protected MaeMainController getMainController() {
         return mainController;
     }
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
+    protected void catchException(Exception e) {
+        getMainController().showError(e);
     }
-
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

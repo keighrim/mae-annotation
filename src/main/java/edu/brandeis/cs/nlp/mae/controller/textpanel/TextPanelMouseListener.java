@@ -22,44 +22,41 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.textpanel;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 
-import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
- * Created by krim on 1/2/2016.
+ * Created by krim on 1/9/2017.
  */
-public abstract class MaeControllerI {
+class TextPanelMouseListener extends MouseAdapter {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    private MaeMainController mainController;
 
-    protected JPanel view;
-    protected MaeMainController mainController;
-
-    public MaeControllerI(MaeMainController mainController) {
+    TextPanelMouseListener(MaeMainController mainController) {
         this.mainController = mainController;
     }
 
-    public MaeMainController getMainController() {
-        return mainController;
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            createAndShowContextMenu(e);
+        }
     }
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            createAndShowContextMenu(e);
+        }
     }
 
-    protected JPanel getView() {
-        return view;
+    private void createAndShowContextMenu(MouseEvent e) {
+        mainController.createTextContextMenu().show(e.getComponent(), e.getX(), e.getY());
+
     }
 
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

@@ -60,11 +60,29 @@ public abstract class Tag implements ModelI, Comparable<Tag> {
 
     }
 
+    public Map<String, String> getAttributesWithNamesWithoutChecking() {
+        Map<String, String> attributesWithNames = new LinkedHashMap<>();
+        ForeignCollection<Attribute> attributes = getAttributes();
+        try {
+            for (Attribute attribute : attributes) {
+                attributesWithNames.put(attribute.getName(), attribute.getValue());
+            }
+            return attributesWithNames;
+        } catch (NullPointerException e) {
+            return new HashMap<>();
+        }
+
+    }
+
     public Map<String, String> getAttributesWithNames() {
         Map<String, String> attributesWithNames = new LinkedHashMap<>();
-        if (getAttributes() != null && getAttributes().size() > 0) {
-            for (Attribute attribute : getAttributes()) {
-                attributesWithNames.put(attribute.getName(), attribute.getValue());
+        ForeignCollection<Attribute> attributes = getAttributes();
+        if (attributes != null) {
+            for (Attribute attribute : attributes) {
+                String value = attribute.getValue();
+                if (value.length() > 0) {
+                    attributesWithNames.put(attribute.getName(), value);
+                }
             }
         }
         return attributesWithNames;

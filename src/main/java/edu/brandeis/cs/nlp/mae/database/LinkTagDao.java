@@ -34,9 +34,11 @@ import edu.brandeis.cs.nlp.mae.model.Attribute;
 import edu.brandeis.cs.nlp.mae.model.LinkTag;
 
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.concurrent.Callable;
 
 /**
- * Created by krim on 12/15/2015.
+ * Accessor for Link Tag DB table
  */
 public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
 
@@ -69,24 +71,42 @@ public class LinkTagDao extends BaseDaoImpl<LinkTag, String> {
     @Override
     public int update(LinkTag tag) throws SQLException {
         refresh(tag);
-        for (Attribute att : tag.getAttributes()) {
-            attDao.createOrUpdate(att);
-        }
-        for (Argument arg : tag.getArguments()) {
-            argDao.createOrUpdate(arg);
-        }
+        final Collection<Attribute> atts = tag.getAttributes();
+        final Collection<Argument> args = tag.getArguments();
+        callBatchTasks((Callable<Void>) () -> {
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.createOrUpdate(att);
+                }
+            }
+            if (args != null) {
+                for (Argument arg : args) {
+                    argDao.createOrUpdate(arg);
+                }
+            }
+            return null;
+        });
         return super.update(tag);
     }
 
     @Override
     public int delete(LinkTag tag) throws SQLException {
         refresh(tag);
-        for (Attribute att : tag.getAttributes()) {
-            attDao.delete(att);
-        }
-        for (Argument arg : tag.getArguments()) {
-            argDao.delete(arg);
-        }
+        final Collection<Attribute> atts = tag.getAttributes();
+        final Collection<Argument> args = tag.getArguments();
+        callBatchTasks((Callable<Void>) () -> {
+            if (atts != null) {
+                for (Attribute att : atts) {
+                    attDao.delete(att);
+                }
+            }
+            if (args != null) {
+                for (Argument arg : args) {
+                    argDao.delete(arg);
+                }
+            }
+            return null;
+        });
         return super.delete(tag);
     }
 }

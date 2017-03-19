@@ -22,44 +22,36 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.menuaction;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.agreement.view.MaeAgreementGUI;
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.io.FileNotFoundException;
 
 /**
- * Created by krim on 1/2/2016.
+ * Created by krim on 4/18/2016.
+ * Launches a separate IAA calculator window, using current loaded DTD.
  */
-public abstract class MaeControllerI {
+public class LaunchIAACalc extends MaeActionI {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
-
-    protected JPanel view;
-    protected MaeMainController mainController;
-
-    public MaeControllerI(MaeMainController mainController) {
-        this.mainController = mainController;
+    public LaunchIAACalc(String text, ImageIcon icon, KeyStroke hotkey, Integer mnemonic, MaeMainController controller) {
+        super(text, icon, hotkey, mnemonic, controller);
     }
 
-    public MaeMainController getMainController() {
-        return mainController;
-    }
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        try {
+            MaeAgreementGUI iaaCalc = new MaeAgreementGUI(getMainController().getDriver().getTaskFileName());
+            iaaCalc.pack();
+            iaaCalc.setVisible(true);
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
+        } catch (FileNotFoundException | MaeIOException | MaeDBException e) {
+            getMainController().showError(e);
+        }
     }
-
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

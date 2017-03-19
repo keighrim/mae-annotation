@@ -22,44 +22,22 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
+import edu.brandeis.cs.nlp.mae.model.TagType;
 
 /**
- * Created by krim on 1/2/2016.
+ * Creates a table model that is not editable at all.
+ * This is only used to create the tab for all extent tags during annotation.
  */
-public abstract class MaeControllerI {
+class UneditableTableModel extends TagTableModel {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
-
-    protected JPanel view;
-    protected MaeMainController mainController;
-
-    public MaeControllerI(MaeMainController mainController) {
-        this.mainController = mainController;
+    UneditableTableModel(TablePanelController tablePanelController, TagType tagType) {
+        super(tablePanelController, tagType);
     }
 
-    public MaeMainController getMainController() {
-        return mainController;
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return false;
     }
-
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
-    }
-
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

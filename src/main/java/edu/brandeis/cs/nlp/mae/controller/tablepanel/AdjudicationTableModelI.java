@@ -22,44 +22,26 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.controller.tablepanel;
 
-import edu.brandeis.cs.nlp.mae.MaeException;
-import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.Tag;
 
-import javax.swing.*;
+import javax.swing.table.TableModel;
 
 /**
- * Created by krim on 1/2/2016.
+ * Interface for adjudication table models.
  */
-public abstract class MaeControllerI {
+interface AdjudicationTableModelI extends TableModel {
 
-    public final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    void setRowAsGoldTag(int row);
 
-    protected JPanel view;
-    protected MaeMainController mainController;
+    boolean isGoldTagRow(int row);
 
-    public MaeControllerI(MaeMainController mainController) {
-        this.mainController = mainController;
-    }
+    int getNonGoldRowCount();
 
-    public MaeMainController getMainController() {
-        return mainController;
-    }
+    void clearTable();
 
-    public MaeDriverI getDriver() {
-        return getMainController().getDriver();
-    }
+    void populateTable(Tag tag) throws MaeDBException;
 
-    protected JPanel getView() {
-        return view;
-    }
-
-    protected MaeControlException catchViewException(String message, Exception e) {
-        return new MaeControlException(message, e.getCause());
-    }
-
-    protected abstract void addListeners() throws MaeException;
 }

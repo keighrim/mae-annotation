@@ -84,46 +84,37 @@ public class MaeMain {
 
     public static void main(final String[] args) {
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                MaeMainController controller = createAndShowGUI();
+        SwingUtilities.invokeLater(() -> {
+            MaeMainController controller = createAndShowGUI();
 
-                if (args.length > 0) {
-                    boolean argCmd = false;
-                    List<String> argsList = new ArrayList<>();
-                    String tFilename = null;
-                    String dFilename = null;
-                    String dFilenames = null;
-                    Collections.addAll(argsList, args);
-                    if (argsList.contains("--task")) {
-                        tFilename = argsList.get(argsList.indexOf("--task") + 1);
-                        argCmd = true;
-                        if (argsList.contains("--doc")) {
-                            dFilename = argsList.get(argsList.indexOf("--doc") + 1);
+            if (args.length > 0) {
+                boolean argCmd = false;
+                List<String> argsList = new ArrayList<>();
+                String tFilename = null;
+                String dFilename = null;
+                Collections.addAll(argsList, args);
+                if (argsList.contains("--task")) {
+                    tFilename = argsList.get(argsList.indexOf("--task") + 1);
+                    argCmd = true;
+                    if (argsList.contains("--doc")) {
+                        dFilename = argsList.get(argsList.indexOf("--doc") + 1);
 
-                        } else if (argsList.contains("--docs")) {
-                            dFilenames = argsList.get(argsList.indexOf("--docs") + 1);
-
-                        }
                     }
-                    if (!argCmd) {
-                        System.out.println("TODO: show some help text");
-                    }
+                }
+                if (!argCmd) {
+                    System.out.println("TODO: show some help text");
+                }
 
-                    if (tFilename != null) {
-                        controller.setupScheme(new File(tFilename), true);
-                        if (dFilename != null) {
-                            controller.addDocument(new File(dFilename));
-                        } else if (dFilenames != null) {
-                            String[] filesToOpen = dFilenames.split(",");
-                            for (String fileName : filesToOpen) {
-                                controller.addDocument(new File((fileName)));
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                if (tFilename != null) {
+                    controller.setUpTask(new File(tFilename));
+                    if (dFilename != null) {
+                        for (String fileName : dFilename.split(",")) {
+                            controller.addDocument(new File((fileName)));
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                e.printStackTrace();
                             }
                         }
                     }
