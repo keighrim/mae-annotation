@@ -24,25 +24,38 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
+import edu.brandeis.cs.nlp.mae.MaeStrings;
+
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Created by krim on 2/18/2016.
+ * Contains helper functions to create or modify files.
  */
-public class FileWriter {
+public class MaeFileWriter {
 
-    public static void writeTextToEmptyXML(String text, String task, File file) throws MaeIOException {
-        try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            Writer output = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(
-                            file), "UTF-8"));
+    public static void writeTextToEmptyXML(String utf8Text, String task, File file) throws MaeIOException {
+        writeTextToEmptyXML(new BufferedReader(new StringReader(utf8Text)), task, file);
+    }
+
+    public static void writeTextToEmptyXML(BufferedReader utf8StreamReader, String task, File file) throws MaeIOException {
+
+        try (BufferedWriter output = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))){
+            if (!file.exists()) file.createNewFile();
             output.write(String.format(
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<%s>\n<TEXT><![CDATA[%s]]></TEXT>\n</%s>",
-                            task, text, task));
-            output.close();
+                    MaeStrings.maeXMLHeader, task));
+            String line = utf8StreamReader.readLine();
+            if (line == null) {
+                return;
+            }
+            output.write(line);
+            while ((line = utf8StreamReader.readLine()) != null) {
+                output.newLine();
+                output.write(line);
+            }
+            output.write(String.format(MaeStrings.maeXMLFooter, task));
+            utf8StreamReader.close();
         } catch (IOException e) {
             throw new MaeIOException("Cannot create a new file!", e);
         }

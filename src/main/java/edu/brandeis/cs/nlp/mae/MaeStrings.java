@@ -187,6 +187,24 @@ public class MaeStrings {
     public static final String WARN_POPUP_TITLE = "Attention, Please";
     public static final String ERROR_POPUP_TITLE = "This is embarrassing ...";
 
+    /* error messages */
+    public static final String FILE_NOT_XML_ERR = "File is not an XML!\n" +
+            "Reading as the primary text, a new XML file will be generated: \n%s";
+    public static final String XML_NOT_MATCH_ERR = "\"%s\" is not a \"%s\" task!\n" +
+            "Make sure you load annotation file that matches the DTD loaded.";
+    public static String getFileNotXmlErr(String filename) {
+        return String.format(FILE_NOT_XML_ERR, filename);
+    }
+    public static String getXmlNotMatchErr(String filename, String taskName) {
+        return String.format(XML_NOT_MATCH_ERR, filename, taskName);
+    }
+
+    /* XML strings */
+
+    public static String maeXMLHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<%s>\n<TEXT><![CDATA[";
+    public static String maeXMLFooter = "]]></TEXT>\n</%s>";
+
+
     /* help messages */
     public static final String ABOUT_TITLE = String.format("MAE %s", VERSION);
     public static final String ABOUT_MESSAGE = String.format(

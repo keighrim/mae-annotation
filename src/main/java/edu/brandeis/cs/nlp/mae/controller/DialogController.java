@@ -29,7 +29,7 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.AnnotationLoader;
-import edu.brandeis.cs.nlp.mae.io.FileWriter;
+import edu.brandeis.cs.nlp.mae.io.MaeFileWriter;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
 
@@ -208,7 +208,7 @@ class DialogController {
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
         File newGS = showFileChooseDialogAndSelect(MaeStrings.DEF_GS_FILE, true);
         if (newGS != null) {
-            FileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
+            MaeFileWriter.writeTextToEmptyXML(getMainController().getDriver().getPrimaryText(),
                     getMainController().getDriver().getTaskName(), newGS);
             return newGS;
         }
