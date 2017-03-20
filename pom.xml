@@ -30,7 +30,7 @@
 
     <groupId>edu.brandeis.cs.nlp</groupId>
     <artifactId>mae</artifactId>
-    <version>2.1.5-SNAPSHOT</version>
+    <version>2.1.5</version>
 
     <licenses>
         <license>
