@@ -112,7 +112,7 @@ public class DTDLoader {
     }
 
     private boolean validateReadTask() throws MaeDBException {
-        return driver.getAllTagTypes().size() > 1;
+        return driver.getAllTagTypes().size() > 0;
     }
 
     private void validateLinkTagTypes() throws MaeDBException {
