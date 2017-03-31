@@ -188,6 +188,8 @@ public class MaeStrings {
     public static final String ERROR_POPUP_TITLE = "This is embarrassing ...";
 
     /* error messages */
+    public static final String FILE_NOT_XML_AND_DELETE_ERR = "File is not an XML!\n" +
+            "Tried to generate a new XML file, but failed due to the following:\n";
     public static final String FILE_NOT_XML_ERR = "File is not an XML!\n" +
             "Reading as the primary text, a new XML file will be generated: \n%s";
     public static final String XML_NOT_MATCH_ERR = "\"%s\" is not a \"%s\" task!\n" +

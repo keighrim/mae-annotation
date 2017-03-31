@@ -122,7 +122,7 @@ public class AnnotationLoader {
         } catch (IOException e) {
             catchIOError(file, e);
         } catch (SAXParseException e) {
-            catchSAXParseError(file, e);
+            catchSAXParseError(e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
@@ -139,7 +139,7 @@ public class AnnotationLoader {
         } catch (IOException e) {
             catchIOError(file, e);
         } catch (SAXParseException e) {
-            catchSAXParseError(file, e);
+            catchSAXParseError(e);
         } catch (SAXException e) {
             catchSAXError(file, e);
 
@@ -159,7 +159,7 @@ public class AnnotationLoader {
         } catch (MaeDBException e) {
             throw e;
         } catch (SAXParseException e) {
-            catchSAXParseError(file, e);
+            catchSAXParseError(e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         } catch (IOException e) {
@@ -217,7 +217,7 @@ public class AnnotationLoader {
         } catch (IOException e) {
             catchIOError(file, e);
         } catch (SAXParseException e) {
-            catchSAXParseError(file, e);
+            catchSAXParseError(e);
         } catch (SAXException e) {
             catchSAXError(file, e);
         }
@@ -257,6 +257,8 @@ public class AnnotationLoader {
                 readAsXml(xmlized);
             } catch (MaeIOException e) {
                 xmlized.delete();
+                throw new MaeIOXMLException(
+                        MaeStrings.FILE_NOT_XML_AND_DELETE_ERR + e.getMessage());
             }
         } catch (NoSuchElementException ex) {
             String message = "failed to read the file, maybe a binary file? " + file.getAbsolutePath();
@@ -357,8 +359,9 @@ public class AnnotationLoader {
         throw new MaeIOXMLException(message, e);
     }
 
-    private static void catchSAXParseError(File file, SAXParseException e) throws MaeIOXMLException {
-        String message = String.format("invalid XML string: %s, %s", file.getName(), e.getMessage());
+    private static void catchSAXParseError(SAXParseException e) throws MaeIOXMLException {
+        String message = String.format("error in XML string: %s\n%s, line: %d, column: %d\n(lines can be off by 2 from original text file because of the XML header)",
+                e.getMessage(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
         logger.error(message);
         throw new MaeIOXMLException(message, e);
     }
