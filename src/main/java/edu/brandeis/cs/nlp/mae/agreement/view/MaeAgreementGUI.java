@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.agreement.view;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.agreement.MaeAgreementMain;
+import edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
@@ -39,13 +40,10 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.LinkedList;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.ALL_METRIC_TYPE_STRINGS;
 
@@ -162,7 +160,7 @@ public class MaeAgreementGUI extends JFrame {
                 }
             }
         });
-        taskChooser.setToolTipText("Not supported yet");
+        taskChooser.setToolTipText("Not supported yet. Please use MAE main window to load a task DTD");
         taskChooser.setEnabled(false);
 
 
@@ -182,7 +180,7 @@ public class MaeAgreementGUI extends JFrame {
 
         JButton dirChooser = new JButton("Choose Annotation Location");
         dirChooser.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser(".");
+            JFileChooser fileChooser = new JFileChooser(this.taskScheme.getParentFile());
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -224,8 +222,22 @@ public class MaeAgreementGUI extends JFrame {
         return mainPanel;
     }
 
+    private JComponent preparePanelTitle(String title) {
+        JLabel titleArea = new JLabel(title);
+        Font font = new Font(Font.SANS_SERIF, Font.BOLD, 18);
+        titleArea.setFont(font);
+        titleArea.setHorizontalAlignment(JLabel.CENTER);
+        titleArea.setPreferredSize(new Dimension(300, 40));
+        titleArea.setBackground(UIManager.getColor("Panel.background"));
+        return titleArea;
+
+    }
+
+
     private JPanel prepareLeftPane() {
         JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.add(preparePanelTitle(MaeAgreementStrings.SCOPE_CONFIG_PANEL_TITLE),
+                BorderLayout.NORTH);
         leftPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
         return leftPanel;
     }
@@ -233,7 +245,11 @@ public class MaeAgreementGUI extends JFrame {
     private JPanel prepareRightPane() {
 
         this.attTypeSelectionPanel = new AttTypeSelectPanel(tagsAndAtts);
-        return this.attTypeSelectionPanel;
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(preparePanelTitle(MaeAgreementStrings.ATTS_CONFIG_PANEL_TITLE),
+                BorderLayout.NORTH);
+        rightPanel.add(this.attTypeSelectionPanel, BorderLayout.CENTER);
+        return rightPanel;
     }
 
     private JPanel prepareButtons() {
@@ -346,7 +362,27 @@ public class MaeAgreementGUI extends JFrame {
 
             }
 
-            JOptionPane.showMessageDialog(null, new JTextArea(result), "Inter-Annotator Agreements", JOptionPane.PLAIN_MESSAGE);
+            String[] resultButtons = new String[]{"Export to a file", "Close"};
+            int export = JOptionPane.showOptionDialog(null, new JTextArea(result), "Inter-Annotator Agreements",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, resultButtons, resultButtons[1]);
+            if (export == 0) {
+                String timestamp = (new SimpleDateFormat("yyMMdd-HHmmss")).format(new Date());
+                String filename = String.format("iaa-%s-%s.txt", driver.getTaskName(), timestamp);
+                File exportFile = new File(filename);
+                JFileChooser fileChooser = new JFileChooser(this.taskScheme.getParentFile());
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setSelectedFile(exportFile);
+                if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    if (!exportFile.exists()) {
+                        exportFile.createNewFile();
+                    }
+                    String resultToFile = String.format("Task name: %s\nDataset: %s\n\n%s",
+                            this.driver.getTaskName(), this.datasetDir, result);
+                    OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(exportFile), "UTF-8");
+                    fw.write(resultToFile);
+                    fw.close();
+                }
+            }
         }
     }
 }

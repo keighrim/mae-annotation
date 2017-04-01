@@ -59,12 +59,11 @@ public abstract class AbstractUnitizationAgreementCalc extends AbstractMaeAgreem
 
         int annotator = 0;
         for (MaeXMLParser parse : annotations) {
-            if (parse != null) {
-                for (ParsedTag tag : parse.getParsedTags()) {
-                    if (tag.getTagTypeName().equals(tagTypeName) && tag.getSpans().length > 0) {
-                        for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
-                            study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, tagTypeName);
-                        }
+            if (parse == null) continue;
+            for (ParsedTag tag : parse.getParsedTags()) {
+                if (tag.getTagTypeName().equals(tagTypeName) && tag.getSpans().length > 0) {
+                    for (int[] pair : SpanHandler.convertArrayToPairs(tag.getSpans())) {
+                        study.addUnit(pair[0] + textOffset, pair[1] - pair[0], annotator, tagTypeName);
                     }
                 }
             }

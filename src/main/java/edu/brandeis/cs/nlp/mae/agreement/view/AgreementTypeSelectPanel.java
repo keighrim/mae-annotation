@@ -24,10 +24,11 @@
 
 package edu.brandeis.cs.nlp.mae.agreement.view;
 
-import java.awt.event.*;
-import java.util.List;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.util.List;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
@@ -116,19 +117,16 @@ class AgreementTypeSelectPanel extends JPanel {
         for (String SCOPE : SCOPE_TYPE_STRINGS) {
             scopeCombo.addItem(SCOPE);
         }
-        scopeCombo.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_LABELING_STRING)) {
-                    prepareLabelingMetricsCombobox();
-                    updateUI();
-                } else if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_UNITIZING_STRING)) {
-                    prepareSegmentationMetricsCombobox();
-                    updateUI();
-                } else {
-                    prepareMetricsCombobox();
-                    updateUI();
-                }
+        scopeCombo.addActionListener(e -> {
+            if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_LABELING_STRING)) {
+                prepareLabelingMetricsCombobox();
+                updateUI();
+            } else if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_UNITIZING_STRING)) {
+                prepareSegmentationMetricsCombobox();
+                updateUI();
+            } else {
+                prepareMetricsCombobox();
+                updateUI();
             }
         });
         scopeCombo.setSelectedIndex(0);
