@@ -24,6 +24,7 @@
 
 package edu.brandeis.cs.nlp.mae.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.tablepanel.HighlightToggleListener;
@@ -82,7 +83,8 @@ public class MaeMainController extends JPanel {
 
     // booleans for user preferences
     private boolean normalModeOnCreation = true; // on by default
-    private String mFilenameSuffix = ""; // for file operation
+    private final static String PREF_FILE_NAME = "." + File.separator + "mae.pref";
+    private MaePreferences prefs;
 
     // database connectors
     private List<MaeDriverI> drivers;
@@ -111,6 +113,12 @@ public class MaeMainController extends JPanel {
         documentTabColors = new ColorHandler(6, true);
 
         try {
+            readUserPrefs();
+        } catch (MaeIOException e) {
+            showError(e);
+        }
+
+        try {
             menu = new MenuController(this);
             textPanel = new TextPanelController(this);
             tablePanel = new TablePanelController(this);
@@ -119,6 +127,30 @@ public class MaeMainController extends JPanel {
             coloredTagsInLastDocument = new HashMap<>();
         } catch (MaeException e) {
             showError(e);
+        }
+    }
+
+    private void writeUserPrefs() throws MaeIOException {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(PREF_FILE_NAME), prefs);
+        } catch (IOException e) {
+            throw new MaeIOException(e.getMessage() + "\nuser preferences may not be stored properly");
+        }
+    }
+
+    private void readUserPrefs() throws MaeIOException {
+        File prefsFile = new File(PREF_FILE_NAME);
+        try {
+            if (!prefsFile.exists()) {
+                prefs = new MaePreferences();
+                writeUserPrefs();
+            } else {
+                ObjectMapper mapper = new ObjectMapper();
+                prefs = mapper.readValue(prefsFile, MaePreferences.class);
+            }
+        } catch (IOException e) {
+            throw new MaeIOException(e.getMessage() + "\nuser preferences may not be stored properly");
         }
     }
 
@@ -304,12 +336,51 @@ public class MaeMainController extends JPanel {
         return mainFrame;
     }
 
-    public String getFilenameSuffix() {
-        return mFilenameSuffix;
+    public String getSaveDirectoryTruncated() {
+        String[] dirs = prefs.saveDir.split(File.separator);
+        return String.format("%s%s...%s%s",
+                dirs[0], File.separator, File.separator, dirs[dirs.length-1]);
     }
 
-    public void setFilenameSuffix(String mFilenameSuffix) {
-        this.mFilenameSuffix = mFilenameSuffix;
+    public String getSaveDirectory() {
+        return prefs.saveDir;
+    }
+
+    public void setSaveDirectory(String dir) {
+        prefs.saveDir = dir;
+        getMenu().resetMenus(MaeStrings.MENU_PREFS);
+        try {
+            writeUserPrefs();
+        } catch (MaeIOException e) {
+            showError(e);
+        }
+    }
+
+    public String getLastWorkingDirectory() {
+        return prefs.lastWD;
+    }
+
+    public void setLastWorkingDirectory(String dir) {
+        prefs.lastWD = dir;
+        try {
+            writeUserPrefs();
+        } catch (MaeIOException e) {
+            showError(e);
+        }
+    }
+
+      public String getSaveSuffix() {
+        return prefs.saveSuffix;
+    }
+
+    public void setSaveSuffix(String suffix) {
+        prefs.saveSuffix = suffix;
+        getMenu().resetMenus(MaeStrings.MENU_PREFS);
+        try {
+            writeUserPrefs();
+        } catch (MaeIOException e) {
+            showError(e);
+        }
     }
 
     private TablePanelController getTablePanel() {
@@ -1582,6 +1653,9 @@ public class MaeMainController extends JPanel {
 
         SetUpTaskWorker(File taskFile) {
             this.taskFile = taskFile;
+            if (!getLastWorkingDirectory().equals(taskFile.getParent())) {
+                setLastWorkingDirectory(taskFile.getParent());
+            }
         }
 
         @Override
@@ -1591,9 +1665,7 @@ public class MaeMainController extends JPanel {
                 resetPaintableColors();
                 setAdjudicating(false);
                 getMenu().resetMenus(MaeStrings.MENU_FILE, MaeStrings.MENU_MODE);
-                SwingUtilities.invokeLater(() -> {
-                            getTextPanel().addGuideTab();
-                        }
+                SwingUtilities.invokeLater(() -> getTextPanel().addGuideTab()
                 );
                 PrepareAllTablesWorker worker = new PrepareAllTablesWorker();
                 worker.execute();

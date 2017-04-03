@@ -65,7 +65,8 @@ class MenuController extends MaeControllerI {
     private static final int MENU_TAGS_POSITOIN = 1;
     private static final int MENU_MODE_POSITION = 2;
     private static final int MENU_DISPLAY_POSITION = 3;
-    private static final int MENU_HELP_POSITION = 4;
+    private static final int MENU_PREFS_POSITION = 4;
+    private static final int MENU_HELP_POSITION = 5;
 
     private static final Map<String , Integer> menuOrder;
     static {
@@ -74,6 +75,7 @@ class MenuController extends MaeControllerI {
         menuOrder.put(MaeStrings.MENU_TAGS, MENU_TAGS_POSITOIN);
         menuOrder.put(MaeStrings.MENU_MODE, MENU_MODE_POSITION);
         menuOrder.put(MaeStrings.MENU_DISPLAY, MENU_DISPLAY_POSITION);
+        menuOrder.put(MaeStrings.MENU_PREFS, MENU_PREFS_POSITION);
         menuOrder.put(MaeStrings.MENU_HELP, MENU_HELP_POSITION);
     }
 
@@ -151,6 +153,8 @@ class MenuController extends MaeControllerI {
                 return menu;
             case MENU_DISPLAY_POSITION:
                 return prepareDisplayMenu();
+            case MENU_PREFS_POSITION:
+                return preparePrefsMenu();
             case MENU_HELP_POSITION:
                 return prepareHelpMenu();
             case MENU_TAGS_POSITOIN:
@@ -309,6 +313,31 @@ class MenuController extends MaeControllerI {
         menu.add(resetFontSize);
         menu.add(presentationItem);
         logger.debug("display menu is created: " + menu.getItemCount());
+        return menu;
+    }
+
+    private JMenu preparePrefsMenu() {
+        String saveSuffixRaw = getMainController().getSaveSuffix();
+        String saveSuffix = saveSuffixRaw != null && saveSuffixRaw.length() > 0 ?
+                ": " + getMainController().getSaveSuffix() : "";
+        String saveDirRaw = getMainController().getSaveDirectory();
+        String saveDir = saveDirRaw != null && saveDirRaw.length() > 0 ?
+                ": " + getMainController().getSaveDirectoryTruncated() : "";
+
+        String saveSuffixText = String.format("%s%s", MENUITEM_SAVE_SUFFIX, saveSuffix);
+        String saveDirText = String.format("%s%s", MENUITEM_SAVE_DIR, saveDir);
+        MaeActionI setSaveSuffixAction = new SetSaveSuffix(saveSuffixText, null, null, null, getMainController());
+        MaeActionI setSaveDirAction = new SetSaveDir(saveDirText, null, null, null, getMainController());
+
+        JMenu menu = new JMenu(MENU_PREFS);
+        menu.setMnemonic(MENU_PREFS.charAt(0));
+
+        JMenuItem setSaveSuffix = new JMenuItem(setSaveSuffixAction);
+        JMenuItem setSaveDir = new JMenuItem(setSaveDirAction);
+
+        menu.add(setSaveSuffix);
+        menu.add(setSaveDir);
+        logger.debug("preferences menu is created: " + menu.getItemCount());
         return menu;
     }
 

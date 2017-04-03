@@ -139,6 +139,9 @@ public class MaeStrings {
     public final static String MENUITEM_ZOOMOUT = "Decrease font size";
     public final static String MENUITEM_RESET_ZOOM = "Reset font size";
     public final static String MENUITEM_BIGFONT = "Huge Font";
+    public final static String MENU_PREFS = "Preferences";
+    public final static String MENUITEM_SAVE_SUFFIX = "Set annotator suffix";
+    public final static String MENUITEM_SAVE_DIR = "Set save location";
     public final static String MENU_HELP = "Help";
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";

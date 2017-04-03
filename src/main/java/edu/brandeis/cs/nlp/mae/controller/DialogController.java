@@ -53,7 +53,7 @@ class DialogController {
     DialogController(MaeMainController mainController) {
         this.mainController = mainController;
 
-        this.fileChooser = new JFileChooser(".");
+        this.fileChooser = new JFileChooser(getMainController().getLastWorkingDirectory());
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
     }
@@ -100,6 +100,7 @@ class DialogController {
         }
 
         if (saveFile) {
+            fileChooser.setCurrentDirectory(new File(getMainController().getSaveDirectory()));
             if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
                 return fileChooser.getSelectedFile();
             }
