@@ -44,6 +44,7 @@ class AdjudicationLinkTableModel extends LinkTagTableModel implements Adjudicati
 
     @Override
     protected void init() {
+        super.init();
         goldTagRows = new HashSet<>();
     }
 

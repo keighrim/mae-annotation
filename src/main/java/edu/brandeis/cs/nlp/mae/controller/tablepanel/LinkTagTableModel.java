@@ -42,7 +42,7 @@ import java.util.Set;
  * on link id, argument id and argument text columns.
  */
 class LinkTagTableModel extends TagTableModel {
-    private Set<Integer> argumentTextColumns;
+    protected Set<Integer> argumentTextColumns;
 
     LinkTagTableModel(TablePanelController tablePanelController, TagType tagType) {
         super(tablePanelController, tagType);
