@@ -139,6 +139,9 @@ public class MaeStrings {
     public final static String MENUITEM_ZOOMOUT = "Decrease font size";
     public final static String MENUITEM_RESET_ZOOM = "Reset font size";
     public final static String MENUITEM_BIGFONT = "Huge Font";
+    public final static String MENU_PREFS = "Preferences";
+    public final static String MENUITEM_SAVE_SUFFIX = "Set annotator suffix";
+    public final static String MENUITEM_SAVE_DIR = "Set save location";
     public final static String MENU_HELP = "Help";
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";
@@ -188,6 +191,8 @@ public class MaeStrings {
     public static final String ERROR_POPUP_TITLE = "This is embarrassing ...";
 
     /* error messages */
+    public static final String FILE_NOT_XML_AND_DELETE_ERR = "File is not an XML!\n" +
+            "Tried to generate a new XML file, but failed due to the following:\n";
     public static final String FILE_NOT_XML_ERR = "File is not an XML!\n" +
             "Reading as the primary text, a new XML file will be generated: \n%s";
     public static final String XML_NOT_MATCH_ERR = "\"%s\" is not a \"%s\" task!\n" +

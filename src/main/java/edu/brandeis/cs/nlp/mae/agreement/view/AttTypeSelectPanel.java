@@ -28,8 +28,6 @@ import edu.brandeis.cs.nlp.mae.util.MappedSet;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +68,7 @@ class AttTypeSelectPanel extends JPanel {
         guideText.setEditable(false);
         guideText.setMargin(new Insets(4, 4, 4, 4));
 
-        guideText.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
+        guideText.setFont(new Font(Font.DIALOG, Font.PLAIN, 14));
         guideText.setBackground(UIManager.getColor("Panel.background"));
 
         JScrollPane guideTextScroller = new JScrollPane(guideText);
@@ -101,12 +99,8 @@ class AttTypeSelectPanel extends JPanel {
         }
 
 
-        tagTypeCombo.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                ((CardLayout) listPanel.getLayout()).show(listPanel, (String) e.getItem());
-            }
-        });
+        tagTypeCombo.addItemListener(e ->
+                ((CardLayout) listPanel.getLayout()).show(listPanel, (String) e.getItem()));
         tagTypeCombo.setSelectedIndex(0);
         ((JLabel) tagTypeCombo.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
 

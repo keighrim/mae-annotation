@@ -22,10 +22,27 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package org.ibex.nestedvm;
+package edu.brandeis.cs.nlp.mae.controller;
+
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 
 /**
- * Created by krim on 4/25/2016.
+ * Stores user preferences for MAE
  */
-public class Interpreter {
+public class MaePreferences {
+    public String maeVersion;
+    public String saveSuffix;
+    public String saveDir;
+    public String lastWD;
+
+    public MaePreferences() {
+        init();
+    }
+
+    public void init() {
+        maeVersion = MaeStrings.getVersion();
+        saveSuffix = "";
+        saveDir = "";
+        lastWD = ".";
+    }
 }

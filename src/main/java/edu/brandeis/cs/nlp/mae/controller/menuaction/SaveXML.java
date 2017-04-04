@@ -85,36 +85,35 @@ public class SaveXML extends MaeActionI {
 
     String generateXMLString() throws MaeDBException {
         MaeDriverI driver = getMainController().getDriver();
-//        String head = String.format(xmlHeader, driver.getTaskFileName(), driver.getTaskName());
         String head = String.format(xmlHeader, driver.getTaskName());
         String text = String.format(xmlText, driver.getPrimaryText());
         String tail = String.format(xmlTail, driver.getTaskName());
-        String tags = "";
+        StringBuilder tags = new StringBuilder();
         for (TagType eType : driver.getExtentTagTypes()) {
             for (ExtentTag tag : driver.getAllExtentTagsOfType(eType)) {
-                tags += tag.toXmlString() + "\n";
+                tags.append(tag.toXmlString()).append("\n");
             }
         }
         for (TagType lType : driver.getLinkTagTypes()) {
             for (LinkTag tag : driver.getAllLinkTagsOfType(lType)) {
-                tags += tag.toXmlString() + "\n";
+                tags.append(tag.toXmlString()).append("\n");
             }
         }
         return head + text + tags + tail;
     }
 
     String getXMLFileName() throws MaeDBException {
-        String annotatorSuffix = getMainController().getFilenameSuffix();
+        String suffix = getMainController().getSaveSuffix();
+        String annotatorSuffix = suffix != null && suffix.length() > 0 ? "_" + suffix : "";
         String annotationFileName = getMainController().getDriver().getAnnotationFileName();
-        if (annotationFileName.endsWith(".xml")) {
-            String baseName = annotationFileName.substring(0, annotationFileName.length() - 4);
-            if (baseName.endsWith(annotatorSuffix)) {
-                return annotationFileName;
-            } else {
-                return baseName + annotatorSuffix + ".xml";
-            }
-        } else {
+        if (!annotationFileName.endsWith(".xml")) {
             return annotationFileName + annotatorSuffix + ".xml";
+        }
+        String baseName = annotationFileName.substring(0, annotationFileName.length() - 4);
+        if (annotatorSuffix.length() == 0 || baseName.endsWith(annotatorSuffix)) {
+            return annotationFileName;
+        } else {
+            return baseName + annotatorSuffix + ".xml";
         }
     }
 }

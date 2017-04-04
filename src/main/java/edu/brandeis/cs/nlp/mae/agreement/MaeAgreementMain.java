@@ -143,12 +143,12 @@ public class MaeAgreementMain {
     }
 
     public String agreementsToString(String agreementType, Map<String, Double> agreements) {
-        String results = String.format("== %s ==\n\n", agreementType);
+        StringBuilder results = new StringBuilder(String.format("== %s ==\n\n", agreementType));
         for (String agreementKey : agreements.keySet()) {
-            results += agreementToString(agreementType, agreementKey, agreements.get(agreementKey));
+            results.append(agreementToString(agreementType, agreementKey, agreements.get(agreementKey)));
         }
-        results += "\n";
-        return results;
+        results.append("\n");
+        return results.toString();
     }
 
     public String agreementToString(String agrType, String agrKey, Double agr) {
@@ -186,7 +186,7 @@ public class MaeAgreementMain {
     }
 
     public String calcGlobalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (String metricType : metricToTargetsMap.keySet()) {
             MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
             if (targetTagsAndAtts.size() == 0) {
@@ -195,24 +195,24 @@ public class MaeAgreementMain {
             String agrTitle = String.format("<%s> %s  %s", SCOPE_CROSSTAG_STRING, metricType, targetTagsAndAtts.keyList());
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts)));
                     break;
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateGlobalMultiKappa(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateGlobalMultiKappa(targetTagsAndAtts)));
                     break;
                 case MULTIPI_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateGlobalMultiPi(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateGlobalMultiPi(targetTagsAndAtts)));
                     break;
             }
 
         }
-        return result;
+        return result.toString();
     }
 
     public String calcLocalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (String metricType : metricToTargetsMap.keySet()) {
             MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
             if (targetTagsAndAtts.size() == 0) {
@@ -221,19 +221,19 @@ public class MaeAgreementMain {
             String agrTitle = String.format("<%s> %s", SCOPE_LOCAL_STRING, metricType);
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateLocalAlphaU(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateLocalAlphaU(targetTagsAndAtts)));
                     break;
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateLocalMultiKappa(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateLocalMultiKappa(targetTagsAndAtts)));
                     break;
                 case MULTIPI_CALC_STRING:
-                    result += agreementsToString(agrTitle, calculateLocalMultiPi(targetTagsAndAtts));
+                    result.append(agreementsToString(agrTitle, calculateLocalMultiPi(targetTagsAndAtts)));
                     break;
             }
 
         }
-        return result;
+        return result.toString();
     }
 }
