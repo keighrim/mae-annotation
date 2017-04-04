@@ -4,6 +4,9 @@
 [![Open issues](https://img.shields.io/github/issues/keighrim/mae-annotation.svg)](https://github.com/keighrim/mae-annotation/issues)
 [![Travis CI](https://img.shields.io/travis/keighrim/mae-annotation.svg)](https://travis-ci.org/keighrim/mae-annotation/) 
 
-##### [Project Website](https://keighrim.github.io/mae-annotation/)
+#### Goto [Project Website](https://keighrim.github.io/mae-annotation/)
 
-##### [Project Wiki](https://github.com/keighrim/mae-annotation/wiki)
+#### See [User Manual](https://github.com/keighrim/mae-annotation/wiki)
+
+##### Citing
+> Kyeongmin Rim. "[MAE2: Portable Annotation Tool for General Natural Language Use](https://sigsem.uvt.nl/isa12/ISA12Proceedings.pdf#page=85)". In Proceedings of the 12th Joint ACL-ISO Workshop on Interoperable Semantic Annotation, Portorož, Slovenia, May 28, 2016.
