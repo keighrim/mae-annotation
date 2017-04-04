@@ -35,6 +35,8 @@ import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.model.*;
+import edu.brandeis.cs.nlp.mae.preferences.MaeBooleanOption;
+import edu.brandeis.cs.nlp.mae.preferences.MaePreferences;
 import edu.brandeis.cs.nlp.mae.util.ColorHandler;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SpanHandler;
@@ -82,22 +84,31 @@ public class MaeMainController extends JPanel {
     private DialogController dialogs;
 
     // booleans for user preferences
-    private boolean normalModeOnCreation = true; // on by default
-    private final static String PREF_FILE_NAME = "." + File.separator + "mae.pref";
-    private MaePreferences prefs;
+    private MaeBooleanOption normalModeOnCreation
+            = new MaeBooleanOption(MaeStrings.MENUITEM_RETURN_TO_NORMAL_MODE);
+    private MaeBooleanOption doNotShowTxtToXMLWarning
+            = new MaeBooleanOption(MaeStrings.MENUITEM_DONT_WARN_TXT2XML);
 
+    private List<MaeBooleanOption> booleanOptions = Arrays.asList(
+            normalModeOnCreation,
+            doNotShowTxtToXMLWarning
+    );
+
+    private final static String PREF_FILE_NAME = "." + File.separator + "mae.pref";
+
+    private MaePreferences prefs;
     // database connectors
     private List<MaeDriverI> drivers;
+
     private MaeDriverI currentDriver;
     private final int adjudDriverIndex = 0;
-
     private ColorHandler textHighlighColors;
+
     private List<TagType> tagsForColor;
     private Map<TagType, Boolean> coloredTagsInLastDocument;
     private ColorHandler documentTabColors;
     private Set<Tag> adjudicatingTags;
     private boolean isAdjudicating;
-
     public MaeMainController() {
 
         drivers = new ArrayList<>();
@@ -243,6 +254,10 @@ public class MaeMainController extends JPanel {
         return view;
     }
 
+    public List<MaeBooleanOption> getBooleanOptions() {
+        return booleanOptions;
+    }
+
     private MenuController getMenu() {
         return menu;
     }
@@ -256,6 +271,11 @@ public class MaeMainController extends JPanel {
         logger.warn(message + ": " + response);
         return response;
 
+    }
+
+    public boolean popupMessageWithToggle(String message) {
+        logger.warn(message);
+        return getDialogs().popupMessageWithToggle(message);
     }
 
     public void popupMessage(String message) {
@@ -372,14 +392,6 @@ public class MaeMainController extends JPanel {
         }
     }
 
-    public boolean normalModeOnCreation() {
-        return normalModeOnCreation;
-    }
-
-    public void setnormalModeOnCreation(boolean b) {
-        this.normalModeOnCreation = b;
-    }
-
     public int getMode() {
         return mode;
     }
@@ -421,7 +433,7 @@ public class MaeMainController extends JPanel {
         }
     }
 
-      public String getSaveSuffix() {
+    public String getSaveSuffix() {
         return prefs.saveSuffix;
     }
 
@@ -735,10 +747,21 @@ public class MaeMainController extends JPanel {
             }
             logger.info("inserting is done");
         }
-        if (xmlParseWarnings.length() > 0) {
-            popupMessage(xmlParseWarnings);
-        }
+        showXMLParsingWarnings(xmlParseWarnings);
+    }
 
+    private void showXMLParsingWarnings(String xmlParseWarnings) {
+        if (xmlParseWarnings.length() > 0) {
+            if (xmlParseWarnings.startsWith(MaeStrings.FILE_NOT_XML_ERR)) {
+                if (!doNotShowTxtToXMLWarning.isEnabled()) {
+                    doNotShowTxtToXMLWarning.set(popupMessageWithToggle(xmlParseWarnings));
+                    // DONT forget to adjust main menu when a booleanOption is changed
+                    getMenu().resetMenus(MaeStrings.MENU_PREFS);
+                }
+            } else {
+                popupMessage(xmlParseWarnings);
+            }
+        }
     }
 
     public void addAdjudication(File goldstandard) {
@@ -751,9 +774,7 @@ public class MaeMainController extends JPanel {
                 getTablePanel().prepareAllTables();
                 switchAdjudicationTag();
                 logger.info(String.format("gold standard for adjudication \"%s\" is open.", getDriver().getAnnotationFileBaseName()));
-                if (xmlParseWarnings.length() > 0) {
-                    popupMessage(xmlParseWarnings);
-                }
+                showXMLParsingWarnings(xmlParseWarnings);
             } catch (MaeIOException e) {
                 showError(e);
                 destroyIncompleteDriver();
@@ -1355,8 +1376,10 @@ public class MaeMainController extends JPanel {
                 }
             }
             updateSavedStatusInTextPanel();
-            if (normalModeOnCreation()) {
+            if (normalModeOnCreation.isEnabled()) {
                 switchToNormalMode();
+            } else {
+                clearTextSelection();
             }
             return tag;
         } catch (MaeException e) {

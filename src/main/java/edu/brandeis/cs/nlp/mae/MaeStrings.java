@@ -142,6 +142,9 @@ public class MaeStrings {
     public final static String MENU_PREFS = "Preferences";
     public final static String MENUITEM_SAVE_SUFFIX = "Set annotator suffix";
     public final static String MENUITEM_SAVE_DIR = "Set save location";
+    public final static String MENUITEM_RETURN_TO_NORMAL_MODE = "Return to the normal mode after an action";
+    public final static String MENUITEM_DONT_WARN_TXT2XML = "Suppress \"New XML created\" popup";
+
     public final static String MENU_HELP = "Help";
     public final static String MENUITEM_ABOUT = "About";
     public final static String MENUITEM_WEB = "Project website";
@@ -194,11 +197,11 @@ public class MaeStrings {
     public static final String FILE_NOT_XML_AND_DELETE_ERR = "File is not an XML!\n" +
             "Tried to generate a new XML file, but failed due to the following:\n";
     public static final String FILE_NOT_XML_ERR = "File is not an XML!\n" +
-            "Reading as the primary text, a new XML file will be generated: \n%s";
+            "Reading as the primary text, a new XML file will be generated: \n";
     public static final String XML_NOT_MATCH_ERR = "\"%s\" is not a \"%s\" task!\n" +
             "Make sure you load annotation file that matches the DTD loaded.";
     public static String getFileNotXmlErr(String filename) {
-        return String.format(FILE_NOT_XML_ERR, filename);
+        return FILE_NOT_XML_ERR + filename;
     }
     public static String getXmlNotMatchErr(String filename, String taskName) {
         return String.format(XML_NOT_MATCH_ERR, filename, taskName);

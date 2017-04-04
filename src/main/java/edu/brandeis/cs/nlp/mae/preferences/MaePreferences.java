@@ -22,7 +22,7 @@
  * @see <a href="https://github.com/keighrim/mae-annotation">https://github.com/keighrim/mae-annotation</a>.
  */
 
-package edu.brandeis.cs.nlp.mae.controller;
+package edu.brandeis.cs.nlp.mae.preferences;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
