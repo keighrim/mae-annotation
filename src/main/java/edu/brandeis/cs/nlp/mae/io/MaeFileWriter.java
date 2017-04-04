@@ -34,28 +34,40 @@ import java.nio.charset.StandardCharsets;
  */
 public class MaeFileWriter {
 
-    public static void writeTextToEmptyXML(String utf8Text, String task, File file) throws MaeIOException {
-        writeTextToEmptyXML(new BufferedReader(new StringReader(utf8Text)), task, file);
+    public static void writeTextToEmptyXML(File utf8file, String task, File xmlOutFile)
+            throws MaeIOException {
+        try {
+            writeTextToEmptyXML(new BufferedReader(new InputStreamReader(
+                            new FileInputStream(utf8file))), task, xmlOutFile);
+        } catch (FileNotFoundException e) {
+            throw new MaeIOException(e.getMessage());
+        }
     }
 
-    public static void writeTextToEmptyXML(BufferedReader utf8StreamReader, String task, File file) throws MaeIOException {
+    public static void writeTextToEmptyXML(String utf8Text, String task, File xmlOutFile)
+            throws MaeIOException {
+        writeTextToEmptyXML(new BufferedReader(new StringReader(utf8Text)), task, xmlOutFile);
+    }
 
-        try (BufferedWriter output = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))){
-            if (!file.exists()) file.createNewFile();
-            output.write(String.format(
+    public static void writeTextToEmptyXML(BufferedReader utf8BufReader, String task, File xmlOutFile)
+            throws MaeIOException {
+
+        try (BufferedWriter outputWriter = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(xmlOutFile), StandardCharsets.UTF_8))){
+            if (!xmlOutFile.exists()) xmlOutFile.createNewFile();
+            outputWriter.write(String.format(
                     MaeStrings.maeXMLHeader, task));
-            String line = utf8StreamReader.readLine();
+            String line = utf8BufReader.readLine();
             if (line == null) {
                 return;
             }
-            output.write(line);
-            while ((line = utf8StreamReader.readLine()) != null) {
-                output.newLine();
-                output.write(line);
+            outputWriter.write(line);
+            while ((line = utf8BufReader.readLine()) != null) {
+                outputWriter.newLine();
+                outputWriter.write(line);
             }
-            output.write(String.format(MaeStrings.maeXMLFooter, task));
-            utf8StreamReader.close();
+            outputWriter.write(String.format(MaeStrings.maeXMLFooter, task));
+            utf8BufReader.close();
         } catch (IOException e) {
             throw new MaeIOException("Cannot create a new file!", e);
         }

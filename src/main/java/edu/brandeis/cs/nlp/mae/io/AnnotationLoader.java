@@ -241,18 +241,11 @@ public class AnnotationLoader {
     }
 
     private void readAsTxt(File file) throws MaeException {
-        Scanner scanner = null;
         File xmlized = getNextAvailableXMLName(file);
 
         try {
             fileName = xmlized.getAbsolutePath();
-            scanner = new Scanner(file, "UTF-8");
-            scanner.useDelimiter("\\A");
-            String primaryText = "";
-            while (scanner.hasNext()) {
-                primaryText += scanner.next();
-            }
-            MaeFileWriter.writeTextToEmptyXML(primaryText, driver.getTaskName(), xmlized);
+            MaeFileWriter.writeTextToEmptyXML(file, driver.getTaskName(), xmlized);
             try {
                 readAsXml(xmlized);
             } catch (MaeIOException e) {
@@ -264,12 +257,8 @@ public class AnnotationLoader {
             String message = "failed to read the file, maybe a binary file? " + file.getAbsolutePath();
             logger.error(message);
             throw new MaeIOTXTException(message);
-        } catch (FileNotFoundException ignored) {
         } catch (MaeException e) {
             throw e;
-        } finally {
-            assert scanner != null;
-            scanner.close();
         }
 
 
