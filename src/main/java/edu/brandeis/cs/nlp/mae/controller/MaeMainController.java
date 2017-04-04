@@ -143,14 +143,66 @@ public class MaeMainController extends JPanel {
         File prefsFile = new File(PREF_FILE_NAME);
         try {
             if (!prefsFile.exists()) {
-                prefs = new MaePreferences();
-                writeUserPrefs();
+                initiatePrefs();
             } else {
                 ObjectMapper mapper = new ObjectMapper();
                 prefs = mapper.readValue(prefsFile, MaePreferences.class);
+                validatePrefs();
+                writeUserPrefs();
             }
         } catch (IOException e) {
             throw new MaeIOException(e.getMessage() + "\nuser preferences may not be stored properly");
+        }
+    }
+
+    private void initiatePrefs() throws MaeIOException {
+        prefs = new MaePreferences();
+        writeUserPrefs();
+    }
+
+    public Integer[] splitVersion(String versionString) {
+        return Arrays.stream(versionString.split("-")[0].split("\\.")).
+                map(Integer::parseInt).toArray(Integer[]::new);
+    }
+
+    private boolean isPrefsCompatible() {
+        Integer[] curVersion = splitVersion(MaeStrings.getVersion());
+        Integer[] prefsVersion = splitVersion(prefs.maeVersion);
+        // always reject a pref file from future
+        return prefsVersion.length == 3 &&
+                prefsVersion[0] <= curVersion[0] &&
+                prefsVersion[1] <= curVersion[1] &&
+                prefsVersion[2] <= curVersion[2];
+    }
+
+    private void validatePrefs() throws MaeIOException {
+
+        if (!isPrefsCompatible()) {
+            logger.error(String.format(
+                    "\"mae.pref\" file is not compatible with current version %s, found: %s, resetting all preferences!",
+                    MaeStrings.getVersion(), prefs.maeVersion));
+            initiatePrefs();
+            return;
+        }
+
+        // bump the pref file version, it can be modified currently instance of MAE
+        prefs.maeVersion = MaeStrings.getVersion();
+
+        logger.info(String.format("Setting the working directory: \"%s\"", prefs.lastWD));
+        File lastWd = new File(prefs.lastWD);
+        if (!lastWd.exists() || !lastWd.isDirectory()) {
+            logger.info(String.format("\"%s\" is not found. " +
+                    "Defaults to the directory with mae", prefs.lastWD));
+            prefs.lastWD = ".";
+        }
+
+        logger.info(String.format("Setting default save directory: \"%s\"", prefs.saveDir));
+        if (prefs.saveDir != null && prefs.saveDir.length() > 0) {
+            File saveDir = new File(prefs.saveDir);
+            if (!saveDir.exists() || !saveDir.isDirectory()) {
+                logger.info(String.format("\"%s\" is not found. ", prefs.saveDir));
+                prefs.saveDir = "";
+            }
         }
     }
 
