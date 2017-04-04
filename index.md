@@ -4,14 +4,6 @@
 [![Open issues](https://img.shields.io/github/issues/keighrim/mae-annotation.svg)](https://github.com/keighrim/mae-annotation/issues)
 [![Travis CI](https://img.shields.io/travis/keighrim/mae-annotation.svg)](https://travis-ci.org/keighrim/mae-annotation/) 
 
-### MAE v2.0 is released!
-
-##### What's new: 
-
-* Multiple files open at the same time
-* Adjudication with visualization is integrated (formerly MAI) 
-* Many bugfix and optimization
-
 ## Introducing MAE
 MAE (Multi-document Annotation Environment) is a lightweight, geneal-purpose natural language annotation tool. 
 It was originally created by [Amber Stubbs](http://amberstubbs.net) for use in her dissertation research at Brandeis University, 
@@ -25,7 +17,7 @@ While it does not enforce strict rules for annotation schemes, it is very easy t
 
 ### Requirements
 
-Latest MAE requires Java 7 to run, and Maven to build. See [the project wiki](https://github.com/keighrim/mae-annotation/wiki) for more details.
+Latest MAE requires Java 8 to run, and Maven to build. See [the project wiki](https://github.com/keighrim/mae-annotation/wiki) for more details.
 
 For robust Unicode support, MAE uses [DejaVu Sans](http://dejavu-fonts.org/wiki/Main_Page) font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also recommended to have DejaVu Sans font installed.
 
@@ -42,7 +34,16 @@ MAE is a free software: you can redistribute it and/or modify it under the terms
 
 Also, MAE is written using open source software below.
 
-#### Open source software used in MAE
+### Citing
+
+* For 1.0 and later version:
+    * Kyeongmin Rim. "[MAE2: Portable Annotation Tool for General Natural Language Use](https://sigsem.uvt.nl/isa12/ISA12Proceedings.pdf#page=85)". In Proceedings of the 12th Joint ACL-ISO Workshop on Interoperable Semantic Annotation, Portorož, Slovenia, May 28, 2016.
+
+* For 0.x:
+    * Amber Stubbs. "[MAE and MAI: Lightweight Annotation and Adjudication Tools](http://amberstubbs.net/docs/LAW_2011_Stubbs_MAE_MAI.pdf)". In 2011 Proceedings of the Linguistic Annotation Workshop V, Association of Computational Linguistics, Portland, Oregon, July 23-24, 2011.
+
+
+### Open source software used in MAE
 
 * [Maven](https://maven.apache.org/) ([apache2](http://www.apache.org/licenses/))
 * [Apache common-io](https://commons.apache.org/) ([apache2](http://www.apache.org/licenses/))
