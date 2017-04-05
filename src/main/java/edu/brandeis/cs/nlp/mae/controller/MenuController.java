@@ -34,6 +34,7 @@ import edu.brandeis.cs.nlp.mae.database.MaeDriverI;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.model.Tag;
 import edu.brandeis.cs.nlp.mae.model.TagType;
+import edu.brandeis.cs.nlp.mae.preferences.MaeBooleanOption;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
 
 import javax.swing.*;
@@ -317,6 +318,8 @@ class MenuController extends MaeControllerI {
     }
 
     private JMenu preparePrefsMenu() {
+
+        //user configurable items
         String saveSuffixRaw = getMainController().getSaveSuffix();
         String saveSuffix = saveSuffixRaw != null && saveSuffixRaw.length() > 0 ?
                 ": " + getMainController().getSaveSuffix() : "";
@@ -337,6 +340,15 @@ class MenuController extends MaeControllerI {
 
         menu.add(setSaveSuffix);
         menu.add(setSaveDir);
+
+        //boolean checkboxes
+        menu.addSeparator();
+        for (MaeBooleanOption option : getMainController().getBooleanOptions()) {
+            JCheckBoxMenuItem item = new JCheckBoxMenuItem(option.getName(), option.isEnabled());
+            item.addActionListener(actionEvent -> option.toggle());
+            menu.add(item);
+        }
+
         logger.debug("preferences menu is created: " + menu.getItemCount());
         return menu;
     }

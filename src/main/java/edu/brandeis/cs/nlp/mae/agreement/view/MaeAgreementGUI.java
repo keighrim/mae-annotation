@@ -354,35 +354,39 @@ public class MaeAgreementGUI extends JFrame {
 
             Map<String, String> parseWarnings = calc.getParseWarnings();
             if (parseWarnings.size() > 0) {
-                String warnings = "";
+                StringBuilder warnings = new StringBuilder();
                 for (String fileName : parseWarnings.keySet()) {
-                    warnings += String.format("%s: \n %s\n  ===\n\n", fileName, parseWarnings.get(fileName));
+                    warnings.append(String.format("%s: \n %s\n  ===\n\n", fileName, parseWarnings.get(fileName)));
                 }
-                JOptionPane.showMessageDialog(null, new JTextArea(warnings), "Some problems found in the dataset", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, new JTextArea(warnings.toString()), "Some problems found in the dataset", JOptionPane.PLAIN_MESSAGE);
 
             }
 
             String[] resultButtons = new String[]{"Export to a file", "Close"};
-            int export = JOptionPane.showOptionDialog(null, new JTextArea(result), "Inter-Annotator Agreements",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, resultButtons, resultButtons[1]);
+            int export = JOptionPane.showOptionDialog(null,
+                    new JTextArea(result), "Inter-Annotator Agreements",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
+                    null, resultButtons, resultButtons[1]);
             if (export == 0) {
-                String timestamp = (new SimpleDateFormat("yyMMdd-HHmmss")).format(new Date());
-                String filename = String.format("iaa-%s-%s.txt", driver.getTaskName(), timestamp);
-                File exportFile = new File(filename);
-                JFileChooser fileChooser = new JFileChooser(this.taskScheme.getParentFile());
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fileChooser.setSelectedFile(exportFile);
-                if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    if (!exportFile.exists()) {
-                        exportFile.createNewFile();
-                    }
-                    String resultToFile = String.format("Task name: %s\nDataset: %s\n\n%s",
-                            this.driver.getTaskName(), this.datasetDir, result);
-                    OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(exportFile), "UTF-8");
-                    fw.write(resultToFile);
-                    fw.close();
-                }
+                exportResult(result);
             }
+        }
+    }
+
+    private void exportResult(String result) throws MaeDBException, IOException {
+        String timestamp = (new SimpleDateFormat("yyMMdd-HHmmss")).format(new Date());
+        String filename = String.format("iaa-%s-%s.txt", driver.getTaskName(), timestamp);
+        File exportFile = new File(filename);
+        JFileChooser fileChooser = new JFileChooser(this.taskScheme.getParentFile());
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setSelectedFile(exportFile);
+        if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            exportFile = fileChooser.getSelectedFile();
+            String resultToFile = String.format("Task name: %s\nDTD: %s\nDataset: %s\n\n%s",
+                    this.driver.getTaskName(), this.driver.getTaskFileName(), this.datasetDir, result);
+            OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(exportFile), "UTF-8");
+            fw.write(resultToFile);
+            fw.close();
         }
     }
 }

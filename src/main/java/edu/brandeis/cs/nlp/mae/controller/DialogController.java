@@ -70,6 +70,14 @@ class DialogController {
         return JOptionPane.showConfirmDialog(null, warnMessage, MaeStrings.WARN_POPUP_TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
     }
 
+    boolean popupMessageWithToggle(String message) {
+        JCheckBox toggleCheck = new JCheckBox("Do not show this again");
+        toggleCheck.setSelected(false);
+        Object[] params = {message, toggleCheck};
+        JOptionPane.showMessageDialog(null, params, MaeStrings.INFO_POPUP_TITLE, JOptionPane.PLAIN_MESSAGE);
+        return toggleCheck.isSelected();
+    }
+
     void popupMessage(String message) {
         JOptionPane.showMessageDialog(null, message, MaeStrings.INFO_POPUP_TITLE, JOptionPane.PLAIN_MESSAGE);
     }
