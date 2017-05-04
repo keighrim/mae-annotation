@@ -233,6 +233,17 @@ public class SpanHandler {
         return range;
     }
 
+    public static Collection<Integer> concatenateArraysToCollection(Collection<int[]> arrays) {
+        TreeSet<Integer> concatenateAndSort = new TreeSet<>();
+        for (int[] array : arrays) {
+            for (int item : array) {
+                concatenateAndSort.add(item);
+            }
+        }
+        return concatenateAndSort;
+
+    }
+
     public static int[] concatenateArrays(Collection<int[]> arrays) {
 
         TreeSet<Integer> concatenateAndSort = new TreeSet<>();
