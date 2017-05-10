@@ -28,8 +28,8 @@ import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 import edu.brandeis.cs.nlp.mae.util.FileHandler;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.*;
 
@@ -49,8 +49,7 @@ public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
     }
 
     private int listupAnnotators(List<File> annotationFiles) throws MaeIOException {
-        annotatorMap = new TreeMap<>();
-        int countSeen = 0;
+        annotatorMap = new ArrayList<>();
 
         for (File annotationFile : annotationFiles) {
             String annotationBaseName = getFileBaseName(annotationFile).trim();
@@ -60,8 +59,8 @@ public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
 
             String annotationShortName = getFileNameWithoutExtension(annotationBaseName);
             String annotatorSymbol = splitAnnotationAnnotator(annotationShortName)[1];
-            if (!annotatorMap.containsKey(annotatorSymbol)) {
-                annotatorMap.put(annotatorSymbol, countSeen++);
+            if (annotatorMap.indexOf(annotatorSymbol) < 0) {
+                annotatorMap.add(annotatorSymbol);
             }
         }
         return annotatorMap.size();
@@ -89,10 +88,10 @@ public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
             String annotatorName  = split[1];
             String[] indexedFileNames = new String[annotatorMap.size()];
             // fill current file's slot
-            indexedFileNames[annotatorMap.get(annotatorName)] = annotationFile.getAbsolutePath();
+            indexedFileNames[annotatorMap.indexOf(annotatorName)] = annotationFile.getAbsolutePath();
 
             // then iterate the rest of files, to find associated files
-            for (String symbol : annotatorMap.keySet()) {
+            for (String symbol : annotatorMap) {
                 if (symbol.equals(annotatorName)) {
                     continue;
                 }
@@ -102,7 +101,7 @@ public class AnnotationFilesIndexer extends AbstractAnnotationIndexer {
                 while (i < annotationFiles.size()) {
                     File rest = annotationFiles.get(i);
                     if (rest.getName().endsWith(secondaryAnnotationBaseName)) {
-                        indexedFileNames[annotatorMap.get(symbol)] = rest.getAbsolutePath();
+                        indexedFileNames[annotatorMap.indexOf(symbol)] = rest.getAbsolutePath();
                         annotationFiles.remove(i);
                         break;
                     } else {
