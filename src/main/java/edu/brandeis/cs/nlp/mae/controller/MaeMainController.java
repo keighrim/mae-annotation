@@ -29,7 +29,6 @@ import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 import edu.brandeis.cs.nlp.mae.controller.tablepanel.HighlightToggleListener;
 import edu.brandeis.cs.nlp.mae.controller.tablepanel.TablePanelController;
-import edu.brandeis.cs.nlp.mae.controller.tablepanel.TagTableModel;
 import edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController;
 import edu.brandeis.cs.nlp.mae.database.LocalSqliteDriverImpl;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
@@ -45,7 +44,6 @@ import edu.brandeis.cs.nlp.mae.view.MaeMainView;
 import edu.brandeis.cs.nlp.mae.view.TablePanelView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.java2d.Spans;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -57,7 +55,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.function.IntPredicate;
+import java.util.regex.Pattern;
 
 /**
  * MainController handles user interactions by coordinates all GUI controllers.
@@ -404,9 +402,14 @@ public class MaeMainController extends JPanel {
     }
 
     public String getSaveDirectoryTruncated() {
-        String[] dirs = prefs.saveDir.split(File.separator);
-        return String.format("%s%s...%s%s",
-                dirs[0], File.separator, File.separator, dirs[dirs.length-1]);
+        if (getSaveDirectory().length() > 11) {
+            String[] dirs = getSaveDirectory().split(Pattern.quote(File.separator));
+            Arrays.toString(dirs);
+            return String.format("%s%s...%s%s",
+                    dirs[0], File.separator, File.separator, dirs[dirs.length-1]);
+        } else {
+            return getSaveDirectory();
+        }
     }
 
     public String getSaveDirectory() {
