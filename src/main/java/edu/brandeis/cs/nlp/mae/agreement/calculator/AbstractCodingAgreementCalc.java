@@ -133,8 +133,8 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 default:
                                     throw new MaeException(
                                             String.format("Error occurred while calculating local labeling agreement:" +
-                                                    " an annotator marked the same range with two or more times - \"%s\", \"%s\"",
-                                                    document, fileIdx.getAnnotators().get(j)));
+                                                    " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
+                                                    document, fileIdx.getAnnotators().get(j), relevantSpan[0]));
                             }
                         }
                     }
@@ -204,9 +204,9 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 break;
                             default:
                                 throw new MaeException(
-                                String.format("Error occurred while calculating global labeling agreement:" +
-                                                " an annotator marked the same range with two or labels - \"%s\", \"%s\"",
-                                        document, fileIdx.getAnnotators().get(i)));
+                                        String.format("Error occurred while calculating global labeling agreement:" +
+                                                        " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
+                                                document, fileIdx.getAnnotators().get(i), span[0]));
                         }
                     }
                     study.addItem(annotations);

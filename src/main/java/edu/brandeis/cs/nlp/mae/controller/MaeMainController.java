@@ -55,6 +55,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 /**
  * MainController handles user interactions by coordinates all GUI controllers.
@@ -401,9 +402,14 @@ public class MaeMainController extends JPanel {
     }
 
     public String getSaveDirectoryTruncated() {
-        String[] dirs = prefs.saveDir.split(File.separator);
-        return String.format("%s%s...%s%s",
-                dirs[0], File.separator, File.separator, dirs[dirs.length-1]);
+        if (getSaveDirectory().length() > 11) {
+            String[] dirs = getSaveDirectory().split(Pattern.quote(File.separator));
+            Arrays.toString(dirs);
+            return String.format("%s%s...%s%s",
+                    dirs[0], File.separator, File.separator, dirs[dirs.length-1]);
+        } else {
+            return getSaveDirectory();
+        }
     }
 
     public String getSaveDirectory() {
@@ -884,14 +890,19 @@ public class MaeMainController extends JPanel {
 //        getTextPanel().assignOverlappingColorOver(new LinkedList<>(goldAnchors), ColorHandler.getVividForeground(), false);
     }
 
-    void paintOverlappingStat(TagType type, Set<Integer> goldAnchors) throws MaeDBException {
+    void surgicallyPaintOveralppingStat(int[] targetSpans, TagType type,  Collection<Integer> goldAnchors) throws MaeDBException {
         MappedSet<Integer, Integer> anchorToDriverIndex = new MappedSet<>();
+        TreeSet<Integer> spans = new TreeSet<>();
+        for (int i : targetSpans) {
+            spans.add(i);
+        }
+        spans.removeAll(goldAnchors);
         // 0th is the driver for gold, skipping.
         for (int i = 1; i < getDrivers().size(); i++) {
             MaeDriverI driver = getDriverAt(i);
             List<Integer> anchors = driver.getAllAnchorLocationsOfTagType(type);
             for (Integer anchor : anchors) {
-                if (!goldAnchors.contains(anchor)) {
+                if (spans.contains(anchor)) {
                     anchorToDriverIndex.putItem(anchor, i);
                 }
             }
@@ -907,6 +918,11 @@ public class MaeMainController extends JPanel {
                 getTextPanel().assignOverlappingColorAt(anchor, ColorHandler.getFadingForeground(), false);
             }
         }
+    }
+
+    void paintOverlappingStat(TagType type, Set<Integer> goldAnchors) throws MaeDBException {
+        surgicallyPaintOveralppingStat(
+                SpanHandler.range(0, getDriver().getPrimaryText().length()), type, goldAnchors);
     }
 
     public void switchAnnotationDocument(int tabId) {
@@ -1333,7 +1349,17 @@ public class MaeMainController extends JPanel {
                     }
                 }
                 deleteTagFromDB(tag);
-                adjudicationStatUpdate();
+//                adjudicationStatUpdate();
+                if (tag.getTagtype().isExtent()) {
+                    surgicallyPaintOveralppingStat((
+                            (ExtentTag) tag).getSpansAsArray(), tag.getTagtype(), null);
+                } else {
+                    for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
+                        surgicallyPaintOveralppingStat(
+                                arg.getSpansAsArray(), arg.getTagtype(), null);
+
+                    }
+                }
             }
         } catch (MaeDBException e) {
             showError(e);
@@ -1365,8 +1391,8 @@ public class MaeMainController extends JPanel {
                 tag = getDriver().createExtentTag(tid, tagType, getSelectedText(), getSelectedTextSpans());
             }
             getTablePanel().insertNewTagIntoTable(tag, tagType);
-            if (isAdjudicating()) {
-                adjudicationStatUpdate();
+            if (isAdjudicating() && tag.getTagtype().isExtent()) {
+                paintGoldTags(((ExtentTag) tag).getSpansAsList());
             } else {
                 selectTagAndTable(tag);
                 if (tagType.isExtent()) {
@@ -1435,13 +1461,14 @@ public class MaeMainController extends JPanel {
             AttributeType attType = getDriver().getAttributeTypeOfTagTypeByName(type, attTypeName);
             getDriver().addAttribute(newTag, attType, attMap.get(attTypeName));
         }
-        adjudicationStatUpdate();
+        paintGoldTags(newTag.getSpansAsList());
+//        adjudicationStatUpdate();
         return newTag;
     }
 
     LinkTag copyLinkTag(LinkTag original) throws MaeDBException {
         String warning = ("Copying a link tag will also copy its arguments,\n" +
-                "unless an extent tag with the same spans is found in GS.\n" +
+                "unless an extent tag with the same spans and of the same type is found in GS.\n" +
                 "(non-consuming arguments are always copied!)" +
                 "\nDo you want to continue?");
         if (showWarning(warning)) {
@@ -1463,6 +1490,10 @@ public class MaeMainController extends JPanel {
                     }
                     if (!matchExists) {
                         newArg = copyExtentTag(originalArg);
+                        // copyExtentTag() will re-color the gold argument
+                    } else {
+                        // when not copying, do re-color only
+                        paintGoldTags(newArg.getSpansAsList());
                     }
                     getDriver().addArgument(newTag, argType, newArg);
                 }
@@ -1474,7 +1505,7 @@ public class MaeMainController extends JPanel {
                     getDriver().addAttribute(newTag, attType, attValue);
                 }
             }
-            adjudicationStatUpdate();
+//            adjudicationStatUpdate();
             return newTag;
         }
         return null;

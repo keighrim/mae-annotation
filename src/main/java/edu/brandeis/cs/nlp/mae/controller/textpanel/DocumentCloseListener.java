@@ -46,10 +46,15 @@ class DocumentCloseListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         DocumentTabTitle title = getProperParent((Component) e.getSource());
         if (title.isEnabled()) {
-            int tabIdx = title.getTabIndex();
-            if (mainController.showIncompleteTagsWarningAt(tabIdx, false) &&
-                    mainController.showUnsavedChangeWarningAt(tabIdx)) {
-                mainController.closeDocumentAt(title.getTabIndex());
+            if (mainController.isAdjudicating()) {
+                // only current (gold) doc has activated X button during adjudication
+                mainController.closeCurrentDocument();
+            } else {
+                int tabIdx = title.getTabIndex();
+                if (mainController.showIncompleteTagsWarningAt(tabIdx, false) &&
+                        mainController.showUnsavedChangeWarningAt(tabIdx)) {
+                    mainController.closeDocumentAt(title.getTabIndex());
+                }
             }
         }
 

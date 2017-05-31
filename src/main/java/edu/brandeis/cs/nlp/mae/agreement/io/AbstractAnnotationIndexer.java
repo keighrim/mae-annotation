@@ -27,9 +27,13 @@ package edu.brandeis.cs.nlp.mae.agreement.io;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import static edu.brandeis.cs.nlp.mae.util.FileHandler.*;
+import static edu.brandeis.cs.nlp.mae.util.FileHandler.ANNOTATOR_SUFFIX_DELIM;
+import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;
 
 
 /**
@@ -37,16 +41,16 @@ import static edu.brandeis.cs.nlp.mae.util.FileHandler.*;
  */
 public abstract class AbstractAnnotationIndexer {
 
-    Map<String, Integer> annotatorMap;
+    List<String> annotatorMap;
     Map<String, String[]> documentFileMap;
 
     public AbstractAnnotationIndexer() {
-        annotatorMap = new TreeMap<>();
+        annotatorMap = new ArrayList<>();
         documentFileMap = new TreeMap<>();
     }
 
     public List<String> getAnnotators() {
-        return new ArrayList<>(annotatorMap.keySet());
+        return annotatorMap;
     }
 
     public Map<String, String[]> getDocumentFileMap() {
@@ -54,7 +58,7 @@ public abstract class AbstractAnnotationIndexer {
     }
 
     public int getAnnotatorIndex(String annotatorSymbol) {
-        return annotatorMap.get(annotatorSymbol);
+        return annotatorMap.indexOf(annotatorSymbol);
     }
 
     public List<String> getDocumentNames() {

@@ -25,6 +25,8 @@
 package edu.brandeis.cs.nlp.mae.preferences;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.brandeis.cs.nlp.mae.MaeStrings;
 
 /**
@@ -48,5 +50,14 @@ public class MaePreferences {
         saveSuffix = "";
         saveDir = "";
         lastWD = ".";
+    }
+
+    public String toString() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            return "JSON parse error" + e.getMessage();
+        }
     }
 }
