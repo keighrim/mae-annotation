@@ -126,8 +126,8 @@ public class MaeStrings {
     public final static String MENU_FILE_ITEM_SAVERTF = "Export Annotation as RTF";
     public final static String MENU_FILE_ITEM_LOADGS = "Load Gold Standard File";
     public final static String MENUITEM_CLOSEFILE = "Close Document";
-    public final static String MENUITEM_START_ADJUD = "Start adjudication";
-    public final static String MENUITEM_END_ADJUD = "End adjudication";
+    public final static String MENUITEM_START_ADJUD = "Start Adjudication";
+    public final static String MENUITEM_END_ADJUD = "End Adjudication";
     public final static String MENU_TAGS = "Tags";
     public final static String MENU_MODE = "Mode";
     public final static String MENUITEM_MSPAN_MODE = "Switch to discontiguous span selection mode";
