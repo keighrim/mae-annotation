@@ -890,13 +890,16 @@ public class MaeMainController extends JPanel {
 //        getTextPanel().assignOverlappingColorOver(new LinkedList<>(goldAnchors), ColorHandler.getVividForeground(), false);
     }
 
-    void surgicallyPaintOveralppingStat(Collection<Integer> spans, TagType type,  Collection<Integer> goldAnchors) throws MaeDBException {
+    void surgicallyPaintOveralppingStat(int[] targetSpans, TagType type,  Collection<Integer> goldAnchors) throws MaeDBException {
         MappedSet<Integer, Integer> anchorToDriverIndex = new MappedSet<>();
+        TreeSet<Integer> spans = new TreeSet<>();
+        for (int i : targetSpans) {
+            spans.add(i);
+        }
         spans.removeAll(goldAnchors);
         // 0th is the driver for gold, skipping.
         for (int i = 1; i < getDrivers().size(); i++) {
             MaeDriverI driver = getDriverAt(i);
-            spans.removeAll(goldAnchors);
             List<Integer> anchors = driver.getAllAnchorLocationsOfTagType(type);
             for (Integer anchor : anchors) {
                 if (spans.contains(anchor)) {
@@ -918,10 +921,8 @@ public class MaeMainController extends JPanel {
     }
 
     void paintOverlappingStat(TagType type, Set<Integer> goldAnchors) throws MaeDBException {
-        Set<int[]> wholeTextRange = new HashSet<>();
-        wholeTextRange.add(new int[] {0, getDriver().getPrimaryText().length()});
         surgicallyPaintOveralppingStat(
-                SpanHandler.concatenateArraysToCollection(wholeTextRange), type, goldAnchors);
+                SpanHandler.range(0, getDriver().getPrimaryText().length()), type, goldAnchors);
     }
 
     public void switchAnnotationDocument(int tabId) {
@@ -1351,11 +1352,11 @@ public class MaeMainController extends JPanel {
 //                adjudicationStatUpdate();
                 if (tag.getTagtype().isExtent()) {
                     surgicallyPaintOveralppingStat((
-                            (ExtentTag) tag).getSpansAsList(), tag.getTagtype(), null);
+                            (ExtentTag) tag).getSpansAsArray(), tag.getTagtype(), null);
                 } else {
                     for (ExtentTag arg : ((LinkTag) tag).getArgumentTags()) {
                         surgicallyPaintOveralppingStat(
-                                arg.getSpansAsList(), arg.getTagtype(), null);
+                                arg.getSpansAsArray(), arg.getTagtype(), null);
 
                     }
                 }

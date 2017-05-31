@@ -145,7 +145,7 @@ public class SpanHandler {
         for (int[] pair : spansPairs) {
             ranges.add(range(pair[0], pair[1]));
         }
-        // concatArrays will do sorting and dupe removal, duplicate work in advance is no need
+        // concatArrays will do sorting and de-duplication
         logger.debug("=== Conversion finished ===");
         return concatenateArrays(ranges);
 
@@ -231,17 +231,6 @@ public class SpanHandler {
             range[i - inclusiveStart] = i;
         }
         return range;
-    }
-
-    public static Collection<Integer> concatenateArraysToCollection(Collection<int[]> arrays) {
-        TreeSet<Integer> concatenateAndSort = new TreeSet<>();
-        for (int[] array : arrays) {
-            for (int item : array) {
-                concatenateAndSort.add(item);
-            }
-        }
-        return concatenateAndSort;
-
     }
 
     public static int[] concatenateArrays(Collection<int[]> arrays) {
