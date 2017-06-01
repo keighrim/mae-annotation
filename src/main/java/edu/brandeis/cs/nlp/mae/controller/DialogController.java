@@ -108,9 +108,13 @@ class DialogController {
         }
 
         if (saveFile) {
+            File curDir = fileChooser.getCurrentDirectory();
             fileChooser.setCurrentDirectory(new File(getMainController().getSaveDirectory()));
             if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                fileChooser.setCurrentDirectory(curDir);
                 return fileChooser.getSelectedFile();
+            } else {
+                fileChooser.setCurrentDirectory(curDir);
             }
         } else {
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
