@@ -513,7 +513,13 @@ class MenuController extends MaeControllerI {
         int typeCount = 0;
         for (TagType type : types) {
             JMenuItem makeTagItem = new JMenuItem(getMakeTagAction(category, typeCount++, type));
-            makeTagItem.setActionCommand(type.getName());
+            String actionCommand = type.getName();
+            // add mark in the action command when creating a non-consuming tag
+            if (category == CAT_NCTAG) {
+                actionCommand = String.format("%s%s%s",
+                        ADD_NC_COMMAND, SEP, actionCommand);
+            }
+            makeTagItem.setActionCommand(actionCommand);
             makeTagMenu.add(makeTagItem);
         }
         return makeTagMenu;

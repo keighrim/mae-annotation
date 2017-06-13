@@ -1068,9 +1068,16 @@ public class MaeMainController extends JPanel {
     }
 
     public void clearTextSelection() {
+        clearTextSelection(true);
+    }
+
+    public void clearTextSelection(boolean notify) {
         getTextPanel().clearSelection();
         propagateSelectionFromTextPanel();
-        sendTemporaryNotification("Cleared!, Click anywhere to continue", 1000);
+        if (notify) {
+            sendTemporaryNotification(
+                    "Cleared!, Click anywhere to continue", 1000);
+        }
     }
 
     public File selectSingleFile(String defautName, boolean saveFile) {
