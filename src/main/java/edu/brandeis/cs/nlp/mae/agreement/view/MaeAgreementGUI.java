@@ -452,9 +452,14 @@ public class MaeAgreementGUI extends JFrame {
 
             }
 
-            String[] resultButtons = new String[]{"Export to a file", "Close"};
+            String[] resultButtons = new String[]{
+                    "Export to a file",
+                    "Close"
+            };
+            JScrollPane scrollableText = new JScrollPane(new JTextArea(result));
+            scrollableText.setPreferredSize(new Dimension(400, 600));
             int export = JOptionPane.showOptionDialog(null,
-                    new JTextArea(result), "Inter-Annotator Agreements",
+                    scrollableText, "Inter-Annotator Agreements",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, resultButtons, resultButtons[1]);
             if (export == 0) {
