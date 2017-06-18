@@ -27,6 +27,7 @@ package edu.brandeis.cs.nlp.mae.agreement;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.agreement.calculator.*;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
+import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationDirsIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationFilesIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
@@ -61,15 +62,18 @@ public class MaeAgreementMain {
         this.driver = driver;
     }
 
-    public void loadAnnotationFiles(File singleDir) throws MaeIOException, IOException, SAXException, MaeDBException {
-
-        if (!FileHandler.containsDirsOnly(singleDir)) {
+    public void indexDataset(File datasetDir) throws MaeIOException {
+         if (!FileHandler.containsDirsOnly(datasetDir)) {
             fileIdx = new AnnotationFilesIndexer();
-//        } else {
-            // TODO: 2016-04-23 17:03:30EDT  implement indexer from dirs
-//            fileIdx = new AnnotationDirsIndexer();
+            fileIdx.indexAnnotations(new File[]{datasetDir});
+        } else {
+            fileIdx = new AnnotationDirsIndexer();
+            fileIdx.indexAnnotations(datasetDir.listFiles());
         }
-        fileIdx.indexAnnotations(singleDir);
+    }
+
+    public void loadAnnotationFiles() throws MaeIOException, IOException, SAXException, MaeDBException {
+
         String invalidTaskNameFile = validateTaskNames(driver.getTaskName());
         String invalidPrimaryTextFile = validateTextSharing();
         if (!invalidTaskNameFile.equals(SUCCESS)) {

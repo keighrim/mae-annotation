@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<NounVerbTask>
+<TEXT><![CDATA[
+Mrs Miller wants the entire house repainted.
+]]></TEXT>
+<TAGS>
+<MOOD_DECL id="DECL0" spans="-1~-1" text=""  />
+<NAMED_ENTITY id="NE0" spans="1~11" text="Mrs Miller" type="person" />
+<NOUN id="N0" spans="1~11" text="Mrs Miller"  />
+<NOUN id="N1" spans="29~34" text="house"  />
+<NOUN id="N2" spans="-1~-1" text=""  />
+<VERB id="V0" spans="12~17" text="wants" tense="past" />
+<ADJ_ADV id="A0" spans="35~44" text="repainted"  />
+<ADJ_ADV id="A1" spans="22~28" text="entire"  />
+<ACTION id="AC1" fromID="N2" fromText="" toID="A0" toText="repainted" />
+<DESCRIPTION id="D1" arg0ID="N1" arg0Text="house" arg1ID="A1" arg1Text="entire" arg2ID="A0" arg2Text="repainted" type="multi" />
+<ARGUMENTS id="AR0" agentID="N0" agentText="Mrs Miller" patientID="N1" patientText="house" themeID="A0" themeText="repainted" predicateID="V0" predicateText="wants" />
+</TAGS>
+</NounVerbTask>
