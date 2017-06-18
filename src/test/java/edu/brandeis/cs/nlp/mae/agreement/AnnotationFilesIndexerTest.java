@@ -48,7 +48,7 @@ public class AnnotationFilesIndexerTest {
     @Test
     public void testGetAnnotationMatrixFromFiles() throws Exception {
         URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
-        File exampleDir = new File(exmapleFileUrl.getPath());
+        File[] exampleDir = new File[]{new File(exmapleFileUrl.getPath())};
         indexer.indexAnnotations(exampleDir);
         assertEquals("Expected 5 annotators, found " + indexer.getAnnotators().size(),
                 5, indexer.getAnnotators().size());

@@ -39,7 +39,7 @@
         </license>
     </licenses>
 
-    <!--mainly or version aliases-->
+    <!--mainly for version aliases-->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.6.6</slf4j.version>

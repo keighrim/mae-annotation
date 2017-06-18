@@ -37,11 +37,14 @@ import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;
 
 
 /**
- * Created by krim on 4/13/16.
+ * Abstract class for file indexer, providing public methods to index a annotation
+ * dataset as well as getters for file names of specific documents or annotators.
  */
 public abstract class AbstractAnnotationIndexer {
 
+    // indexed list of annotator IDs
     List<String> annotatorMap;
+    // map from document ID to annotation file names
     Map<String, String[]> documentFileMap;
 
     public AbstractAnnotationIndexer() {
@@ -75,15 +78,15 @@ public abstract class AbstractAnnotationIndexer {
                 annotator, XML_EXT);
     }
 
-    public abstract void indexAnnotations(File datasetDirectory) throws MaeIOException;
+    public abstract void indexAnnotations(File[] dataset) throws MaeIOException;
 
-    public abstract int listupAnnotators(File datasetDirectory) throws MaeIOException;
-
-    public void getAnnotationMatrixFromDirectories(List<File> annotationDirs) throws MaeIOException {
-        // TODO: 2016-04-13 20:41:43EDT implement this to take a set of dir names and treat each of them as an annotator
-
+    public int getDocumentNumber() {
+        return documentFileMap.keySet().size();
     }
 
+    public int getAnnotatorNumber() {
+        return annotatorMap.size();
+    }
 
 
 }
