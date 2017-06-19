@@ -61,27 +61,10 @@ class AttTypeSelectPanel extends JPanel {
         }
     }
 
-    private JComponent prepareGuideTextArea() {
-        JTextArea guideText = new JTextArea(GUI_ATT_SELECT_GUIDE);
-        guideText.setLineWrap(true);
-        guideText.setWrapStyleWord(true);
-        guideText.setEditable(false);
-        guideText.setMargin(new Insets(4, 4, 4, 4));
-
-        guideText.setFont(new Font(Font.DIALOG, Font.PLAIN, 14));
-        guideText.setBackground(UIManager.getColor("Panel.background"));
-
-        JScrollPane guideTextScroller = new JScrollPane(guideText);
-        guideTextScroller.setBorder(BorderFactory.createEmptyBorder());
-
-        return guideTextScroller;
-    }
-
     private void initUI() {
 
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        add(prepareGuideTextArea());
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(new VerboseTextArea(GUI_ATT_SELECT_GUIDE));
 
         final JComboBox<String> tagTypeCombo = new JComboBox<>();
         final JPanel listPanel = new JPanel(new CardLayout());

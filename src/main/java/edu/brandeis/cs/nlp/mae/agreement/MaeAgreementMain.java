@@ -72,7 +72,7 @@ public class MaeAgreementMain {
         }
     }
 
-    public void loadAnnotationFiles() throws MaeIOException, IOException, SAXException, MaeDBException {
+    public void loadXmlFiles() throws MaeIOException, IOException, SAXException, MaeDBException {
 
         String invalidTaskNameFile = validateTaskNames(driver.getTaskName());
         String invalidPrimaryTextFile = validateTextSharing();

@@ -327,7 +327,7 @@ public class MaeAgreementGUI extends JFrame {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
             calc.indexDataset(datasetDir);
-            calc.loadAnnotationFiles();
+            calc.loadXmlFiles();
 
             Map<String, MappedSet<String, String>> global = new TreeMap<>();
             Map<String, MappedSet<String, String>> local = new TreeMap<>();
