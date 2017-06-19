@@ -203,10 +203,11 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 annotations[i] = relevantTags.get(0).getTagTypeName();
                                 break;
                             default:
+                                int errorLocation = span.length == 0 ? -1 : span[0];
                                 throw new MaeException(
                                         String.format("Error occurred while calculating global labeling agreement:" +
                                                         " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
-                                                document, fileIdx.getAnnotators().get(i), span[0]));
+                                                document, fileIdx.getAnnotators().get(i), errorLocation));
                         }
                     }
                     study.addItem(annotations);

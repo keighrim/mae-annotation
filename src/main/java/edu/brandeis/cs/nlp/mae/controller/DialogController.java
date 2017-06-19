@@ -103,13 +103,16 @@ class DialogController {
     }
 
     File showFileChooseDialogAndSelect(String defaultName, boolean saveFile) {
+        File curDir = fileChooser.getCurrentDirectory();
         if (defaultName.length() > 0) {
             fileChooser.setSelectedFile(new File(defaultName));
         }
 
         if (saveFile) {
             fileChooser.setCurrentDirectory(new File(getMainController().getSaveDirectory()));
-            if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            int response = fileChooser.showSaveDialog(null);
+            fileChooser.setCurrentDirectory(curDir);
+            if (response == JFileChooser.APPROVE_OPTION) {
                 return fileChooser.getSelectedFile();
             }
         } else {

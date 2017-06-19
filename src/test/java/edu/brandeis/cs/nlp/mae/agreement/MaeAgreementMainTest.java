@@ -67,7 +67,8 @@ public class MaeAgreementMainTest {
 
         URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
         File exampleDir = new File(exmapleFileUrl.getPath());
-        calc.loadAnnotationFiles(exampleDir);
+        calc.indexDataset(exampleDir);
+        calc.loadXmlFiles();
     }
 
     @Test

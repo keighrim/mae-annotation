@@ -24,14 +24,12 @@
 
 package edu.brandeis.cs.nlp.mae.io;
 
-import org.junit.Test;
+import org.junit.Ignore;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by krim on 3/10/17.
@@ -51,7 +49,7 @@ public class MaeFileWriterTest {
         }
     }
 
-    @Test
+    @Ignore
     public void canWriteTextToEmptyXML() throws Exception {
         String test = "President Trump has inherited an economy that set a record Friday " +
                 "with 77 consecutive months of job growth, or, as put it, a “mess.”\n" +
@@ -67,7 +65,7 @@ public class MaeFileWriterTest {
         writeAndPrintFile(test);
     }
 
-    @Test
+    @Ignore
     public void canWriteUnicodeTextToEmptyXML() throws Exception {
        writeAndPrintFile("" +
                "698517229072035841 ...' it was accidental, ..but it sounded \uD83D\uDD0A good, ...so the \uD83D\uDC1E\uD83D\uDC1E\uD83D\uDC1E. \uD83D\uDC1E  decided to stick with it... \uD83D\uDC35\n" +

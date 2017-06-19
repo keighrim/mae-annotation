@@ -27,26 +27,40 @@ package edu.brandeis.cs.nlp.mae.agreement.io;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.ANNOTATOR_SUFFIX_DELIM;
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;
 
 
 /**
- * Created by krim on 4/13/16.
+ * Abstract class for file indexer, providing public methods to index a annotation
+ * dataset as well as getters for file names of specific documents or annotators.
  */
 public abstract class AbstractAnnotationIndexer {
 
+    // indexed list of annotator IDs
     List<String> annotatorMap;
+    // map from document ID to annotation file names
     Map<String, String[]> documentFileMap;
+    Set<Integer> ignored;
 
     public AbstractAnnotationIndexer() {
         annotatorMap = new ArrayList<>();
         documentFileMap = new TreeMap<>();
+        ignored = new TreeSet<>();
+    }
+
+    public void ignoreAnnotator(String annotatorID) {
+        int annotatorIndex = getAnnotatorIndex(annotatorID);
+        if (!ignored.contains(annotatorIndex))
+            ignored.add(annotatorIndex);
+    }
+
+    public void approveAnnotator(String annotatorID) {
+        int annotatorIndex = getAnnotatorIndex(annotatorID);
+        if (ignored.contains(annotatorIndex))
+            ignored.remove((annotatorIndex));
     }
 
     public List<String> getAnnotators() {
@@ -66,7 +80,17 @@ public abstract class AbstractAnnotationIndexer {
     }
 
     public String[] getAnnotationsOfDocument(String docName) {
-        return documentFileMap.get(docName);
+        if (ignored.size() == 0) {
+            return documentFileMap.get(docName);
+        }
+        String[] docs =  new String[annotatorMap.size() - ignored.size()];
+        int j = 0;
+        for (int i = 0 ; i < annotatorMap.size(); i++ ) {
+            if (!ignored.contains(i)) {
+                docs[j++] = documentFileMap.get(docName)[i];
+            }
+        }
+        return docs;
     }
 
     public String generateAnnotationFileName(String document, String annotator) {
@@ -75,15 +99,15 @@ public abstract class AbstractAnnotationIndexer {
                 annotator, XML_EXT);
     }
 
-    public abstract void indexAnnotations(File datasetDirectory) throws MaeIOException;
+    public abstract void indexAnnotations(File[] dataset) throws MaeIOException;
 
-    public abstract int listupAnnotators(File datasetDirectory) throws MaeIOException;
-
-    public void getAnnotationMatrixFromDirectories(List<File> annotationDirs) throws MaeIOException {
-        // TODO: 2016-04-13 20:41:43EDT implement this to take a set of dir names and treat each of them as an annotator
-
+    public int getDocumentCount() {
+        return documentFileMap.keySet().size();
     }
 
+    public int getAnnotatorCount() {
+        return annotatorMap.size();
+    }
 
 
 }

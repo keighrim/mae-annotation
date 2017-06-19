@@ -24,12 +24,15 @@
 
 package edu.brandeis.cs.nlp.mae.agreement;
 
+import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
+import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationDirsIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.AnnotationFilesIndexer;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -38,18 +41,35 @@ import static org.junit.Assert.assertEquals;
  * Created by krim on 4/13/16.
  */
 public class AnnotationFilesIndexerTest {
-    AnnotationFilesIndexer indexer;
+    AbstractAnnotationIndexer indexer;
 
-    @Before
-    public void setUp() throws Exception {
-        indexer = new AnnotationFilesIndexer();
+    @Test
+    public void testGetAnnotationMatrixFromDirs() throws Exception {
+        indexer = new AnnotationDirsIndexer();
+        URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example_dirs");
+        File exampleDir = new File(exmapleFileUrl.getPath());
+        List<File> subsets = new LinkedList<>();
+        for (File subset : exampleDir.listFiles()) {
+            if (subset.isDirectory()) {
+                subsets.add(subset);
+            }
+        }
+        File[] targets = new File[subsets.size()];
+        targets = subsets.toArray(targets);
+        indexer.indexAnnotations(targets);
+        testIndexer();
     }
 
     @Test
     public void testGetAnnotationMatrixFromFiles() throws Exception {
+        indexer = new AnnotationFilesIndexer();
         URL exmapleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example");
-        File exampleDir = new File(exmapleFileUrl.getPath());
+        File[] exampleDir = new File[]{new File(exmapleFileUrl.getPath())};
         indexer.indexAnnotations(exampleDir);
+        testIndexer();
+    }
+
+    private void testIndexer() {
         assertEquals("Expected 5 annotators, found " + indexer.getAnnotators().size(),
                 5, indexer.getAnnotators().size());
         Map<String, String[]> map = (indexer.getDocumentFileMap());

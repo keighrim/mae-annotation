@@ -85,4 +85,7 @@ hs_err_pid*
 dev_samples/ 
 scripts/ 
 
+# MAE preferences file
+**/mae.pref
+
 

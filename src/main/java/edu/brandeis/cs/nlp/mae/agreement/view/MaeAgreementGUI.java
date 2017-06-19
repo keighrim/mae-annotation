@@ -37,9 +37,7 @@ import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -55,6 +53,17 @@ public class MaeAgreementGUI extends JFrame {
     JButton buttonOK;
     JButton buttonCancel;
 
+    // Currently only the left panel (annotator selection panel) needs to be updated
+    // dynamically after dataset location is selected. So we're keeping track of it
+    // as a instance field.
+    // Center and right panels will also be traceable when IAA calc is provided as
+    // a stand-alone GUI with open-DTD functionality.
+    JPanel leftPanel;
+//    JPanel centerPanel;
+//    JPanel rightPanel;
+
+//    JComponent annotatorSelectionPanel;
+
     private MappedSet<String, String> tagsAndAtts;
     private List<AgreementTypeSelectPanel> agrTypeSelectPanels;
     private AttTypeSelectPanel attTypeSelectionPanel;
@@ -69,6 +78,7 @@ public class MaeAgreementGUI extends JFrame {
         super("MAE IAA Calculator");
         this.taskScheme =  new File(taskSchemeName);
         setupDriver();
+        this.calc = new MaeAgreementMain(this.driver);
 
         // currently only support extent tags
         // TODO: 2016-04-17 17:53:40EDT think of a way to handle link tags
@@ -179,7 +189,7 @@ public class MaeAgreementGUI extends JFrame {
         dataDirPanel.add(selectedDirScroller);
 
         JButton dirChooser = new JButton("Choose Annotation Location");
-        dirChooser.addActionListener(e -> {
+        dirChooser.addActionListener((ActionEvent e) -> {
             JFileChooser fileChooser = new JFileChooser(this.taskScheme.getParentFile());
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -187,6 +197,18 @@ public class MaeAgreementGUI extends JFrame {
                 datasetDir = fileChooser.getSelectedFile();
                 String selectedDirString = datasetDir.getAbsolutePath();
                 selectedDir.setText(selectedDirString);
+                try {
+                    calc.indexDataset(datasetDir);
+                    BorderLayout layout = (BorderLayout) leftPanel.getLayout();
+                    leftPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
+                    leftPanel.add(prepareAnnotatorSelectionPanel(calc.getAnnotators()),
+                            BorderLayout.CENTER);
+                    leftPanel.revalidate();
+
+                } catch (MaeIOException e1) {
+                    JOptionPane.showMessageDialog(null, e1.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+                    e1.printStackTrace();
+                }
             }
         });
 
@@ -207,12 +229,23 @@ public class MaeAgreementGUI extends JFrame {
     private JPanel prepareMainPanel() {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
-        JPanel leftPanel = prepareLeftPane();
-        JPanel rightPanel = prepareRightPane();
-        leftPanel.setMinimumSize(new Dimension(600, 300));
-        leftPanel.setPreferredSize(new Dimension(600, 300));
-        leftPanel.setMaximumSize(new Dimension(600, 2000));
+        leftPanel = prepareAnnotatorPanel(null);
+        JPanel centerPanel = prepareTagsPane();
+        JPanel rightPanel = prepareAttsPane();
+
+        centerPanel.setMinimumSize(new Dimension(200, 300));
+        centerPanel.setPreferredSize(new Dimension(200, 300));
+        centerPanel.setMaximumSize(new Dimension(200, 2000));
         mainPanel.add(leftPanel);
+        mainPanel.add(Box.createHorizontalStrut(12));
+        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        mainPanel.add(Box.createHorizontalStrut(2));
+        mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        mainPanel.add(Box.createHorizontalStrut(12));
+        centerPanel.setMinimumSize(new Dimension(600, 300));
+        centerPanel.setPreferredSize(new Dimension(600, 300));
+        centerPanel.setMaximumSize(new Dimension(600, 2000));
+        mainPanel.add(centerPanel);
         mainPanel.add(Box.createHorizontalStrut(12));
         mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
         mainPanel.add(Box.createHorizontalStrut(2));
@@ -233,23 +266,81 @@ public class MaeAgreementGUI extends JFrame {
 
     }
 
-
-    private JPanel prepareLeftPane() {
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(preparePanelTitle(MaeAgreementStrings.SCOPE_CONFIG_PANEL_TITLE),
+    private JPanel prepareAnnotatorPanel(List<String> annotatorIDs) {
+        JPanel annotatorsPanel = new JPanel(new BorderLayout());
+        annotatorsPanel.add(preparePanelTitle(MaeAgreementStrings.ANNOTATOR_CONFIG_PANEL_TITLE),
                 BorderLayout.NORTH);
-        leftPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
-        return leftPanel;
+        annotatorsPanel.add(prepareAnnotatorSelectionPanel(annotatorIDs));
+        return annotatorsPanel;
     }
 
-    private JPanel prepareRightPane() {
+    private JComponent prepareAnnotatorSelectionPanel(List<String> annotatorIDs) {
+        if (annotatorIDs == null || annotatorIDs.size() == 0) {
+            return new VerboseTextArea("once you have a dataset selected!");
+        }
+        JCheckBox[] annotatorCheckBoxes = new JCheckBox[annotatorIDs.size()];
+        JPanel annotatorList = new JPanel();
+        annotatorList.setLayout(new BoxLayout(annotatorList, BoxLayout.Y_AXIS));
+
+        // add each annotator
+        for (int i = 0; i < annotatorIDs.size(); i++) {
+            String annotatorID = annotatorIDs.get(i);
+            JCheckBox annotatorCheckBox = new JCheckBox(annotatorID);
+            annotatorCheckBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    calc.ignoreAnnotator(annotatorID);
+                } else {
+                    calc.approveAnnotator(annotatorID);
+                }
+            });
+            annotatorList.add(annotatorCheckBox);
+            annotatorCheckBoxes[i] = annotatorCheckBox;
+        }
+
+        // add "all" button at the end
+        JCheckBox allAnnotatorCheckBox = new JCheckBox("Include All");
+        allAnnotatorCheckBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.DESELECTED) {
+                for (JCheckBox check : annotatorCheckBoxes) {
+                    check.setEnabled(true);
+                }
+            } else {
+                for (JCheckBox check : annotatorCheckBoxes) {
+                    check.setSelected(true);
+                    check.setEnabled(false);
+                }
+            }
+        });
+        allAnnotatorCheckBox.setSelected(true);
+        annotatorList.add(allAnnotatorCheckBox);
+
+        // TODO: 6/18/2017 provide pairwise IAA calculation
+        JCheckBox pairwise = new JCheckBox("Pairwise comparison");
+        pairwise.setEnabled(false);
+        pairwise.setToolTipText("Under development");
+        annotatorList.add(pairwise);
+
+        JScrollPane annotatorListScroller = new JScrollPane(annotatorList);
+        annotatorListScroller.setBorder(BorderFactory.createEmptyBorder());
+        return annotatorListScroller;
+    }
+
+    private JPanel prepareTagsPane() {
+        JPanel tagsPanel = new JPanel(new BorderLayout());
+        tagsPanel.add(preparePanelTitle(MaeAgreementStrings.SCOPE_CONFIG_PANEL_TITLE),
+                BorderLayout.NORTH);
+        tagsPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
+        return tagsPanel;
+    }
+
+    private JPanel prepareAttsPane() {
 
         this.attTypeSelectionPanel = new AttTypeSelectPanel(tagsAndAtts);
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(preparePanelTitle(MaeAgreementStrings.ATTS_CONFIG_PANEL_TITLE),
+        JPanel attsPanel = new JPanel(new BorderLayout());
+        attsPanel.add(preparePanelTitle(MaeAgreementStrings.ATTS_CONFIG_PANEL_TITLE),
                 BorderLayout.NORTH);
-        rightPanel.add(this.attTypeSelectionPanel, BorderLayout.CENTER);
-        return rightPanel;
+        attsPanel.add(this.attTypeSelectionPanel, BorderLayout.CENTER);
+        return attsPanel;
     }
 
     private JPanel prepareButtons() {
@@ -306,7 +397,6 @@ public class MaeAgreementGUI extends JFrame {
     private JScrollPane prepareAgrTypePanels() {
         JPanel agrTypeList = new JPanel();
         agrTypeList.setLayout(new BoxLayout(agrTypeList, BoxLayout.Y_AXIS));
-        agrTypeList.add(new JSeparator(SwingConstants.VERTICAL));
 
         for (String tagTypeName : tagsAndAtts.keyList()) {
             AgreementTypeSelectPanel tagTypePanel = new AgreementTypeSelectPanel(tagTypeName);
@@ -315,18 +405,18 @@ public class MaeAgreementGUI extends JFrame {
             agrTypeList.add(Box.createVerticalStrut(8));
         }
         agrTypeList.add(Box.createVerticalGlue());
+
         JScrollPane agrTypeListScroller = new JScrollPane(agrTypeList);
         agrTypeListScroller.setBorder(BorderFactory.createEmptyBorder());
-
         return agrTypeListScroller;
     }
 
     private void computeAgreement() throws IOException, MaeException, SAXException {
-        this.calc = new MaeAgreementMain(this.driver);
         if (datasetDir == null) {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
-            calc.loadAnnotationFiles(datasetDir);
+//            calc.indexDataset(datasetDir);
+            calc.loadXmlFiles();
 
             Map<String, MappedSet<String, String>> global = new TreeMap<>();
             Map<String, MappedSet<String, String>> local = new TreeMap<>();
