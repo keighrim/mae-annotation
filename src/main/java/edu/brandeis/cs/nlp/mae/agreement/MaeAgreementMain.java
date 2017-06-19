@@ -42,6 +42,7 @@ import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
@@ -70,6 +71,18 @@ public class MaeAgreementMain {
             fileIdx = new AnnotationDirsIndexer();
             fileIdx.indexAnnotations(datasetDir.listFiles());
         }
+    }
+
+    public List<String> getAnnotators() {
+        return fileIdx.getAnnotators();
+    }
+
+    public void ignoreAnnotator(String annotatorId) {
+        fileIdx.ignoreAnnotator(annotatorId);
+    }
+
+    public void approveAnnotator(String annotatorId) {
+        fileIdx.approveAnnotator(annotatorId);
     }
 
     public void loadXmlFiles() throws MaeIOException, IOException, SAXException, MaeDBException {

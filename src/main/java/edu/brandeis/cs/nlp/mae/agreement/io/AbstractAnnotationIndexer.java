@@ -27,10 +27,7 @@ package edu.brandeis.cs.nlp.mae.agreement.io;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.ANNOTATOR_SUFFIX_DELIM;
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;
@@ -46,10 +43,24 @@ public abstract class AbstractAnnotationIndexer {
     List<String> annotatorMap;
     // map from document ID to annotation file names
     Map<String, String[]> documentFileMap;
+    Set<Integer> ignored;
 
     public AbstractAnnotationIndexer() {
         annotatorMap = new ArrayList<>();
         documentFileMap = new TreeMap<>();
+        ignored = new TreeSet<>();
+    }
+
+    public void ignoreAnnotator(String annotatorID) {
+        int annotatorIndex = getAnnotatorIndex(annotatorID);
+        if (!ignored.contains(annotatorIndex))
+            ignored.add(annotatorIndex);
+    }
+
+    public void approveAnnotator(String annotatorID) {
+        int annotatorIndex = getAnnotatorIndex(annotatorID);
+        if (ignored.contains(annotatorIndex))
+            ignored.remove((annotatorIndex));
     }
 
     public List<String> getAnnotators() {
@@ -69,7 +80,17 @@ public abstract class AbstractAnnotationIndexer {
     }
 
     public String[] getAnnotationsOfDocument(String docName) {
-        return documentFileMap.get(docName);
+        if (ignored.size() == 0) {
+            return documentFileMap.get(docName);
+        }
+        String[] docs =  new String[annotatorMap.size() - ignored.size()];
+        int j = 0;
+        for (int i = 0 ; i < annotatorMap.size(); i++ ) {
+            if (!ignored.contains(i)) {
+                docs[j++] = documentFileMap.get(docName)[i];
+            }
+        }
+        return docs;
     }
 
     public String generateAnnotationFileName(String document, String annotator) {
@@ -80,11 +101,11 @@ public abstract class AbstractAnnotationIndexer {
 
     public abstract void indexAnnotations(File[] dataset) throws MaeIOException;
 
-    public int getDocumentNumber() {
+    public int getDocumentCount() {
         return documentFileMap.keySet().size();
     }
 
-    public int getAnnotatorNumber() {
+    public int getAnnotatorCount() {
         return annotatorMap.size();
     }
 
