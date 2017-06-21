@@ -39,11 +39,8 @@ public class FileHandler {
 
     public static String ANNOTATOR_SUFFIX_DELIM = "_";
     public static String XML_EXT = ".xml";
-    public static FileFilter XML_FILTER  = new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-            return pathname.getName().toLowerCase().endsWith(".xml");
-        } };
+    public static FileFilter XML_FILTER  = pathname
+            -> pathname.getName().toLowerCase().endsWith(".xml");
 
     public static String getFileBaseName(File file) {
         return getFileBaseName(file.getAbsolutePath());
@@ -61,7 +58,7 @@ public class FileHandler {
                 throw new MaeIOException("Directory is empty: " + directory.getName());
             }
             for (File file : files) {
-                if (!file.isDirectory()) {
+                if (!file.isDirectory() && !file.isHidden()) {
                     return false;
                 }
             }

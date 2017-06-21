@@ -69,7 +69,7 @@ public class MaeAgreementMain {
             fileIdx.indexAnnotations(new File[]{datasetDir});
         } else {
             fileIdx = new AnnotationDirsIndexer();
-            fileIdx.indexAnnotations(datasetDir.listFiles());
+            fileIdx.indexAnnotations(datasetDir.listFiles(file -> !file.isHidden()));
         }
     }
 
