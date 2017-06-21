@@ -318,7 +318,7 @@ public class MaeAgreementGUI extends JFrame {
         JCheckBox pairwise = new JCheckBox("Pairwise comparison");
         pairwise.setEnabled(false);
         pairwise.setToolTipText("Under development");
-        annotatorList.add(pairwise);
+//        annotatorList.add(pairwise);
 
         JScrollPane annotatorListScroller = new JScrollPane(annotatorList);
         annotatorListScroller.setBorder(BorderFactory.createEmptyBorder());
