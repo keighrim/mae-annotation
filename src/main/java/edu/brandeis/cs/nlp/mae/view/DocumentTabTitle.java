@@ -94,7 +94,7 @@ public class DocumentTabTitle extends JPanel {
 
     public void setLabel(String label) {
         documentLabel.setText(label);
-        updateUI();
+        revalidate();
 
     }
 

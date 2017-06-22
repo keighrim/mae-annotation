@@ -129,8 +129,7 @@ class MenuController extends MaeControllerI {
 
         @Override
         protected void done() {
-            menubar.updateUI();
-
+            menubar.revalidate();
         }
     }
 
