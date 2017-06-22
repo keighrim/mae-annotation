@@ -39,6 +39,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -50,19 +52,16 @@ import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.ALL_METRIC_T
  */
 public class MaeAgreementGUI extends JFrame {
 
-    JButton buttonOK;
     JButton buttonCancel;
 
     // Currently only the left panel (annotator selection panel) needs to be updated
     // dynamically after dataset location is selected. So we're keeping track of it
     // as a instance field.
-    // Center and right panels will also be traceable when IAA calc is provided as
+    // Center and right panels should also be traceable when IAA calc is provided as
     // a stand-alone GUI with open-DTD functionality.
     JPanel leftPanel;
 //    JPanel centerPanel;
 //    JPanel rightPanel;
-
-//    JComponent annotatorSelectionPanel;
 
     private MappedSet<String, String> tagsAndAtts;
     private List<AgreementTypeSelectPanel> agrTypeSelectPanels;
@@ -346,15 +345,35 @@ public class MaeAgreementGUI extends JFrame {
     private JPanel prepareButtons() {
         JPanel buttons = new JPanel();
         buttons.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        buttonOK = new JButton("Continue");
+
+        JButton buttonHelp = new JButton(MaeStrings.MENU_HELP);
+        buttonHelp.addActionListener(e -> openWebsite(MaeStrings.IAA_HELP_WEBPAGE));
+
+        JButton buttonOK = new JButton("Continue");
         buttonOK.addActionListener(e -> onOk());
 
         buttonCancel = new JButton("Close");
         buttonCancel.addActionListener(e -> onCancel());
+
+        buttons.add(buttonHelp);
         buttons.add(buttonOK);
         buttons.add(buttonCancel);
 
         return buttons;
+    }
+
+    private void openWebsite(String Url) {
+        if (Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().browse(
+                        new URI(Url));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } catch (URISyntaxException ignored) {
+            }
+        }
+
+
     }
 
     private JPanel prepareRightAlignedButtonPanel(JButton dirChooser) {
@@ -415,7 +434,6 @@ public class MaeAgreementGUI extends JFrame {
         if (datasetDir == null) {
             JOptionPane.showMessageDialog(null, "Choose dataset path first!");
         } else {
-//            calc.indexDataset(datasetDir);
             calc.loadXmlFiles();
 
             Map<String, MappedSet<String, String>> global = new TreeMap<>();
@@ -453,17 +471,23 @@ public class MaeAgreementGUI extends JFrame {
             }
 
             String[] resultButtons = new String[]{
+                    "Close",
                     "Export to a file",
-                    "Close"
+                    MaeStrings.MENU_HELP
             };
+            JPanel resultPanel = new JPanel(new BorderLayout());
+            resultPanel.add(new VerboseTextArea("Please make sure you understand differences between metrices before you use these numbers. See the MAE wiki for more details."), BorderLayout.NORTH);
             JScrollPane scrollableText = new JScrollPane(new JTextArea(result));
             scrollableText.setPreferredSize(new Dimension(400, 600));
+            resultPanel.add(scrollableText);
             int export = JOptionPane.showOptionDialog(null,
-                    scrollableText, "Inter-Annotator Agreements",
+                    resultPanel, "Inter-Annotator Agreements",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-                    null, resultButtons, resultButtons[1]);
-            if (export == 0) {
+                    null, resultButtons, resultButtons[0]);
+            if (export == 1) {
                 exportResult(result);
+            } else if (export == resultButtons.length - 1) {
+                openWebsite(MaeStrings.IAA_HELP_WEBPAGE);
             }
         }
     }
