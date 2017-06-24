@@ -194,8 +194,6 @@ public class MaeAgreementGUI extends JFrame {
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 datasetDir = fileChooser.getSelectedFile();
-                String selectedDirString = datasetDir.getAbsolutePath();
-                selectedDir.setText(selectedDirString);
                 try {
                     calc.indexDataset(datasetDir);
                     BorderLayout layout = (BorderLayout) leftPanel.getLayout();
@@ -204,10 +202,13 @@ public class MaeAgreementGUI extends JFrame {
                             BorderLayout.CENTER);
                     leftPanel.revalidate();
 
-                } catch (MaeIOException e1) {
-                    JOptionPane.showMessageDialog(null, e1.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
-                    e1.printStackTrace();
+                } catch (MaeIOException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), MaeStrings.ERROR_POPUP_TITLE, JOptionPane.WARNING_MESSAGE);
+                    ex.printStackTrace();
                 }
+                // show the dataset path only loading is successfully completed.
+                String selectedDirString = datasetDir.getAbsolutePath();
+                selectedDir.setText(selectedDirString);
             }
         });
 
