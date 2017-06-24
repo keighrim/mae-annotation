@@ -108,7 +108,7 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
             }
             List<String> documents = fileIdx.getDocumentNames();
             for (String document : documents) {
-                MaeXMLParser[] parses = getParses(document);
+                MaeXMLParser[] parses = parseCache.getParses(document);
                 Set<int[]> relevantSpans = getSegmentSpansOfTagType(parses, tagTypeName);
 
                 for (int[] relevantSpan : relevantSpans) {
@@ -134,7 +134,7 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                     throw new MaeException(
                                             String.format("Error occurred while calculating local labeling agreement:" +
                                                     " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
-                                                    document, fileIdx.getAnnotators().get(j), relevantSpan[0]));
+                                                    document, fileIdx.getApprovedAnnotators().get(j), relevantSpan[0]));
                             }
                         }
                     }
@@ -207,7 +207,7 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 throw new MaeException(
                                         String.format("Error occurred while calculating global labeling agreement:" +
                                                         " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
-                                                document, fileIdx.getAnnotators().get(i), errorLocation));
+                                                document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
                         }
                     }
                     study.addItem(annotations);

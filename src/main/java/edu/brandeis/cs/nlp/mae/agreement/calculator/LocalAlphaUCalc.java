@@ -67,7 +67,7 @@ public class LocalAlphaUCalc extends AbstractUnitizationAgreementCalc {
             List<String> documents = fileIdx.getDocumentNames();
             for (int i = 0; i < documents.size(); i++) {
                 String document = documents.get(i);
-                MaeXMLParser[] parses = getParses(document);
+                MaeXMLParser[] parses = parseCache.getParses(document);
 
                 addTagAsUnits(tagTypeName, parses, curDocLength, studyPerAtt.get(attFullNameMap.get(SPAN_ATT)));
                 for (int j = 1; j < attTypeNames.size(); j++) {

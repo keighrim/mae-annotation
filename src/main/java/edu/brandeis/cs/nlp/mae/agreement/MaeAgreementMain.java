@@ -42,7 +42,6 @@ import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -125,7 +124,6 @@ public class MaeAgreementMain {
         int curDoc = 0;
         for (String docName : fileIdx.getDocumentNames()) {
             String[] fileNames = fileIdx.getAnnotationsOfDocument(docName);
-            System.out.println(Arrays.toString(fileNames));
             int seen = getFirstNonNullIndex(fileNames);
             if (seen == -1) {
                 continue;
@@ -149,8 +147,8 @@ public class MaeAgreementMain {
     /**
      * Returns the index of the first non-null element of the given array.
      * If the array is full of null items, return -1.
-     * @param array
-     * @return
+     * @param array an array
+     * @return the index of non-null item, or -1
      */
     private static int getFirstNonNullIndex(Object[] array) {
         int seen = 0;

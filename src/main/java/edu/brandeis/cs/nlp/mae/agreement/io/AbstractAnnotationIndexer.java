@@ -27,7 +27,13 @@ package edu.brandeis.cs.nlp.mae.agreement.io;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.ANNOTATOR_SUFFIX_DELIM;
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;
@@ -61,6 +67,16 @@ public abstract class AbstractAnnotationIndexer {
         int annotatorIndex = getAnnotatorIndex(annotatorID);
         if (ignored.contains(annotatorIndex))
             ignored.remove((annotatorIndex));
+    }
+
+    public List<String> getApprovedAnnotators() {
+        List<String> annotators = new LinkedList<>();
+        for (int i = 0; i < annotatorMap.size(); i++) {
+            if (!ignored.contains(i)) {
+                annotators.add(annotatorMap.get(i));
+            }
+        }
+        return annotators;
     }
 
     public List<String> getAnnotators() {
@@ -105,7 +121,11 @@ public abstract class AbstractAnnotationIndexer {
         return documentFileMap.keySet().size();
     }
 
-    public int getAnnotatorCount() {
+    public int getApprovedAnnotatorCount() {
+        return annotatorMap.size() - ignored.size();
+    }
+
+    public int getAllAnnotatorCount() {
         return annotatorMap.size();
     }
 

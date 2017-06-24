@@ -62,10 +62,11 @@ public class XMLParseCache {
     }
 
     private MaeXMLParser[] cacheXMLParse(String docName) throws MaeDBException, IOException, SAXException {
-        String[] xmlFileNames = fileIdx.getAnnotationsOfDocument(docName);
-        MaeXMLParser[] parses = new MaeXMLParser[xmlFileNames.length];
-        for (int i = 0; i < xmlFileNames.length; i++) {
-            String fileName = xmlFileNames[i];
+        // this var would only hold xml files of approved annotators, and so would the cache
+        String[] xmlFilesToCache = fileIdx.getAnnotationsOfDocument(docName);
+        MaeXMLParser[] parses = new MaeXMLParser[xmlFilesToCache.length];
+        for (int i = 0; i < xmlFilesToCache.length; i++) {
+            String fileName = xmlFilesToCache[i];
             if (fileName != null) {
                 MaeXMLParser parser = new MaeXMLParser(driver);
                 parser.readAnnotationFile(new File(fileName));
