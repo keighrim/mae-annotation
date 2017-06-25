@@ -457,7 +457,7 @@ public class MaeAgreementGUI extends JFrame {
                     }
                 }
             }
-            String result = "";
+            String result = "Please make sure you understand differences between metrices before you use these numbers. See the MAE wiki for more details.\n\n";
             result += calc.calcGlobalAgreementToString(global);
             result += calc.calcLocalAgreementToString(local);
 
