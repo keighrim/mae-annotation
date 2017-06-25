@@ -48,7 +48,7 @@ import java.util.Map;
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
 /**
- * Created by krim on 4/14/2016.
+ * Main controller for IAA calculator.
  */
 public class MaeAgreementMain {
 
@@ -69,7 +69,7 @@ public class MaeAgreementMain {
             fileIdx.indexAnnotations(new File[]{datasetDir});
         } else {
             fileIdx = new AnnotationDirsIndexer();
-            fileIdx.indexAnnotations(datasetDir.listFiles());
+            fileIdx.indexAnnotations(datasetDir.listFiles(file -> !file.isHidden()));
         }
     }
 
@@ -125,6 +125,9 @@ public class MaeAgreementMain {
         for (String docName : fileIdx.getDocumentNames()) {
             String[] fileNames = fileIdx.getAnnotationsOfDocument(docName);
             int seen = getFirstNonNullIndex(fileNames);
+            if (seen == -1) {
+                continue;
+            }
             parser.readAnnotationPreamble(new File(fileNames[seen++]));
             String primaryText = parser.getParsedPrimaryText();
             documentLength[curDoc++] = primaryText.length();
@@ -141,22 +144,22 @@ public class MaeAgreementMain {
         return SUCCESS;
     }
 
-    private static int countNonNull(Object[] array) {
-        int countNonNull = 0;
-        for (Object obj : array) {
-            if (obj != null) {
-                countNonNull++;
-            }
-        }
-        return countNonNull;
-    }
-
+    /**
+     * Returns the index of the first non-null element of the given array.
+     * If the array is full of null items, return -1.
+     * @param array an array
+     * @return the index of non-null item, or -1
+     */
     private static int getFirstNonNullIndex(Object[] array) {
         int seen = 0;
         while (seen < array.length && array[seen] == null) {
             seen++;
         }
-        return seen;
+        if (seen >= array.length) {
+            return -1;
+        } else {
+            return seen;
+        }
     }
 
     public String agreementsToString(String agreementType, Map<String, Double> agreements) {

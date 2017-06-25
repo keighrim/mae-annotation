@@ -27,8 +27,6 @@ package edu.brandeis.cs.nlp.mae.agreement.calculator;
 import edu.brandeis.cs.nlp.mae.MaeException;
 import edu.brandeis.cs.nlp.mae.agreement.io.AbstractAnnotationIndexer;
 import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
-import edu.brandeis.cs.nlp.mae.database.MaeDBException;
-import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import org.xml.sax.SAXException;
 
@@ -36,7 +34,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Created by krim on 4/23/2016.
+ * Abstract superclass for all AgreementCalc classes to hold common instance fields.
  */
 abstract class AbstractMaeAgreementCalc {
 
@@ -47,24 +45,9 @@ abstract class AbstractMaeAgreementCalc {
     public AbstractMaeAgreementCalc(AbstractAnnotationIndexer fileIdx, XMLParseCache parseCache) {
         this.fileIdx = fileIdx;
         this.parseCache = parseCache;
-        this.numAnnotators = fileIdx.getAnnotators().size();
+        this.numAnnotators = fileIdx.getApprovedAnnotatorCount();
     }
 
-    public int getNumAnnotators() {
-        return numAnnotators;
-    }
-
-    public AbstractAnnotationIndexer getFileIdx() {
-        return fileIdx;
-    }
-
-    public XMLParseCache getParseCache() {
-        return parseCache;
-    }
-
-    public MaeXMLParser[] getParses(String docName) throws IOException, SAXException, MaeDBException {
-        return this.parseCache.getParses(docName);
-    }
-
-    public abstract Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException;
+    public abstract Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts)
+            throws IOException, SAXException, MaeException;
 }

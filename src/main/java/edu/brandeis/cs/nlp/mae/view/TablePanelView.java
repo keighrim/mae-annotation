@@ -30,8 +30,6 @@ import edu.brandeis.cs.nlp.mae.model.TagType;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 /**
@@ -116,9 +114,8 @@ public class TablePanelView extends JPanel {
             Icon selected = new ColorRect(c, 13);
             this.toggle.setIcon(unselected);
             this.toggle.setSelectedIcon(selected);
-            this.toggle.updateUI();
-            this.updateUI();
-
+            this.toggle.revalidate();
+            this.revalidate();
         }
 
         public Color getColor() {

@@ -120,14 +120,12 @@ class AgreementTypeSelectPanel extends JPanel {
         scopeCombo.addActionListener(e -> {
             if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_LABELING_STRING)) {
                 prepareLabelingMetricsCombobox();
-                updateUI();
             } else if (((String) scopeCombo.getSelectedItem()).contains(SCOPE_UNITIZING_STRING)) {
                 prepareSegmentationMetricsCombobox();
-                updateUI();
             } else {
                 prepareMetricsCombobox();
-                updateUI();
             }
+            revalidate();
         });
         scopeCombo.setSelectedIndex(0);
     }

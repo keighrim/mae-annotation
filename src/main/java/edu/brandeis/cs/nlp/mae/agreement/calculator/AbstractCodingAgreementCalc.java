@@ -42,7 +42,8 @@ import java.util.stream.Collectors;
 import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.*;
 
 /**
- * Created by krim on 4/24/2016.
+ * Abstract superclass for AgreementCalc classes for coding (labeling) task.
+ * Holds common helper methods.
  */
 public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCalc {
 
@@ -50,7 +51,16 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
         super(fileIdx, parseCache);
     }
 
-    Set<int[]> getSegmentSpansOfTagType(MaeXMLParser[] parses, String tagTypeName) {
+    /**
+     * Given an array of XML parses and a single tag name, return a set of
+     * spans of relevant tags from the XML parses. Note that the final list does
+     * not know about different documents in the parses. All instances of tags from
+     * all documents are collapsed.
+     * @param parses parsed annotation XML files
+     * @param tagTypeName the name of the extent tag of interest
+     * @return a set of spans of relevant tags
+     */
+    private Set<int[]> getSpansOfTagType(MaeXMLParser[] parses, String tagTypeName) {
         TreeSet<int[]> spans = new TreeSet<>(new SortedIntArrayComparator());
 
         Arrays.stream(parses).filter(
@@ -64,7 +74,16 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
         return spans;
     }
 
-    Set<int[]> getSegmentSpansOfTagTypes(MaeXMLParser[] parses, Set<String> tagTypeNames) {
+    /**
+     * Given an array of XML parses and a set of tag names, return a set of
+     * spans of relevant tags from the XML parses. Note that the final list does
+     * not know about different documents in the parses. All instances of tags from
+     * all documents are collapsed.
+     * @param parses parsed annotation XML files
+     * @param tagTypeNames all target extent tag names
+     * @return a set of spans of relevant tags
+     */
+    private Set<int[]> getSpansOfTagTypes(MaeXMLParser[] parses, Set<String> tagTypeNames) {
 
         TreeSet<int[]> spans = new TreeSet<>(new SortedIntArrayComparator());
 
@@ -88,80 +107,98 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
         return new ArrayList<>();
     }
 
-    Object[] prepareNullCodings() {
-        Object[] nullArray = new Object[numAnnotators];
-        Arrays.fill(nullArray, UNMARKED_CAT);
-        return nullArray;
-    }
-
+    /**
+     *
+     * @param targetTagsAndAtts a map of [name of a selected tag --> its selected attribute names]
+     * @return
+     * @throws IOException
+     * @throws SAXException
+     * @throws MaeException
+     */
     public Map<String, CodingAnnotationStudy> prepareLocalCodingStudies(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
 
-        Map<String, String> attFullNameMap = new HashMap<>();
-        Map<String, CodingAnnotationStudy> studyPerAtt = new LinkedHashMap<>();
-        for (String tagTypeName : targetTagsAndAtts.keyList()) {
-            List<String> attTypeNames = targetTagsAndAtts.getAsList(tagTypeName);
-            attTypeNames.add(0, SPAN_ATT);
-            for (String attTypeName : attTypeNames) {
-                String attFullName = tagTypeName + TAG_ATT_DELIM + attTypeName;
-                studyPerAtt.put(attFullName, new CodingAnnotationStudy(numAnnotators));
-                attFullNameMap.put(attTypeName, attFullName);
+        // These two are reused at every tag, thus attribute name conflicts won't happen.
+        // maps [name of attribute name --> its "full" name (tag name + att name concatenated)]
+        Map<String, String> attFullNameMap;
+        // maps [bare attrib name --> its value]
+        Map<String, String[]> attValueMap;
+
+        // maps [att "full" name --> behind-the-hood data structure for IAA]
+        Map<String, CodingAnnotationStudy> attToStudyMap = new LinkedHashMap<>();
+
+        for (String tagType : targetTagsAndAtts.keyList()) {
+            List<String> attTypes = targetTagsAndAtts.getAsList(tagType);
+            attTypes.add(0, SPAN_ATT);
+
+            attFullNameMap = new HashMap<>();
+            // attTypes already has SPAN_ATT item at this point
+            attValueMap = new HashMap<>();
+
+            // add dummy item representing the tag itself
+            // convert each att names to their "full" names and initiate bookkeepers
+            for (String attType : attTypes) {
+                String attFull = tagType + TAG_ATT_DELIM + attType;
+                attToStudyMap.put(attFull, new CodingAnnotationStudy(numAnnotators));
+                attFullNameMap.put(attType, attFull);
+                attValueMap.put(attType, new String[numAnnotators]);
             }
-            List<String> documents = fileIdx.getDocumentNames();
-            for (String document : documents) {
-                MaeXMLParser[] parses = getParses(document);
-                Set<int[]> relevantSpans = getSegmentSpansOfTagType(parses, tagTypeName);
 
-                for (int[] relevantSpan : relevantSpans) {
-                    Map<String, String[]> attAnnotationsMap = prepareAttAnnotationMap(attTypeNames);
+            for (String document : fileIdx.getDocumentNames()) {
 
-                    for (int j = 0; j < parses.length; j++) {
-                        MaeXMLParser parse = parses[j];
-                        if (parse == null) {
-                            fillUnmarkednessOfAnnotator(attAnnotationsMap, j);
-                        } else {
-                            List<ParsedTag> relevantTags
-                                    = getTagsOfTagTypesAndSpans(relevantSpan, Collections.singletonList(tagTypeName), parse);
-                            switch (relevantTags.size()) {
-                                case 0:
-                                    fillUnmarkednessOfAnnotator(attAnnotationsMap, j);
-                                    break;
-                                case 1:
-                                    attAnnotationsMap.get(SPAN_ATT)[j] = Boolean.toString(true);
-                                    String tid = relevantTags.get(0).getTid();
-                                    fillAllAttValueOfTid(parse, j, tid, attAnnotationsMap);
-                                    break;
-                                default:
-                                    throw new MaeException(
-                                            String.format("Error occurred while calculating local labeling agreement:" +
-                                                    " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
-                                                    document, fileIdx.getAnnotators().get(j), relevantSpan[0]));
+                MaeXMLParser[] parses = parseCache.getParses(document);
+                Set<int[]> relevantSpans = getSpansOfTagType(parses, tagType);
+
+                // will treat each span of a tag type that we found from the data set as a single annotation item
+                for (int[] span : relevantSpans) {
+
+                    // for each span, this will populate the att-value array
+                    for (int i = 0; i < parses.length; i++) {
+                        MaeXMLParser parse = parses[i];
+                        List<ParsedTag> relevantTags
+                                = getTagsOfTagTypesAndSpans(span, Collections.singletonList(tagType), parse);
+                        // when no tags are found or parse is null
+                        if (relevantTags.size() == 0) {
+                            for (String attName : attValueMap.keySet()) {
+                                // Why do we use "null" for not found attributes?
+                                // (Note that not all coding measures can handle null annotation.
+                                // e.g. FleissKapps can't, and ignore all null values - resulting in higher agreement)
+                                // The reason for using null value is to ensure the use can
+                                // see the agreements between annotators that actually tagged at this span.
+                                attValueMap.get(attName)[i] = attName.equals(SPAN_ATT) ? Boolean.toString(false) : null;
                             }
+                        } else if (relevantTags.size() == 1){
+                            attValueMap.get(SPAN_ATT)[i] = Boolean.toString(true);
+                            String tid = relevantTags.get(0).getTid();
+                            fillAllAttValueOfTid(parse, i, tid, attValueMap);
+
+                        } else {
+                            int errorLocation = span.length == 0 ? -1 : span[0];
+                            StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels - ");
+                            errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
+                            relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
+                            throw new MaeException(errorBuilder.toString());
                         }
                     }
-                    for (String attTypeName : attAnnotationsMap.keySet()) {
+
+                    for (String attTypeName : attValueMap.keySet()) {
                         String attFullName = attFullNameMap.get(attTypeName);
-                        studyPerAtt.get(attFullName).addItemAsArray(attAnnotationsMap.get(attTypeName));
+                        attToStudyMap.get(attFullName).addItemAsArray(attValueMap.get(attTypeName));
                     }
                 }
             }
         }
-        return studyPerAtt;
-    }
-
-    void fillUnmarkednessOfAnnotator(Map<String, String[]> attAnnotationMap, int annotatorIdx) {
-        for (String attTypeName : attAnnotationMap.keySet()) {
-            String[] markups = attAnnotationMap.get(attTypeName);
-            markups[annotatorIdx] = attTypeName.equals(SPAN_ATT)? Boolean.toString(false) : null;
+        // make sure all studies have enough labels used.
+        for (String attFullName : attToStudyMap.keySet()) {
+            CodingAnnotationStudy study = attToStudyMap.get(attFullName);
+            if (study.getCategoryCount() < 2) {
+                StringBuilder errorBuilder = new StringBuilder();
+                errorBuilder.append(String.format("Error: \"%s\" has too few categories: ", attFullName));
+                study.getCategories().forEach(cat -> errorBuilder.append(String.format("<%s> ", cat)));
+                errorBuilder.append("\n100% agreement can cause this error, as the program couldn't find any other category.");
+                throw new MaeException(errorBuilder.toString());
+            }
         }
-    }
-
-    Map<String, String[]> prepareAttAnnotationMap(List<String> attTypeNames) {
-        Map<String, String[]> attMarkupMap = new HashMap<>();
-        attMarkupMap.put(SPAN_ATT, new String[numAnnotators]);
-        for (String attTypeName : attTypeNames) {
-            attMarkupMap.put(attTypeName, new String[numAnnotators]);
-        }
-        return attMarkupMap;
+        return attToStudyMap;
     }
 
     void fillAllAttValueOfTid(MaeXMLParser annotation, int annotatorIdx, String tid, Map<String, String[]> attAnnotationsMap) {
@@ -171,7 +208,7 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                 if (att.getAttValue() != null && att.getAttValue().length() > 0) {
                     attAnnotationsMap.get(attTypeName)[annotatorIdx] = att.getAttValue();
                 } else {
-                    // TODO: 2016-04-25 15:27:30EDT  unmarked vs empty marked ??
+                    // using UNMARKED value ensures this attribute to be included in the calculation, as opposed to null (e.g. FleissKapps will ignore null values, which results in higher agreement)
                     attAnnotationsMap.get(attTypeName)[annotatorIdx] = UNMARKED_CAT;
                 }
             }
@@ -180,40 +217,45 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
 
     public CodingAnnotationStudy prepareGlobalCodingStudy(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
 
-        CodingAnnotationStudy study = new CodingAnnotationStudy(numAnnotators);
-        List<String> documents = fileIdx.getDocumentNames();
+        // Note that in global (cross-tag) level calculation, all tag names (keys
+        // of tTAA var) are used as a set of labels and no attributes are included
+        // (values of tTAA var is completely irrelevant).
+        // so we only need one "study" for all tags.
         Set<String> targetTags = targetTagsAndAtts.keySet();
+        CodingAnnotationStudy study = new CodingAnnotationStudy(numAnnotators);
 
-        for (String document : documents) {
+        for (String document : fileIdx.getDocumentNames()) {
             MaeXMLParser[] parses = parseCache.getParses(document);
-            Set<int[]> relevantSpans = getSegmentSpansOfTagTypes(parses, targetTags);
+            Set<int[]> relevantSpans = getSpansOfTagTypes(parses, targetTags);
             if (relevantSpans.size() == 0) {
-                study.addItem(prepareNullCodings());
-            } else {
-                for (int[] span : relevantSpans) {
-                    Object[] annotations = new String[numAnnotators];
-                    for (int i = 0; i < parses.length; i++) {
-                        MaeXMLParser parse = parses[i];
-                        List<ParsedTag> relevantTags = getTagsOfTagTypesAndSpans(span, targetTags, parse);
-                        switch (relevantTags.size()) {
-                            case 0:
-                                annotations[i] = UNMARKED_CAT;
-                                break;
-                            case 1:
-                                annotations[i] = relevantTags.get(0).getTagTypeName();
-                                break;
-                            default:
-                                int errorLocation = span.length == 0 ? -1 : span[0];
-                                throw new MaeException(
-                                        String.format("Error occurred while calculating global labeling agreement:" +
-                                                        " an annotator marked the same range with two or labels - \"%s\", \"%s\", \"%d\"",
-                                                document, fileIdx.getAnnotators().get(i), errorLocation));
-                        }
+                Object[] unmarkedArray = new Object[numAnnotators];
+                Arrays.fill(unmarkedArray, UNMARKED_CAT);
+                study.addItem(unmarkedArray);
+                continue;
+            }
+            for (int[] span : relevantSpans) {
+                Object[] annotations = new String[numAnnotators];
+                for (int i = 0; i < parses.length; i++) {
+                    // we pass targetTags as a whole set since all tags on
+                    // the global level are treated as a set of labels
+                    List<ParsedTag> relevantTags = getTagsOfTagTypesAndSpans(span, targetTags, parses[i]);
+                    if (relevantTags.size() == 0) {
+                        annotations[i] = UNMARKED_CAT;
+                    } else if (relevantTags.size() == 1) {
+                        annotations[i] = relevantTags.get(0).getTagTypeName();
+                    } else {
+                        int errorLocation = span.length == 0 ? -1 : span[0];
+                        StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels: \n");
+                        errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
+                        relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
+                        throw new MaeException(errorBuilder.toString());
                     }
-                    study.addItem(annotations);
                 }
+                study.addItem(annotations);
             }
         }
+        // do not worry about the study having only one category, as we forced
+        // null annotations to be "UNMARKED_CAT"
         return study;
     }
 }

@@ -214,7 +214,7 @@ public class TablePanelController extends MaeControllerI {
             JTable table = (JTable) sp.getViewport().getView();
             table.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
             table.setRowHeight(36);
-            table.updateUI();
+            table.revalidate();
         }
 
     }

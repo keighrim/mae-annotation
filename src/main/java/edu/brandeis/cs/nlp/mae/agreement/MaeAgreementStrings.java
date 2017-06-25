@@ -37,7 +37,7 @@ public class MaeAgreementStrings {
     public final static String GUI_ATT_SELECT_GUIDE = "Choose a tag using dropdown and then select attributes.\nUse ctrl/cmd or shift keys to select items.";
 
     public final static String ANNOTATOR_CONFIG_PANEL_TITLE = "Select Annotators";
-    public final static String SCOPE_CONFIG_PANEL_TITLE = "Select Tags and Metricses";
+    public final static String SCOPE_CONFIG_PANEL_TITLE = "Select Tags and Matrices";
     public final static String ATTS_CONFIG_PANEL_TITLE = "Select Attributes";
 
     public final static String SCOPE_CROSSTAG_STRING = "Cross-tag";

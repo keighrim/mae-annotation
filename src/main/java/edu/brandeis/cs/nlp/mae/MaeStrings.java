@@ -54,6 +54,7 @@ public class MaeStrings {
 
     /* External information */
     public final static String PROJECT_WEBPAGE = "https://github.com/keighrim/mae-annotation";
+    public final static String IAA_HELP_WEBPAGE = "https://github.com/keighrim/mae-annotation/wiki/iaacalc";
     public final static String CUR_YEAR = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
     public final static String VERSION = getVersion();
     public final static String TITLE_PREFIX = "MAE " + VERSION;
