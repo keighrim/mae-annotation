@@ -65,7 +65,7 @@ public class TextPanelController extends MaeControllerI {
 
     public TextPanelController(MaeMainController mainController) throws MaeDBException {
         super(mainController);
-        view = new TextPanelView();
+        view = new TextPanelView(mainController);
         selectionHistory = new LinkedList<>();
         selected = new int[0];
         addGuideTab();
