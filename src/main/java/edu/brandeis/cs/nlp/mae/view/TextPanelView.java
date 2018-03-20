@@ -28,6 +28,7 @@ import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
 import edu.brandeis.cs.nlp.mae.database.MaeDBException;
 import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
+import edu.brandeis.cs.nlp.mae.util.TextHandler;
 
 import javax.swing.*;
 import javax.swing.text.AttributeSet;
@@ -121,7 +122,8 @@ public class TextPanelView extends JPanel {
                     }
                     return tags.stream().map(tag -> String.format(
                             "%s (%s) \"%s\"",
-                            tag.getTagtype().getName(), tag.getId(), tag.getText())
+                            tag.getTagtype().getName(), tag.getId(),
+                            TextHandler.truncateLongText(tag.getText()))
                     ).collect(Collectors.joining("<br/>", "<html>", "</html>"));
                 } catch (MaeDBException err) {
                     err.printStackTrace();
