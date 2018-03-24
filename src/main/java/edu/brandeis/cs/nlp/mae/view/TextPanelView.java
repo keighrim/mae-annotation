@@ -130,6 +130,13 @@ public class TextPanelView extends JPanel {
                     return null;
                 }
             }
+
+            // this will make sure that lines are wrapped (at word boundaries)
+            // even the width of the view gets really small.
+            @Override
+            public boolean getScrollableTracksViewportWidth() {
+                return true;
+            }
         };
         JScrollPane scrollableDocument = new JScrollPane(documentArea);
 

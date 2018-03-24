@@ -25,7 +25,6 @@
 package edu.brandeis.cs.nlp.mae.util;
 
 import javax.swing.text.*;
-import javax.xml.stream.events.Characters;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,7 +107,7 @@ public class FontHandler {
         ExecutorService unicodeRenderService = Executors.newCachedThreadPool();
 
         try {
-            if (!(plainText == null || plainText.length() == 0)) {
+            if (plainText != null && plainText.length() > 0) {
                 document.insertString(0, plainText, StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE));
 
                 SimpleAttributeSet aSet = new SimpleAttributeSet();
