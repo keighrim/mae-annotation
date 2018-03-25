@@ -24,13 +24,24 @@
 
 package edu.brandeis.cs.nlp.mae.view;
 
+import edu.brandeis.cs.nlp.mae.controller.MaeMainController;
+import edu.brandeis.cs.nlp.mae.database.MaeDBException;
+import edu.brandeis.cs.nlp.mae.model.ExtentTag;
 import edu.brandeis.cs.nlp.mae.util.FontHandler;
+import edu.brandeis.cs.nlp.mae.util.TextHandler;
 
 import javax.swing.*;
-import javax.swing.text.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Highlighter;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import static edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController.*;
+import static edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController.DEFAULT_FONT_FAMILY;
+import static edu.brandeis.cs.nlp.mae.controller.textpanel.TextPanelController.DEFAULT_FONT_SIZE;
 
 /**
  * Created by krim on 1/2/2016.
@@ -39,10 +50,12 @@ public class TextPanelView extends JPanel {
 
     private JTabbedPane documentTabs;
     private boolean documentOpen;
+    private MaeMainController mainController;
 
-    public TextPanelView() {
+    public TextPanelView(MaeMainController mainController) {
         super(new BorderLayout());
         documentTabs = new JTabbedPane();
+        this.mainController = mainController;
         initTabs();
         add(getTabs(), BorderLayout.CENTER);
 
@@ -95,12 +108,43 @@ public class TextPanelView extends JPanel {
 
     public JScrollPane createDocumentArea(StyledDocument document) {
 
-        JTextPane documentArea = new JTextPane(new DefaultStyledDocument());
+        JTextPane documentArea = new JTextPane(new DefaultStyledDocument()) {
+            @Override
+            public String getToolTipText(MouseEvent e) {
+                if (!mainController.isDocumentOpen()) {
+                    return null;
+                }
+                try {
+                    List<ExtentTag> tags
+                            = mainController.getDriver().getTagsAt(this.viewToModel(e.getPoint()));
+                    if (tags.size() < 1) {
+                        return null;
+                    }
+                    return tags.stream().map(tag -> String.format(
+                            "%s (%s) \"%s\"",
+                            tag.getTagtype().getName(), tag.getId(),
+                            TextHandler.truncateLongText(tag.getText()))
+                    ).collect(Collectors.joining("<br/>", "<html>", "</html>"));
+                } catch (MaeDBException err) {
+                    err.printStackTrace();
+                    return null;
+                }
+            }
+
+            // this will make sure that lines are wrapped (at word boundaries)
+            // even the width of the view gets really small.
+            @Override
+            public boolean getScrollableTracksViewportWidth() {
+                return true;
+            }
+        };
         JScrollPane scrollableDocument = new JScrollPane(documentArea);
 
         documentArea.setEditable(false);
         documentArea.setContentType("text/plain; charset=UTF-8");
         documentArea.setStyledDocument(document);
+        // need to initiate the tooltip with empty value, otherwise getToolTipText won't work
+        documentArea.setToolTipText("");
 
         TextLineNumberRowHeader header = new TextLineNumberRowHeader(documentArea);
         scrollableDocument.setRowHeaderView(header);

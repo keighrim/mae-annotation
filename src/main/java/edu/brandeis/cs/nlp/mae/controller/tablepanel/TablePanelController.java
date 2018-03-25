@@ -455,6 +455,9 @@ public class TablePanelController extends MaeControllerI {
     public JScrollPane makeAnnotationArea(TagType type) {
         TagTableModel model = type.isExtent()? new TagTableModel(this, type) : new LinkTagTableModel(this, type);
         JTable table = makeTagTable(type, model);
+        if (table.getColumnCount() > 8) {
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        }
         AnnotationCellRenderer renderer = new AnnotationCellRenderer();
         setColumnRenders(table, renderer);
         logger.debug("successfully created a table for: " + type.getName());
@@ -465,6 +468,9 @@ public class TablePanelController extends MaeControllerI {
         TagTableModel model = type.isExtent()? new AdjudicationTableModel(this, type) : new AdjudicationLinkTableModel(this, type);
         model.addTableModelListener(model);
         JTable table = makeTagTable(type, model);
+        if (table.getColumnCount() > 8) {
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        }
         AdjudicationCellRenderer renderer = new AdjudicationCellRenderer(this, model);
         setColumnRenders(table, renderer);
         table.addMouseListener(new AdjudicationTablePanelMouseListener(getMainController()));
