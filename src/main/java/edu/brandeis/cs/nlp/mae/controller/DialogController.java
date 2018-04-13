@@ -211,10 +211,14 @@ class DialogController {
     File getExistingGoldstandardFile() throws MaeIOException, MaeDBException {
         File existingGS = showFileChooseDialogAndSelect(MaeStrings.DEF_GS_FILE, false);
         AnnotationLoader xmlLoader = new AnnotationLoader(getMainController().getDriver());
-        if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
-            return existingGS;
+        if (existingGS == null) {
+            showError("Cannot open the file: " + existingGS.getName());
+            return null;
+        } else if (!xmlLoader.isFileMatchesCurrentWork(existingGS)) {
+            showError("Primary text do not match");
+            return null;
         }
-        return null;
+        return existingGS;
     }
 
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {
