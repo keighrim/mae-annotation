@@ -25,6 +25,7 @@
 package edu.brandeis.cs.nlp.mae;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -59,12 +60,9 @@ public class MaeStrings {
     public final static String VERSION = getVersion();
     public final static String TITLE_PREFIX = "MAE " + VERSION;
     public final static String DB_DRIVER = "jdbc:sqlite:";
-    public final static String ANN_DB_FILE = "mae.db";
-    public final static String ANN_DB_URL = DB_DRIVER + ANN_DB_FILE;
-    public final static String ADJ_DB_FILE = "mai.db";
-    public final static String ADJ_DB_URL = DB_DRIVER + ADJ_DB_FILE;
-    public final static String TEST_DB_FILE = "test.db";
-    public final static String TEST_DB_URL = DB_DRIVER + TEST_DB_FILE;
+    public static String newTempTestDBFile() throws IOException {
+        return File.createTempFile("mae-test-db", ".db").getAbsolutePath();
+    }
     public final static String DEF_GS_FILE = "goldstandard.xml";
 
     /* Internal data structures and actionEvents */

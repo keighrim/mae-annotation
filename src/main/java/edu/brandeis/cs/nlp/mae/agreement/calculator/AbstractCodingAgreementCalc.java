@@ -109,7 +109,7 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
 
     /**
      *
-     * @param targetTagsAndAtts a map of [name of a selected tag --> its selected attribute names]
+     * @param targetTagsAndAtts a map of [selected tag --> their selected attributes]
      * @return
      * @throws IOException
      * @throws SAXException
@@ -161,8 +161,8 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                             for (String attName : attValueMap.keySet()) {
                                 // Why do we use "null" for not found attributes?
                                 // (Note that not all coding measures can handle null annotation.
-                                // e.g. FleissKapps can't, and ignore all null values - resulting in higher agreement)
-                                // The reason for using null value is to ensure the use can
+                                // e.g. FleissKapps can't, and ignores all null values - resulting in higher agreement)
+                                // The reason for using null value is to ensure the user can
                                 // see the agreements between annotators that actually tagged at this span.
                                 attValueMap.get(attName)[i] = attName.equals(SPAN_ATT) ? Boolean.toString(false) : null;
                             }
@@ -208,7 +208,8 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                 if (att.getAttValue() != null && att.getAttValue().length() > 0) {
                     attAnnotationsMap.get(attTypeName)[annotatorIdx] = att.getAttValue();
                 } else {
-                    // using UNMARKED value ensures this attribute to be included in the calculation, as opposed to null (e.g. FleissKapps will ignore null values, which results in higher agreement)
+                    // using UNMARKED value ensures this attribute to be included in the calculation,
+                    // as opposed to null (e.g. FleissKapps will ignore null values, which results in higher agreement)
                     attAnnotationsMap.get(attTypeName)[annotatorIdx] = UNMARKED_CAT;
                 }
             }

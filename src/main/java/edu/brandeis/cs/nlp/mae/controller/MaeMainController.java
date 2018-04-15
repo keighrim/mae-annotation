@@ -853,7 +853,7 @@ public class MaeMainController extends JPanel {
                 if (driver.getAnnotationFileName() != null) {
                     String curDriverFilename = driver.getAnnotationFileName().replace("/./", "/");
                     if (annotationFile.getAbsolutePath().replace("/./", "/").equals(curDriverFilename)) {
-                        showError(String.format("%s \nis already open!", annotationFile.getName()));
+                        showWarning(String.format("\"%s\" is already open!", annotationFile.getName()));
                         return true;
 
                     }

@@ -53,7 +53,26 @@ class DialogController {
     DialogController(MaeMainController mainController) {
         this.mainController = mainController;
 
-        this.fileChooser = new JFileChooser(getMainController().getLastWorkingDirectory());
+        this.fileChooser = new JFileChooser(getMainController().getLastWorkingDirectory()) {
+            @Override
+            public void approveSelection(){
+                File f = getSelectedFile();
+                if(f.exists() && getDialogType() == SAVE_DIALOG){
+                    int result = JOptionPane.showConfirmDialog(this
+                            ,"We found the file! Do you want to overwrite?"
+                            ,MaeStrings.WARN_POPUP_TITLE,
+                            JOptionPane.YES_NO_OPTION);
+                    switch(result){
+                        case JOptionPane.YES_OPTION:
+                            super.approveSelection();
+                            return;
+                        default:
+                            return;
+                    }
+                }
+                super.approveSelection();
+            }
+        };
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
     }
@@ -211,10 +230,14 @@ class DialogController {
     File getExistingGoldstandardFile() throws MaeIOException, MaeDBException {
         File existingGS = showFileChooseDialogAndSelect(MaeStrings.DEF_GS_FILE, false);
         AnnotationLoader xmlLoader = new AnnotationLoader(getMainController().getDriver());
-        if (existingGS != null && xmlLoader.isFileMatchesCurrentWork(existingGS)) {
-            return existingGS;
+        if (existingGS == null) {
+            showError("Cannot open the file: " + existingGS.getName());
+            return null;
+        } else if (!xmlLoader.isFileMatchesCurrentWork(existingGS)) {
+            showError("Primary text do not match");
+            return null;
         }
-        return null;
+        return existingGS;
     }
 
     File getNewGoldstandardFile() throws MaeIOException, MaeDBException {

@@ -30,7 +30,7 @@
 
     <groupId>edu.brandeis.cs.nlp</groupId>
     <artifactId>mae</artifactId>
-    <version>2.2.5</version>
+    <version>2.2.6-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.8.11.2</version>
+            <version>3.7.2</version>
         </dependency>
         <dependency>
             <groupId>com.j256.ormlite</groupId>

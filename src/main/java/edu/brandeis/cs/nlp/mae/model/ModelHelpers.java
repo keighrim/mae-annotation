@@ -24,7 +24,9 @@
 
 package edu.brandeis.cs.nlp.mae.model;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Collection of static helper methods used within DB schema (model package)

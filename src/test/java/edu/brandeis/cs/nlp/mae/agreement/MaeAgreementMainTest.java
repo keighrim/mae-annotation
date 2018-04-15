@@ -56,7 +56,7 @@ public class MaeAgreementMainTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver = new LocalSqliteDriverImpl(MaeStrings.newTempTestDBFile());
         driver.setAnnotationFileName("TEST_SAMPLE");
         DTDLoader dtdLoader = new DTDLoader(driver);
         URL sampleFileUrl = Thread.currentThread().getContextClassLoader().getResource("iaa_example/iaaSample.dtd");

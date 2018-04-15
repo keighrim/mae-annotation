@@ -57,7 +57,7 @@ public class AnnotationLoaderTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver = new LocalSqliteDriverImpl(MaeStrings.newTempTestDBFile());
         driver.setAnnotationFileName("TEST_SAMPLE");
         dtdLoader = new DTDLoader(driver);
 

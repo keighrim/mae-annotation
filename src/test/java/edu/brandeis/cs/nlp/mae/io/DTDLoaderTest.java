@@ -57,7 +57,7 @@ public class DTDLoaderTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver = new LocalSqliteDriverImpl(MaeStrings.newTempTestDBFile());
         dtdLoader = new DTDLoader(driver);
 
     }

@@ -32,6 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +57,7 @@ public class LocalSqliteDriverImplTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver = new LocalSqliteDriverImpl(MaeStrings.newTempTestDBFile());
         driver.setAnnotationFileName("TEST_SAMPLE");
 
         noun = driver.createTagType("NOUN", "N", false);

@@ -26,6 +26,7 @@ package edu.brandeis.cs.nlp.mae.model;
 
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
+import edu.brandeis.cs.nlp.mae.MaeStrings;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class LinkTagTest extends ExtentTagTest {
     @Before
     public void setUp() throws Exception {
 
-        cs = new JdbcConnectionSource(DATABASE_URL);
+        cs = new JdbcConnectionSource(MaeStrings.DB_DRIVER + MaeStrings.newTempTestDBFile());
         setupDatabase(cs);
     }
 

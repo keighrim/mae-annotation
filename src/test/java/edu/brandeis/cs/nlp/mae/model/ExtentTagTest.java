@@ -45,7 +45,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class ExtentTagTest {
 
-    protected final static String DATABASE_URL = "jdbc:sqlite:" + MaeStrings.TEST_DB_FILE;
     protected ConnectionSource cs;
 
     Dao<CharIndex, Integer> charIndexDao;
@@ -64,7 +63,7 @@ public class ExtentTagTest {
     @Before
     public void setUp() throws Exception {
 
-        cs = new JdbcConnectionSource(DATABASE_URL);
+        cs = new JdbcConnectionSource(MaeStrings.DB_DRIVER + MaeStrings.newTempTestDBFile());
         this.setupDatabase(cs);
     }
 

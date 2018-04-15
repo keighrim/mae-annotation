@@ -38,7 +38,7 @@ public class MaeFileWriter {
             throws MaeIOException {
         try {
             writeTextToEmptyXML(new BufferedReader(new InputStreamReader(
-                            new FileInputStream(utf8file))), task, xmlOutFile);
+                    new FileInputStream(utf8file), StandardCharsets.UTF_8)), task, xmlOutFile);
         } catch (FileNotFoundException e) {
             throw new MaeIOException(e.getMessage());
         }
@@ -52,25 +52,20 @@ public class MaeFileWriter {
     public static void writeTextToEmptyXML(BufferedReader utf8BufReader, String task, File xmlOutFile)
             throws MaeIOException {
 
-        try (BufferedWriter outputWriter = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(xmlOutFile), StandardCharsets.UTF_8))){
+        try (PrintWriter outputWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(xmlOutFile), StandardCharsets.UTF_8)))) {
             if (!xmlOutFile.exists()) xmlOutFile.createNewFile();
-            outputWriter.write(String.format(
+            outputWriter.print(String.format(
                     MaeStrings.maeXMLHeader, task));
-            String line = utf8BufReader.readLine();
-            if (line == null) {
-                return;
+
+            int c;
+            while ((c = utf8BufReader.read()) > -1) {
+                outputWriter.print((char) c);
             }
-            outputWriter.write(line);
-            while ((line = utf8BufReader.readLine()) != null) {
-                outputWriter.newLine();
-                outputWriter.write(line);
-            }
-            outputWriter.write(String.format(MaeStrings.maeXMLFooter, task));
+            outputWriter.print(String.format(MaeStrings.maeXMLFooter, task));
             utf8BufReader.close();
         } catch (IOException e) {
             throw new MaeIOException("Cannot create a new file!", e);
         }
     }
-
 }
