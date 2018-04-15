@@ -28,7 +28,6 @@ import edu.brandeis.cs.nlp.mae.MaeStrings;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 /**
  * Contains helper functions to create or modify files.

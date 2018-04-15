@@ -37,7 +37,9 @@ package edu.brandeis.cs.nlp.mae.util;
  */
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 
 public interface MappedCollection<K,V>{
 

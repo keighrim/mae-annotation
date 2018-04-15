@@ -27,13 +27,7 @@ package edu.brandeis.cs.nlp.mae.agreement.io;
 import edu.brandeis.cs.nlp.mae.io.MaeIOException;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.ANNOTATOR_SUFFIX_DELIM;
 import static edu.brandeis.cs.nlp.mae.util.FileHandler.XML_EXT;

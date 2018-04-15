@@ -41,7 +41,7 @@ public class IdHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-        driver = new LocalSqliteDriverImpl(MaeStrings.TEST_DB_FILE);
+        driver = new LocalSqliteDriverImpl(MaeStrings.newTempTestDBFile());
         handler = new IdHandler();
 
     }
