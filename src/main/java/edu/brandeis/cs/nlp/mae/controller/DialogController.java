@@ -53,7 +53,26 @@ class DialogController {
     DialogController(MaeMainController mainController) {
         this.mainController = mainController;
 
-        this.fileChooser = new JFileChooser(getMainController().getLastWorkingDirectory());
+        this.fileChooser = new JFileChooser(getMainController().getLastWorkingDirectory()) {
+            @Override
+            public void approveSelection(){
+                File f = getSelectedFile();
+                if(f.exists() && getDialogType() == SAVE_DIALOG){
+                    int result = JOptionPane.showConfirmDialog(this
+                            ,"We found the file! Do you want to overwrite?"
+                            ,MaeStrings.WARN_POPUP_TITLE,
+                            JOptionPane.YES_NO_OPTION);
+                    switch(result){
+                        case JOptionPane.YES_OPTION:
+                            super.approveSelection();
+                            return;
+                        default:
+                            return;
+                    }
+                }
+                super.approveSelection();
+            }
+        };
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
     }
