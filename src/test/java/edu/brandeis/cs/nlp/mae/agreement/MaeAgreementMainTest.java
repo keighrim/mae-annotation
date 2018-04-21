@@ -35,8 +35,12 @@ import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
+import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.ALPHAU_CALC_STRING;
+import static edu.brandeis.cs.nlp.mae.agreement.MaeAgreementStrings.MULTIPI_CALC_STRING;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -87,14 +91,18 @@ public class MaeAgreementMainTest {
         sample.putCollection("MOOD_DECL", new LinkedList<>());
         sample.putCollection("MOOD_IMPE", new LinkedList<>());
         sample.putCollection("MOOD_SUBJ", new LinkedList<>());
-        System.out.println(calc.agreementsToString("GlobalMultiPi", calc.calculateGlobalMultiPi(sample)));
+        Map<String, MappedSet<String, String>> toCalc  = new HashMap<>();
+        toCalc.put(MULTIPI_CALC_STRING, sample);
+        System.out.println(calc.calcGlobalAgreementToString(toCalc, false));
     }
 
     @Test
     public void testLocalMultiPiAgreement() throws Exception {
         MappedSet<String, String> sample = new MappedSet<>();
         sample.putCollection("NAMED_ENTITY", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.agreementsToString("LocalMultiPi", calc.calculateLocalMultiPi(sample)));
+        Map<String, MappedSet<String, String>> toCalc  = new HashMap<>();
+        toCalc.put(MULTIPI_CALC_STRING, sample);
+        System.out.println(calc.calcLocalAgreementToString(toCalc, false));
     }
 
     @Test
@@ -103,7 +111,9 @@ public class MaeAgreementMainTest {
         sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
         sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
         sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.agreementsToString("LocalUnitize", calc.calculateLocalAlphaU(sample)));
+        Map<String, MappedSet<String, String>> toCalc  = new HashMap<>();
+        toCalc.put(ALPHAU_CALC_STRING, sample);
+        System.out.println(calc.calcLocalAgreementToString(toCalc, false));
     }
 
     @Test
@@ -112,6 +122,9 @@ public class MaeAgreementMainTest {
         sample.putCollection("NOUN", new LinkedList<String>() {{add("type"); add("comment");}});
         sample.putCollection("VERB", new LinkedList<String>() {{add("tense"); add("aspect");}});
         sample.putCollection("ADJ_ADV", new LinkedList<String>() {{add("type");}});
-        System.out.println(calc.agreementsToString("GlobalUnitize: " + sample, calc.calculateGlobalAlphaU(sample)));
+        Map<String, MappedSet<String, String>> toCalc  = new HashMap<>();
+        toCalc.put(ALPHAU_CALC_STRING, sample);
+        System.out.println(calc.calcGlobalAgreementToString(toCalc, false));
+
     }
 }

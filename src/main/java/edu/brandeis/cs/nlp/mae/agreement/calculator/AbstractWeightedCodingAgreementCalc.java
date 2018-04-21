@@ -53,7 +53,7 @@ abstract public class AbstractWeightedCodingAgreementCalc extends AbstractCoding
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeException {
         return calculateAgreement(targetTagsAndAtts, 0);
     }
 

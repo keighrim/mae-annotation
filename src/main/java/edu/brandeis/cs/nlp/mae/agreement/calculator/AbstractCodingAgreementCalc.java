@@ -30,6 +30,7 @@ import edu.brandeis.cs.nlp.mae.agreement.io.XMLParseCache;
 import edu.brandeis.cs.nlp.mae.io.MaeXMLParser;
 import edu.brandeis.cs.nlp.mae.io.ParsedAtt;
 import edu.brandeis.cs.nlp.mae.io.ParsedTag;
+import edu.brandeis.cs.nlp.mae.util.MappedList;
 import edu.brandeis.cs.nlp.mae.util.MappedSet;
 import edu.brandeis.cs.nlp.mae.util.SortedIntArrayComparator;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
@@ -115,7 +116,10 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
      * @throws SAXException
      * @throws MaeException
      */
-    public Map<String, CodingAnnotationStudy> prepareLocalCodingStudies(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    public Map<String, CodingAnnotationStudy> prepareLocalCodingStudies(
+            MappedSet<String, String> targetTagsAndAtts,
+            boolean allowMultiTagging)
+            throws IOException, SAXException, MaeException {
 
         // These two are reused at every tag, thus attribute name conflicts won't happen.
         // maps [name of attribute name --> its "full" name (tag name + att name concatenated)]
@@ -166,17 +170,23 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                                 // see the agreements between annotators that actually tagged at this span.
                                 attValueMap.get(attName)[i] = attName.equals(SPAN_ATT) ? Boolean.toString(false) : null;
                             }
-                        } else if (relevantTags.size() == 1){
-                            attValueMap.get(SPAN_ATT)[i] = Boolean.toString(true);
-                            String tid = relevantTags.get(0).getTid();
-                            fillAllAttValueOfTid(parse, i, tid, attValueMap);
+                        } else if (!allowMultiTagging) {
+                            if (relevantTags.size() == 1) {
+                                attValueMap.get(SPAN_ATT)[i] = Boolean.toString(true);
+                                String tid = relevantTags.get(0).getTid();
+                                fillAllAttValueOfTid(parse, i, tid, attValueMap);
 
+                            } else {
+                                int errorLocation = span.length == 0 ? -1 : span[0];
+                                StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels - ");
+                                errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
+                                relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
+                                throw new MaeException(errorBuilder.toString());
+                            }
                         } else {
-                            int errorLocation = span.length == 0 ? -1 : span[0];
-                            StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels - ");
-                            errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
-                            relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
-                            throw new MaeException(errorBuilder.toString());
+                            attValueMap.get(SPAN_ATT)[i] = Boolean.toString(true);
+                            List<String> tids = relevantTags.stream().map(ParsedTag::getTid).collect(Collectors.toList());
+                            concatThenFillAllAttValueOfTids(parse, i, tids, attValueMap);
                         }
                     }
 
@@ -216,7 +226,31 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
         }
     }
 
-    public CodingAnnotationStudy prepareGlobalCodingStudy(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    void concatThenFillAllAttValueOfTids(MaeXMLParser annotation, int annotatorIdx, Collection< String> tids, Map<String, String[]> attAnnotationsMap) {
+        MappedList<String, String> markedAttByAttName = new MappedList<>();
+        for (ParsedAtt att : annotation.getParsedAtts()) {
+            if (tids.contains(att.getTid()) && attAnnotationsMap.containsKey(att.getAttTypeName())) {
+                String attTypeName = att.getAttTypeName();
+                String attValue = att.getAttValue();
+                if (attValue == null || attValue.length() <= 0) {
+                    // using UNMARKED value ensures this attribute to be included in the calculation,
+                    // as opposed to null (e.g. FleissKapps will ignore null values, which results in higher agreement)
+                    attValue = UNMARKED_CAT;
+                }
+                markedAttByAttName.putItem(attTypeName, attValue);
+            }
+        }
+        for (String attTypeName : markedAttByAttName.keySet()) {
+            List<String> sorted = markedAttByAttName.getAsList(attTypeName);
+            Collections.sort(sorted);
+            attAnnotationsMap.get(attTypeName)[annotatorIdx] = sorted.toString();
+        }
+    }
+
+    public CodingAnnotationStudy prepareGlobalCodingStudy(
+            MappedSet<String, String> targetTagsAndAtts,
+            boolean allowMultiTagging)
+            throws IOException, SAXException, MaeException {
 
         // Note that in global (cross-tag) level calculation, all tag names (keys
         // of tTAA var) are used as a set of labels and no attributes are included
@@ -242,15 +276,25 @@ public abstract class AbstractCodingAgreementCalc extends AbstractMaeAgreementCa
                     List<ParsedTag> relevantTags = getTagsOfTagTypesAndSpans(span, targetTags, parses[i]);
                     if (relevantTags.size() == 0) {
                         annotations[i] = UNMARKED_CAT;
-                    } else if (relevantTags.size() == 1) {
-                        annotations[i] = relevantTags.get(0).getTagTypeName();
+                    } else if (!allowMultiTagging) {
+                        if (relevantTags.size() == 1) {
+                            annotations[i] = relevantTags.get(0).getTagTypeName();
+                        } else {
+                            int errorLocation = span.length == 0 ? -1 : span[0];
+                            StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels: \n");
+                            errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
+                            relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
+                            throw new MaeException(errorBuilder.toString());
+                        }
                     } else {
-                        int errorLocation = span.length == 0 ? -1 : span[0];
-                        StringBuilder errorBuilder = new StringBuilder("Error: an annotator marked the same range with two or labels: \n");
-                        errorBuilder.append(String.format("Document: \"%s\", Annotator: \"%s\", Offset: \"%d\"", document, fileIdx.getApprovedAnnotators().get(i), errorLocation));
-                        relevantTags.forEach(tag -> errorBuilder.append(String.format("<%s> ", tag.getTagTypeName())));
-                        throw new MaeException(errorBuilder.toString());
+                        String[] markedTags = new String[relevantTags.size()];
+                        for (int j = 0; j < relevantTags.size(); j++) {
+                            markedTags[j] = relevantTags.get(j).getTagTypeName();
+                        }
+                        Arrays.sort(markedTags);
+                        annotations[i] = Arrays.toString(markedTags);
                     }
+
                 }
                 study.addItem(annotations);
             }

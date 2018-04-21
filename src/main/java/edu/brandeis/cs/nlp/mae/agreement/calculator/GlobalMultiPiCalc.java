@@ -46,9 +46,9 @@ public class GlobalMultiPiCalc extends AbstractCodingAgreementCalc {
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeException {
         Map<String, Double> globalMultiPi = new TreeMap<>();
-        CodingAnnotationStudy study = prepareGlobalCodingStudy(targetTagsAndAtts);
+        CodingAnnotationStudy study = prepareGlobalCodingStudy(targetTagsAndAtts, allowMultiTagging);
         double agreement = (new FleissKappaAgreement(study)).calculateAgreement();
         globalMultiPi.put("cross-tag_multi_pi", agreement);
         return globalMultiPi;

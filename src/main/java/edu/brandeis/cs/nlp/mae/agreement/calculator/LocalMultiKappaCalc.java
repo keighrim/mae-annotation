@@ -46,9 +46,9 @@ public class LocalMultiKappaCalc extends AbstractCodingAgreementCalc {
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeException {
         Map<String, Double> localMultiKappa = new TreeMap<>();
-        Map<String, CodingAnnotationStudy> studies = prepareLocalCodingStudies(targetTagsAndAtts);
+        Map<String, CodingAnnotationStudy> studies = prepareLocalCodingStudies(targetTagsAndAtts, allowMultiTagging);
         for (String attFullName : studies.keySet()) {
             localMultiKappa.put(attFullName, (new HubertKappaAgreement(studies.get(attFullName))).calculateAgreement());
         }

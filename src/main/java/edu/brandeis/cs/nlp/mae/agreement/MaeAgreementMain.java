@@ -175,37 +175,10 @@ public class MaeAgreementMain {
         return String.format("% .4f (%s) %s\n", agr, agrType, agrKey );
     }
 
-    Map<String, Double> calculateLocalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
-        LocalAlphaUCalc calc = new LocalAlphaUCalc(fileIdx, parseCache, documentLength);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-    Map<String, Double> calculateGlobalAlphaU(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
-        GlobalAlphaUCalc calc = new GlobalAlphaUCalc(fileIdx, parseCache, documentLength);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-    Map<String, Double> calculateLocalMultiPi(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
-        LocalMultiPiCalc calc = new LocalMultiPiCalc(fileIdx, parseCache);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-    Map<String, Double> calculateGlobalMultiPi(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
-        GlobalMultiPiCalc calc = new GlobalMultiPiCalc(fileIdx, parseCache);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-     Map<String, Double> calculateLocalMultiKappa(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
-        LocalMultiKappaCalc calc = new LocalMultiKappaCalc(fileIdx, parseCache);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-    Map<String, Double> calculateGlobalMultiKappa(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
-        GlobalMultiKappaCalc calc = new GlobalMultiKappaCalc(fileIdx, parseCache);
-        return calc.calculateAgreement(targetTagsAndAtts);
-    }
-
-    public String calcGlobalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
+    public String calcGlobalAgreementToString(
+            Map<String, MappedSet<String, String>> metricToTargetsMap,
+            boolean allowMultiTagging)
+            throws MaeException, SAXException, IOException {
         StringBuilder result = new StringBuilder();
         for (String metricType : metricToTargetsMap.keySet()) {
             MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
@@ -213,25 +186,34 @@ public class MaeAgreementMain {
                 continue;
             }
             String agrTitle = String.format("<%s> %s  %s", SCOPE_CROSSTAG_STRING, metricType, targetTagsAndAtts.keyList());
+            AbstractMaeAgreementCalc calc = null;
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateGlobalAlphaU(targetTagsAndAtts)));
+                    calc = new GlobalAlphaUCalc(fileIdx, parseCache, documentLength);
                     break;
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateGlobalMultiKappa(targetTagsAndAtts)));
+                    calc = new GlobalMultiKappaCalc(fileIdx, parseCache);
                     break;
                 case MULTIPI_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateGlobalMultiPi(targetTagsAndAtts)));
+                    calc = new GlobalMultiPiCalc(fileIdx, parseCache);
                     break;
             }
-
+            if (calc == null) {
+                result.append("metric not defined: ").append(metricType);
+            } else {
+                result.append(agreementsToString(agrTitle,
+                        calc.calculateAgreement(targetTagsAndAtts, allowMultiTagging)));
+            }
         }
         return result.toString();
     }
 
-    public String calcLocalAgreementToString(Map<String, MappedSet<String, String>> metricToTargetsMap) throws MaeException, SAXException, IOException {
+    public String calcLocalAgreementToString(
+            Map<String, MappedSet<String, String>> metricToTargetsMap,
+            boolean allowMultiTagging)
+            throws MaeException, SAXException, IOException {
         StringBuilder result = new StringBuilder();
         for (String metricType : metricToTargetsMap.keySet()) {
             MappedSet<String, String> targetTagsAndAtts = metricToTargetsMap.get(metricType);
@@ -239,20 +221,26 @@ public class MaeAgreementMain {
                 continue;
             }
             String agrTitle = String.format("<%s> %s", SCOPE_LOCAL_STRING, metricType);
+            AbstractMaeAgreementCalc calc = null;
             switch (metricType) {
                 case ALPHAU_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateLocalAlphaU(targetTagsAndAtts)));
+                    calc = new LocalAlphaUCalc(fileIdx, parseCache, documentLength);
                     break;
                 case ALPHA_CALC_STRING:
                     break;
                 case MULTIKAPPA_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateLocalMultiKappa(targetTagsAndAtts)));
+                    calc = new LocalMultiKappaCalc(fileIdx, parseCache);
                     break;
                 case MULTIPI_CALC_STRING:
-                    result.append(agreementsToString(agrTitle, calculateLocalMultiPi(targetTagsAndAtts)));
+                    calc = new LocalMultiPiCalc(fileIdx, parseCache);
                     break;
             }
-
+            if (calc == null) {
+                result.append("metric not defined: ").append(metricType);
+            } else {
+                result.append(agreementsToString(agrTitle,
+                        calc.calculateAgreement(targetTagsAndAtts, allowMultiTagging)));
+            }
         }
         return result.toString();
     }

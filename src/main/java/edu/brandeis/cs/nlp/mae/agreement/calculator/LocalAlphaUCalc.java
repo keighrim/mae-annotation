@@ -50,7 +50,7 @@ public class LocalAlphaUCalc extends AbstractUnitizationAgreementCalc {
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeDBException {
         Map<String, Double> alphaUs = new TreeMap<>();
 
         Map<String, String> attFullNameMap = new HashMap<>();

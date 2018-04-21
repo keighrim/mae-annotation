@@ -96,5 +96,8 @@ public abstract class AbstractUnitizationAgreementCalc extends AbstractMaeAgreem
 
 
     @Override
-    abstract public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException;
+    abstract public Map<String, Double> calculateAgreement(
+            MappedSet<String, String> targetTagsAndAtts,
+            boolean allowMultiTagging)
+            throws IOException, SAXException, MaeDBException;
 }

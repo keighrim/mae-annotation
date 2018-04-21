@@ -49,7 +49,7 @@ public class GlobalAlphaUCalc extends AbstractUnitizationAgreementCalc {
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeDBException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeDBException {
         Map<String, Double> globalAlphaU = new TreeMap<>();
 
         UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(numAnnotators, totalDocumentsLength);

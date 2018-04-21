@@ -46,9 +46,9 @@ public class GlobalMultiKappaCalc extends AbstractCodingAgreementCalc {
     }
 
     @Override
-    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts) throws IOException, SAXException, MaeException {
+    public Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts, boolean allowMultiTagging) throws IOException, SAXException, MaeException {
         Map<String, Double> globalMultiKappa = new TreeMap<>();
-        CodingAnnotationStudy study = prepareGlobalCodingStudy(targetTagsAndAtts);
+        CodingAnnotationStudy study = prepareGlobalCodingStudy(targetTagsAndAtts, allowMultiTagging);
         double agreement = (new HubertKappaAgreement(study)).calculateAgreement();
         globalMultiKappa.put("cross-tag_multi_kappa", agreement);
         return globalMultiKappa;

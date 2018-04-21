@@ -66,6 +66,7 @@ public class MaeAgreementGUI extends JFrame {
     private MappedSet<String, String> tagsAndAtts;
     private List<AgreementTypeSelectPanel> agrTypeSelectPanels;
     private AttTypeSelectPanel attTypeSelectionPanel;
+    private JCheckBox allowMultiTaggingBox;
 
     private File datasetDir;
     private File taskScheme;
@@ -329,6 +330,10 @@ public class MaeAgreementGUI extends JFrame {
         JPanel tagsPanel = new JPanel(new BorderLayout());
         tagsPanel.add(preparePanelTitle(MaeAgreementStrings.SCOPE_CONFIG_PANEL_TITLE),
                 BorderLayout.NORTH);
+
+        allowMultiTaggingBox = new JCheckBox("Allow using the same tag again on the same text span?");
+        tagsPanel.add(allowMultiTaggingBox, BorderLayout.SOUTH);
+
         tagsPanel.add(prepareAgrTypePanels(), BorderLayout.CENTER);
         return tagsPanel;
     }
@@ -458,8 +463,8 @@ public class MaeAgreementGUI extends JFrame {
                 }
             }
             String result = "Please make sure you understand differences between metrices before you use these numbers. See the MAE wiki for more details.\n\n";
-            result += calc.calcGlobalAgreementToString(global);
-            result += calc.calcLocalAgreementToString(local);
+            result += calc.calcGlobalAgreementToString(global, allowMultiTaggingBox.isSelected());
+            result += calc.calcLocalAgreementToString(local, allowMultiTaggingBox.isSelected());
 
             Map<String, String> parseWarnings = calc.getParseWarnings();
             if (parseWarnings.size() > 0) {

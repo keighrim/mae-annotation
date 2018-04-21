@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * Abstract superclass for all AgreementCalc classes to hold common instance fields.
  */
-abstract class AbstractMaeAgreementCalc {
+public abstract class AbstractMaeAgreementCalc {
 
     int numAnnotators;
     AbstractAnnotationIndexer fileIdx;
@@ -48,6 +48,8 @@ abstract class AbstractMaeAgreementCalc {
         this.numAnnotators = fileIdx.getApprovedAnnotatorCount();
     }
 
-    public abstract Map<String, Double> calculateAgreement(MappedSet<String, String> targetTagsAndAtts)
+    public abstract Map<String, Double> calculateAgreement(
+            MappedSet<String, String> targetTagsAndAtts,
+            boolean allowMultiTagging)
             throws IOException, SAXException, MaeException;
 }
