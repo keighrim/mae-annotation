@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class DTDLoader {
 
     }
     public boolean read(InputStream stream) throws MaeIODTDException, MaeDBException {
-        Scanner sc = new Scanner(stream, "UTF-8");
+        Scanner sc = new Scanner(stream, StandardCharsets.UTF_8.name());
         int lineNum = 1;
         while (sc.hasNextLine()) {
             String next = sc.nextLine();

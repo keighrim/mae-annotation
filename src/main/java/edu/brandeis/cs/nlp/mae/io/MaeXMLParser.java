@@ -36,14 +36,15 @@ import edu.brandeis.cs.nlp.mae.util.SpanHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -98,11 +99,14 @@ public class MaeXMLParser {
         parse(file);
     }
 
-    private void parse(File file) throws IOException, SAXException  {
+    private void parse(File utf8file) throws IOException, SAXException  {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
-            saxParser.parse(file, xmlHandler);
+            Reader r = new InputStreamReader(new FileInputStream(utf8file), StandardCharsets.UTF_8);
+            InputSource source = new InputSource(r);
+            source.setEncoding(StandardCharsets.UTF_8.name());
+            saxParser.parse(source, xmlHandler);
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         }
@@ -382,6 +386,7 @@ public class MaeXMLParser {
         @Override
         public void characters(char[] ch, int start, int length) {
             if (hasTextElem) {
+                // TODO: 5/7/18 strip non-xml characters
                 setPrimaryText(new String(ch, start, length));
                 hasTextElem = false;
             }
