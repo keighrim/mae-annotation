@@ -75,8 +75,59 @@ public class MaeHotKeys {
     public final static int n8 = KeyEvent.VK_8;
     public final static int n9 = KeyEvent.VK_9;
     public final static int n0 = KeyEvent.VK_0;
-    public final static int[] numKeys = new int[] {
+    public final static int a = KeyEvent.VK_A;
+    public final static int b = KeyEvent.VK_B;
+    public final static int c = KeyEvent.VK_C;
+    public final static int d = KeyEvent.VK_D;
+    public final static int e = KeyEvent.VK_E;
+    public final static int f = KeyEvent.VK_F;
+    public final static int g = KeyEvent.VK_G;
+    public final static int h = KeyEvent.VK_H;
+    public final static int i = KeyEvent.VK_I;
+    public final static int j = KeyEvent.VK_J;
+    public final static int k = KeyEvent.VK_K;
+    public final static int l = KeyEvent.VK_L;
+    public final static int m = KeyEvent.VK_M;
+    public final static int n = KeyEvent.VK_N;
+    public final static int o = KeyEvent.VK_O;
+    public final static int p = KeyEvent.VK_P;
+    public final static int q = KeyEvent.VK_Q;
+    public final static int r = KeyEvent.VK_R;
+    public final static int s = KeyEvent.VK_S;
+    public final static int t = KeyEvent.VK_T;
+    public final static int u = KeyEvent.VK_U;
+    public final static int v = KeyEvent.VK_V;
+    public final static int w = KeyEvent.VK_W;
+    public final static int x = KeyEvent.VK_X;
+    public final static int y = KeyEvent.VK_Y;
+    public final static int z = KeyEvent.VK_Z;
+
+    public final static int[] numKeys = new int[]{
             n1, n2, n3, n4, n5, n6, n7, n8, n9, n0};
+
+    // make sure number 0 goes in the final position
+    // (see MenuController::getMenuItemsWithNumberMnemonics)
+    public final static int[] mnemonicCadidatesKS = new int[] {
+            n1, n2, n3, n4,
+            q, w, e, r,
+            a, s, d, f,
+            z, x, c, v,
+            n5, n6, n7, n8,
+            t, y, u, i,
+            g, h, j, k,
+            b, n, m,
+            n9, o, l, p, n0 };
+
+    public final static String[] mnemonicCadidateStrings = new String[] {
+            "1", "2", "3", "4",
+            "q", "w", "e", "r",
+            "a", "s", "d", "f",
+            "z", "x", "c", "v",
+            "5", "6", "7", "8",
+            "t", "y", "u", "i",
+            "g", "h", "j", "k",
+            "b", "n", "m",
+            "9", "o", "l", "p", "0" };
 
     public final static KeyStroke ksC1
             = KeyStroke.getKeyStroke(n1, 

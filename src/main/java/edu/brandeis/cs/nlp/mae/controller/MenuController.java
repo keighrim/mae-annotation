@@ -478,7 +478,7 @@ class MenuController extends MaeControllerI {
         JMenu copyMenu = new JMenu(MENU_COPY);
         copyMenu.setMnemonic(cmnCOPY);
         // this will assign hotkey
-        getMenuItemsWithNumberMnemonics(tags, MENUITEM_COPY_TAG_SINGLE, copyMenu, 10, COPY_MENU);
+        getMenuItemsWithNumberMnemonics(tags, MENUITEM_COPY_TAG_SINGLE, copyMenu, true, COPY_MENU);
 
         return copyMenu;
     }
@@ -557,9 +557,9 @@ class MenuController extends MaeControllerI {
     private MaeActionI getMakeTagAction(int category, Integer mnemonicNum, TagType type) {
         String makeTagItemLabel;
         Integer mnemonic;
-        if (mnemonicNum < 10) {
-            makeTagItemLabel = String.format("(%d) %s", mnemonicNum + 1, type.getName());
-            mnemonic = numKeys[mnemonicNum];
+        if (mnemonicNum < mnemonicCadidatesKS.length) {
+            makeTagItemLabel = String.format("(%s) %s", mnemonicCadidateStrings[mnemonicNum], type.getName());
+            mnemonic = mnemonicCadidatesKS[mnemonicNum];
         } else {
             makeTagItemLabel = String.format("    %s", type.getName());
             mnemonic = null;
@@ -613,7 +613,7 @@ class MenuController extends MaeControllerI {
         deleteMenu.add(getTotalDeleteMenuItem(tags, "(0) " + String.format(MENUITEM_DELETE_TAG_PLURAL, tags.size()), n0));
 
         // this will assign hotkey
-        getMenuItemsWithNumberMnemonics(tags, MENUITEM_DELETE_TAG_SINGLE, deleteMenu, 9, DELETE_MENU);
+        getMenuItemsWithNumberMnemonics(tags, MENUITEM_DELETE_TAG_SINGLE, deleteMenu, false, DELETE_MENU);
 
         return deleteMenu;
     }
@@ -667,19 +667,20 @@ class MenuController extends MaeControllerI {
     private JMenu getPluralSetArg(List<? extends Tag> tags) throws MaeDBException {
         JMenu setArgMenu = new JMenu(MENU_SETARG);
         setArgMenu.setMnemonic(cmnSETARG);
-        getMenuItemsWithNumberMnemonics(tags, MENUITEM_SETARG_SINGLE, setArgMenu, 10, SETARG_MENU);
+        getMenuItemsWithNumberMnemonics(tags, MENUITEM_SETARG_SINGLE, setArgMenu, true, SETARG_MENU);
         return setArgMenu;
     }
 
-    private void getMenuItemsWithNumberMnemonics(List<? extends Tag> tags, String labelTemplate, JMenu menu, int endPoint, int menuType) {
+    private void getMenuItemsWithNumberMnemonics(List<? extends Tag> tags, String labelTemplate, JMenu menu, boolean useZero, int menuType) {
         String label;
         Integer mnemonic;
+        int endPoint = useZero ? mnemonicCadidatesKS.length - 1 : mnemonicCadidatesKS.length;
         int i = 0;
         for (Tag tag : tags) {
             String labelWithoutMnemonic = String.format(labelTemplate, tag.toString(), tag.getFilename());
             if (i < endPoint) {
-                label = String.format("(%d) %s", i + 1, labelWithoutMnemonic);
-                mnemonic = numKeys[i++];
+                label = String.format("(%s) %s", mnemonicCadidateStrings[i], labelWithoutMnemonic);
+                mnemonic = mnemonicCadidatesKS[i++];
             } else {
                 label = String.format("    %s", labelWithoutMnemonic);
                 mnemonic = null;
