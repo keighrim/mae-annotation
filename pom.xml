@@ -28,7 +28,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.brandeis.cs.nlp</groupId>
+    <groupId>edu.brandeis.llc</groupId>
     <artifactId>mae</artifactId>
     <version>2.2.7-SNAPSHOT</version>
 
@@ -129,7 +129,7 @@
                             <!--Define a directory to copy all dependencies in-->
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>edu.brandeis.cs.nlp.mae.MaeMain</mainClass>
+                            <mainClass>edu.brandeis.llc.mae.MaeMain</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Class-Path>lib/</Class-Path>
@@ -172,7 +172,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>edu.brandeis.cs.nlp.mae.MaeMain</mainClass>
+                                    <mainClass>edu.brandeis.llc.mae.MaeMain</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
