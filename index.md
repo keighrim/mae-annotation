@@ -5,9 +5,9 @@
 [![Travis CI](https://img.shields.io/travis/keighrim/mae-annotation.svg)](https://travis-ci.org/keighrim/mae-annotation/) 
 
 ## Introducing MAE
-MAE (Multi-document Annotation Environment) is a lightweight, geneal-purpose natural language annotation tool. 
+MAE (Multi-document Annotation Environment) is a lightweight, general-purpose natural language annotation tool. 
 It was originally created by [Amber Stubbs](http://amberstubbs.net) for use in her dissertation research at Brandeis University, 
-and currently [Keigh Rim](https://github.com/keighrim) is maintaininig the project.
+and currently [Keigh Rim](https://github.com/keighrim) is maintaining the project.
 
 MAE allows users to define their own annotation tasks, mark up arbitrary text spans, use non-consuming tags, easily create links between annotations, and it outputs annotations in stand-off XML.
 It also allows for easy adjudication with visualization of extent tags, link tags, and non-consuming tags from any XML standoff annotated documents. (for best results, the files output by MAE should be used).
@@ -17,7 +17,7 @@ While it does not enforce strict rules for annotation schemes, it is very easy t
 
 ### Requirements
 
-Latest MAE requires Java 8 to run, and Maven to build. See [the project wiki](https://github.com/keighrim/mae-annotation/wiki) for more details.
+Latest MAE requires Java 8 to run (Java 9 or later is recommended for HiDPI machines), and Maven to build. See [the project wiki](https://github.com/keighrim/mae-annotation/wiki) for more details.
 
 For robust Unicode support, MAE uses [DejaVu Sans](http://dejavu-fonts.org/wiki/Main_Page) font as the default. If the annotation task involves lots of Unicode characters, such as Emojis, users are also recommended to have DejaVu Sans font installed.
 
