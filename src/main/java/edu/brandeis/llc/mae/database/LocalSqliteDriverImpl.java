@@ -357,30 +357,24 @@ public class LocalSqliteDriverImpl implements MaeDriverI {
     }
 
     @Override
-	public Collection<CharIndex> getAllAnchorsOfTagType(TagType type) throws MaeDBException {
-		try {
-			Collection<CharIndex> indices = new ArrayList<CharIndex>();
-			if (type.isExtent()) {
-				List<ExtentTag> ttags = eTagQuery.where().eq(TAB_TAG_FCOL_TT, type).query();
-				if(ttags!=null) {
-					for(ExtentTag ttag : ttags) {
-						indices = new ArrayList(ttag.getSpans());
-					}
-				}
-				
-				//indices = charIndexQuery.join(eTagQuery).query();
-			} else {
-				lTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
-				argQuery.join(lTagQuery).selectColumns(TAB_ARG_FCOL_ETAG).distinct();
-				eTagQuery.join(argQuery);
-				indices = charIndexQuery.join(eTagQuery).query();
-			}
-			resetQueryBuilders();
-			return indices;
-		} catch (SQLException e) {
-			throw catchSQLException(e);
-		}
-	}
+    public Collection<CharIndex> getAllAnchorsOfTagType(TagType type) throws MaeDBException{
+        try {
+            Collection<CharIndex> indices;
+            if (type.isExtent()) {
+                eTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
+                indices = charIndexQuery.join(eTagQuery).query();
+            } else {
+                lTagQuery.where().eq(TAB_TAG_FCOL_TT, type);
+                argQuery.join(lTagQuery).selectColumns(TAB_ARG_FCOL_ETAG).distinct();
+                eTagQuery.join(argQuery);
+                indices = charIndexQuery.join(eTagQuery).query();
+            }
+            resetQueryBuilders();
+            return indices;
+        } catch (SQLException e) {
+            throw catchSQLException(e);
+        }
+    }
 
     @Override
     public List<Integer> getAllAnchorLocations() throws MaeDBException{
