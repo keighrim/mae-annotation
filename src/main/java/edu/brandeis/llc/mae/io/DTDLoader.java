@@ -258,6 +258,7 @@ public class DTDLoader {
                 type = addAttributeType(tagType, attTypeName);
                 logger.debug("setting as id-referencing attribute: " + attTypeName);
                 driver.setAttributeTypeIDRef(type, true);
+                break;
             case "CDATA":
                 if ((attTypeName.equals("spans") || attTypeName.equals("start")) && !required) {
                     logger.debug("setting as non-consuming: " + tagType.getName());

@@ -485,6 +485,7 @@ public class TextPanelController extends MaeControllerI {
     }
 
     public void massivelyAssignFGColors(List<Integer> largeSpan) throws MaeDBException {
+        // TODO: 2019-04-04 This methods is still too slow (test with Toledo-eb dev example)
         int locIndex = 0;
         Set<TagType> activeTags = getMainController().getActiveExtentTags();
         Set<TagType> activeLinks = getMainController().getActiveLinkTags();
