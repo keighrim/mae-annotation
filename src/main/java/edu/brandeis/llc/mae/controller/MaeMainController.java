@@ -226,7 +226,7 @@ public class MaeMainController extends JPanel {
             @Override
             public void windowClosing(WindowEvent winEvt) {
                 boolean allChecked = true;
-                if (isDocumentOpen()) {
+                if (isDocumentOpen() || isAdjudicating()) {
                     for (int i = 0; i < getDrivers().size(); i++) {
                         if (!showUnsavedChangeWarningAt(i)) {
                             allChecked = false;
